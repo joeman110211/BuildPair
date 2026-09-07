@@ -105,12 +105,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          resolved_clerk="${EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY:-$(grep '^EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=' "$GITHUB_ENV" 2>/dev/null | tail -1 | cut -d= -f2-)}"
-          resolved_stripe="${EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY:-$(grep '^EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=' "$GITHUB_ENV" 2>/dev/null | tail -1 | cut -d= -f2-)}"
-          test -n "$resolved_clerk" || { echo "::error::Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in GitHub Actions and target client config"; exit 1; }
+          test -n "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" || { echo "::error::Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in GitHub Actions and target client config"; exit 1; }
           test -n "$EXPO_PUBLIC_API_URL" || { echo "::error::Missing EXPO_PUBLIC_API_URL"; exit 1; }
-          if [ -z "$resolved_stripe" ]; then
-            echo "::warning::Stripe publishable key is not set; Android payments would not match the web production experience."
+          if [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ]; then
+            echo "::warning::Stripe publishable key is not set; Android payments will remain disabled until production client config or the GitHub Actions variable is populated."
           fi
 
       - name: Install full Android build toolchain
