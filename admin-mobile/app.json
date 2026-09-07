@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "BuildPair Admin",
+    "slug": "buildpair-admin",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "buildpairadmin",
+    "userInterfaceStyle": "light",
+    "icon": "../assets/icon.png",
+    "android": {
+      "package": "uk.co.buildpair.admin",
+      "adaptiveIcon": {
+        "foregroundImage": "../assets/adaptive-icon.png",
+        "backgroundColor": "#252A31"
+      }
+    },
+    "plugins": [
+      "@clerk/expo",
+      "expo-secure-store"
+    ]
+  }
+}
