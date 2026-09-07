@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Divider, Menu } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
-import { colors } from '@/constants/theme';
+import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref, modeSetupHref } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
@@ -60,17 +60,17 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
     signOut(() => router.replace('/'));
   };
 
-  return <View style={styles.header}>
+  return <View style={[styles.header, compact ? styles.headerCompact : styles.headerDesktop]}>
     <Link href="/" asChild><Pressable style={styles.brandButton} accessibilityLabel="BuildPair website home"><BuildPairLogo compact /></Pressable></Link>
     {compact ? <Menu
       visible={menuOpen}
       onDismiss={() => setMenuOpen(false)}
-      anchor={<Button mode="outlined" compact contentStyle={styles.menuButtonContent} onPress={() => setMenuOpen((value) => !value)}>Account menu</Button>}
+      anchor={<Button mode="outlined" contentStyle={styles.menuButtonContent} onPress={() => setMenuOpen((value) => !value)}>Account menu</Button>}
       contentStyle={styles.menuContent}
     >
       <Menu.Item title="Website home" onPress={() => go('/')} />
       <Menu.Item title="Advice Hub" onPress={() => go('/(public)/advice')} />
-      <Menu.Item title="Find Trades" onPress={() => go('/(public)/directory')} />
+      <Menu.Item title="Find trades" onPress={() => go('/(public)/directory')} />
       <Divider />
       <Menu.Item title="Notifications" onPress={() => go(notificationsHref)} />
       <Menu.Item title="Messages" onPress={() => go(messagesHref)} />
@@ -80,22 +80,25 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
       <Divider />
       <Menu.Item title="Sign out" onPress={doSignOut} />
     </Menu> : <View style={styles.actions}>
-      <Link href="/" asChild><Button textColor={colors.charcoalSoft}>Website Home</Button></Link>
-      <Link href="/(public)/advice" asChild><Button textColor={colors.charcoalSoft}>Advice Hub</Button></Link>
-      <Link href="/(public)/directory" asChild><Button textColor={colors.charcoalSoft}>Find Trades</Button></Link>
-      <Link href={messagesHref} asChild><Button textColor={colors.charcoalSoft}>Messages</Button></Link>
-      <Button textColor={colors.charcoalSoft} onPress={() => router.push(notificationsHref)}>Notifications</Button>
-      <Button mode="outlined" onPress={() => router.push(settingsHref)}>Account</Button>
-      <Button compact mode={otherEnabled ? 'text' : 'outlined'} disabled={switchingMode} loading={switchingMode} onPress={() => void changeMode()}>{modeAction}</Button>
-      <Button compact textColor={colors.muted} onPress={doSignOut}>Sign out</Button>
+      <Link href="/" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Website home</Button></Link>
+      <Link href="/(public)/advice" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Advice Hub</Button></Link>
+      <Link href="/(public)/directory" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Find trades</Button></Link>
+      <Link href={messagesHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Messages</Button></Link>
+      <Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft} onPress={() => router.push(notificationsHref)}>Notifications</Button>
+      <Button mode="outlined" contentStyle={styles.navButtonContent} onPress={() => router.push(settingsHref)}>Account</Button>
+      <Button mode={otherEnabled ? 'text' : 'outlined'} contentStyle={styles.navButtonContent} disabled={switchingMode} loading={switchingMode} onPress={() => void changeMode()}>{modeAction}</Button>
+      <Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.muted} onPress={doSignOut}>Sign out</Button>
     </View>}
   </View>;
 }
 
 const styles = StyleSheet.create({
-  header: { minHeight: 68, paddingHorizontal: 14, backgroundColor: colors.surfaceRaised, borderBottomWidth: 1, borderColor: colors.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 10, shadowColor: colors.charcoal, shadowOpacity: 0.035, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
-  brandButton: { minHeight: 56, justifyContent: 'center', paddingHorizontal: 4 },
-  actions: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 2 },
-  menuButtonContent: { minHeight: 40, paddingHorizontal: 3 },
-  menuContent: { backgroundColor: colors.surfaceRaised, borderRadius: 18, minWidth: 230, borderWidth: 1, borderColor: colors.border },
+  header: { minHeight: 72, backgroundColor: colors.surfaceRaised, borderBottomWidth: 1, borderColor: colors.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 10, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
+  headerCompact: { paddingHorizontal: spacing.md },
+  headerDesktop: { paddingHorizontal: spacing.xxl },
+  brandButton: { minHeight: 56, justifyContent: 'center', paddingHorizontal: spacing.xxs },
+  actions: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.xxs, justifyContent: 'flex-end' },
+  navButtonContent: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xxs },
+  menuButtonContent: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xs },
+  menuContent: { backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, minWidth: 240, borderWidth: 1, borderColor: colors.border, paddingVertical: spacing.xs },
 });
