@@ -16,12 +16,14 @@ async function expectNoHorizontalOverflow(page, label) {
   expect(metrics.bodyWidth, `${label}: body overflows horizontally`).toBeLessThanOrEqual(metrics.innerWidth + 2);
 }
 
-async function expectActionInViewport(page, action, label) {
+async function expectActionReachable(page, action, label) {
   await expect(action).toBeVisible();
+  await action.scrollIntoViewIfNeeded();
   const box = await action.boundingBox();
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   expect(box, `${label}: action has no layout box`).not.toBeNull();
-  expect((box?.y ?? viewportHeight) + (box?.height ?? 0), `${label}: action is below the usable viewport`).toBeLessThanOrEqual(viewportHeight + 2);
+  expect((box?.y ?? viewportHeight) + (box?.height ?? 0), `${label}: action cannot be scrolled into the usable viewport`).toBeLessThanOrEqual(viewportHeight + 2);
+  expect(box?.y ?? -1, `${label}: action remains above the usable viewport after scrolling`).toBeGreaterThanOrEqual(-2);
 }
 
 async function getToken(page) {
@@ -78,17 +80,17 @@ test('small Android trader forms keep primary actions reachable', async ({ page 
   await expect(page.getByText('Business Details', { exact: true }).first()).toBeVisible();
   const titleBox = await page.getByText('Business Details', { exact: true }).first().boundingBox();
   expect(titleBox?.y ?? 9999, 'Trader onboarding starts too far below the top of a small phone').toBeLessThan(300);
-  await expectActionInViewport(page, page.getByRole('button', { name: 'Continue' }), 'trader onboarding');
+  await expectActionReachable(page, page.getByRole('button', { name: 'Continue' }), 'trader onboarding');
   await expectNoHorizontalOverflow(page, 'trader onboarding');
 
   await page.goto('/trader/invoices/new');
   await expect(page.getByText('Create invoice', { exact: true }).first()).toBeVisible();
-  await expectActionInViewport(page, page.getByRole('button', { name: 'Save and send invoice' }), 'create invoice');
+  await expectActionReachable(page, page.getByRole('button', { name: 'Save and send invoice' }), 'create invoice');
   await expectNoHorizontalOverflow(page, 'create invoice');
 
   await page.goto('/trader/quotes/new?jobId=mobile-layout-check');
   await expect(page.getByText('Create an itemised quote', { exact: true }).first()).toBeVisible();
-  await expectActionInViewport(page, page.getByRole('button', { name: 'Send Quote & Open Conversation' }), 'create quote');
+  await expectActionReachable(page, page.getByRole('button', { name: 'Send Quote & Open Conversation' }), 'create quote');
   await expectNoHorizontalOverflow(page, 'create quote');
 });
 
@@ -101,6 +103,6 @@ test('small Android post-a-job keeps Continue reachable', async ({ page }) => {
 
   await page.goto('/customer/new-job');
   await expect(page.getByText('What do you need?', { exact: true }).first()).toBeVisible();
-  await expectActionInViewport(page, page.getByRole('button', { name: 'Continue' }), 'post a job');
+  await expectActionReachable(page, page.getByRole('button', { name: 'Continue' }), 'post a job');
   await expectNoHorizontalOverflow(page, 'post a job');
 });
