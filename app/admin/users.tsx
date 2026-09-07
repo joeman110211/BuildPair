@@ -79,7 +79,10 @@ export default function UserControlCentre() {
     finally { setLoading(false); }
   }, [token]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const timer = setTimeout(() => { void load(); }, 0);
+    return () => clearTimeout(timer);
+  }, [load]);
 
   const visible = useMemo(() => {
     const query = search.trim().toLowerCase();
