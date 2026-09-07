@@ -7,6 +7,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Divider, Text } from 'react-native-paper';
+import { controlHeights, spacing } from '@/constants/theme';
 import { modeSetupHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
 import type { UserRole } from '@/types';
@@ -87,7 +88,7 @@ export function SocialAuthButtons({ onError, mode = null }: Props) {
       ))}
       <View style={styles.orRow}>
         <Divider style={styles.divider} />
-        <Text variant="bodySmall" style={styles.orText}>or use email</Text>
+        <Text variant="bodySmall" style={styles.orText}>or continue with email</Text>
         <Divider style={styles.divider} />
       </View>
     </View>
@@ -95,9 +96,9 @@ export function SocialAuthButtons({ onError, mode = null }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 10 },
-  button: { minHeight: 48 },
-  orRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 },
+  container: { gap: spacing.md },
+  button: { minHeight: controlHeights.standard },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginVertical: spacing.xxs },
   divider: { flex: 1 },
   orText: { opacity: 0.65 },
 });
