@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/expo';
 import type { Href } from 'expo-router';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, ProgressBar, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
 import { AIJobSpecModal } from '@/components/AIJobSpecModal';
@@ -13,8 +13,28 @@ import { TradeMatchAssistant } from '@/components/TradeMatchAssistant';
 import { BUDGET_OPTIONS, PROPERTY_TYPES, TRADE_CATEGORIES, URGENCY_OPTIONS } from '@/constants/options';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { clearDraft, loadDraft, saveDraft } from '@/lib/draft-storage';
 
 const STEP_TITLES = ['What do you need?', 'Describe the job', 'Add photos', 'Location & budget', 'Review & post'] as const;
+type Category = (typeof TRADE_CATEGORIES)[number];
+type PropertyType = (typeof PROPERTY_TYPES)[number];
+type Urgency = (typeof URGENCY_OPTIONS)[number];
+type Budget = (typeof BUDGET_OPTIONS)[number];
+
+type JobDraft = {
+  step: number;
+  category?: string;
+  propertyType?: string;
+  postcode: string;
+  urgency?: string;
+  budgetRange?: string;
+  title: string;
+  description: string;
+  photos: string[];
+  aiGeneratedSpec: string | null;
+  mode: string;
+  isEmergency: boolean;
+};
 
 export default function NewJobScreen() {
   const { getToken } = useAuth();
@@ -22,12 +42,13 @@ export default function NewJobScreen() {
   const { traderId, traderName, tradeCategory } = useLocalSearchParams<{ traderId?: string; traderName?: string; tradeCategory?: string }>();
   const directRequest = Boolean(traderId);
   const initialCategory = TRADE_CATEGORIES.find((item) => item === tradeCategory);
+  const draftKey = traderId ? `customer-job-direct-${traderId}` : 'customer-job-open-v1';
   const [step, setStep] = useState(0);
-  const [category, setCategory] = useState<(typeof TRADE_CATEGORIES)[number] | undefined>(initialCategory);
-  const [propertyType, setPropertyType] = useState<(typeof PROPERTY_TYPES)[number]>();
+  const [category, setCategory] = useState<Category | undefined>(initialCategory);
+  const [propertyType, setPropertyType] = useState<PropertyType>();
   const [postcode, setPostcode] = useState('');
-  const [urgency, setUrgency] = useState<(typeof URGENCY_OPTIONS)[number]>();
-  const [budgetRange, setBudgetRange] = useState<(typeof BUDGET_OPTIONS)[number]>();
+  const [urgency, setUrgency] = useState<Urgency>();
+  const [budgetRange, setBudgetRange] = useState<Budget>();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
@@ -36,7 +57,71 @@ export default function NewJobScreen() {
   const [showAi, setShowAi] = useState(false);
   const [isEmergency, setIsEmergency] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [draftReady, setDraftReady] = useState(false);
+  const [draftStatus, setDraftStatus] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    void loadDraft<JobDraft>(draftKey).then((draft) => {
+      if (!active || !draft) return;
+      setStep(Math.max(0, Math.min(4, Number(draft.step) || 0)));
+      const restoredCategory = TRADE_CATEGORIES.find((item) => item === draft.category);
+      setCategory(restoredCategory ?? initialCategory);
+      setPropertyType(PROPERTY_TYPES.find((item) => item === draft.propertyType));
+      setPostcode(draft.postcode ?? '');
+      setUrgency(URGENCY_OPTIONS.find((item) => item === draft.urgency));
+      setBudgetRange(BUDGET_OPTIONS.find((item) => item === draft.budgetRange));
+      setTitle(draft.title ?? '');
+      setDescription(draft.description ?? '');
+      setPhotos(Array.isArray(draft.photos) ? draft.photos.slice(0, 8) : []);
+      setAiGeneratedSpec(typeof draft.aiGeneratedSpec === 'string' ? draft.aiGeneratedSpec : null);
+      setMode(draft.mode === 'ai' ? 'ai' : 'manual');
+      setIsEmergency(!directRequest && Boolean(draft.isEmergency));
+      setDraftStatus('Draft restored ✓');
+    }).finally(() => { if (active) setDraftReady(true); });
+    return () => { active = false; };
+  }, [directRequest, draftKey, initialCategory]);
+
+  const draft = useMemo<JobDraft>(() => ({
+    step,
+    category,
+    propertyType,
+    postcode,
+    urgency,
+    budgetRange,
+    title,
+    description,
+    photos,
+    aiGeneratedSpec,
+    mode,
+    isEmergency: directRequest ? false : isEmergency,
+  }), [aiGeneratedSpec, budgetRange, category, description, directRequest, isEmergency, mode, photos, postcode, propertyType, step, title, urgency]);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    const timer = setTimeout(() => {
+      void saveDraft(draftKey, draft).then(() => setDraftStatus('Draft saved automatically ✓')).catch(() => undefined);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [draft, draftKey, draftReady]);
+
+  async function discardDraft() {
+    await clearDraft(draftKey);
+    setStep(0);
+    setCategory(initialCategory);
+    setPropertyType(undefined);
+    setPostcode('');
+    setUrgency(undefined);
+    setBudgetRange(undefined);
+    setTitle('');
+    setDescription('');
+    setPhotos([]);
+    setAiGeneratedSpec(null);
+    setMode('manual');
+    setIsEmergency(false);
+    setDraftStatus('Draft cleared');
+  }
 
   async function submit() {
     if (!category) return;
@@ -63,6 +148,7 @@ export default function NewJobScreen() {
           isEmergency: directRequest ? false : isEmergency,
         }),
       }, getToken);
+      await clearDraft(draftKey);
       if (created.conversationId) router.replace(`/customer/messages/${created.conversationId}` as Href);
       else router.replace('/customer/jobs');
     } catch (e) { setError(errorMessage(e)); }
@@ -87,12 +173,13 @@ export default function NewJobScreen() {
   const aiPropertyType = propertyType ?? 'Other';
   const submitLabel = traderName ? 'Send request' : isEmergency ? 'Post urgent job' : 'Post job';
   const footer = <View style={styles.actions}>
-    {step > 0 ? <Button mode="outlined" contentStyle={styles.button} onPress={() => setStep((value) => value - 1)}>Back</Button> : <View />}
+    {step > 0 ? <Button mode="outlined" contentStyle={styles.button} onPress={() => setStep((value) => value - 1)}>Back</Button> : <Button mode="text" disabled={busy} onPress={() => void discardDraft()}>Clear draft</Button>}
     {step < 4 ? <Button mode="contained" contentStyle={styles.button} disabled={!stepValid} onPress={() => setStep((value) => value + 1)}>Continue</Button> : <Button mode="contained" icon="send" contentStyle={styles.button} loading={busy} disabled={!stepValid || busy} onPress={submit}>{submitLabel}</Button>}
   </View>;
 
   return <Screen title={STEP_TITLES[step]} subtitle={traderName ? `Direct quote request for ${traderName}` : 'Add a few clear details so tradespeople can quote accurately.'} footer={footer}>
     <View style={styles.progressBlock}><View style={styles.progressHeader}><Text style={styles.step}>Step {step + 1} of 5</Text><Text style={styles.muted}>{STEP_TITLES[step]}</Text></View><ProgressBar progress={(step + 1) / 5} color={colors.primary} style={styles.progress} /></View>
+    {draftStatus ? <HelperText type="info" visible>{draftStatus}</HelperText> : null}
 
     {directRequest ? <AppCard style={styles.directInfo}>
       <Text variant="titleMedium" style={styles.title}>Keep it simple</Text>
