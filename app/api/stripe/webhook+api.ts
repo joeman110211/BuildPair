@@ -49,6 +49,57 @@ async function recordStripeMilestoneAudit(milestoneId: string) {
   }
 }
 
+type PaidTier = 'basic' | 'featured';
+
+function effectiveTier(paidTier: PaidTier | null, complimentaryTier: PaidTier | null): 'free' | PaidTier {
+  if (paidTier === 'featured' || complimentaryTier === 'featured') return 'featured';
+  if (paidTier === 'basic' || complimentaryTier === 'basic') return 'basic';
+  return 'free';
+}
+
+async function syncSubscriptionState(userId: string, subscription: Stripe.Subscription, tier: PaidTier) {
+  const active = ['active', 'trialing'].includes(subscription.status);
+  const paidTier = active ? tier : null;
+  const rows = await getSql()`
+    SELECT complimentary_tier AS "complimentaryTier"
+    FROM trader_profiles
+    WHERE user_id = ${userId}
+    LIMIT 1
+  ` as { complimentaryTier: PaidTier | null }[];
+  const complimentaryTier = rows[0]?.complimentaryTier ?? null;
+  const effective = effectiveTier(paidTier, complimentaryTier);
+  await getSql()`
+    UPDATE trader_profiles
+    SET stripe_subscription_id = ${subscription.id},
+        paid_subscription_tier = ${paidTier}::subscription_tier,
+        subscription_tier = ${effective}::subscription_tier,
+        is_subscription_active = ${effective !== 'free'},
+        updated_at = now()
+    WHERE user_id = ${userId}
+  `;
+}
+
+async function clearPaidSubscription(subscriptionId: string) {
+  const rows = await getSql()`
+    SELECT user_id AS "userId", complimentary_tier AS "complimentaryTier"
+    FROM trader_profiles
+    WHERE stripe_subscription_id = ${subscriptionId}
+    LIMIT 1
+  ` as { userId: string; complimentaryTier: PaidTier | null }[];
+  const profile = rows[0];
+  if (!profile) return;
+  const effective = effectiveTier(null, profile.complimentaryTier);
+  await getSql()`
+    UPDATE trader_profiles
+    SET stripe_subscription_id = NULL,
+        paid_subscription_tier = NULL,
+        subscription_tier = ${effective}::subscription_tier,
+        is_subscription_active = ${effective !== 'free'},
+        updated_at = now()
+    WHERE user_id = ${profile.userId}
+  `;
+}
+
 async function handleEvent(event: Stripe.Event) {
   const db = getDb();
 
@@ -64,16 +115,12 @@ async function handleEvent(event: Stripe.Event) {
     // test/live Stripe objects are not orphaned during the transition.
     const userId = subscription.metadata.buildpairUserId ?? subscription.metadata.buildmateUserId;
     const tier = subscription.metadata.tier;
-    if (userId && (tier === 'basic' || tier === 'featured')) {
-      const active = ['active', 'trialing'].includes(subscription.status);
-      await db.update(traderProfiles).set({ stripeSubscriptionId: subscription.id, subscriptionTier: active ? tier : 'free', isSubscriptionActive: active, updatedAt: new Date() }).where(eq(traderProfiles.userId, userId));
-    }
+    if (userId && (tier === 'basic' || tier === 'featured')) await syncSubscriptionState(userId, subscription, tier);
     return;
   }
 
   if (event.type === 'customer.subscription.deleted') {
-    const subscription = event.data.object;
-    await db.update(traderProfiles).set({ subscriptionTier: 'free', isSubscriptionActive: false, updatedAt: new Date() }).where(eq(traderProfiles.stripeSubscriptionId, subscription.id));
+    await clearPaidSubscription(event.data.object.id);
     return;
   }
 
