@@ -1,36 +1,36 @@
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
-import { colors } from '@/constants/theme';
+import { colors, layout, radii, spacing } from '@/constants/theme';
 
 const linkGroups = [
   {
     title: 'Discover',
     links: [
-      ['Find Trades', '/(public)/directory'],
-      ['Browse Jobs', '/(public)/jobs'],
-      ['How It Works', '/(public)/how-it-works'],
-      ['For Homeowners', '/(public)/for-homeowners'],
-      ['For Tradespeople', '/(public)/for-tradespeople'],
+      ['Find trades', '/(public)/directory'],
+      ['Browse jobs', '/(public)/jobs'],
+      ['How it works', '/(public)/how-it-works'],
+      ['For homeowners', '/(public)/for-homeowners'],
+      ['For tradespeople', '/(public)/for-tradespeople'],
     ],
   },
   {
-    title: 'Help & Advice',
+    title: 'Help & advice',
     links: [
       ['Advice Hub', '/(public)/advice'],
-      ['UK Building Rules', '/(public)/building-regulations'],
-      ['Report a User', '/(public)/report'],
+      ['UK building rules', '/(public)/building-regulations'],
+      ['Report a user', '/(public)/report'],
       ['Trust & Safety', '/(public)/trust-safety'],
-      ['Contact Us', '/(public)/contact'],
+      ['Contact us', '/(public)/contact'],
     ],
   },
   {
     title: 'BuildPair',
     links: [
       ['Membership', '/(public)/pricing'],
-      ['About Us', '/(public)/about'],
-      ['Download App', '/(public)/download'],
-      ['Marketplace Standards', '/(public)/marketplace-standards'],
+      ['About us', '/(public)/about'],
+      ['Download app', '/(public)/download'],
+      ['Marketplace standards', '/(public)/marketplace-standards'],
     ],
   },
   {
@@ -51,36 +51,37 @@ export function PublicFooter() {
       <View style={styles.brandBlock}>
         <Text variant="headlineSmall" style={styles.brand}>BuildPair</Text>
         <Text style={styles.tagline}>From “who do I need?” to “job complete”.</Text>
-        <Text style={styles.description}>A UK marketplace and project workflow connecting homeowners with local tradespeople, then keeping search, quotes, messages, changes, payment stages and reputation in one place.</Text>
-        <Text style={styles.description}>Free public advice and official building-rules links are available whether or not you have a paid membership.</Text>
+        <Text style={styles.description}>A UK marketplace and project workflow connecting homeowners with local tradespeople, keeping search, quotes, messages, changes, payment stages and reputation in one place.</Text>
+        <Text style={styles.description}>Public advice and official building-rules links remain available whether or not you have a paid membership.</Text>
         <View style={styles.contactPill}><Text style={styles.contactText}>info@buildpair.co.uk</Text></View>
       </View>
       {linkGroups.map((group) => <View key={group.title} style={styles.group}>
         <Text style={styles.groupTitle}>{group.title}</Text>
-        {group.links.map(([label, href]) => <Link key={label} href={href} asChild><Pressable style={styles.linkPress}><Text style={styles.link}>{label}</Text></Pressable></Link>)}
+        {group.links.map(([label, href]) => <Link key={label} href={href} asChild><Pressable style={({ pressed }) => [styles.linkPress, pressed && styles.linkPressed]}><Text style={styles.link}>{label}</Text></Pressable></Link>)}
       </View>)}
     </View>
     <View style={styles.bottom}>
       <Text style={styles.small}>© {new Date().getFullYear()} BuildPair. All rights reserved.</Text>
-      <Text style={styles.small}>BuildPair provides marketplace and project-management technology. It does not itself carry out building work, provide building-control approval or replace checks required for regulated work.</Text>
+      <Text style={styles.small}>BuildPair provides marketplace and project-management technology. It does not carry out building work, provide building-control approval or replace checks required for regulated work.</Text>
     </View>
   </View>;
 }
 
 const styles = StyleSheet.create({
-  footer: { marginTop: 32, backgroundColor: colors.charcoal, paddingHorizontal: 20, paddingTop: 0, paddingBottom: 25 },
-  accentLine: { height: 5, backgroundColor: colors.primary, marginHorizontal: -20, marginBottom: 36 },
-  inner: { width: '100%', maxWidth: 1240, alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 32, justifyContent: 'space-between' },
-  brandBlock: { flex: 2, minWidth: 260, maxWidth: 430, gap: 9 },
+  footer: { marginTop: spacing.xxxl, backgroundColor: colors.charcoal, paddingHorizontal: spacing.xl, paddingTop: 0, paddingBottom: spacing.xxl },
+  accentLine: { height: 4, backgroundColor: colors.primary, marginHorizontal: -spacing.xl, marginBottom: spacing.xxxl },
+  inner: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xxxl, justifyContent: 'space-between' },
+  brandBlock: { flex: 2, minWidth: 260, maxWidth: 430, gap: spacing.sm },
   brand: { color: '#FFFFFF', fontWeight: '900', letterSpacing: -0.4 },
   tagline: { color: '#FFE6D5', lineHeight: 23, fontWeight: '800' },
   description: { color: '#C8CDD1', lineHeight: 21, fontSize: 13, maxWidth: 420 },
-  contactPill: { alignSelf: 'flex-start', marginTop: 6, borderRadius: 999, backgroundColor: '#343B43', paddingHorizontal: 12, paddingVertical: 7 },
+  contactPill: { alignSelf: 'flex-start', marginTop: spacing.xs, borderRadius: radii.pill, backgroundColor: '#343B43', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   contactText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
   small: { color: '#B7BDC2', lineHeight: 20, fontSize: 12 },
-  group: { minWidth: 145, gap: 8 },
-  groupTitle: { color: colors.secondary, fontWeight: '900', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.8, fontSize: 11 },
-  linkPress: { paddingVertical: 2 },
+  group: { minWidth: 145, gap: spacing.sm },
+  groupTitle: { color: colors.secondary, fontWeight: '900', marginBottom: spacing.xxs, textTransform: 'uppercase', letterSpacing: 0.8, fontSize: 11 },
+  linkPress: { paddingVertical: spacing.xxs, borderRadius: radii.sm },
+  linkPressed: { opacity: 0.65 },
   link: { color: '#FFFFFF', opacity: 0.93, lineHeight: 20 },
-  bottom: { width: '100%', maxWidth: 1240, alignSelf: 'center', borderTopWidth: 1, borderTopColor: '#454B52', marginTop: 30, paddingTop: 18, gap: 5 },
+  bottom: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', borderTopWidth: 1, borderTopColor: '#454B52', marginTop: spacing.xxxl, paddingTop: spacing.lg, gap: spacing.xs },
 });

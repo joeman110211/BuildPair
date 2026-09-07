@@ -11,7 +11,7 @@ import { PhotoUploader } from '@/components/PhotoUploader';
 import { Screen } from '@/components/Screen';
 import { TradeMatchAssistant } from '@/components/TradeMatchAssistant';
 import { BUDGET_OPTIONS, PROPERTY_TYPES, TRADE_CATEGORIES, URGENCY_OPTIONS } from '@/constants/options';
-import { colors } from '@/constants/theme';
+import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 
 const STEP_TITLES = ['What do you need?', 'Describe the job', 'Add photos', 'Location & budget', 'Review & post'] as const;
@@ -85,54 +85,55 @@ export default function NewJobScreen() {
   ][step], [budgetRange, category, description, directRequest, postcode, propertyType, step, title, urgency]);
 
   const aiPropertyType = propertyType ?? 'Other';
+  const submitLabel = traderName ? 'Send request' : isEmergency ? 'Post urgent job' : 'Post job';
   const footer = <View style={styles.actions}>
-    {step > 0 ? <Button onPress={() => setStep((value) => value - 1)}>Back</Button> : <View />}
-    {step < 4 ? <Button mode="contained" contentStyle={styles.button} disabled={!stepValid} onPress={() => setStep((value) => value + 1)}>Continue</Button> : <Button mode="contained" icon="send" contentStyle={styles.button} loading={busy} disabled={!stepValid || busy} onPress={submit}>{traderName ? 'Send Request & Open Chat' : isEmergency ? 'Broadcast Urgent Job' : 'Post Job'}</Button>}
+    {step > 0 ? <Button mode="outlined" contentStyle={styles.button} onPress={() => setStep((value) => value - 1)}>Back</Button> : <View />}
+    {step < 4 ? <Button mode="contained" contentStyle={styles.button} disabled={!stepValid} onPress={() => setStep((value) => value + 1)}>Continue</Button> : <Button mode="contained" icon="send" contentStyle={styles.button} loading={busy} disabled={!stepValid || busy} onPress={submit}>{submitLabel}</Button>}
   </View>;
 
-  return <Screen title={STEP_TITLES[step]} subtitle={traderName ? `Direct quote request for ${traderName}` : 'A few clear details help tradespeople give you useful quotes instead of guessing.'} footer={footer}>
+  return <Screen title={STEP_TITLES[step]} subtitle={traderName ? `Direct quote request for ${traderName}` : 'Add a few clear details so tradespeople can quote accurately.'} footer={footer}>
     <View style={styles.progressBlock}><View style={styles.progressHeader}><Text style={styles.step}>Step {step + 1} of 5</Text><Text style={styles.muted}>{STEP_TITLES[step]}</Text></View><ProgressBar progress={(step + 1) / 5} color={colors.primary} style={styles.progress} /></View>
 
     {directRequest ? <AppCard style={styles.directInfo}>
       <Text variant="titleMedium" style={styles.title}>Keep it simple</Text>
-      <Text style={styles.muted}>For a direct request, only your job description and area are mandatory. Photos, property type, timing, budget and a custom title are optional and can be discussed in the BuildPair conversation.</Text>
+      <Text style={styles.muted}>Only the job description and area are required. Photos, property type, timing, budget and a custom title can be agreed in chat.</Text>
     </AppCard> : null}
 
     {step === 0 ? <>
       {!directRequest ? <TradeMatchAssistant onChoose={(trade) => { const matched = TRADE_CATEGORIES.find((item) => item === trade); if (matched) setCategory(matched); }} /> : null}
       <AppCard>
         <Text variant="titleLarge" style={styles.title}>What work do you need?</Text>
-        <FormSelect label={directRequest ? 'Trade category' : 'Trade category'} value={category} options={TRADE_CATEGORIES} onChange={setCategory} />
+        <FormSelect label="Trade category" value={category} options={TRADE_CATEGORIES} onChange={setCategory} />
         <FormSelect label={directRequest ? 'Property type (optional)' : 'Property type'} value={propertyType} options={PROPERTY_TYPES} onChange={setPropertyType} placeholder={directRequest ? 'Not specified' : undefined} />
-        <Text style={styles.muted}>{directRequest ? 'The trade is preselected from the profile where possible. Property type can be left blank.' : 'Choose the closest category, or use the BuildPair matcher above when you are not sure. You can explain the exact work on the next step.'}</Text>
+        <Text style={styles.muted}>{directRequest ? 'The trade is preselected from the profile where possible. Property type can be left blank.' : 'Choose the closest category, or use the BuildPair matcher above if you are unsure. You can explain the exact work on the next step.'}</Text>
       </AppCard>
     </> : null}
 
     {step === 1 ? <AppCard>
-      <Text variant="titleLarge" style={styles.title}>Tell the tradesperson what needs doing</Text>
+      <Text variant="titleLarge" style={styles.title}>Describe the work clearly</Text>
       <TextInput label={directRequest ? 'Short job title (optional)' : 'Short job title'} accessibilityLabel={directRequest ? 'Short job title (optional)' : 'Short job title'} value={title} onChangeText={setTitle} mode="outlined" maxLength={120} placeholder={directRequest ? `e.g. ${category ?? 'Job'} quote request` : 'e.g. Retile bathroom floor'} />
       <SegmentedButtons value={mode} onValueChange={setMode} buttons={[{ value: 'manual', label: 'Write it myself' }, { value: 'ai', label: 'BuildPair AI helper' }]} />
-      {mode === 'ai' ? <Button mode="outlined" icon="creation" disabled={!readyForAi} onPress={() => setShowAi(true)}>{aiGeneratedSpec ? 'Improve with AI again' : 'Help me write the job'}</Button> : null}
+      {mode === 'ai' ? <Button mode="outlined" icon="creation" contentStyle={styles.button} disabled={!readyForAi} onPress={() => setShowAi(true)}>{aiGeneratedSpec ? 'Improve with AI again' : 'Help me write the job'}</Button> : null}
       {mode === 'ai' && !readyForAi ? <HelperText type="info">Choose a trade category first.</HelperText> : null}
       <TextInput label="Detailed job description" accessibilityLabel="Detailed job description" value={description} onChangeText={(value) => { setDescription(value); if (value !== aiGeneratedSpec) setAiGeneratedSpec(null); }} mode="outlined" multiline numberOfLines={10} maxLength={5000} />
-      <HelperText type={description.length > 0 && description.trim().length < 30 ? 'error' : 'info'}>{description.length}/5000 characters · minimum 30 and required {aiGeneratedSpec ? '· AI draft checked by you ✓' : ''}</HelperText>
+      <HelperText type={description.length > 0 && description.trim().length < 30 ? 'error' : 'info'}>{description.length}/5000 characters · minimum 30 characters {aiGeneratedSpec ? '· AI draft reviewed by you ✓' : ''}</HelperText>
     </AppCard> : null}
 
     {step === 2 ? <AppCard>
       <Text variant="titleLarge" style={styles.title}>Add useful photos</Text>
-      <Text style={styles.muted}>Photos are optional, but they help the tradesperson understand access, condition, size and finish before replying.</Text>
+      <Text style={styles.muted}>Photos are optional, but they help show access, condition, size and finish before a tradesperson replies.</Text>
       <PhotoUploader kind="job" photos={photos} onChange={setPhotos} max={8} />
       <Chip icon="information-outline">Up to 8 photos · optional</Chip>
     </AppCard> : null}
 
     {step === 3 ? <AppCard>
-      <Text variant="titleLarge" style={styles.title}>Where, when and roughly how much?</Text>
+      <Text variant="titleLarge" style={styles.title}>Location, timing and budget</Text>
       <TextInput label="Job postcode / area" accessibilityLabel="Job postcode / area" value={postcode} onChangeText={setPostcode} mode="outlined" autoCapitalize="characters" placeholder="e.g. SW1A 1AA" />
-      <HelperText type="info">Area is required so BuildPair can confirm the job is within the tradesperson’s service radius.</HelperText>
+      <HelperText type="info">Your area lets BuildPair match the job to tradespeople who cover it.</HelperText>
       <FormSelect label={directRequest ? 'Budget bracket (optional)' : 'Budget bracket'} value={budgetRange} options={BUDGET_OPTIONS} onChange={setBudgetRange} placeholder={directRequest ? 'Not sure / discuss' : undefined} />
       <FormSelect label={directRequest ? 'Timing / urgency (optional)' : 'Urgency'} value={urgency} options={URGENCY_OPTIONS} onChange={setUrgency} placeholder={directRequest ? 'Flexible / discuss' : undefined} />
-      {!directRequest ? <View style={[styles.emergencyRow, isEmergency && styles.emergencyActive]}><View style={styles.flex}><Text variant="titleMedium" style={styles.title}>Emergency broadcast</Text><Text style={styles.muted}>For genuinely urgent jobs, alert matching nearby tradespeople who have marked themselves available now.</Text></View><Switch value={isEmergency} onValueChange={setIsEmergency} /></View> : null}
-      {isEmergency ? <HelperText type="info">Emergency broadcast improves visibility but does not guarantee attendance or replace emergency services where life or property is at immediate risk.</HelperText> : null}
+      {!directRequest ? <View style={[styles.emergencyRow, isEmergency && styles.emergencyActive]}><View style={styles.flex}><Text variant="titleMedium" style={styles.title}>Emergency broadcast</Text><Text style={styles.muted}>For genuinely urgent work, alert matching nearby tradespeople who have marked themselves available.</Text></View><Switch value={isEmergency} onValueChange={setIsEmergency} /></View> : null}
+      {isEmergency ? <HelperText type="info">Emergency broadcast improves visibility but does not guarantee attendance or replace emergency services where there is immediate danger.</HelperText> : null}
     </AppCard> : null}
 
     {step === 4 ? <AppCard>
@@ -148,19 +149,19 @@ export default function NewJobScreen() {
 }
 
 const styles = StyleSheet.create({
-  progressBlock: { gap: 8 },
-  progressHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
-  progress: { height: 8, borderRadius: 8, backgroundColor: colors.surfaceStrong },
+  progressBlock: { width: '100%', maxWidth: 820, alignSelf: 'center', gap: spacing.sm },
+  progressHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap' },
+  progress: { height: 8, borderRadius: radii.sm, backgroundColor: colors.surfaceStrong },
   step: { color: colors.primary, fontWeight: '900' },
   title: { fontWeight: '900', color: colors.charcoal },
   muted: { color: colors.muted, lineHeight: 22 },
-  directInfo: { backgroundColor: '#FFF8F3', borderColor: colors.primary },
-  actions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
-  button: { minHeight: 50 },
-  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' },
+  directInfo: { backgroundColor: colors.primarySoft, borderColor: '#F2D7C3' },
+  actions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' },
+  button: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xs },
+  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap', alignItems: 'flex-start' },
   flex: { flex: 1, minWidth: 220 },
-  reviewMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  reviewMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   description: { color: colors.text, lineHeight: 23 },
-  emergencyRow: { borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  emergencyActive: { backgroundColor: '#FFF4EF', borderColor: colors.primary },
+  emergencyRow: { borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  emergencyActive: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
 });

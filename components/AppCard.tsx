@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { colors } from '@/constants/theme';
+import { colors, radii, spacing } from '@/constants/theme';
 
 export function AppCard({ children, style, elevated = true }: PropsWithChildren<{ style?: StyleProp<ViewStyle>; elevated?: boolean }>) {
   return <View style={[styles.card, elevated && styles.elevated, style]}>{children}</View>;
@@ -11,15 +11,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 26,
-    padding: 20,
-    gap: 13,
+    borderRadius: radii.lg,
+    padding: spacing.xl,
+    gap: spacing.md,
   },
   elevated: {
     shadowColor: colors.charcoal,
-    shadowOpacity: 0.08,
-    shadowRadius: 22,
-    shadowOffset: { width: 0, height: 9 },
-    elevation: 4,
+    shadowOpacity: 0.05,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 2,
   },
 });

@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/expo';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
-import { colors } from '@/constants/theme';
+import { colors, radii, spacing } from '@/constants/theme';
 import { apiFetch } from '@/lib/api';
 import { traderWorkTypeLimit } from '@/lib/subscription';
 
@@ -67,25 +67,26 @@ export function PillSelector({
         style={[styles.pill, webTouchStyle, active && styles.active, disabled && styles.disabled]}
       >
         <View style={[styles.box, active && styles.boxActive]}>{active ? <Text style={styles.check}>✓</Text> : null}</View>
-        <Text style={active ? styles.activeText : disabled ? styles.disabledText : undefined}>{option}</Text>
+        <Text style={active ? styles.activeText : disabled ? styles.disabledText : styles.optionText}>{option}</Text>
       </Pressable>;
     })}</View>
-    <Text style={styles.limitText}>Selected {values.length} of {planLimit} categories · Starter 2 · Plus 4 · Pro 6</Text>
-    {limitReached ? <Text style={styles.limitReached}>Maximum reached for your current plan. Remove one to choose another.</Text> : null}
+    <Text style={styles.limitText}>Selected {values.length} of {planLimit} · Starter 2 · Plus 4 · Pro 6</Text>
+    {limitReached ? <Text style={styles.limitReached}>You’ve reached your current category limit. Remove one to choose another.</Text> : null}
   </View>;
 }
 
 const styles = StyleSheet.create({
-  block: { gap: 8 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  pill: { borderWidth: 1, borderColor: colors.border, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 9, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', gap: 7, minHeight: 44 },
+  block: { gap: spacing.sm },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  pill: { borderWidth: 1, borderColor: colors.border, borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.surfaceRaised, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 44 },
   active: { backgroundColor: colors.primary, borderColor: colors.primary },
   disabled: { opacity: 0.45 },
-  activeText: { color: '#fff', fontWeight: '700' },
+  optionText: { color: colors.charcoalSoft },
+  activeText: { color: '#FFFFFF', fontWeight: '700' },
   disabledText: { color: colors.muted },
-  box: { width: 20, height: 20, borderRadius: 6, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  boxActive: { borderColor: '#fff', backgroundColor: 'rgba(255,255,255,0.16)' },
-  check: { color: '#fff', fontWeight: '900', fontSize: 13, lineHeight: 15 },
+  box: { width: 20, height: 20, borderRadius: 6, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surfaceRaised, alignItems: 'center', justifyContent: 'center' },
+  boxActive: { borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.16)' },
+  check: { color: '#FFFFFF', fontWeight: '900', fontSize: 13, lineHeight: 15 },
   limitText: { color: colors.muted, lineHeight: 20 },
   limitReached: { color: colors.warning, fontWeight: '700', lineHeight: 20 },
 });

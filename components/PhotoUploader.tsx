@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/expo';
 import { useState } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, HelperText, Text } from 'react-native-paper';
-import { colors } from '@/constants/theme';
+import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { errorMessage } from '@/lib/api';
 import { pickAndUploadImages, type MediaKind } from '@/lib/media';
 
@@ -47,28 +47,31 @@ export function PhotoUploader({
   return <View style={styles.wrap}>
     <View style={styles.header}>
       <View style={styles.heading}>
-        <Text variant="titleMedium">{title}</Text>
+        <Text variant="titleMedium" style={styles.title}>{title}</Text>
         <Text style={styles.muted}>{photos.length}/{max}</Text>
       </View>
-      <Button mode="outlined" icon="image-plus" loading={busy} disabled={busy || photos.length >= max} onPress={addPhoto}>{displayButtonLabel}</Button>
+      <Button mode="outlined" icon="image-plus" contentStyle={styles.addButton} loading={busy} disabled={busy || photos.length >= max} onPress={addPhoto}>{displayButtonLabel}</Button>
     </View>
-    {max > 1 ? <Text variant="bodySmall" style={styles.muted}>Select up to 10 photos at once. You can keep adding batches until you reach {max}.</Text> : null}
+    {max > 1 ? <Text variant="bodySmall" style={styles.muted}>Select up to 10 at once and keep adding batches until you reach {max}.</Text> : null}
     {photos.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.gallery}>
       {photos.map((uri, index) => <View key={`${uri}-${index}`} style={styles.photoWrap}>
         <Image source={{ uri }} style={styles.photo} />
-        <Button compact onPress={() => onChange(photos.filter((_, i) => i !== index))}>Remove</Button>
+        <Button mode="text" compact onPress={() => onChange(photos.filter((_, i) => i !== index))}>Remove</Button>
       </View>)}
-    </ScrollView> : <Text style={styles.muted}>{emptyText}</Text>}
+    </ScrollView> : <View style={styles.empty}><Text style={styles.muted}>{emptyText}</Text></View>}
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
   </View>;
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 8 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
-  heading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  gallery: { gap: 10, paddingBottom: 4 },
-  photoWrap: { width: 150, gap: 2 },
-  photo: { width: 150, height: 110, borderRadius: 10, backgroundColor: colors.border },
-  muted: { color: colors.muted },
+  wrap: { gap: spacing.sm },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap' },
+  heading: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  title: { color: colors.charcoal, fontWeight: '800' },
+  addButton: { minHeight: controlHeights.standard },
+  gallery: { gap: spacing.md, paddingBottom: spacing.xxs },
+  photoWrap: { width: 150, gap: spacing.xxs, alignItems: 'center' },
+  photo: { width: 150, height: 110, borderRadius: radii.md, backgroundColor: colors.surfaceStrong },
+  empty: { minHeight: 72, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border, borderRadius: radii.md, backgroundColor: colors.surfaceSoft, padding: spacing.lg, justifyContent: 'center', alignItems: 'center' },
+  muted: { color: colors.muted, lineHeight: 20 },
 });

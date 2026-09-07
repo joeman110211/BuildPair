@@ -3,7 +3,7 @@ import type { PropsWithChildren, ReactNode } from 'react';
 import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { ActivityIndicator, Button, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors } from '@/constants/theme';
+import { colors, layout, radii, spacing } from '@/constants/theme';
 
 type ScreenProps = PropsWithChildren<{
   title?: string;
@@ -19,6 +19,7 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
   const canGoBack = router.canGoBack();
   const showBack = canGoBack || Boolean(backHref);
   const footerInScroll = Boolean(footer && scroll && width < 900);
+  const contentPadding = width < 520 ? styles.contentMobile : width < 900 ? styles.contentTablet : styles.contentDesktop;
 
   function goBack() {
     if (canGoBack) {
@@ -29,7 +30,7 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
   }
 
   const content = (
-    <View style={styles.content}>
+    <View style={[styles.content, contentPadding]}>
       {showBack ? <View style={styles.backRow}><Button icon="arrow-left" mode="text" compact onPress={goBack}>Back</Button></View> : null}
       {title || subtitle ? <View style={styles.headingBlock}>
         {title ? <Text variant="headlineMedium" style={styles.title}>{title}</Text> : null}
@@ -48,7 +49,7 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
     {scroll ? <ScrollView
       style={[styles.scrollView, webScrollStyle]}
       contentContainerStyle={[styles.scroll, footer && !footerInScroll ? styles.scrollWithFooter : null]}
-      keyboardShouldPersistTaps="always"
+      keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
       nestedScrollEnabled
       contentInsetAdjustmentBehavior="automatic"
@@ -59,31 +60,36 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
 }
 
 export function LoadingScreen({ label = 'Loading…' }: { label?: string }) {
-  return <Screen scroll={false}><View style={styles.loading}><ActivityIndicator size="large" /><Text style={styles.subtitle}>{label}</Text></View></Screen>;
+  return <Screen scroll={false}><View style={styles.loading}><ActivityIndicator size="large" /><Text style={styles.loadingLabel}>{label}</Text></View></Screen>;
 }
 
 export function EmptyState({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
-  return <View style={styles.empty}><View style={styles.emptyIcon}><Text style={styles.emptyIconText}>BP</Text></View><Text variant="titleLarge" style={styles.emptyTitle}>{title}</Text><Text style={[styles.subtitle, styles.emptyBody]}>{body}</Text>{action}</View>;
+  return <View style={styles.empty}><View style={styles.emptyIcon}><Text style={styles.emptyIconText}>BP</Text></View><Text variant="titleLarge" style={styles.emptyTitle}>{title}</Text><Text style={[styles.subtitle, styles.emptyBody]}>{body}</Text>{action ? <View style={styles.emptyAction}>{action}</View> : null}</View>;
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background, minHeight: 0 },
   scrollView: { flex: 1, minHeight: 0 },
-  scroll: { flexGrow: 1, paddingBottom: 64 },
-  scrollWithFooter: { paddingBottom: 28 },
+  scroll: { flexGrow: 1, paddingBottom: 72 },
+  scrollWithFooter: { paddingBottom: spacing.xxxl },
   staticBody: { flex: 1, minHeight: 0 },
-  content: { width: '100%', maxWidth: 1200, alignSelf: 'center', paddingHorizontal: 18, paddingTop: 18, paddingBottom: 30, gap: 20 },
-  backRow: { alignSelf: 'flex-start', marginBottom: -8 },
-  headingBlock: { gap: 8, paddingHorizontal: 2 },
-  title: { color: colors.charcoal, fontWeight: '900', letterSpacing: -0.7 },
-  subtitle: { color: colors.muted, lineHeight: 24 },
-  inlineFooter: { width: '100%', borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surfaceRaised, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 12, marginTop: 2, marginBottom: 24 },
-  footerShell: { width: '100%', flexShrink: 0, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surfaceRaised, paddingHorizontal: 18, paddingVertical: 10 },
-  footerContent: { width: '100%', maxWidth: 1200, alignSelf: 'center' },
-  loading: { flex: 1, minHeight: 420, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  empty: { paddingVertical: 38, paddingHorizontal: 26, borderWidth: 1, borderColor: colors.border, borderRadius: 26, backgroundColor: colors.surfaceRaised, alignItems: 'center', gap: 10 },
-  emptyIcon: { width: 50, height: 50, borderRadius: 17, backgroundColor: colors.charcoal, alignItems: 'center', justifyContent: 'center' },
+  content: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', paddingTop: spacing.xxl, paddingBottom: spacing.huge, gap: spacing.xxl },
+  contentMobile: { paddingHorizontal: spacing.lg },
+  contentTablet: { paddingHorizontal: spacing.xxl },
+  contentDesktop: { paddingHorizontal: spacing.xxxl },
+  backRow: { alignSelf: 'flex-start', marginBottom: -spacing.md },
+  headingBlock: { width: '100%', maxWidth: layout.readingMaxWidth, alignSelf: 'center', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.xs, paddingVertical: spacing.xxs },
+  title: { color: colors.charcoal, fontWeight: '900', letterSpacing: -0.7, textAlign: 'center' },
+  subtitle: { color: colors.muted, lineHeight: 24, textAlign: 'center' },
+  inlineFooter: { width: '100%', borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, paddingHorizontal: spacing.md, paddingVertical: spacing.md, marginTop: spacing.xs, marginBottom: 78 },
+  footerShell: { width: '100%', flexShrink: 0, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surfaceRaised, paddingHorizontal: spacing.xxl, paddingVertical: spacing.md },
+  footerContent: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center' },
+  loading: { flex: 1, minHeight: 420, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+  loadingLabel: { color: colors.muted, lineHeight: 24, textAlign: 'center' },
+  empty: { paddingVertical: spacing.xxxl, paddingHorizontal: spacing.xxl, borderWidth: 1, borderColor: colors.border, borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, alignItems: 'center', gap: spacing.md },
+  emptyIcon: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: colors.charcoal, alignItems: 'center', justifyContent: 'center' },
   emptyIconText: { color: colors.secondary, fontWeight: '900' },
   emptyTitle: { fontWeight: '800', color: colors.charcoal, textAlign: 'center' },
-  emptyBody: { maxWidth: 500, textAlign: 'center' },
+  emptyBody: { maxWidth: 520, textAlign: 'center' },
+  emptyAction: { marginTop: spacing.xs, alignItems: 'center' },
 });
