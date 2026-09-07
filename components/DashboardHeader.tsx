@@ -25,6 +25,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
   const modeAction = otherEnabled ? `Switch to ${otherLabel}` : `Add ${otherLabel}`;
   const messagesHref = (currentMode === 'customer' ? '/customer/messages' : '/trader/messages') as Href;
   const notificationsHref = (currentMode === 'customer' ? '/customer/notifications' : '/trader/notifications') as Href;
+  const settingsHref = (currentMode === 'customer' ? '/customer/settings' : '/trader/settings') as Href;
   const compact = width < 900;
 
   const go = (href: Href) => {
@@ -56,32 +57,36 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
 
   const doSignOut = () => {
     setMenuOpen(false);
-    signOut(() => router.replace('/auth/account'));
+    signOut(() => router.replace('/'));
   };
 
   return <View style={styles.header}>
-    <Link href={home} asChild><Pressable style={styles.brandButton} accessibilityLabel="BuildPair home"><BuildPairLogo compact /></Pressable></Link>
+    <Link href="/" asChild><Pressable style={styles.brandButton} accessibilityLabel="BuildPair website home"><BuildPairLogo compact /></Pressable></Link>
     {compact ? <Menu
       visible={menuOpen}
       onDismiss={() => setMenuOpen(false)}
       anchor={<Button mode="outlined" compact contentStyle={styles.menuButtonContent} onPress={() => setMenuOpen((value) => !value)}>Account menu</Button>}
       contentStyle={styles.menuContent}
     >
+      <Menu.Item title="Website home" onPress={() => go('/')} />
+      <Menu.Item title="Advice Hub" onPress={() => go('/(public)/advice')} />
+      <Menu.Item title="Find Trades" onPress={() => go('/(public)/directory')} />
+      <Divider />
       <Menu.Item title="Notifications" onPress={() => go(notificationsHref)} />
       <Menu.Item title="Messages" onPress={() => go(messagesHref)} />
-      <Menu.Item title="Settings" onPress={() => go('/settings')} />
+      <Menu.Item title="Account & security" onPress={() => go(settingsHref)} />
       <Divider />
       <Menu.Item title={modeAction} disabled={switchingMode} onPress={() => void changeMode()} />
-      {user?.isAdmin ? <Menu.Item title="Owner console" onPress={() => go('/admin')} /> : null}
       <Divider />
       <Menu.Item title="Sign out" onPress={doSignOut} />
     </Menu> : <View style={styles.actions}>
+      <Link href="/" asChild><Button textColor={colors.charcoalSoft}>Website Home</Button></Link>
+      <Link href="/(public)/advice" asChild><Button textColor={colors.charcoalSoft}>Advice Hub</Button></Link>
       <Link href="/(public)/directory" asChild><Button textColor={colors.charcoalSoft}>Find Trades</Button></Link>
       <Link href={messagesHref} asChild><Button textColor={colors.charcoalSoft}>Messages</Button></Link>
       <Button textColor={colors.charcoalSoft} onPress={() => router.push(notificationsHref)}>Notifications</Button>
-      <Button mode="outlined" onPress={() => router.push('/settings')}>Settings</Button>
+      <Button mode="outlined" onPress={() => router.push(settingsHref)}>Account</Button>
       <Button compact mode={otherEnabled ? 'text' : 'outlined'} disabled={switchingMode} loading={switchingMode} onPress={() => void changeMode()}>{modeAction}</Button>
-      {user?.isAdmin ? <Link href="/admin" asChild><Button>Owner console</Button></Link> : null}
       <Button compact textColor={colors.muted} onPress={doSignOut}>Sign out</Button>
     </View>}
   </View>;

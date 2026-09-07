@@ -9,6 +9,8 @@ const stateFile = path.join(process.cwd(), 'playwright', '.e2e-users.json');
 const publicRoutes = [
   '/',
   '/about',
+  '/advice',
+  '/building-regulations',
   '/contact',
   '/cookies',
   '/directory',
@@ -18,9 +20,13 @@ const publicRoutes = [
   '/for-tradespeople',
   '/how-it-works',
   '/jobs',
+  '/marketplace-standards',
+  '/pricing',
   '/privacy',
+  '/report',
   '/status',
   '/terms',
+  '/trust-safety',
   '/auth/account',
   '/auth/sign-in?mode=customer',
   '/auth/sign-in?mode=trader',
@@ -28,6 +34,15 @@ const publicRoutes = [
   '/auth/sign-up?mode=trader',
   '/auth/forgot-password?mode=customer',
   '/auth/forgot-password?mode=trader',
+];
+
+const signedInPublicRoutes = [
+  '/',
+  '/advice',
+  '/directory',
+  '/how-it-works',
+  '/pricing',
+  '/trust-safety',
 ];
 
 const homeownerRoutes = [
@@ -38,6 +53,7 @@ const homeownerRoutes = [
   '/customer/notifications',
   '/customer/profile',
   '/customer/saved-trades',
+  '/customer/settings',
 ];
 
 const tradespersonRoutes = [
@@ -52,6 +68,7 @@ const tradespersonRoutes = [
   '/trader/onboarding',
   '/trader/profile',
   '/trader/saved-searches',
+  '/trader/settings',
   '/trader/stories',
   '/trader/subscription',
   '/trader/trust',
@@ -104,6 +121,20 @@ test('every public and authentication surface remains routable', async ({ page }
   }
 });
 
+test('a signed-in homeowner can still use the public BuildPair website', async ({ browser }) => {
+  const state = JSON.parse(await fs.readFile(stateFile, 'utf8'));
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  try {
+    await signIn(page, state.customerEmail, 'customer');
+    for (const route of signedInPublicRoutes) {
+      await test.step(`signed-in public route ${route}`, async () => assertHealthyRoute(page, route, route));
+    }
+  } finally {
+    await context.close();
+  }
+});
+
 test('every homeowner surface opens for a real homeowner session', async ({ browser }) => {
   const state = JSON.parse(await fs.readFile(stateFile, 'utf8'));
   const context = await browser.newContext();
@@ -113,6 +144,7 @@ test('every homeowner surface opens for a real homeowner session', async ({ brow
     for (const route of homeownerRoutes) {
       await test.step(`homeowner route ${route}`, async () => assertHealthyRoute(page, route, route));
     }
+    await expect(page.getByText(/Owner console/i)).toHaveCount(0);
   } finally {
     await context.close();
   }
@@ -127,6 +159,7 @@ test('every tradesperson surface opens for a real tradesperson session', async (
     for (const route of tradespersonRoutes) {
       await test.step(`tradesperson route ${route}`, async () => assertHealthyRoute(page, route, route));
     }
+    await expect(page.getByText(/Owner console/i)).toHaveCount(0);
   } finally {
     await context.close();
   }

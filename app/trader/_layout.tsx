@@ -11,6 +11,7 @@ export default function TraderLayout() {
     <Stack.Screen name="my-jobs" options={{ headerShown: false }} />
     <Stack.Screen name="profile" options={{ headerShown: false }} />
     <Stack.Screen name="notifications" options={{ headerShown: false }} />
+    <Stack.Screen name="settings" options={{ headerShown: false }} />
     <Stack.Screen name="trust" options={{ headerShown: false }} />
     <Stack.Screen name="analytics" options={{ headerShown: false }} />
     <Stack.Screen name="saved-searches" options={{ headerShown: false }} />

@@ -13,7 +13,7 @@ import { parseEnv } from 'node:util';
 // exist, which meant stale Clerk/DB credentials could survive even after
 // .env.local was corrected. Treat BuildPair's local env file as authoritative
 // for application configuration while preserving the few runtime values the
-// deploy script intentionally injects for the staging process.
+// deploy script intentionally injects for the production process.
 const localEnvFile = path.resolve(process.cwd(), '.env.local');
 const fallbackEnvFile = path.resolve(process.cwd(), '.env');
 const runtimeOverrides = new Set([
@@ -55,6 +55,7 @@ const PORT = Number(process.env.PORT || 3000);
 const CLIENT_BUILD_DIR = path.resolve(process.cwd(), 'dist/client');
 const SERVER_BUILD_DIR = path.resolve(process.cwd(), 'dist/server');
 const NOINDEX = /^(1|true|yes)$/i.test(process.env.BUILDPAIR_NOINDEX || '');
+const ADMIN_HOST = String(process.env.BUILDPAIR_ADMIN_HOST || 'admin.buildpair.co.uk').trim().toLowerCase();
 
 const expoHandler = createRequestHandler({
   build: SERVER_BUILD_DIR,
@@ -86,6 +87,79 @@ function applySecurityHeaders(res) {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'microphone=(), geolocation=(self), payment=(self)');
   if (NOINDEX) res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+}
+
+function requestHostname(req) {
+  const forwarded = Array.isArray(req.headers['x-forwarded-host'])
+    ? req.headers['x-forwarded-host'][0]
+    : req.headers['x-forwarded-host'];
+  const raw = String(forwarded || req.headers.host || '').split(',')[0].trim().toLowerCase();
+  return raw.replace(/:\d+$/, '');
+}
+
+function requestPathname(req) {
+  return String(req.url || '/').split('?')[0] || '/';
+}
+
+function isAdminSurfacePath(pathName) {
+  return pathName === '/admin'
+    || pathName === '/admin.html'
+    || pathName.startsWith('/admin/')
+    || pathName === '/api/admin'
+    || pathName.startsWith('/api/admin/');
+}
+
+function sendNotFound(res) {
+  res.statusCode = 404;
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.end('Not Found');
+}
+
+function handleAdminHostRouting(req, res) {
+  const host = requestHostname(req);
+  const pathName = requestPathname(req);
+  const onAdminHost = host === ADMIN_HOST;
+
+  // The owner console is deliberately absent from the customer-facing website,
+  // even though both hostnames are served by the same PM2 process.
+  if (!onAdminHost && isAdminSurfacePath(pathName)) {
+    sendNotFound(res);
+    return true;
+  }
+
+  if (!onAdminHost) return false;
+
+  // Admin pages should never be indexed, independently of the public site's SEO setting.
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+
+  if (pathName === '/') {
+    res.statusCode = 302;
+    res.setHeader('Location', '/admin');
+    res.end();
+    return true;
+  }
+
+  const allowed = isAdminSurfacePath(pathName)
+    || pathName.startsWith('/auth/')
+    || pathName === '/api/me'
+    || pathName === '/api/client-config'
+    || pathName === '/api/presence'
+    || pathName === '/api/health'
+    || pathName === '/api/readiness'
+    || pathName.startsWith('/_expo/')
+    || pathName.startsWith('/assets/')
+    || pathName.startsWith('/icons/')
+    || pathName === '/favicon.png'
+    || pathName === '/favicon.svg'
+    || pathName === '/manifest.webmanifest'
+    || pathName === '/sw.js';
+
+  if (!allowed) {
+    sendNotFound(res);
+    return true;
+  }
+
+  return false;
 }
 
 function safeCandidates(requestPath) {
@@ -160,7 +234,6 @@ async function serveStatic(req, res) {
   return true;
 }
 
-
 function requestWantsHtml(req) {
   const pathName = String(req.url || '/').split('?')[0];
   if (pathName.startsWith('/api/')) return false;
@@ -187,6 +260,7 @@ function sendServerError(req, res) {
 const server = http.createServer(async (req, res) => {
   try {
     applySecurityHeaders(res);
+    if (handleAdminHostRouting(req, res)) return;
 
     if (await serveStatic(req, res)) return;
 
