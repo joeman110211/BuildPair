@@ -69,6 +69,12 @@ export default defineConfig({
       dependencies: ['setup'],
     },
     {
+      name: 'desktop-abuse-security',
+      testMatch: /abuse-security\.spec\.mjs/,
+      use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
+    },
+    {
       name: 'desktop-dual-mode',
       testMatch: /dual-mode\.spec\.mjs/,
       use: { ...devices['Desktop Chrome'] },
