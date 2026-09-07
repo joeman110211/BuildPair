@@ -13,7 +13,8 @@ export function PresenceHeartbeat() {
     let cancelled = false;
 
     const ping = async () => {
-      if (cancelled || AppState.currentState !== 'active') return;
+      if (cancelled) return;
+      if (Platform.OS !== 'web' && AppState.currentState !== 'active') return;
       try {
         await apiFetch('/api/presence', {
           method: 'POST',
