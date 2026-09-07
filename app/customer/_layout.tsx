@@ -1,6 +1,5 @@
 import { Stack } from 'expo-router';
 import { View } from 'react-native';
-import { AppBottomNav } from '@/components/AppBottomNav';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { RoleGate } from '@/components/RoleGate';
 
@@ -17,5 +16,5 @@ export default function CustomerLayout() {
     <Stack.Screen name="compare/[jobId]" options={{ title: 'Compare quotes' }} />
     <Stack.Screen name="messages" options={{ headerShown: false }} />
     <Stack.Screen name="messages/[id]" options={{ title: 'Conversation' }} />
-  </Stack><AppBottomNav role="customer" /></View></RoleGate>;
+  </Stack></View></RoleGate>;
 }
