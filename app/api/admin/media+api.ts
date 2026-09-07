@@ -36,6 +36,20 @@ export async function GET(request: Request) {
         WHERE v.url IS NOT NULL AND v.url <> ''
 
         UNION ALL
+        SELECT ('before_after_' || v.asset_type)::text, tp.id::text,
+               coalesce(project.item->>'caption', tp.business_name)::text,
+               u.id::text, u.email::text, v.url::text, s.updated_at
+        FROM trader_profile_showcase s
+        JOIN trader_profiles tp ON tp.user_id = s.user_id
+        JOIN users u ON u.id = s.user_id
+        CROSS JOIN LATERAL jsonb_array_elements(coalesce(s.before_after_projects, '[]'::jsonb)) AS project(item)
+        CROSS JOIN LATERAL (VALUES
+          ('before', project.item->>'before'),
+          ('after', project.item->>'after')
+        ) AS v(asset_type, url)
+        WHERE v.url IS NOT NULL AND v.url <> ''
+
+        UNION ALL
         SELECT 'story_before', st.id::text, st.title::text, u.id::text, u.email::text, p.url::text, st.created_at
         FROM trader_stories st
         JOIN users u ON u.id = st.trader_id
