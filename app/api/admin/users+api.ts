@@ -240,7 +240,7 @@ export async function PATCH(request: Request) {
     const target = rows[0];
     if (!target || target.isDeleted) throw new HttpError(404, 'Active BuildPair account not found');
 
-    let actionType = payload.action;
+    let actionType: string = payload.action;
     const details: Record<string, unknown> = { reason: payload.reason };
 
     if (payload.action === 'grant_complimentary') {
