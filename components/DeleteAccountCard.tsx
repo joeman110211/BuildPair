@@ -32,7 +32,7 @@ export function DeleteAccountCard() {
   return <AppCard style={styles.card}>
     <Text variant="titleLarge" style={styles.title}>Delete account</Text>
     <Text style={styles.body}>Permanently remove your BuildPair login and scrub personal marketplace data. This cannot be undone.</Text>
-    <TextInput mode="outlined" label="Type DELETE MY ACCOUNT" value={confirmation} onChangeText={setConfirmation} autoCapitalize="characters" />
+    <TextInput mode="outlined" label="Type DELETE MY ACCOUNT" accessibilityLabel="Type DELETE MY ACCOUNT" value={confirmation} onChangeText={setConfirmation} autoCapitalize="characters" />
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
     <Button mode="outlined" textColor={colors.danger} loading={busy} disabled={busy || confirmation !== 'DELETE MY ACCOUNT'} onPress={() => void remove()}>Permanently delete account</Button>
   </AppCard>;
