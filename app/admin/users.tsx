@@ -162,7 +162,7 @@ export default function UserControlCentre() {
     <AppCard>
       <TextInput mode="outlined" label="Search name, email, business or user ID" value={search} onChangeText={setSearch} left={<TextInput.Icon icon="magnify" />} />
       <View style={styles.filters}>
-        {(['all', 'homeowners', 'trades', 'suspended', 'removed'] as Filter[]).map((value) => <Chip key={value} selected={filter === value} onPress={() => setFilter(value)}>{value[0].toUpperCase() + value.slice(1)}</Chip>)}
+        {(['all', 'homeowners', 'trades', 'suspended', 'removed'] as Filter[]).map((value) => <Chip key={value} selected={filter === value} onPress={() => setFilter(value)}>{value.charAt(0).toUpperCase() + value.slice(1)}</Chip>)}
       </View>
       <Text style={styles.muted}>{visible.length} shown · {users.length} total account record{users.length === 1 ? '' : 's'}</Text>
     </AppCard>
