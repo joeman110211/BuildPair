@@ -88,10 +88,11 @@ export function TradeCategorySelector({
               accessibilityState={{ checked: selected, disabled: categoryDisabled }}
               onPress={() => toggleCategory(category)}
               disabled={categoryDisabled}
-              style={styles.selectArea}
+              hitSlop={4}
+              style={({ pressed }) => [styles.selectArea, pressed && !categoryDisabled ? styles.pressed : null]}
             >
-              <Checkbox status={selected ? 'checked' : 'unchecked'} disabled={categoryDisabled} />
-              <View style={styles.categoryText}>
+              <View pointerEvents="none"><Checkbox status={selected ? 'checked' : 'unchecked'} disabled={categoryDisabled} /></View>
+              <View style={styles.categoryText} pointerEvents="none">
                 <Text variant="titleMedium" style={[styles.categoryTitle, categoryDisabled && !selected && styles.disabledText]}>{category}</Text>
                 <Text style={styles.muted}>{selected ? `${services.length} service${services.length === 1 ? '' : 's'} selected` : categoryDisabled && maxReached ? 'Plan category limit reached' : 'Tap the box to add this trade'}</Text>
               </View>
@@ -113,10 +114,11 @@ export function TradeCategorySelector({
                   accessibilityState={{ checked, disabled: !selected }}
                   disabled={!selected}
                   onPress={() => toggleService(category, service)}
-                  style={[styles.service, checked && styles.serviceSelected, !selected && styles.serviceDisabled]}
+                  hitSlop={2}
+                  style={({ pressed }) => [styles.service, checked && styles.serviceSelected, !selected && styles.serviceDisabled, pressed && selected ? styles.pressed : null]}
                 >
-                  <Checkbox status={checked ? 'checked' : 'unchecked'} disabled={!selected} />
-                  <Text style={[styles.serviceText, !selected && styles.disabledText]}>{service}</Text>
+                  <View pointerEvents="none"><Checkbox status={checked ? 'checked' : 'unchecked'} disabled={!selected} /></View>
+                  <Text pointerEvents="none" style={[styles.serviceText, !selected && styles.disabledText]}>{service}</Text>
                 </Pressable>;
               })}
             </View>
@@ -144,7 +146,8 @@ const styles = StyleSheet.create({
   card: { borderWidth: 1, borderColor: colors.border, borderRadius: 18, backgroundColor: colors.surfaceRaised, overflow: 'hidden' },
   cardSelected: { borderColor: colors.primary, backgroundColor: '#FFFBF8' },
   categoryRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 7 },
-  selectArea: { flex: 1, minWidth: 200, flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3 },
+  selectArea: { flex: 1, minWidth: 200, flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, borderRadius: 12 },
+  pressed: { opacity: 0.72 },
   categoryText: { flex: 1, gap: 1 },
   categoryTitle: { color: colors.charcoal, fontWeight: '800' },
   expandButton: { paddingHorizontal: 10, paddingVertical: 12, borderRadius: 12 },
