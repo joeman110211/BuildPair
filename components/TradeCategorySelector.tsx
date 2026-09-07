@@ -84,6 +84,7 @@ export function TradeCategorySelector({
           <View style={styles.categoryRow}>
             <Pressable
               accessibilityRole="checkbox"
+              accessibilityLabel={category}
               accessibilityState={{ checked: selected, disabled: categoryDisabled }}
               onPress={() => toggleCategory(category)}
               disabled={categoryDisabled}
@@ -95,7 +96,7 @@ export function TradeCategorySelector({
                 <Text style={styles.muted}>{selected ? `${services.length} service${services.length === 1 ? '' : 's'} selected` : categoryDisabled && maxReached ? 'Plan category limit reached' : 'Tap the box to add this trade'}</Text>
               </View>
             </Pressable>
-            <Pressable accessibilityRole="button" onPress={() => setExpanded(open ? null : category)} style={styles.expandButton}>
+            <Pressable accessibilityRole="button" accessibilityLabel={`${open ? 'Hide' : 'Show'} ${category} services`} onPress={() => setExpanded(open ? null : category)} style={styles.expandButton}>
               <Text style={styles.expandText}>{open ? 'Hide ▲' : 'Services ▼'}</Text>
             </Pressable>
           </View>
@@ -108,6 +109,7 @@ export function TradeCategorySelector({
                 return <Pressable
                   key={service}
                   accessibilityRole="checkbox"
+                  accessibilityLabel={`${category}: ${service}`}
                   accessibilityState={{ checked, disabled: !selected }}
                   disabled={!selected}
                   onPress={() => toggleService(category, service)}
