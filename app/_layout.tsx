@@ -7,18 +7,20 @@ import { StatusBar } from 'expo-status-bar';
 // eslint-disable-next-line import/no-unresolved
 import { AppStripeProvider } from '@/components/AppStripeProvider';
 import { PaperIcon } from '@/components/PaperIcon';
+import { PresenceHeartbeat } from '@/components/PresenceHeartbeat';
 import { colors, paperTheme } from '@/constants/theme';
 import { AuthAvailabilityProvider } from '@/lib/auth-availability';
 import { tokenCache } from '@/lib/token-cache';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-function AppShell() {
+function AppShell({ trackPresence = false }: { trackPresence?: boolean }) {
   return (
     <SafeAreaProvider>
       <PaperProvider theme={paperTheme} settings={{ icon: PaperIcon }}>
         <AppStripeProvider>
           <StatusBar style="dark" />
+          {trackPresence ? <PresenceHeartbeat /> : null}
           <Stack screenOptions={{ headerTintColor: colors.primary, headerShadowVisible: false, contentStyle: { backgroundColor: colors.background } }}>
             <Stack.Screen name="(public)" options={{ headerShown: false }} />
             <Stack.Screen name="auth" options={{ headerShown: false }} />
@@ -46,7 +48,7 @@ export default function RootLayout() {
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <AuthAvailabilityProvider value>
         <ClerkLoaded>
-          <AppShell />
+          <AppShell trackPresence />
         </ClerkLoaded>
       </AuthAvailabilityProvider>
     </ClerkProvider>
