@@ -109,7 +109,7 @@ export function TradeCategorySelector({
                 return <Pressable
                   key={service}
                   accessibilityRole="checkbox"
-                  accessibilityLabel={`${category}: ${service}`}
+                  accessibilityLabel={service}
                   accessibilityState={{ checked, disabled: !selected }}
                   disabled={!selected}
                   onPress={() => toggleService(category, service)}
