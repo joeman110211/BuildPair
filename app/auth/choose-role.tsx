@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Button, HelperText, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
+import { TRADE_CATEGORIES } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref, parseAccountMode } from '@/lib/account-mode';
@@ -13,10 +14,15 @@ import type { CurrentUser, UserRole } from '@/types';
 
 type ModeActivationResponse = CurrentUser & { wasEnabled?: boolean };
 
+function scalar(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 export default function ChooseRoleScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ mode?: string | string[] }>();
+  const params = useLocalSearchParams<{ mode?: string | string[]; trade?: string | string[] }>();
   const requestedMode = parseAccountMode(params.mode);
+  const requestedTrade = TRADE_CATEGORIES.find((trade) => trade === scalar(params.trade));
   const { getToken, isLoaded: authLoaded, isSignedIn } = useAuth();
   const { user, error: loadError, refresh } = useCurrentUser();
   const [role, setRole] = useState<UserRole | null>(requestedMode);
@@ -42,7 +48,7 @@ export default function ChooseRoleScreen() {
           : Boolean(user?.traderEnabled);
 
       if (selectedRole === 'trader' && !wasEnabled) {
-        router.replace('/trader/onboarding');
+        router.replace(requestedTrade ? `/trader/onboarding?trade=${encodeURIComponent(requestedTrade)}` : '/trader/onboarding');
       } else {
         router.replace(dashboardHref(selectedRole));
       }
