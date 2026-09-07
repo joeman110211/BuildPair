@@ -2,10 +2,10 @@ import { useClerk } from '@clerk/expo';
 import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Divider, Menu, Text } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
+import { CompactNavMenu, type CompactNavItem } from '@/components/CompactNavMenu';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref } from '@/lib/account-mode';
@@ -52,30 +52,25 @@ function HeaderBrand() {
 }
 
 function NavMenu({ dashboard, signedIn, onSignOut, preview = false }: { dashboard?: Href; signedIn?: boolean; onSignOut?: () => void; preview?: boolean }) {
-  const [open, setOpen] = useState(false);
   const router = useRouter();
-  const go = (href: Href) => { setOpen(false); router.push(href); };
+  const go = (href: Href) => router.push(href);
+  const items: CompactNavItem[] = [
+    ...NAV_ITEMS.map((item) => ({ label: item.label, onPress: () => go(item.href) })),
+    ...SUPPORT_ITEMS.map((item, index) => ({ label: item.label, dividerBefore: index === 0, onPress: () => go(item.href) })),
+    ...LEGAL_ITEMS.map((item, index) => ({ label: item.label, dividerBefore: index === 0, onPress: () => go(item.href) })),
+  ];
 
-  return <Menu
-    visible={open}
-    onDismiss={() => setOpen(false)}
-    anchor={<Button mode="outlined" contentStyle={styles.menuButtonContent} onPress={() => setOpen((value) => !value)} accessibilityLabel="Open navigation menu">Menu</Button>}
-    contentStyle={styles.menuContent}
-  >
-    {NAV_ITEMS.map((item) => <Menu.Item key={item.label} title={item.label} onPress={() => go(item.href)} />)}
-    <Divider />
-    {SUPPORT_ITEMS.map((item) => <Menu.Item key={item.label} title={item.label} onPress={() => go(item.href)} />)}
-    <Divider />
-    {LEGAL_ITEMS.map((item) => <Menu.Item key={item.label} title={item.label} onPress={() => go(item.href)} />)}
-    <Divider />
-    {preview ? <Menu.Item title="Sign in unavailable in public preview" disabled /> : signedIn && dashboard ? <>
-      <Menu.Item title="Dashboard" onPress={() => go(dashboard)} />
-      <Menu.Item title="Sign out" onPress={() => { setOpen(false); onSignOut?.(); }} />
-    </> : <>
-      <Menu.Item title="Sign in" onPress={() => go('/auth/account')} />
-      <Menu.Item title="Join BuildPair" onPress={() => go('/auth/account')} />
-    </>}
-  </Menu>;
+  if (preview) {
+    items.push({ label: 'Sign in unavailable in public preview', dividerBefore: true, disabled: true, onPress: () => undefined });
+  } else if (signedIn && dashboard) {
+    items.push({ label: 'Dashboard', dividerBefore: true, onPress: () => go(dashboard) });
+    items.push({ label: 'Sign out', onPress: () => onSignOut?.() });
+  } else {
+    items.push({ label: 'Sign in', dividerBefore: true, onPress: () => go('/auth/account') });
+    items.push({ label: 'Join BuildPair', onPress: () => go('/auth/account') });
+  }
+
+  return <CompactNavMenu items={items} accessibilityLabel="Menu" />;
 }
 
 function DesktopNav() {
@@ -113,9 +108,12 @@ function AuthenticatedHeader() {
   else if (user?.traderEnabled) mode = 'trader';
 
   const dashboard = (mode ? dashboardHref(mode) : '/auth/choose-role') as Href;
-  const doSignOut = () => signOut(() => router.replace('/'));
+  const doSignOut = async () => {
+    await signOut();
+    router.replace('/');
+  };
 
-  if (compact) return <CompactShell menu={<NavMenu dashboard={dashboard} signedIn={isSignedIn} onSignOut={doSignOut} />} />;
+  if (compact) return <CompactShell menu={<NavMenu dashboard={dashboard} signedIn={isSignedIn} onSignOut={() => void doSignOut()} />} />;
 
   return <View style={styles.header}>
     <HeaderBrand />
@@ -123,7 +121,7 @@ function AuthenticatedHeader() {
       <DesktopNav />
       {isSignedIn ? <>
         <Button mode="contained" contentStyle={styles.primaryAction} onPress={() => router.push(dashboard)}>Dashboard</Button>
-        <NavMenu dashboard={dashboard} signedIn onSignOut={doSignOut} />
+        <NavMenu dashboard={dashboard} signedIn onSignOut={() => void doSignOut()} />
       </> : <>
         <Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link>
         <Link href="/auth/account" asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join BuildPair</Button></Link>
@@ -159,18 +157,16 @@ const baseHeader = {
 };
 
 const styles = StyleSheet.create({
-  shell: { backgroundColor: 'rgba(255,255,255,0.985)', borderBottomWidth: 1, borderColor: colors.border, zIndex: 20, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
-  compactHeader: { ...baseHeader, paddingHorizontal: spacing.md },
+  shell: { backgroundColor: 'rgba(255,255,255,0.985)', borderBottomWidth: 1, borderColor: colors.border, zIndex: 200, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4, overflow: 'visible' },
+  compactHeader: { ...baseHeader, paddingHorizontal: spacing.md, zIndex: 200, overflow: 'visible' },
   header: { ...baseHeader, borderBottomWidth: 1, borderColor: colors.border, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1, zIndex: 20 },
   brandPressable: { minHeight: 56, justifyContent: 'center', paddingHorizontal: spacing.xxs },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs, justifyContent: 'flex-end' },
   desktopNav: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
   navButtonContent: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xxs },
   primaryAction: { minHeight: controlHeights.standard, paddingHorizontal: spacing.sm },
-  menuButtonContent: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xs },
   preview: { opacity: 0.62, marginLeft: spacing.xxs },
-  menuContent: { backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, minWidth: 285, paddingVertical: spacing.xs, borderWidth: 1, borderColor: colors.border },
-  quickNav: { maxHeight: 48, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5' },
+  quickNav: { maxHeight: 48, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5', zIndex: 1 },
   quickNavContent: { paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, gap: spacing.xxs, alignItems: 'center' },
   quickButton: { borderRadius: radii.pill },
   quickButtonContent: { minHeight: 36, paddingHorizontal: spacing.xxs },

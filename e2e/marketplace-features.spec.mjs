@@ -141,14 +141,14 @@ test('Starter tradesperson satellite features work while paid marketplace access
       expect(entries.some((item) => item.id === availabilityId)).toBe(true);
     });
 
-    await test.step('Tradesperson trust credential submission creates a visible pending record and notification', async () => {
+    await test.step('Tradesperson trust credential submission creates a visible submitted record and notification', async () => {
       const credential = await api(trader.token, '/api/credentials', {
         method: 'POST',
         body: JSON.stringify({ credentialType: 'public_liability', name: `E2E Public Liability ${runId}`, issuer: 'BuildPair Automated QA', referenceNumber: `QA-${runId}` }),
       });
-      expect(credential.status).toBe('pending');
+      expect(credential.status).toBe('submitted');
       const credentials = await api(trader.token, '/api/credentials');
-      expect(credentials.some((item) => item.id === credential.id)).toBe(true);
+      expect(credentials.some((item) => item.id === credential.id && item.status === 'submitted')).toBe(true);
       await assertPage(trader.page, '/trader/trust', 'Trust');
       const notifications = await api(trader.token, '/api/notifications');
       expect(notifications.some((item) => item.type === 'credential_submitted')).toBe(true);

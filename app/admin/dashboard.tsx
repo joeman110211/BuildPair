@@ -46,9 +46,10 @@ export default function AdminDashboard() {
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
   if (!data && !error) return <LoadingScreen label="Loading owner console…" />;
 
-  return <Screen title="BuildPair Owner Console" subtitle="Live operational view of accounts, marketplace activity, content and moderation while BuildPair is in active testing.">
+  return <Screen title="BuildPair Owner Console" subtitle="Live operational view of accounts, marketplace activity, content, moderation and the services BuildPair relies on.">
     <View style={styles.nav}>
-      <Link href="/admin/presence" asChild><Button mode="contained" icon="access-point">Live users</Button></Link>
+      <Link href="/admin/system" asChild><Button mode="contained" icon="heart-pulse">System health</Button></Link>
+      <Link href="/admin/presence" asChild><Button mode="outlined" icon="access-point">Live users</Button></Link>
       <Link href="/admin/users" asChild><Button mode="outlined" icon="account-group-outline">Users</Button></Link>
       <Link href="/admin/jobs" asChild><Button mode="outlined" icon="briefcase-outline">Jobs</Button></Link>
       <Link href="/admin/profiles" asChild><Button mode="outlined" icon="account-hard-hat-outline">Profiles</Button></Link>

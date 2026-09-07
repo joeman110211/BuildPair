@@ -23,7 +23,8 @@ export function DeleteAccountCard() {
         try {
           setBusy(true); setError('');
           await apiFetch('/api/me/delete', { method: 'POST', body: JSON.stringify({ confirmation }) }, getToken);
-          await signOut(() => router.replace('/'));
+          await signOut();
+          router.replace('/');
         } catch (e) { setError(errorMessage(e)); setBusy(false); }
       } },
     ]);

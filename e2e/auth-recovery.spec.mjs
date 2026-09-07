@@ -48,6 +48,14 @@ async function finishEmailSignInIfNeeded(page) {
   }
 }
 
+async function submitCurrentClerkStep(page) {
+  const root = page.locator('.cl-signIn-root');
+  const submit = root.locator('button[type="submit"]').first();
+  await expect(submit).toBeVisible({ timeout: 20_000 });
+  await expect(submit).toBeEnabled();
+  await submit.click();
+}
+
 test('a user can reset a forgotten password and sign in with the replacement password', async ({ page }) => {
   await registerCleanupEmail();
   await ensureRecoveryUser();
@@ -78,7 +86,7 @@ test('a user can reset a forgotten password and sign in with the replacement pas
   await page.goto(`${baseURL}/auth/sign-in?mode=customer`, { waitUntil: 'domcontentloaded' });
   await page.getByLabel('Email address').fill(email);
   await page.getByLabel('Password', { exact: true }).fill(replacementPassword);
-  await page.getByRole('button', { name: 'Sign in with email' }).click();
+  await submitCurrentClerkStep(page);
   await finishEmailSignInIfNeeded(page);
   await page.waitForURL(/\/(auth\/choose-role|customer\/dashboard)/, { timeout: 25_000 });
   await page.waitForFunction(() => Boolean(globalThis.Clerk?.session));
