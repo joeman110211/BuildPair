@@ -48,7 +48,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
       <Menu.Item title="Settings" onPress={() => go('/settings')} />
       <Divider />
       <Menu.Item title={modeAction} onPress={() => go(modeSetupHref(otherMode))} />
-      {user?.isAdmin ? <Menu.Item title="Moderation" onPress={() => go('/admin/moderation')} /> : null}
+      {user?.isAdmin ? <Menu.Item title="Admin control" onPress={() => go('/admin/users')} /> : null}
       <Divider />
       <Menu.Item title="Sign out" onPress={doSignOut} />
     </Menu> : <View style={styles.actions}>
@@ -57,7 +57,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
       <Button textColor={colors.charcoalSoft} onPress={() => router.push(notificationsHref)}>Notifications</Button>
       <Button mode="outlined" onPress={() => router.push('/settings')}>Settings</Button>
       <Link href={modeSetupHref(otherMode)} asChild><Button compact mode={otherEnabled ? 'text' : 'outlined'}>{modeAction}</Button></Link>
-      {user?.isAdmin ? <Link href="/admin/moderation" asChild><Button>Moderation</Button></Link> : null}
+      {user?.isAdmin ? <Link href="/admin/users" asChild><Button>Admin</Button></Link> : null}
       <Button compact textColor={colors.muted} onPress={doSignOut}>Sign out</Button>
     </View>}
   </View>;
