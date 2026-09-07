@@ -52,7 +52,19 @@ jobs:
             https://*) ;;
             *) echo "::error::api_url must start with https://"; exit 1 ;;
           esac
-          test -n "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" || { echo "::error::Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY GitHub secret"; exit 1; }
+
+      - name: Resolve Clerk client configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" ]; then
+            config=$(curl --fail --show-error --silent --retry 8 --retry-delay 3 "$EXPO_PUBLIC_ADMIN_API_URL/api/client-config")
+            clerk=$(printf '%s' "$config" | jq -r '.clerkPublishableKey // empty')
+            if [ -n "$clerk" ]; then
+              echo "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=$clerk" >> "$GITHUB_ENV"
+            fi
+          fi
+          test -n "${EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY:-$(grep '^EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=' "$GITHUB_ENV" 2>/dev/null | cut -d= -f2-)}" || { echo "::error::BuildPair client config did not provide a Clerk publishable key"; exit 1; }
 
       - name: Install admin app dependencies
         working-directory: admin-mobile
