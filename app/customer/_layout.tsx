@@ -11,6 +11,7 @@ export default function CustomerLayout() {
     <Stack.Screen name="profile" options={{ headerShown: false }} />
     <Stack.Screen name="saved-trades" options={{ headerShown: false }} />
     <Stack.Screen name="notifications" options={{ headerShown: false }} />
+    <Stack.Screen name="settings" options={{ headerShown: false }} />
     <Stack.Screen name="new-job" options={{ title: 'Post a job' }} />
     <Stack.Screen name="jobs/[id]" options={{ title: 'Job details' }} />
     <Stack.Screen name="compare/[jobId]" options={{ title: 'Compare quotes' }} />
