@@ -2,7 +2,7 @@ name: UI Evidence
 
 on:
   push:
-    branches: [feature/professional-ui-overhaul]
+    branches: [feature/professional-ui-overhaul, testing]
 
 permissions:
   contents: read
