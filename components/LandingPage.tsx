@@ -270,7 +270,11 @@ export default function LandingPage() {
     <View style={styles.trustBand}>
       <View style={[styles.section, styles.trustInner, isWide && styles.trustInnerWide]}>
         <View style={styles.trustCopy}>
-          <SectionHeading eyebrow="Trust & safety" title="Better signals, clearer records and human moderation." body="BuildPair is deliberately not built around the fantasy that a logo badge can make every home-improvement project safe." />
+          <View style={styles.sectionHeading}>
+            <Text style={styles.trustEyebrow}>TRUST & SAFETY</Text>
+            <Text variant="headlineMedium" style={styles.trustHeading}>Better signals, clearer records and human moderation.</Text>
+            <Text style={styles.trustBody}>BuildPair is deliberately not built around the fantasy that a logo badge can make every home-improvement project safe.</Text>
+          </View>
           {[
             'Credentials and review status can add useful context to a trade profile.',
             'Reviews can be tied back to genuine marketplace project activity.',
@@ -278,7 +282,7 @@ export default function LandingPage() {
             'Moderation is evidence-led, with human actions such as warnings, restrictions, suspensions, restoration and recorded reasons.',
             'Regulated and specialist work still requires the appropriate real-world checks.',
           ].map((item) => <View key={item} style={styles.trustRow}><View style={styles.trustTick}><Text style={styles.trustTickText}>✓</Text></View><Text style={styles.trustText}>{item}</Text></View>)}
-          <Link href="/(public)/trust-safety" asChild><Button mode="outlined">How BuildPair handles trust & safety</Button></Link>
+          <Link href="/(public)/trust-safety" asChild><Button mode="outlined" textColor="#FFFFFF">How BuildPair handles trust & safety</Button></Link>
         </View>
         <View style={styles.trustVisual}>
           <View style={styles.recordCard}><Text style={styles.recordEyebrow}>PROJECT RECORD</Text><Text variant="headlineSmall" style={styles.recordTitle}>What was agreed stays easier to find.</Text><Text style={styles.recordText}>Original job → quote → messages → variation → milestone → completion → review</Text></View>
@@ -370,7 +374,7 @@ const styles = StyleSheet.create({
   heroVisualWide: { flex: 0.9, minHeight: 520, flexBasis: 490 },
   heroImage: { flex: 1, minHeight: 330, justifyContent: 'flex-end', padding: 20, overflow: 'hidden' },
   heroImageRadius: { borderRadius: 30 },
-  heroImageShade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(14,30,43,0.32)', borderRadius: 30 },
+  heroImageShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(14,30,43,0.32)', borderRadius: 30 },
   imageCaption: { gap: 5, maxWidth: 500 },
   imageCaptionSmall: { color: '#FFD7BA', fontWeight: '900', fontSize: 11, letterSpacing: 1.2 },
   imageCaptionBig: { color: '#FFFFFF', fontSize: 21, lineHeight: 28, fontWeight: '900' },
@@ -442,6 +446,9 @@ const styles = StyleSheet.create({
   trustInner: { maxWidth: 1140 },
   trustInnerWide: { flexDirection: 'row', gap: 30, alignItems: 'center' },
   trustCopy: { flex: 1, gap: 10 },
+  trustEyebrow: { color: '#FFD7BA', fontWeight: '900', fontSize: 11, letterSpacing: 1.2 },
+  trustHeading: { color: '#FFFFFF', fontWeight: '900', letterSpacing: -0.5 },
+  trustBody: { color: '#DCE7EE', lineHeight: 24 },
   trustRow: { flexDirection: 'row', gap: 9, alignItems: 'flex-start' },
   trustTick: { width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   trustTickText: { color: '#FFD7BA', fontWeight: '900', fontSize: 11 },
