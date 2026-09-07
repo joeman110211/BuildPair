@@ -26,6 +26,12 @@ async function expectActionReachable(page, action, label) {
   expect(box?.y ?? -1, `${label}: action remains above the usable viewport after scrolling`).toBeGreaterThanOrEqual(-2);
 }
 
+async function expectMobileNav(page, labels) {
+  for (const label of labels) {
+    await expect(page.getByRole('button', { name: label, exact: true }).last()).toBeVisible();
+  }
+}
+
 async function getToken(page) {
   await page.waitForFunction(() => Boolean(globalThis.Clerk?.session));
   const token = await page.evaluate(() => globalThis.Clerk.session.getToken());
@@ -69,7 +75,7 @@ test('small Android public and auth surfaces fit without furniture-removal chaos
   await expectNoHorizontalOverflow(page, 'preview trader profile');
 });
 
-test('small Android trader forms keep primary actions reachable', async ({ page }) => {
+test('small Android trader forms keep primary actions and navigation reachable', async ({ page }) => {
   const state = JSON.parse(await fs.readFile(stateFile, 'utf8'));
   await page.goto('/');
   await clerk.signIn({ page, emailAddress: state.traderEmail });
@@ -81,20 +87,23 @@ test('small Android trader forms keep primary actions reachable', async ({ page 
   const titleBox = await page.getByText('Business Details', { exact: true }).first().boundingBox();
   expect(titleBox?.y ?? 9999, 'Trader onboarding starts too far below the top of a small phone').toBeLessThan(300);
   await expectActionReachable(page, page.getByRole('button', { name: 'Continue' }), 'trader onboarding');
+  await expectMobileNav(page, ['Home', 'Find Work', 'Jobs', 'Messages', 'Profile']);
   await expectNoHorizontalOverflow(page, 'trader onboarding');
 
   await page.goto('/trader/invoices/new');
   await expect(page.getByText('Create invoice', { exact: true }).first()).toBeVisible();
   await expectActionReachable(page, page.getByRole('button', { name: 'Save and send invoice' }), 'create invoice');
+  await expectMobileNav(page, ['Home', 'Find Work', 'Jobs', 'Messages', 'Profile']);
   await expectNoHorizontalOverflow(page, 'create invoice');
 
   await page.goto('/trader/quotes/new?jobId=mobile-layout-check');
   await expect(page.getByText('Create an itemised quote', { exact: true }).first()).toBeVisible();
   await expectActionReachable(page, page.getByRole('button', { name: 'Send Quote & Open Conversation' }), 'create quote');
+  await expectMobileNav(page, ['Home', 'Find Work', 'Jobs', 'Messages', 'Profile']);
   await expectNoHorizontalOverflow(page, 'create quote');
 });
 
-test('small Android post-a-job keeps Continue reachable', async ({ page }) => {
+test('small Android homeowner can post work and still browse the public website while signed in', async ({ page }) => {
   const state = JSON.parse(await fs.readFile(stateFile, 'utf8'));
   await page.goto('/');
   await clerk.signIn({ page, emailAddress: state.customerEmail });
@@ -104,5 +113,11 @@ test('small Android post-a-job keeps Continue reachable', async ({ page }) => {
   await page.goto('/customer/new-job');
   await expect(page.getByText('What do you need?', { exact: true }).first()).toBeVisible();
   await expectActionReachable(page, page.getByRole('button', { name: 'Continue' }), 'post a job');
+  await expectMobileNav(page, ['Home', 'Find Trades', 'Jobs', 'Messages', 'Profile']);
   await expectNoHorizontalOverflow(page, 'post a job');
+
+  await page.goto('/advice');
+  await expect(page.getByText(/Advice Hub/i).first()).toBeVisible();
+  await expectMobileNav(page, ['Home', 'Find Trades', 'Jobs', 'Messages', 'Profile']);
+  await expectNoHorizontalOverflow(page, 'signed-in advice hub');
 });
