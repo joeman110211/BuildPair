@@ -27,3 +27,24 @@ www.buildpair.co.uk {
     }
   }
 }
+
+admin.buildpair.co.uk {
+  encode zstd gzip
+
+  header {
+    Strict-Transport-Security "max-age=31536000"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    Permissions-Policy "camera=(), microphone=(), geolocation=(self)"
+    X-Robots-Tag "noindex, nofollow"
+    -Server
+  }
+
+  handle {
+    reverse_proxy app:3000 {
+      health_uri /api/health
+      health_interval 30s
+      health_timeout 5s
+    }
+  }
+}
