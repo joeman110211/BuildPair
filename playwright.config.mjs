@@ -75,6 +75,12 @@ export default defineConfig({
       dependencies: ['setup'],
     },
     {
+      name: 'desktop-job-draft-recovery',
+      testMatch: /job-draft-recovery\.spec\.mjs/,
+      use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
+    },
+    {
       name: 'desktop-dual-mode',
       testMatch: /dual-mode\.spec\.mjs/,
       use: { ...devices['Desktop Chrome'] },
