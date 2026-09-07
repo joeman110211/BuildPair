@@ -1,8 +1,9 @@
 import { useClerk } from '@clerk/expo';
 import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Divider, Menu, Text } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { colors } from '@/constants/theme';
@@ -20,6 +21,13 @@ const NAV_ITEMS: { label: string; href: Href }[] = [
   { label: 'For Trades', href: '/(public)/for-tradespeople' },
   { label: 'Trust & Safety', href: '/(public)/trust-safety' as Href },
   { label: 'About', href: '/(public)/about' },
+];
+
+const QUICK_NAV: { label: string; href: Href }[] = [
+  { label: 'Find Trades', href: '/(public)/directory' },
+  { label: 'Advice Hub', href: '/(public)/advice' as Href },
+  { label: 'Membership', href: '/(public)/pricing' as Href },
+  { label: 'How It Works', href: '/(public)/how-it-works' },
 ];
 
 const SUPPORT_ITEMS: { label: string; href: Href }[] = [
@@ -46,11 +54,7 @@ function HeaderBrand() {
 function NavMenu({ dashboard, signedIn, onSignOut, preview = false }: { dashboard?: Href; signedIn?: boolean; onSignOut?: () => void; preview?: boolean }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-
-  const go = (href: Href) => {
-    setOpen(false);
-    router.push(href);
-  };
+  const go = (href: Href) => { setOpen(false); router.push(href); };
 
   return <Menu
     visible={open}
@@ -80,6 +84,21 @@ function DesktopNav() {
   </View>;
 }
 
+function MobileQuickNav() {
+  return <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickNav} contentContainerStyle={styles.quickNavContent} accessibilityLabel="BuildPair quick navigation">
+    {QUICK_NAV.map((item, index) => <Link key={item.label} href={item.href} asChild>
+      <Button compact mode={index === 1 ? 'contained-tonal' : 'text'} textColor={index === 1 ? colors.primaryDark : colors.charcoalSoft} contentStyle={styles.quickButtonContent} style={styles.quickButton}>{item.label}</Button>
+    </Link>)}
+  </ScrollView>;
+}
+
+function CompactShell({ menu }: { menu: ReactNode }) {
+  return <View style={styles.shell}>
+    <View style={styles.compactHeader}><HeaderBrand />{menu}</View>
+    <MobileQuickNav />
+  </View>;
+}
+
 function AuthenticatedHeader() {
   const { width } = useWindowDimensions();
   const { user, isSignedIn } = useCurrentUser();
@@ -96,9 +115,11 @@ function AuthenticatedHeader() {
   const dashboard = (mode ? dashboardHref(mode) : '/auth/choose-role') as Href;
   const doSignOut = () => signOut(() => router.replace('/'));
 
+  if (compact) return <CompactShell menu={<NavMenu dashboard={dashboard} signedIn={isSignedIn} onSignOut={doSignOut} />} />;
+
   return <View style={styles.header}>
     <HeaderBrand />
-    {compact ? <NavMenu dashboard={dashboard} signedIn={isSignedIn} onSignOut={doSignOut} /> : <View style={styles.actions}>
+    <View style={styles.actions}>
       <DesktopNav />
       {isSignedIn ? <>
         <Button mode="contained" contentStyle={styles.primaryAction} onPress={() => router.push(dashboard)}>Dashboard</Button>
@@ -108,20 +129,18 @@ function AuthenticatedHeader() {
         <Link href="/auth/account" asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join BuildPair</Button></Link>
         <NavMenu />
       </>}
-    </View>}
+    </View>
   </View>;
 }
 
 function PreviewHeader() {
   const { width } = useWindowDimensions();
   const compact = width < 1040;
+  if (compact) return <CompactShell menu={<NavMenu preview />} />;
+
   return <View style={styles.header}>
     <HeaderBrand />
-    {compact ? <NavMenu preview /> : <View style={styles.actions}>
-      <DesktopNav />
-      <Text variant="bodySmall" style={styles.preview}>Public preview</Text>
-      <NavMenu preview />
-    </View>}
+    <View style={styles.actions}><DesktopNav /><Text variant="bodySmall" style={styles.preview}>Public preview</Text><NavMenu preview /></View>
   </View>;
 }
 
@@ -130,12 +149,27 @@ export function PublicHeader() {
   return authAvailable ? <AuthenticatedHeader /> : <PreviewHeader />;
 }
 
+const baseHeader = {
+  minHeight: 74,
+  paddingHorizontal: 18,
+  backgroundColor: 'rgba(255,255,255,0.985)',
+  flexDirection: 'row' as const,
+  justifyContent: 'space-between' as const,
+  alignItems: 'center' as const,
+};
+
 const styles = StyleSheet.create({
-  header: { minHeight: 74, paddingHorizontal: 18, borderBottomWidth: 1, borderColor: colors.border, backgroundColor: 'rgba(255,255,255,0.985)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', shadowColor: colors.charcoal, shadowOpacity: 0.035, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 2, zIndex: 20 },
+  shell: { backgroundColor: 'rgba(255,255,255,0.985)', borderBottomWidth: 1, borderColor: colors.border, zIndex: 20, shadowColor: colors.charcoal, shadowOpacity: 0.035, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 2 },
+  compactHeader: { ...baseHeader },
+  header: { ...baseHeader, borderBottomWidth: 1, borderColor: colors.border, shadowColor: colors.charcoal, shadowOpacity: 0.035, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 2, zIndex: 20 },
   brandPressable: { minHeight: 58, justifyContent: 'center', paddingHorizontal: 3 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 3, justifyContent: 'flex-end' },
   desktopNav: { flexDirection: 'row', alignItems: 'center', gap: 1 },
   primaryAction: { minHeight: 44, paddingHorizontal: 6 },
   preview: { opacity: 0.62, marginLeft: 4 },
   menuContent: { backgroundColor: colors.surfaceRaised, borderRadius: 20, minWidth: 285, paddingVertical: 7, borderWidth: 1, borderColor: colors.border },
+  quickNav: { maxHeight: 48, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5' },
+  quickNavContent: { paddingHorizontal: 10, paddingVertical: 5, gap: 2, alignItems: 'center' },
+  quickButton: { borderRadius: 999 },
+  quickButtonContent: { minHeight: 36, paddingHorizontal: 2 },
 });
