@@ -8,11 +8,13 @@ BuildPair's production stack is provider-neutral: one Linux host runs the websit
 
 - `https://www.buildpair.co.uk` is the canonical public address.
 - `https://buildpair.co.uk` redirects to `www`.
-- Caddy terminates HTTPS and renews certificates automatically.
+- `https://admin.buildpair.co.uk` is the dedicated owner/admin address and redirects its root to `/admin` inside the application.
+- The public `www` host deliberately does not expose `/admin` or `/api/admin/*`.
+- Caddy terminates HTTPS and renews certificates automatically for both the public and admin hostnames.
 - The Expo web application and API routes run in the `app` container on port 3000.
 - The application container is not exposed directly to the public internet.
-- `/downloads/*` is served directly by Caddy from the local `downloads/` directory.
-- Search-engine indexing is deliberately disabled during quiet launch with the `X-Robots-Tag: noindex, nofollow` response header. Remove that header only when BuildPair is deliberately ready for normal public discovery.
+- `/downloads/*` is served directly by Caddy from the local `downloads/` directory on the public host.
+- Search-engine indexing is deliberately disabled during quiet launch with the `X-Robots-Tag: noindex, nofollow` response header. The admin hostname must always remain `noindex, nofollow`.
 
 ## Recommended first public server
 
@@ -53,7 +55,7 @@ Do not keep production secrets in the Git repository or in unencrypted notes/fil
    chmod 600 /opt/buildpair/.env.production
    ```
 
-6. At the domain/DNS provider, point the required `@` / `www` records to the public environment.
+6. At the domain/DNS provider, point the required `@`, `www`, and `admin` records to the public environment. `admin.buildpair.co.uk` must resolve to the same Caddy endpoint unless the admin app is deliberately moved to a separate host later.
 7. Allow only the network ports required by the chosen deployment. For the supplied Caddy setup that normally means TCP 22, 80 and 443 plus UDP 443 for HTTP/3. Restrict SSH where practical.
 8. Run:
 
@@ -63,6 +65,8 @@ Do not keep production secrets in the Git repository or in unencrypted notes/fil
    ```
 
 Caddy requests public TLS certificates once DNS resolves to the server and the challenge ports are reachable.
+
+After deployment, check both `https://www.buildpair.co.uk/api/health` and `https://admin.buildpair.co.uk/`. The admin hostname should redirect to `/admin`, then require the dedicated administrator sign-in flow and an account with administrator access.
 
 ## Production environment values
 
@@ -77,6 +81,7 @@ At minimum, `.env.production` must contain the live values used by BuildPair, in
 - `RESEND_API_KEY`
 - Cloudinary credentials
 - `APP_URL=https://www.buildpair.co.uk`
+- `BUILDPAIR_ADMIN_HOST=admin.buildpair.co.uk`
 
 Keep `BUILDPAIR_PREVIEW_DATA_ENABLED=false` for a real public marketplace.
 
@@ -115,10 +120,8 @@ The script fast-forwards to the latest `main`, rebuilds the containers, restarts
 
 ## Going fully public
 
-Quiet-launch production deliberately prevents search-engine indexing. When BuildPair is ready for discovery, remove this line from `infra/production/Caddyfile` and redeploy:
+Quiet-launch production deliberately prevents search-engine indexing. When BuildPair is ready for discovery, remove the `X-Robots-Tag: noindex, nofollow` response header from the `www.buildpair.co.uk` block in `infra/production/Caddyfile` and redeploy.
 
-```text
-X-Robots-Tag "noindex, nofollow"
-```
+Do **not** remove the noindex header from `admin.buildpair.co.uk`.
 
 Then add normal SEO, sitemap and search-console work as a separate launch task.
