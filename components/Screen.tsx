@@ -43,11 +43,8 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
   const webScrollStyle = Platform.OS === 'web'
     ? ({ overflowY: 'auto', overscrollBehaviorY: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as never)
     : undefined;
-  const webViewportStyle = Platform.OS === 'web'
-    ? ({ minHeight: '100dvh', height: '100dvh' } as never)
-    : undefined;
 
-  return <SafeAreaView style={[styles.safe, webViewportStyle]}>
+  return <SafeAreaView style={styles.safe}>
     {scroll ? <ScrollView
       style={[styles.scrollView, webScrollStyle]}
       contentContainerStyle={[styles.scroll, footer && !footerInScroll ? styles.scrollWithFooter : null]}
