@@ -1,0 +1,24 @@
+{
+  "name": "buildpair-admin",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo/AppEntry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@clerk/expo": "^4.6.4",
+    "expo": "~57.0.19",
+    "expo-secure-store": "~57.0.3",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.4",
+    "typescript": "~6.0.3"
+  }
+}
