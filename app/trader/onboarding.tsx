@@ -366,7 +366,7 @@ export default function TraderOnboarding() {
     {step === 0 ? <AppCard>
       <Text variant="titleLarge" style={styles.title}>Tell us about your business</Text>
       <Text style={styles.muted}>Choose broad trade categories first, then expand each one and tick the services you actually offer. Services do not use extra plan slots.</Text>
-      <TextInput label="Business or trading name" value={businessName} onChangeText={setBusinessName} mode="outlined" />
+      <TextInput label="Business or trading name" accessibilityLabel="Business or trading name" value={businessName} onChangeText={setBusinessName} mode="outlined" />
 
       <Text variant="titleMedium" style={styles.title}>What work do you offer?</Text>
       <TradeCategorySelector
@@ -380,13 +380,13 @@ export default function TraderOnboarding() {
       {!everyCategoryHasService && tradeCategories.length ? <HelperText type="error">Choose at least one service inside each selected trade category.</HelperText> : null}
 
       <View style={styles.twoCol}>
-        <TextInput style={styles.flex} label="Years of experience" value={yearsExperience} onChangeText={setYearsExperience} mode="outlined" keyboardType="number-pad" />
-        <TextInput style={styles.flex} label="Year established" value={yearEstablished} onChangeText={setYearEstablished} mode="outlined" keyboardType="number-pad" />
+        <TextInput style={styles.flex} label="Years of experience" accessibilityLabel="Years of experience" value={yearsExperience} onChangeText={setYearsExperience} mode="outlined" keyboardType="number-pad" />
+        <TextInput style={styles.flex} label="Year established" accessibilityLabel="Year established" value={yearEstablished} onChangeText={setYearEstablished} mode="outlined" keyboardType="number-pad" />
       </View>
-      <TextInput label="Base postcode" value={postcode} onChangeText={setPostcode} mode="outlined" autoCapitalize="characters" placeholder="e.g. TW18 4AA" />
+      <TextInput label="Base postcode" accessibilityLabel="Base postcode" value={postcode} onChangeText={setPostcode} mode="outlined" autoCapitalize="characters" placeholder="e.g. SW1A 1AA" />
       <HelperText type="info">Used for local job matching. Your full postcode is never displayed publicly.</HelperText>
       <FormSelect label="Working radius (miles)" value={radius} options={RADIUS_OPTIONS} onChange={setRadius} />
-      <TextInput label="Other areas you cover" value={serviceAreasText} onChangeText={setServiceAreasText} mode="outlined" multiline placeholder="Staines, Egham, Chertsey, Windsor…" />
+      <TextInput label="Other areas you cover" accessibilityLabel="Other areas you cover" value={serviceAreasText} onChangeText={setServiceAreasText} mode="outlined" multiline placeholder="Staines, Egham, Chertsey, Windsor…" />
     </AppCard> : null}
 
     {step === 1 ? <>
@@ -398,7 +398,7 @@ export default function TraderOnboarding() {
       </AppCard>
       <AppCard>
         <Text variant="titleLarge" style={styles.title}>About your business</Text>
-        <TextInput label="Business bio" value={bio} onChangeText={setBio} mode="outlined" multiline numberOfLines={7} />
+        <TextInput label="Business bio" accessibilityLabel="Business bio" value={bio} onChangeText={setBio} mode="outlined" multiline numberOfLines={7} />
         <View style={styles.bioMeta}>
           <HelperText style={styles.helperFlex} type={bioLength > 0 && bioCharactersRemaining > 0 ? 'error' : 'info'}>
             Minimum {TRADER_BIO_MIN_LENGTH} characters required.{bioCharactersRemaining > 0 ? ` ${bioCharactersRemaining} more to go.` : ' Requirement met ✓'}
@@ -406,7 +406,7 @@ export default function TraderOnboarding() {
           <Text style={[styles.counter, bioLength >= TRADER_BIO_MIN_LENGTH && styles.counterOk]}>{bioLength} / {TRADER_BIO_MIN_LENGTH}</Text>
         </View>
         <Text style={styles.muted}>Explain what you specialise in, how you work and what customers can expect.</Text>
-        <TextInput label="Qualifications, cards and certificates (one per line)" value={qualificationsText} onChangeText={setQualificationsText} mode="outlined" multiline />
+        <TextInput label="Qualifications, cards and certificates (one per line)" accessibilityLabel="Qualifications, cards and certificates (one per line)" value={qualificationsText} onChangeText={setQualificationsText} mode="outlined" multiline />
         <Text variant="titleMedium" style={styles.title}>Registers & social links</Text>
         {([
           ['Gas Safe register URL', gasSafe, setGasSafe],
@@ -415,7 +415,7 @@ export default function TraderOnboarding() {
           ['Instagram URL', instagram, setInstagram],
           ['TikTok URL', tiktok, setTiktok],
           ['WhatsApp click-to-chat URL', whatsapp, setWhatsapp],
-        ] as const).map(([label, value, setter]) => <TextInput key={label} label={label} value={value} onChangeText={setter} mode="outlined" autoCapitalize="none" />)}
+        ] as const).map(([label, value, setter]) => <TextInput key={label} label={label} accessibilityLabel={label} value={value} onChangeText={setter} mode="outlined" autoCapitalize="none" />)}
       </AppCard>
     </> : null}
 
@@ -426,7 +426,7 @@ export default function TraderOnboarding() {
       <Text variant="titleMedium" style={styles.title}>Before & after projects</Text>
       <PhotoUploader kind="trader" photos={beforeDraft} onChange={setBeforeDraft} max={1} title="Before" buttonLabel="Add Before Photo" />
       <PhotoUploader kind="trader" photos={afterDraft} onChange={setAfterDraft} max={1} title="After" buttonLabel="Add After Photo" />
-      <TextInput label="Project caption (optional)" value={projectCaption} onChangeText={setProjectCaption} mode="outlined" placeholder="Full bathroom retile in Staines" />
+      <TextInput label="Project caption (optional)" accessibilityLabel="Project caption (optional)" value={projectCaption} onChangeText={setProjectCaption} mode="outlined" placeholder="Full bathroom retile in Staines" />
       <Button mode="outlined" icon="image-plus" disabled={!beforeDraft[0] || !afterDraft[0] || beforeAfterProjects.length >= 12} onPress={addBeforeAfter}>Add Before & After Project</Button>
       {beforeAfterProjects.map((project, index) => <View key={`${project.before}-${index}`} style={styles.projectRow}>
         <View style={styles.flex}>
@@ -454,7 +454,7 @@ export default function TraderOnboarding() {
       <AppCard>
         <Text variant="titleLarge" style={styles.title}>Confirm & publish</Text>
         <Text style={styles.muted}>Starter Free lets you complete and externally share this profile and browse BuildPair jobs. Starter profiles are hidden from BuildPair search and cannot offer on jobs until you choose Plus or Pro. There is no trial during beta testing.</Text>
-        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: certified }} onPress={() => setCertified((value) => !value)} style={styles.check}>
+        <Pressable accessibilityRole="checkbox" accessibilityLabel="Confirm profile information is accurate" accessibilityState={{ checked: certified }} onPress={() => setCertified((value) => !value)} style={styles.check}>
           <View style={[styles.checkBox, certified && styles.checkBoxSelected]}>{certified ? <Text style={styles.checkMark}>✓</Text> : null}</View>
           <Text style={styles.checkText}>I confirm that the information I have provided is accurate and that I hold any insurance or trade accreditation required for the work I offer.</Text>
         </Pressable>
