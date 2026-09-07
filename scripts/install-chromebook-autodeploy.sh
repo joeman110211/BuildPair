@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Installs BuildPair automatic deploys for the existing Chromebook staging runtime:
+# Installs BuildPair automatic deploys for the existing Chromebook production runtime:
 # PM2 runs BuildPair, and the named Cloudflare tunnel is managed separately.
-# This installer only adds a user-level systemd timer that checks GitHub and
-# deploys new testing revisions safely.
+# This installer adds a user-level systemd timer that checks GitHub main and
+# deploys new production revisions safely.
 
 ACTION="${1:-install}"
 REPO_DIR="${BUILDPAIR_REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
@@ -60,7 +60,7 @@ install_timer() {
 
   cat > "$SERVICE_FILE" <<EOF
 [Unit]
-Description=BuildPair Chromebook staging automatic deploy
+Description=BuildPair Chromebook production automatic deploy
 After=network-online.target
 Wants=network-online.target
 
@@ -68,7 +68,10 @@ Wants=network-online.target
 Type=oneshot
 WorkingDirectory=$REPO_DIR
 Environment=BUILDPAIR_REPO_DIR=$REPO_DIR
-Environment=BUILDPAIR_DEPLOY_BRANCH=testing
+Environment=BUILDPAIR_DEPLOY_BRANCH=main
+Environment=BUILDPAIR_PUBLIC_ORIGIN=https://www.buildpair.co.uk
+Environment=BUILDPAIR_HEALTH_URL=https://www.buildpair.co.uk/api/health
+Environment=BUILDPAIR_READINESS_URL=https://www.buildpair.co.uk/api/readiness
 Environment="PATH=$service_path"
 ExecStart=/usr/bin/env bash $DEPLOY_SCRIPT
 TimeoutStartSec=20min
@@ -77,12 +80,12 @@ EOF
 
   cat > "$TIMER_FILE" <<'EOF'
 [Unit]
-Description=Check GitHub for BuildPair testing updates
+Description=Check GitHub for BuildPair production updates
 
 [Timer]
-OnBootSec=2min
-OnUnitActiveSec=2min
-RandomizedDelaySec=15s
+OnBootSec=1min
+OnUnitActiveSec=1min
+RandomizedDelaySec=10s
 Persistent=true
 Unit=buildpair-autodeploy.service
 
@@ -94,8 +97,9 @@ EOF
   systemctl --user enable --now buildpair-autodeploy.timer
 
   echo
-  echo "BuildPair staging automatic deployment is enabled."
-  echo "The Chromebook will check origin/testing roughly every two minutes while Linux is running."
+  echo "BuildPair production automatic deployment is enabled."
+  echo "The Chromebook will check origin/main roughly every minute while Linux is running."
+  echo "New revisions are typechecked, tested, migrated, rebuilt, restarted through PM2 and health-checked before being marked deployed."
   echo "Existing PM2 and Cloudflare services are left in place."
   echo "The deploy service is using the same Node/PM2 runtime path as this terminal."
   echo
