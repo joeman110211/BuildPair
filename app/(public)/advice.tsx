@@ -32,6 +32,18 @@ const HOMEOWNER_RESOURCES: Resource[] = [
     url: 'https://www.hse.gov.uk/gas/gas-safe-register-check.htm',
   },
   {
+    title: 'Electrical work: minor, notifiable and competent (England)',
+    body: 'There is no blanket “handyman permission”. Some maintenance and alterations to existing circuits do not need formal Building Regulations approval, but safety standards still apply and the person doing the work must be competent. Consumer-unit replacement, a new circuit and certain work around baths or showers can require notification or an authorised self-certification route.',
+    label: 'GOV.UK Approved Document P',
+    url: 'https://www.gov.uk/government/publications/electrical-safety-approved-document-p',
+  },
+  {
+    title: 'Rental electrical checks: the five-year rule (England)',
+    body: 'Landlords must have fixed electrical installations inspected and tested at least every five years by a properly qualified person and provide the required report to tenants. The current rules now cover private and social rented sectors in England.',
+    label: 'GOV.UK rental electrical safety',
+    url: 'https://www.gov.uk/government/publications/electrical-safety-standards-in-the-private-and-social-rented-sectors-guidance/electrical-safety-standards-in-the-private-and-social-rented-sectors-guidance',
+  },
+  {
     title: 'Check electrical competence',
     body: 'The Registered Competent Person Electrical search lets householders find or check registered electrical businesses for relevant domestic work.',
     label: 'Electrical Competent Person Register',
@@ -51,6 +63,12 @@ const TRADE_RESOURCES: Resource[] = [
     body: 'Home visits, distance contracts and cancellation rights have specific rules. Do not rely on pub-law folklore or a template you found in somebody else’s van.',
     label: 'Business Companion: off-premises sales',
     url: 'https://www.businesscompanion.info/en/quick-guides/off-premises-sales/consumer-contracts-off-premises-sales',
+  },
+  {
+    title: 'Electrical certificates: know which record applies',
+    body: 'BS 7671 uses different records for different purposes, including Electrical Installation Certificates, Minor Electrical Installation Works Certificates and EICRs. The IET publishes the current model forms. A certificate does not replace Building Regulations notification where notification is required.',
+    label: 'IET current electrical model forms',
+    url: 'https://electrical.theiet.org/bs-7671-18th-edition-wiring-regulations/model-forms/',
   },
   {
     title: 'Small-builder health and safety',
@@ -109,7 +127,7 @@ export default function AdviceHub() {
       <View style={styles.sectionHeader}>
         <Text style={styles.eyebrow}>For homeowners</Text>
         <Text variant="headlineMedium" style={styles.sectionTitle}>Protect the project without becoming your own solicitor.</Text>
-        <Text style={styles.body}>Use BuildPair records for clarity, then use the official services below when the issue needs consumer, safety or registration guidance.</Text>
+        <Text style={styles.body}>Use BuildPair records for clarity, then use the official services below when the issue needs consumer, safety or registration guidance. Electrical Building Regulations differ across the UK, so the Part P examples below are explicitly for England.</Text>
       </View>
       <View style={styles.grid}>{HOMEOWNER_RESOURCES.map((item) => <ResourceCard key={item.title} item={item} />)}</View>
 
