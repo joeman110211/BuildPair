@@ -24,7 +24,7 @@ const NAV_ITEMS: { label: string; href: Href }[] = [
 ];
 
 const QUICK_NAV: { label: string; href: Href }[] = [
-  { label: 'Find Trades', href: '/(public)/directory' },
+  { label: 'Home', href: '/' },
   { label: 'Advice Hub', href: '/(public)/advice' as Href },
   { label: 'Membership', href: '/(public)/pricing' as Href },
   { label: 'How It Works', href: '/(public)/how-it-works' },
@@ -86,8 +86,8 @@ function DesktopNav() {
 
 function MobileQuickNav() {
   return <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickNav} contentContainerStyle={styles.quickNavContent} accessibilityLabel="BuildPair quick navigation">
-    {QUICK_NAV.map((item, index) => <Link key={item.label} href={item.href} asChild>
-      <Button compact mode={index === 1 ? 'contained-tonal' : 'text'} textColor={index === 1 ? colors.primaryDark : colors.charcoalSoft} contentStyle={styles.quickButtonContent} style={styles.quickButton}>{item.label}</Button>
+    {QUICK_NAV.map((item) => <Link key={item.label} href={item.href} asChild>
+      <Button compact mode="text" textColor={colors.charcoalSoft} contentStyle={styles.quickButtonContent} style={styles.quickButton}>{item.label}</Button>
     </Link>)}
   </ScrollView>;
 }
