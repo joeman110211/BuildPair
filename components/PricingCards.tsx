@@ -1,7 +1,7 @@
 import { Link } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
-import { colors } from '@/constants/theme';
+import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 
 const plans = [
   {
@@ -79,41 +79,41 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
             </View>)}
           </View>
           <Link href="/auth/account" asChild>
-            <Button mode={featured || pro ? 'contained' : 'outlined'} buttonColor={pro ? colors.navy : undefined} contentStyle={styles.buttonContent}>{plan.cta}</Button>
+            <Button mode={featured || pro ? 'contained' : 'outlined'} contentStyle={styles.buttonContent}>{plan.cta}</Button>
           </Link>
         </View>;
       })}
     </View>
-    <Text style={styles.note}>Category limits count broad trade categories, not every service you offer inside them. Direct homeowner requests do not use the monthly open-marketplace offer allowance.</Text>
+    <Text style={styles.note}>Category limits count broad trade categories, not every service inside them. Direct homeowner requests do not use the monthly open-marketplace offer allowance.</Text>
   </View>;
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 15 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
-  card: { flexGrow: 1, flexBasis: 300, minWidth: 270, backgroundColor: colors.surfaceRaised, borderRadius: 28, padding: 22, gap: 12, borderWidth: 1, borderColor: colors.border, shadowColor: colors.charcoal, shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  wrap: { gap: spacing.lg },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, alignItems: 'stretch' },
+  card: { flexGrow: 1, flexBasis: 300, minWidth: 270, backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, padding: spacing.xl, gap: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: colors.charcoal, shadowOpacity: 0.04, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 2 },
   cardCompact: { flexBasis: 280 },
   cardFeatured: { borderColor: colors.primary, borderWidth: 2, backgroundColor: '#FFFCF9' },
   cardPro: { borderColor: '#CAD6E0', backgroundColor: '#FAFCFE' },
-  topRow: { minHeight: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  topRow: { minHeight: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
   eyebrow: { color: colors.muted, fontSize: 11, lineHeight: 16, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1 },
   eyebrowFeatured: { color: colors.primary },
   eyebrowPro: { color: colors.navy },
-  badge: { backgroundColor: colors.primarySoft, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5 },
+  badge: { backgroundColor: colors.primarySoft, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
   badgeText: { color: colors.primaryDark, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.6 },
   name: { color: colors.charcoal, fontWeight: '900' },
-  priceRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 5 },
+  priceRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.xs },
   price: { color: colors.charcoal, fontSize: 34, lineHeight: 39, fontWeight: '900', letterSpacing: -1 },
-  suffix: { color: colors.muted, paddingBottom: 5 },
+  suffix: { color: colors.muted, paddingBottom: spacing.xs },
   summary: { color: colors.muted, lineHeight: 22, minHeight: 66 },
-  divider: { height: 1, backgroundColor: colors.border, marginVertical: 2 },
-  features: { gap: 10, flexGrow: 1 },
-  featureRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.xxs },
+  features: { gap: spacing.sm, flexGrow: 1 },
+  featureRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   tick: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.surfaceStrong, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   tickFeatured: { backgroundColor: colors.primarySoft },
   tickPro: { backgroundColor: colors.blueSoft },
   tickText: { color: colors.charcoal, fontWeight: '900', fontSize: 11 },
   featureText: { color: colors.charcoalSoft, lineHeight: 21, flex: 1 },
-  buttonContent: { minHeight: 47 },
+  buttonContent: { minHeight: controlHeights.standard },
   note: { color: colors.muted, fontSize: 12, lineHeight: 19, textAlign: 'center', maxWidth: 820, alignSelf: 'center' },
 });
