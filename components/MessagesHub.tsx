@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Button, Icon, Text } from 'react-native-paper';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
-import { colors } from '@/constants/theme';
+import { colors, radii, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 
 type Conversation = {
@@ -36,9 +36,9 @@ export function MessagesHub({ basePath }: { basePath: '/customer' | '/trader' })
   useEffect(() => { void load(); const refresh = setInterval(() => void load(), 10000); return () => clearInterval(refresh); }, [load]);
 
   if (loading) return <LoadingScreen label="Loading messages…" />;
-  return <Screen title="Messages" subtitle="Every conversation stays attached to the job it belongs to.">
-    {error ? <EmptyState title="Couldn’t load messages" body={error} action={<Button onPress={load}>Try again</Button>} /> : null}
-    {!error && !rows.length ? <EmptyState title="No conversations yet" body="A conversation opens after a quote or direct job request, so job discussions never float around without context." /> : rows.map((row) => <Pressable key={row.id} accessibilityRole="button" onPress={() => router.push(`${basePath}/messages/${row.id}` as Href)} style={({ pressed }) => [styles.conversation, pressed && styles.pressed]}>
+  return <Screen title="Messages" subtitle="Keep every conversation attached to the job it belongs to.">
+    {error ? <EmptyState title="Couldn’t load messages" body={error} action={<Button mode="outlined" onPress={load}>Try again</Button>} /> : null}
+    {!error && !rows.length ? <EmptyState title="No conversations yet" body="A conversation opens after a quote or direct job request, keeping job discussions in the right place." /> : rows.map((row) => <Pressable key={row.id} accessibilityRole="button" onPress={() => router.push(`${basePath}/messages/${row.id}` as Href)} style={({ pressed }) => [styles.conversation, pressed && styles.pressed]}>
       <View style={styles.avatar}><Icon source="briefcase-outline" size={24} color={colors.primary} /></View>
       <View style={styles.flex}><View style={styles.row}><Text variant="titleMedium" style={styles.title}>{row.jobTitle}</Text><Text style={styles.time}>{formatConversationTime(row.lastMessageAt)}</Text></View><Text style={styles.muted} numberOfLines={2}>{row.lastMessage ?? 'Conversation ready. Send the first message.'}</Text></View>
       <Icon source="chevron-right" size={24} color={colors.muted} />
@@ -54,11 +54,11 @@ function formatConversationTime(value: string) {
 }
 
 const styles = StyleSheet.create({
-  conversation: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, shadowColor: '#111827', shadowOpacity: 0.04, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
-  pressed: { opacity: 0.75 },
-  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.surfaceSoft, alignItems: 'center', justifyContent: 'center' },
-  flex: { flex: 1, gap: 4 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, alignItems: 'center' },
+  conversation: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.md, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
+  pressed: { opacity: 0.72 },
+  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  flex: { flex: 1, gap: spacing.xxs },
+  row: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm, alignItems: 'center' },
   title: { fontWeight: '900', color: colors.text, flex: 1 },
   time: { color: colors.muted, fontSize: 12 },
   muted: { color: colors.muted, lineHeight: 20 },
