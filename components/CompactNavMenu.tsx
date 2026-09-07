@@ -55,7 +55,6 @@ const styles = StyleSheet.create({
     top: 52,
     right: 0,
     width: 285,
-    maxWidth: '88vw',
     paddingVertical: spacing.xs,
     backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
