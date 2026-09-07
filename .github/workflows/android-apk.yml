@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       api_url:
-        description: 'HTTPS BuildPair API/web origin to embed in the APK'
+        description: 'HTTPS BuildPair API/web origin to embed in the Android build'
         required: false
-        default: 'https://staging.buildpair.co.uk'
+        default: 'https://www.buildpair.co.uk'
         type: string
   push:
     branches: [main]
@@ -21,13 +21,12 @@ concurrency:
 jobs:
   apk:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     env:
       CI: '1'
       EXPO_NO_TELEMETRY: '1'
-      NODE_ENV: production
       EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-      EXPO_PUBLIC_API_URL: ${{ inputs.api_url || 'https://staging.buildpair.co.uk' }}
+      EXPO_PUBLIC_API_URL: ${{ inputs.api_url || 'https://www.buildpair.co.uk' }}
       EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
       EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME: qrrcn7ma
 
@@ -47,7 +46,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Validate target URL
+      - name: Validate production/native contract
         shell: bash
         run: |
           set -euo pipefail
@@ -55,6 +54,23 @@ jobs:
             https://*) ;;
             *) echo "::error::api_url must start with https://"; exit 1 ;;
           esac
+          node - <<'NODE'
+          const app = require('./app.json').expo;
+          if (app.android?.package !== 'uk.co.buildpair.app') {
+            throw new Error(`Unexpected Android package: ${app.android?.package || 'missing'}`);
+          }
+          const router = (app.plugins || []).find((plugin) => Array.isArray(plugin) && plugin[0] === 'expo-router');
+          if (router?.[1]?.origin !== 'https://www.buildpair.co.uk') {
+            throw new Error(`Expo Router origin must remain https://www.buildpair.co.uk (found ${router?.[1]?.origin || 'missing'})`);
+          }
+          console.log('BuildPair Android identity and web origin contract verified.');
+          NODE
+
+      - name: Check target health
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --show-error --silent --retry 8 --retry-delay 3 "$EXPO_PUBLIC_API_URL/api/health" | jq -e '.status == "ok"' >/dev/null
 
       - name: Resolve client-safe configuration
         shell: bash
@@ -72,25 +88,47 @@ jobs:
             fi
           fi
 
-      - name: Require beta client configuration
+      - name: Require native client configuration
         shell: bash
         run: |
-          test -n "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" || { echo "::error::Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in GitHub Actions and target client config"; exit 1; }
+          set -euo pipefail
+          resolved_clerk="${EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY:-$(grep '^EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=' "$GITHUB_ENV" 2>/dev/null | tail -1 | cut -d= -f2-)}"
+          resolved_stripe="${EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY:-$(grep '^EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=' "$GITHUB_ENV" 2>/dev/null | tail -1 | cut -d= -f2-)}"
+          test -n "$resolved_clerk" || { echo "::error::Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in GitHub Actions and target client config"; exit 1; }
           test -n "$EXPO_PUBLIC_API_URL" || { echo "::error::Missing EXPO_PUBLIC_API_URL"; exit 1; }
-          if [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ]; then
-            echo "::notice::Stripe publishable key is not set; beta APK will build with payments disabled."
+          if [ -z "$resolved_stripe" ]; then
+            echo "::warning::Stripe publishable key is not set; Android payments would not match the web production experience."
           fi
 
-      - run: npm ci --no-audit --no-fund --prefer-offline
+      - name: Install full Android build toolchain
+        run: npm ci --include=dev --no-audit --no-fund --prefer-offline
+
+      - name: Typecheck shared web/native app
+        run: npm run typecheck
 
       - name: Generate native Android project
         run: npx expo prebuild --platform android --clean
+
+      - name: Verify Expo autolinking
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx expo-modules-autolinking verify --verbose
+          npx expo-modules-autolinking react-native-config --json --platform android > /tmp/buildpair-rn-config.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const config = JSON.parse(fs.readFileSync('/tmp/buildpair-rn-config.json', 'utf8'));
+          const dependencies = Object.keys(config.dependencies || {});
+          console.log(`Expo autolinking resolved ${dependencies.length} React Native modules.`);
+          if (!dependencies.length) throw new Error('Expo autolinking returned no React Native modules.');
+          NODE
 
       - name: Tune Android release build for GitHub runner
         working-directory: android
         shell: bash
         run: |
           set -euo pipefail
+          chmod +x ./gradlew
           sed -i 's/^org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -Dfile.encoding=UTF-8/' gradle.properties
           if grep -q '^reactNativeArchitectures=' gradle.properties; then
             sed -i 's/^reactNativeArchitectures=.*/reactNativeArchitectures=armeabi-v7a,arm64-v8a/' gradle.properties
@@ -99,9 +137,9 @@ jobs:
           fi
           echo 'org.gradle.workers.max=2' >> gradle.properties
 
-      - name: Build installable release APK
+      - name: Build installable APK and Play Store bundle
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --max-workers=2 --stacktrace --info
+        run: ./gradlew assembleRelease bundleRelease --no-daemon --max-workers=2 --stacktrace --info
 
       - name: Verify release APK integrity and package
         shell: bash
@@ -117,10 +155,27 @@ jobs:
           grep -q "application-label:'BuildPair'" /tmp/buildpair-apk-badging.txt || { echo "::error::Unexpected Android application label"; exit 1; }
           echo "BuildPair Android release APK passed ZIP integrity and manifest identity checks."
 
-      - name: Upload APK
+      - name: Verify Play Store bundle integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          aab=$(find android/app/build/outputs/bundle/release -name '*.aab' -print -quit)
+          test -n "$aab" || { echo "::error::Release AAB was not produced"; exit 1; }
+          unzip -t "$aab" >/dev/null
+          echo "BuildPair Android release AAB passed bundle integrity checks."
+
+      - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
           name: buildpair-android-apk
           path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
+
+      - name: Upload Play Store AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildpair-android-aab
+          path: android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 30
