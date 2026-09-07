@@ -9,6 +9,7 @@
     "icon": "../assets/icon.png",
     "android": {
       "package": "uk.co.buildpair.admin",
+      "allowBackup": false,
       "adaptiveIcon": {
         "foregroundImage": "../assets/adaptive-icon.png",
         "backgroundColor": "#252A31"
