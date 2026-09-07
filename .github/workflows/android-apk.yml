@@ -10,12 +10,25 @@ on:
         type: string
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'hooks/**'
+      - 'lib/**'
+      - 'constants/**'
+      - 'assets/**'
+      - 'app.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/android-apk.yml'
 
 permissions:
   contents: read
 
 concurrency:
-  group: buildpair-android-apk
+  group: buildpair-android-apk-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
