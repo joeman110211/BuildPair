@@ -75,6 +75,7 @@ export default function VerifyEmailAddressScreen() {
     <Screen title="Verify your email" subtitle={`We sent a 6-digit code to ${emailAddress}.`}>
       <TextInput
         label="Verification code"
+        accessibilityLabel="Enter verification code"
         value={code}
         onChangeText={setCode}
         keyboardType="number-pad"
