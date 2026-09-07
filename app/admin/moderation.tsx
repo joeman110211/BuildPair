@@ -42,7 +42,7 @@ type Report = {
   resolvedAt: string | null;
 };
 
-type AccountAction = 'none' | 'suspend' | 'unsuspend';
+type AccountAction = 'none' | 'warn' | 'suspend' | 'unsuspend';
 type ConversationAction = 'none' | 'warn' | 'restrict' | 'close' | 'reopen';
 type ReportStatus = 'reviewed' | 'actioned' | 'dismissed';
 
@@ -99,7 +99,7 @@ export default function ModerationScreen() {
   }
 
   if (loading) return <LoadingScreen label="Loading moderation queue…" />;
-  return <Screen title="Moderation queue" subtitle="Review flagged content with the surrounding conversation, then warn, restrict, close, reopen or suspend where necessary.">
+  return <Screen title="Moderation queue" subtitle="Review reports in context, record the reason for your decision, then warn, restrict, close or suspend only where the evidence supports it.">
     {error ? <EmptyState title="Moderation unavailable" body={error} action={<Button onPress={load}>Try again</Button>} /> : null}
     {!error && !reports.length ? <EmptyState title="No reports" body="There are currently no moderation reports to review." /> : reports.map((report) => {
       const isExpanded = Boolean(expanded[report.id]);
@@ -144,7 +144,7 @@ export default function ModerationScreen() {
           <Text variant="labelLarge" style={styles.actionLabel}>Conversation controls</Text>
           <View style={styles.actions}>
             {report.conversationId ? <>
-              <Button disabled={busy} mode="outlined" icon="alert-outline" onPress={() => void update(report, 'actioned', 'none', 'warn')}>Warn</Button>
+              <Button disabled={busy} mode="outlined" icon="alert-outline" onPress={() => void update(report, 'actioned', 'none', 'warn')}>Warn in chat</Button>
               <Button disabled={busy} mode="outlined" icon="pause-circle-outline" onPress={() => void update(report, 'actioned', 'none', 'restrict')}>Restrict messaging</Button>
               {report.conversationStatus !== 'closed' ? <Button disabled={busy} mode="outlined" textColor={colors.danger} icon="close-circle-outline" onPress={() => confirmClose(report)}>Close conversation</Button> : null}
               {report.conversationStatus !== 'open' ? <Button disabled={busy} mode="outlined" icon="lock-open-outline" onPress={() => void update(report, 'reviewed', 'none', 'reopen')}>Reopen</Button> : null}
@@ -154,9 +154,11 @@ export default function ModerationScreen() {
 
         <View style={styles.sectionActions}>
           <Text variant="labelLarge" style={styles.actionLabel}>Account and report controls</Text>
+          <Text style={styles.muted}>Use the notes box above for the reason. Account warnings are delivered as an in-app notification; suspension blocks authenticated activity.</Text>
           <View style={styles.actions}>
             <Button disabled={busy} onPress={() => void update(report, 'reviewed')}>Mark reviewed</Button>
             <Button disabled={busy} onPress={() => void update(report, 'dismissed')}>Dismiss</Button>
+            {report.subjectUserId && !report.subjectSuspended ? <Button mode="outlined" icon="alert-outline" disabled={busy} onPress={() => void update(report, 'actioned', 'warn')}>Warn account</Button> : null}
             {report.subjectUserId && !report.subjectSuspended ? <Button mode="contained" buttonColor={colors.danger} disabled={busy} onPress={() => confirmSuspend(report)}>Suspend account</Button> : null}
             {report.subjectUserId && report.subjectSuspended ? <Button mode="outlined" disabled={busy} onPress={() => void update(report, 'reviewed', 'unsuspend')}>Restore account</Button> : null}
           </View>

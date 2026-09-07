@@ -4,13 +4,17 @@ import { PublicInfoPage, infoStyles } from '@/components/PublicInfoPage';
 export default function ForHomeownersPage() {
   return <PublicInfoPage
     eyebrow="For homeowners"
-    title="Explain the job once. Compare the right people properly."
-    intro="BuildPair helps homeowners move from a problem or project idea to relevant local trades without needing to know the exact industry terminology first."
+    title="From “something’s wrong” to a properly managed job."
+    intro="BuildPair helps homeowners identify likely trades, compare local professionals with useful context and keep the project record together after somebody is hired."
     sections={[
-      { title: 'Search by the job you actually have', body: 'Type “tiler”, “bathroom”, “sink”, “roof leak”, “boiler”, “kitchen” or another normal description. Related-trade matching broadens the search intelligently rather than relying on one exact word.' },
-      { title: 'Post a useful job', body: 'Add the job description, property type, location, timing, budget and photos so tradespeople can judge whether the work is a good fit before everybody wastes time.' },
-      { title: 'Compare with more context', body: <View style={infoStyles.list}><Text style={infoStyles.item}>• Trade and service information</Text><Text style={infoStyles.item}>• Work galleries and project examples</Text><Text style={infoStyles.item}>• Ratings and customer reviews</Text><Text style={infoStyles.item}>• Location and working radius</Text><Text style={infoStyles.item}>• Quotes and job communication</Text></View> },
-      { title: 'Stay in control', body: 'BuildPair gives you tools to compare and communicate, but you remain responsible for choosing who you appoint. For regulated work, check the relevant registrations, qualifications, insurance and documentation before work starts.' },
+      { title: 'Describe the problem in normal English', body: 'You do not have to know whether a leak needs a plumber, bathroom fitter, roofer or another specialist before you search. BuildPair uses trade categories, services and related search terms to turn the problem you describe into more relevant results.' },
+      { title: 'Search or post a structured job', body: 'Search profiles directly or create a job with category, property type, description, photos, postcode, urgency, timing and budget information. Better initial detail gives tradespeople a better chance of deciding whether the work genuinely suits them.' },
+      { title: 'Compare more than the headline price', body: <View style={infoStyles.list}><Text style={infoStyles.item}>• Scope and what is actually included.</Text><Text style={infoStyles.item}>• Exclusions, deposit and payment stages.</Text><Text style={infoStyles.item}>• Proposed start date and expected duration.</Text><Text style={infoStyles.item}>• Warranty information where supplied.</Text><Text style={infoStyles.item}>• Profile history, services, work examples, availability and reviews.</Text></View> },
+      { title: 'Request a quote from a specific trade', body: 'When a suitable searchable profile is available, a homeowner can send a direct quote request rather than posting the job to everybody. BuildPair checks the relevant account, category and marketplace eligibility before creating the job-specific connection.' },
+      { title: 'Keep the project history together', body: 'Messages, quotes, agreed variations, job events and payment milestones can stay attached to the project. That matters when memories differ later about what was included, what changed and what was approved.' },
+      { title: 'Save trades and come back later', body: 'Homeowners can shortlist useful profiles instead of trying to remember who they saw during the first search. That gives repeat customers a simple way to build a trusted local network over time.' },
+      { title: 'Privacy where it matters', body: 'Public marketplace listings use outward postcode/location information rather than publishing the homeowner’s full matching coordinates. More precise matching information remains server-side.' },
+      { title: 'Make the final checks', body: 'BuildPair provides information and workflow tools, but the appointment decision remains yours. For regulated or specialist work, check registrations, qualifications, insurance, references and any permissions appropriate to the job before work starts.' },
     ]}
   />;
 }

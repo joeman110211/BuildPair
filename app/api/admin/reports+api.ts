@@ -6,7 +6,7 @@ const actionSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(['reviewed', 'actioned', 'dismissed']),
   adminNotes: z.string().trim().max(4000).default(''),
-  accountAction: z.enum(['none', 'suspend', 'unsuspend']).default('none'),
+  accountAction: z.enum(['none', 'warn', 'suspend', 'unsuspend']).default('none'),
   conversationAction: z.enum(['none', 'warn', 'restrict', 'close', 'reopen']).default('none'),
 });
 
@@ -93,8 +93,19 @@ export async function PATCH(request: Request) {
 
     if (payload.accountAction !== 'none') {
       if (!report.subjectUserId) throw new HttpError(400, 'This report has no account target');
-      if (report.subjectUserId === admin.id) throw new HttpError(400, 'Administrators cannot suspend themselves from this screen');
-      if (payload.accountAction === 'suspend') {
+      if (report.subjectUserId === admin.id) throw new HttpError(400, 'Administrators cannot take account action against themselves from this screen');
+      if (payload.accountAction === 'warn') {
+        await sql`
+          INSERT INTO notifications(user_id, type, title, body, href)
+          VALUES (
+            ${report.subjectUserId},
+            'moderation_warning',
+            'BuildPair account warning',
+            ${payload.adminNotes || 'BuildPair has reviewed a marketplace report involving your account. Please review the Marketplace Standards and keep future activity professional, accurate and safe.'},
+            '/(public)/marketplace-standards'
+          )
+        `;
+      } else if (payload.accountAction === 'suspend') {
         await sql`UPDATE users SET is_suspended = true, suspension_reason = ${payload.adminNotes || 'Suspended after moderation review'}, updated_at = now() WHERE id = ${report.subjectUserId}`;
       } else {
         await sql`UPDATE users SET is_suspended = false, suspension_reason = '', updated_at = now() WHERE id = ${report.subjectUserId}`;

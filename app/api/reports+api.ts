@@ -5,15 +5,34 @@ import { getSql } from '@/lib/sql';
 
 const reportSchema = z.object({
   subjectUserId: z.string().min(1).optional(),
+  subjectReference: z.string().trim().min(1).max(500).optional(),
   messageId: z.string().uuid().optional(),
   reviewId: z.string().uuid().optional(),
   jobId: z.string().uuid().optional(),
-  reason: z.enum(['spam', 'fraud', 'abuse_or_harassment', 'unsafe_content', 'other']),
+  reason: z.enum([
+    'spam',
+    'fraud',
+    'abuse_or_harassment',
+    'unsafe_content',
+    'poor_workmanship',
+    'misleading_profile',
+    'non_payment',
+    'payment_dispute',
+    'no_show',
+    'other',
+  ]),
   details: z.string().trim().max(2000).default(''),
 }).superRefine((value, ctx) => {
-  const targetCount = [value.subjectUserId, value.messageId, value.reviewId, value.jobId].filter(Boolean).length;
+  const targetCount = [value.subjectUserId, value.subjectReference, value.messageId, value.reviewId, value.jobId].filter(Boolean).length;
   if (targetCount !== 1) ctx.addIssue({ code: 'custom', message: 'Choose exactly one report target' });
 });
+
+function profileReference(value: string) {
+  const match = value.match(/\/traders\/([^/?#]+)/i);
+  const reference = match?.[1] ?? value.trim();
+  try { return decodeURIComponent(reference); }
+  catch { return reference; }
+}
 
 export async function GET(request: Request) {
   try {
@@ -49,6 +68,23 @@ export async function POST(request: Request) {
       `;
       if (!target.length) throw new HttpError(404, 'Account to report was not found');
       subjectUserId = payload.subjectUserId;
+    } else if (payload.subjectReference) {
+      const reference = payload.subjectReference.trim();
+      const profileId = profileReference(reference);
+      const target = await sql`
+        SELECT u.id
+        FROM users u
+        LEFT JOIN trader_profiles tp ON tp.user_id = u.id
+        WHERE coalesce(u.is_deleted, false) = false
+          AND (
+            u.id = ${reference}
+            OR lower(coalesce(u.email, '')) = lower(${reference})
+            OR tp.id::text = ${profileId}
+          )
+        LIMIT 1
+      ` as unknown as Array<{ id: string }>;
+      if (!target[0]) throw new HttpError(404, 'We could not match that BuildPair account or profile');
+      subjectUserId = target[0].id;
     } else if (payload.messageId) {
       const access = await sql`
         SELECT m.sender_id AS "senderId"
