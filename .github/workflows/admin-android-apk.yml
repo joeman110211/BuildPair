@@ -86,7 +86,7 @@ jobs:
         run: |
           set -euo pipefail
           npx expo-modules-autolinking verify --verbose
-          npx expo-modules-autolinking react-native-config --platform android > /tmp/buildpair-admin-rn-config.json
+          npx expo-modules-autolinking react-native-config --json --platform android > /tmp/buildpair-admin-rn-config.json
           node - <<'NODE'
           const fs = require('fs');
           const config = JSON.parse(fs.readFileSync('/tmp/buildpair-admin-rn-config.json', 'utf8'));
