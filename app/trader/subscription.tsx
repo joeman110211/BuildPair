@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useState } from 'react';
-import { Linking, StyleSheet, View } from 'react-native';
+import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { Button, Chip, ProgressBar, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
@@ -48,6 +48,7 @@ const PLAN_COPY = {
 
 export default function SubscriptionScreen() {
   const { getToken } = useAuth();
+  const isWeb = Platform.OS === 'web';
   const paymentsEnabled = Boolean(process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim());
   const [profile, setProfile] = useState<TraderProfile>();
   const [error, setError] = useState('');
@@ -79,31 +80,45 @@ export default function SubscriptionScreen() {
     ? new Date(profile.monthlyQuoteResetAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
     : 'next month';
   const usageProgress = limit > 0 ? Math.min(1, used / limit) : 0;
+  const screenSubtitle = isWeb
+    ? 'Start free, upgrade when you want BuildPair to bring your profile into search and let you actively pursue work.'
+    : 'See your current BuildPair plan and the features included with each tier.';
 
-  return <Screen title="BuildPair plans" subtitle="Start free, upgrade when you want BuildPair to bring your profile into search and let you actively pursue work.">
+  return <Screen title="BuildPair plans" subtitle={screenSubtitle}>
     <AppCard>
       <View style={styles.currentRow}>
         <View style={styles.flex}>
           <Text variant="titleLarge" style={styles.title}>Current plan: {PLAN_COPY[activeTier].name}</Text>
-          <Text style={styles.muted}>There is no free trial during beta testing. Starter, Plus and Pro entitlements are kept separate so we can test them properly.</Text>
+          <Text style={styles.muted}>BuildPair currently has no free trial. Starter, Plus and Pro entitlements remain separate and persist across your BuildPair devices.</Text>
         </View>
-        <Chip icon={activeTier === 'free' ? 'account-outline' : activeTier === 'basic' ? 'check-decagram-outline' : 'star-circle-outline'}>{PLAN_COPY[activeTier].price}</Chip>
+        <Chip icon={activeTier === 'free' ? 'account-outline' : activeTier === 'basic' ? 'check-decagram-outline' : 'star-circle-outline'}>{isWeb ? PLAN_COPY[activeTier].price : PLAN_COPY[activeTier].shortName}</Chip>
       </View>
       {limit > 0 ? <View style={styles.usage}>
         <View style={styles.currentRow}><Text variant="labelLarge">Marketplace offers</Text><Text variant="labelLarge">{used} / {limit}</Text></View>
         <ProgressBar progress={usageProgress} color={colors.primary} style={styles.progress} />
         <Text style={styles.muted}>Allowance resets {resetLabel}. Direct homeowner requests do not count toward this total.</Text>
-      </View> : <Text style={styles.muted}>Starter traders can browse jobs without consuming anything, but offering on an open marketplace job requires Plus or Pro.</Text>}
+      </View> : <Text style={styles.muted}>Starter traders can browse jobs without consuming anything, but offering on an open marketplace job requires an active paid plan.</Text>}
     </AppCard>
+
+    {!isWeb ? <AppCard>
+      <Text variant="titleLarge" style={styles.title}>Mobile plan access</Text>
+      <Text style={styles.muted}>Plan purchases and plan changes are not offered inside this mobile app. If your BuildPair account already has Plus or Pro, the same entitlement and allowance are available here automatically.</Text>
+    </AppCard> : null}
 
     <View style={styles.grid}>{(Object.entries(PLAN_COPY) as [SubscriptionTier, (typeof PLAN_COPY)[SubscriptionTier]][]).map(([key, tier]) => {
       const isCurrent = key === activeTier;
       return <View key={key} style={styles.plan}>
         <AppCard style={isCurrent ? styles.currentPlan : undefined}>
-          <View style={styles.planHeader}><View><Text variant="headlineSmall" style={styles.title}>{tier.name}</Text><Text variant="headlineMedium" style={styles.price}>{tier.price}</Text></View>{isCurrent ? <Chip icon="check">Current</Chip> : null}</View>
+          <View style={styles.planHeader}>
+            <View>
+              <Text variant="headlineSmall" style={styles.title}>{tier.name}</Text>
+              {isWeb ? <Text variant="headlineMedium" style={styles.price}>{tier.price}</Text> : null}
+            </View>
+            {isCurrent ? <Chip icon="check">Current</Chip> : null}
+          </View>
           <Text style={styles.categoryLine}>Up to {tier.categoryLimit} main trade categories</Text>
           {tier.detail.map((feature) => <Text key={feature} style={styles.feature}>✓ {feature}</Text>)}
-          {key !== 'free' ? <Button
+          {isWeb && key !== 'free' ? <Button
             mode={isCurrent ? 'outlined' : 'contained'}
             disabled={!paymentsEnabled || isCurrent}
             onPress={() => openEndpoint('/api/stripe/subscription', { tier: key })}
@@ -112,17 +127,17 @@ export default function SubscriptionScreen() {
       </View>;
     })}</View>
 
-    <AppCard>
+    {isWeb ? <AppCard>
       <Text variant="titleLarge" style={styles.title}>Why Pro costs £10 more</Text>
       <Text style={styles.muted}>Pro is not simply “20 more clicks”. It raises the monthly open-job allowance to 35, supports 6 main categories, adds advanced analytics and gets a measured discovery and alert advantage. Relevance, reviews, verified credentials and profile quality still matter more than simply paying for Pro.</Text>
-    </AppCard>
+    </AppCard> : null}
 
     <AppCard>
       <Text variant="titleLarge" style={styles.title}>Receive job payments</Text>
-      <Text style={styles.muted}>Complete Stripe Express onboarding so customer deposits and balances can be routed to your bank. BuildPair never handles raw card numbers.</Text>
+      <Text style={styles.muted}>Complete Stripe Express onboarding so customer deposits and balances for real-world building work can be routed to your bank. BuildPair never handles raw card numbers.</Text>
       <Button mode="contained" icon="bank" disabled={!paymentsEnabled} onPress={() => openEndpoint('/api/stripe/connect')}>{paymentsEnabled ? 'Set up Stripe payouts' : 'Stripe setup in progress'}</Button>
     </AppCard>
-    <Button mode="outlined" disabled={!paymentsEnabled} onPress={() => openEndpoint('/api/stripe/billing-portal')}>Manage or cancel subscription</Button>
+    {isWeb ? <Button mode="outlined" disabled={!paymentsEnabled} onPress={() => openEndpoint('/api/stripe/billing-portal')}>Manage or cancel subscription</Button> : null}
     {error ? <Text style={styles.error}>{error}</Text> : null}
   </Screen>;
 }

@@ -45,7 +45,7 @@ export default function SignUpScreen() {
   const verificationEmail = signUp.emailAddress ?? email.trim().toLowerCase();
   const title = mode === 'trader' ? 'Create Tradesperson Account' : mode === 'customer' ? 'Create Homeowner Account' : 'Create your account';
   const subtitle = mode === 'trader'
-    ? 'Build your trade profile and start with a 14-day free trial.'
+    ? 'Build your trade profile and start on Starter Free. Upgrade only when you want paid marketplace access.'
     : mode === 'customer'
       ? 'Post work, compare quotes and hire trusted trades.'
       : 'One BuildPair login can hold both Homeowner and Tradesperson profiles.';
@@ -123,6 +123,7 @@ export default function SignUpScreen() {
         {jobContext}
         <TextInput
           label="Verification code"
+          accessibilityLabel="Verification code"
           value={code}
           onChangeText={setCode}
           keyboardType="number-pad"
@@ -145,6 +146,7 @@ export default function SignUpScreen() {
       <SocialAuthButtons onError={setError} mode={mode} />
       <TextInput
         label="Email address"
+        accessibilityLabel="Email address"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -154,6 +156,7 @@ export default function SignUpScreen() {
       />
       <TextInput
         label="Password"
+        accessibilityLabel="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry

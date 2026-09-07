@@ -12,8 +12,8 @@ const traderPassword = `Bp!${crypto.randomUUID()}Aa9`;
 const customerPassword = `Bp!${crypto.randomUUID()}Aa9`;
 const businessName = `BuildPair Real Journey ${runId}`;
 const jobTitle = `Bathroom tiling real journey ${runId}`;
-const invoiceNumber = `E2E-${runId}`;
 const stateFile = path.join(process.cwd(), 'playwright', '.e2e-users.json');
+const testPostcode = 'SW1A 1AA';
 
 async function registerCleanupEmails() {
   let state = {};
@@ -35,7 +35,7 @@ async function registerCleanupEmails() {
   await fs.writeFile(stateFile, JSON.stringify({ ...state, cleanupEmails: [...cleanupEmails] }), 'utf8');
 }
 
-async function api(page, pathName, options = {}) {
+async function rawApi(page, pathName, options = {}) {
   await page.waitForFunction(() => Boolean(globalThis.Clerk?.session));
   const token = await page.evaluate(() => globalThis.Clerk.session.getToken());
   if (!token) throw new Error(`No active Clerk token for ${pathName}`);
@@ -50,6 +50,11 @@ async function api(page, pathName, options = {}) {
   const text = await response.text();
   let body;
   try { body = text ? JSON.parse(text) : null; } catch { body = text; }
+  return { response, body, text };
+}
+
+async function api(page, pathName, options = {}) {
+  const { response, body, text } = await rawApi(page, pathName, options);
   if (!response.ok) throw new Error(`${options.method || 'GET'} ${pathName} -> HTTP ${response.status}: ${text}`);
   return body;
 }
@@ -62,46 +67,77 @@ async function selectOption(page, label, option) {
 async function chooseModeIfNeeded(page, mode) {
   const target = mode === 'trader' ? /\/trader\/onboarding/ : /\/customer\/dashboard/;
   try {
-    await page.waitForURL(target, { timeout: 8_000 });
+    await page.waitForURL(target, { timeout: 12_000 });
     return;
   } catch {
-    // The chooser is deliberately user-operable even when automatic mode opening is slow.
+    // Automatic mode activation can take a moment after Clerk establishes the session.
   }
 
-  await page.waitForURL(/\/auth\/choose-role/, { timeout: 15_000 });
+  await page.waitForURL(/\/auth\/choose-role/, { timeout: 20_000 });
   const title = mode === 'trader' ? 'Tradesperson' : 'Homeowner';
   const action = mode === 'trader' ? /Add Tradesperson Profile|Continue as Tradesperson/ : /Add Homeowner Profile|Continue as Homeowner/;
   await page.getByText(title, { exact: true }).last().click();
   const button = page.getByRole('button', { name: action });
   await expect(button).toBeEnabled();
   await button.click();
-  await page.waitForURL(target, { timeout: 20_000 });
+  await page.waitForURL(target, { timeout: 25_000 });
+}
+
+async function fillIfVisible(locator, value) {
+  if (await locator.isVisible().catch(() => false)) await locator.fill(value);
 }
 
 async function realEmailSignup(page, mode, email, password) {
   await setupClerkTestingToken({ page });
   await page.goto(`${baseURL}/auth/sign-up?mode=${mode}`, { waitUntil: 'domcontentloaded' });
-  await expect(page.getByLabel('Email address')).toBeVisible();
-  await page.getByLabel('Email address').fill(email);
-  await page.locator('input[name="password"]').fill(password);
-  await page.getByRole('button', { name: 'Create account with email' }).click();
 
-  await expect(page.getByLabel('Verification code')).toBeVisible({ timeout: 20_000 });
-  expect(page.url()).toContain('/auth/sign-up/verify-email-address');
-  await page.getByLabel('Verification code').fill('424242');
-  await page.getByRole('button', { name: 'Verify and continue' }).click();
+  if (mode === 'trader') {
+    const tiling = page.getByRole('checkbox', { name: 'Tiling', exact: true });
+    await expect(tiling).toBeVisible();
+    await tiling.check();
+  }
+
+  await page.waitForSelector('.cl-signUp-root', { state: 'attached', timeout: 20_000 });
+  const root = page.locator('.cl-signUp-root');
+
+  await fillIfVisible(root.locator('input[name="firstName"]'), 'BuildPair');
+  await fillIfVisible(root.locator('input[name="lastName"]'), 'E2E');
+  await fillIfVisible(root.locator('input[name="username"]'), `buildpair_${mode}_${runId}`.toLowerCase().replace(/[^a-z0-9_]/g, ''));
+
+  const emailInput = root.locator('input[name="emailAddress"]');
+  const passwordInput = root.locator('input[name="password"]');
+  await expect(emailInput).toBeVisible();
+  await expect(passwordInput).toBeVisible();
+  await emailInput.fill(email);
+  await passwordInput.fill(password);
+
+  const phoneInput = root.locator('input[name="phoneNumber"]');
+  if (await phoneInput.isVisible().catch(() => false)) await phoneInput.fill('+15555550100');
+  const legalCheckbox = root.locator('input[name="legalAccepted"]');
+  if (await legalCheckbox.isVisible().catch(() => false)) await legalCheckbox.check();
+
+  await root.getByRole('button', { name: 'Continue', exact: true }).click();
+
+  const code = page.getByRole('textbox', { name: 'Enter verification code' });
+  await expect(code).toBeVisible({ timeout: 20_000 });
+  await code.pressSequentially('424242');
   await chooseModeIfNeeded(page, mode);
 }
 
-async function createTraderProfile(page) {
+async function createStarterTraderProfile(page) {
   await expect(page.getByText('Business Details', { exact: true }).first()).toBeVisible();
   await page.getByLabel('Business or trading name').fill(businessName);
-  await selectOption(page, 'Primary trade', 'Tiling');
-  await page.getByRole('checkbox', { name: 'Bathrooms' }).click();
+
+  const tiling = page.getByRole('checkbox', { name: 'Tiling', exact: true });
+  if (!(await tiling.isChecked())) await tiling.click();
+  const bathroomTiling = page.getByRole('checkbox', { name: 'Bathroom tiling', exact: true });
+  await expect(bathroomTiling).toBeEnabled();
+  await bathroomTiling.click();
+
   await page.getByLabel('Years of experience').fill('12');
   await page.getByLabel('Year established').fill('2014');
-  await page.getByLabel('Base postcode').fill('TW18 4AA');
-  await page.getByLabel('Other areas you cover').fill('Staines, Egham, Chertsey');
+  await page.getByLabel('Base postcode').fill(testPostcode);
+  await page.getByLabel('Other areas you cover').fill('Westminster, Central London');
   await page.getByRole('button', { name: 'Continue' }).click();
 
   await page.getByLabel('Business bio').fill('Experienced bathroom and floor tiling contractor used for BuildPair automated real-user journey testing. Reliable quoting, clear communication and tidy workmanship.');
@@ -112,7 +148,7 @@ async function createTraderProfile(page) {
   await page.getByRole('button', { name: 'Continue' }).click();
 
   await expect(page.getByText('Confirm & publish')).toBeVisible();
-  await page.getByRole('checkbox').click();
+  await page.getByRole('checkbox', { name: 'Confirm profile information is accurate' }).click();
   const publish = page.getByRole('button', { name: 'Save & Publish Profile' });
   await expect(publish).toBeEnabled();
   await publish.click();
@@ -123,90 +159,40 @@ async function createTraderProfile(page) {
   const profile = await api(page, '/api/me/profile');
   expect(profile.businessName).toBe(businessName);
   expect(profile.tradeCategory).toBe('Tiling');
-  expect(profile.isSubscriptionActive).toBe(true);
+  expect(profile.subscriptionTier).toBe('free');
+  expect(profile.isSubscriptionActive).toBe(false);
   return { me, profile };
 }
 
-async function postDirectJob(page, traderId) {
-  const url = `${baseURL}/customer/new-job?traderId=${encodeURIComponent(traderId)}&traderName=${encodeURIComponent(businessName)}&tradeCategory=${encodeURIComponent('Tiling')}`;
-  await page.goto(url, { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText(`Direct quote request for ${businessName}`)).toBeVisible();
-
+async function postOpenMarketplaceJob(page) {
+  await page.goto(`${baseURL}/customer/new-job`, { waitUntil: 'domcontentloaded' });
+  await selectOption(page, 'Trade category', 'Tiling');
   await selectOption(page, 'Property type', 'House');
   await page.getByRole('button', { name: 'Continue' }).click();
+
   await page.getByLabel('Short job title').fill(jobTitle);
   await page.getByLabel('Detailed job description').fill('Retile the main bathroom floor and shower walls, prepare the surfaces, waterproof the wet area, grout and silicone everything ready for use.');
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  await page.getByLabel('Job postcode').fill('TW18 4AA');
+  await page.getByLabel('Job postcode / area').fill(testPostcode);
   await selectOption(page, 'Budget bracket', '£1,500–£5,000');
   await selectOption(page, 'Urgency', 'Within 1 month');
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText(jobTitle, { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Send Quote Request' }).click();
-  await page.waitForURL(/\/customer\/(messages|jobs)/, { timeout: 25_000 });
+  await page.getByRole('button', { name: 'Post Job' }).click();
+  await page.waitForURL(/\/customer\/jobs/, { timeout: 25_000 });
 
   const jobs = await api(page, '/api/jobs');
   const job = jobs.find((item) => item.title === jobTitle);
   expect(job).toBeTruthy();
-  expect(job.targetTraderId).toBe(traderId);
+  expect(job.targetTraderId).toBeNull();
   return job;
-}
-
-async function sendTraderQuote(page, job) {
-  await page.goto(`${baseURL}/trader/quotes/new?jobId=${encodeURIComponent(job.id)}&title=${encodeURIComponent(job.title)}`, { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText('Create an itemised quote')).toBeVisible();
-  await page.getByLabel('Labour total (£)').fill('1200');
-  await page.getByLabel('Materials (£)').fill('300');
-  await page.getByLabel('Included scope').fill('Preparation, waterproofing, tiling, grouting, silicone and final clean.');
-  await page.getByLabel('Estimated duration (days)').fill('5');
-  await page.getByLabel('Deposit requested (£)').fill('200');
-  await page.getByLabel('Additional notes').fill('Real BuildPair browser journey quote.');
-  await page.getByRole('button', { name: 'Send quote' }).click();
-  await page.waitForURL(/\/trader\/dashboard/, { timeout: 25_000 });
-}
-
-async function acceptQuote(page, jobId) {
-  await page.goto(`${baseURL}/customer/compare/${jobId}`, { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText(businessName, { exact: true })).toBeVisible({ timeout: 20_000 });
-  const accept = page.getByRole('button', { name: 'Accept Quote' });
-  await expect(accept).toBeEnabled();
-  await accept.click();
-  await page.waitForURL(new RegExp(`/customer/jobs/${jobId}`), { timeout: 25_000 });
-  const detail = await api(page, `/api/jobs/${jobId}`);
-  expect(detail.job.status).toBe('in_progress');
-  expect(detail.acceptedQuote).toBeTruthy();
-  return detail;
-}
-
-async function createInvoice(page) {
-  await page.goto(`${baseURL}/trader/invoices/new`, { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText('Create invoice')).toBeVisible();
-  await page.getByLabel('Invoice number').fill(invoiceNumber);
-  await page.getByLabel('Customer name').fill('BuildPair Test Homeowner');
-  await page.getByLabel('Customer email').fill(customerEmail);
-  await page.getByLabel('Description').fill('Bathroom tiling labour and materials');
-  await page.getByLabel('Quantity').fill('1');
-  await page.getByLabel('Unit price (£)').fill('1500');
-  await page.getByLabel('Deposit already paid / requested (£)').fill('200');
-  await page.getByLabel('Notes').fill('Generated by the BuildPair real signup-to-invoice browser journey.');
-
-  page.once('dialog', async (dialog) => dialog.accept());
-  await page.getByRole('button', { name: 'Save and send invoice' }).click();
-  await page.waitForURL(/\/trader\/invoices/, { timeout: 25_000 });
-
-  const invoices = await api(page, '/api/invoices');
-  const invoice = invoices.find((item) => item.invoiceNumber === invoiceNumber);
-  expect(invoice).toBeTruthy();
-  expect(invoice.totalAmount).toBe(150000);
-  expect(['draft', 'sent']).toContain(invoice.status);
-  return invoice;
 }
 
 test.describe.configure({ mode: 'serial' });
 
-test('real browser journey: trader signup -> profile -> homeowner signup -> direct job -> quote -> accept -> invoice', async ({ browser }) => {
+test('real browser journey: Clerk signup -> account mode -> Starter trader profile -> homeowner job', async ({ browser }) => {
   await registerCleanupEmails();
 
   const traderContext = await browser.newContext();
@@ -215,34 +201,43 @@ test('real browser journey: trader signup -> profile -> homeowner signup -> dire
   const customerPage = await customerContext.newPage();
 
   try {
-    await test.step('Tradesperson signs up with email and verifies the real Clerk flow', async () => {
+    await test.step('Tradesperson signs up through the real Clerk web component and verifies email', async () => {
       await realEmailSignup(traderPage, 'trader', traderEmail, traderPassword);
     });
 
-    const { me: traderUser } = await test.step('Tradesperson completes and publishes a real profile', async () => createTraderProfile(traderPage));
+    const { me: traderUser, profile } = await test.step('Tradesperson publishes a real Starter profile', async () => createStarterTraderProfile(traderPage));
+    expect(profile.categoryLimit).toBe(2);
 
-    await test.step('Homeowner signs up with a separate fresh email account', async () => {
+    await test.step('Homeowner signs up with a separate fresh account', async () => {
       await realEmailSignup(customerPage, 'customer', customerEmail, customerPassword);
       const me = await api(customerPage, '/api/me');
       expect(me.customerEnabled).toBe(true);
+      expect(me.activeMode).toBe('customer');
     });
 
-    const job = await test.step('Homeowner sends this exact tradesperson a direct quote request', async () => postDirectJob(customerPage, traderUser.id));
-
-    await test.step('Tradesperson opens the real quote form and sends an itemised quote', async () => sendTraderQuote(traderPage, job));
-
-    const quoteData = await api(customerPage, `/api/jobs/${job.id}/quotes`);
-    expect(quoteData.quotes.some((quote) => quote.businessName === businessName && quote.totalAmount === 150000)).toBe(true);
-
-    await test.step('Homeowner compares and accepts the quote in the real UI', async () => acceptQuote(customerPage, job.id));
-
-    await test.step('Tradesperson marks the job complete through the live API used by the UI', async () => {
-      await api(traderPage, `/api/jobs/${job.id}`, { method: 'PATCH', body: JSON.stringify({ action: 'complete' }) });
-      const detail = await api(customerPage, `/api/jobs/${job.id}`);
-      expect(detail.job.status).toBe('completed');
+    await test.step('Homeowner can post a real open marketplace job', async () => {
+      await postOpenMarketplaceJob(customerPage);
     });
 
-    await test.step('Tradesperson creates and sends/safely-saves a real invoice', async () => createInvoice(traderPage));
+    await test.step('Starter trader remains blocked from paid direct-lead access', async () => {
+      const result = await rawApi(customerPage, '/api/jobs', {
+        method: 'POST',
+        body: JSON.stringify({
+          targetTraderId: traderUser.id,
+          title: `Starter direct lead guard ${runId}`,
+          category: 'Tiling',
+          propertyType: 'House',
+          postcode: testPostcode,
+          urgency: 'Within 1 month',
+          description: 'This direct request is intentionally expected to be rejected because the target tradesperson is still on Starter Free.',
+          budgetRange: '£1,500–£5,000',
+          photos: [],
+          isEmergency: false,
+        }),
+      });
+      expect(result.response.status).toBe(409);
+      expect(String(result.body?.error ?? result.text)).toMatch(/not currently accepting direct BuildPair leads/i);
+    });
   } finally {
     await traderContext.close();
     await customerContext.close();

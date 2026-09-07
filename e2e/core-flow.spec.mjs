@@ -5,6 +5,7 @@ import { expect, test } from '@playwright/test';
 
 const baseURL = process.env.E2E_BASE_URL || 'https://staging.buildpair.co.uk';
 const stateFile = path.join(process.cwd(), 'playwright', '.e2e-users.json');
+const testPostcode = 'SW1A 1AA';
 
 async function signInAndGetToken(browser, email) {
   const context = await browser.newContext();
@@ -17,7 +18,7 @@ async function signInAndGetToken(browser, email) {
   return { context, page, token };
 }
 
-async function api(token, pathName, options = {}) {
+async function rawApi(token, pathName, options = {}) {
   const response = await fetch(`${baseURL}${pathName}`, {
     ...options,
     headers: {
@@ -29,11 +30,16 @@ async function api(token, pathName, options = {}) {
   const text = await response.text();
   let body;
   try { body = text ? JSON.parse(text) : null; } catch { body = text; }
+  return { response, body, text };
+}
+
+async function api(token, pathName, options = {}) {
+  const { response, body, text } = await rawApi(token, pathName, options);
   if (!response.ok) throw new Error(`${options.method || 'GET'} ${pathName} -> HTTP ${response.status}: ${text}`);
   return body;
 }
 
-test('homeowner to tradesperson job lifecycle works end to end', async ({ browser }) => {
+test('Homeowner and Starter tradesperson core journey obeys the current product contract', async ({ browser }) => {
   const state = JSON.parse(await fs.readFile(stateFile, 'utf8'));
   const customer = await signInAndGetToken(browser, state.customerEmail);
   const trader = await signInAndGetToken(browser, state.traderEmail);
@@ -51,11 +57,13 @@ test('homeowner to tradesperson job lifecycle works end to end', async ({ browse
       method: 'PUT',
       body: JSON.stringify({
         businessName: 'BuildPair Automated QA Trade',
+        tradeCategories: ['Tiling'],
+        serviceSelections: { Tiling: ['Bathroom tiling', 'Floor tiling'] },
         tradeCategory: 'Tiling',
-        subSkills: ['Tiling', 'Bathroom Fitting'],
-        bio: 'Automated BuildPair end-to-end test tradesperson profile used only to verify the complete customer and trader workflow.',
+        subSkills: ['Bathroom tiling', 'Floor tiling'],
+        bio: 'Automated BuildPair end-to-end test tradesperson profile used only to verify the current Starter customer and trader workflow.',
         radiusMiles: 20,
-        postcode: 'TW18 4AB',
+        postcode: testPostcode,
         qualifications: ['Automated test profile - not a public trader'],
         externalLinks: {},
         photos: [],
@@ -68,23 +76,24 @@ test('homeowner to tradesperson job lifecycle works end to end', async ({ browse
           logoUrl: '',
           yearsExperience: 10,
           yearEstablished: 2016,
-          serviceAreas: ['Staines-upon-Thames'],
+          serviceAreas: ['Westminster', 'Central London'],
           beforeAfterProjects: [],
         },
       }),
     });
     expect(profile.subscriptionTier).toBe('free');
     expect(profile.isSubscriptionActive).toBe(false);
+    expect(profile.categoryLimit).toBe(2);
 
     const unique = Date.now();
     const job = await api(customer.token, '/api/jobs', {
       method: 'POST',
       body: JSON.stringify({
-        targetTraderId: traderUser.id,
+        targetTraderId: null,
         title: `BuildPair E2E bathroom tiling ${unique}`,
         category: 'Tiling',
         propertyType: 'House',
-        postcode: 'TW18 4AB',
+        postcode: testPostcode,
         urgency: 'Flexible',
         description: 'Automated end-to-end test job to retile a bathroom, prepare the walls, waterproof the wet area and complete the finish.',
         aiGeneratedSpec: null,
@@ -93,14 +102,13 @@ test('homeowner to tradesperson job lifecycle works end to end', async ({ browse
       }),
     });
     expect(job.customerId).toBe(customerUser.id);
-    expect(job.targetTraderId).toBe(traderUser.id);
+    expect(job.targetTraderId).toBeNull();
     expect(job.status).toBe('open');
-    expect(job.conversationId).toBeTruthy();
 
     const traderJobs = await api(trader.token, '/api/jobs');
-    expect(traderJobs.some((item) => item.id === job.id && item.isPreview === false)).toBe(true);
+    expect(traderJobs.some((item) => item.id === job.id)).toBe(true);
 
-    const quote = await api(trader.token, '/api/quotes', {
+    const quoteAttempt = await rawApi(trader.token, '/api/quotes', {
       method: 'POST',
       body: JSON.stringify({
         jobId: job.id,
@@ -109,71 +117,30 @@ test('homeowner to tradesperson job lifecycle works end to end', async ({ browse
         vatAmount: 0,
         depositAmount: 20000,
         paymentTerms: '£200 deposit, remaining balance after the completed work is checked by the customer.',
-        notes: 'Automated BuildPair E2E quote.',
+        scope: 'Preparation, waterproofing, tiling, grouting, silicone and final clean.',
+        notes: 'Automated BuildPair Starter entitlement check.',
       }),
     });
-    expect(quote.status).toBe('pending');
-    expect(quote.totalAmount).toBe(150000);
-    expect(quote.conversationId).toBeTruthy();
+    expect(quoteAttempt.response.status).toBe(402);
+    expect(String(quoteAttempt.body?.error ?? quoteAttempt.text)).toMatch(/Plus or Pro is required/i);
 
-    await api(customer.token, `/api/quotes/${quote.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ action: 'accept' }),
-    });
-
-    let detail = await api(customer.token, `/api/jobs/${job.id}`);
-    expect(detail.job.status).toBe('in_progress');
-    expect(detail.acceptedQuote.id).toBe(quote.id);
-    expect(detail.milestones.length).toBeGreaterThanOrEqual(2);
-
-    const conversationId = quote.conversationId || job.conversationId;
-    await api(trader.token, `/api/conversations/${conversationId}/messages`, {
-      method: 'POST',
-      body: JSON.stringify({ body: 'Automated trader message: quote accepted and job arranged.' }),
-    });
-    const customerMessages = await api(customer.token, `/api/conversations/${conversationId}/messages`);
-    expect(customerMessages.some((message) => message.body.includes('quote accepted'))).toBe(true);
-    await api(customer.token, `/api/conversations/${conversationId}/messages`, {
-      method: 'POST',
-      body: JSON.stringify({ body: 'Automated homeowner reply: confirmed, please proceed.' }),
-    });
-
-    await api(trader.token, `/api/jobs/${job.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ action: 'complete' }),
-    });
-    detail = await api(customer.token, `/api/jobs/${job.id}`);
-    expect(detail.job.status).toBe('completed');
-
-    const finalMilestone = detail.milestones.find((milestone) => milestone.title !== 'Deposit');
-    expect(finalMilestone).toBeTruthy();
-    expect(finalMilestone.status).toBe('completed');
-
-    const confirmation = await api(customer.token, '/api/payments/external-confirm', {
-      method: 'POST',
-      body: JSON.stringify({ milestoneId: finalMilestone.id }),
-    });
-    expect(confirmation.confirmation).toBe('customer_confirmed_external');
-
-    const review = await api(customer.token, '/api/reviews', {
+    const directLeadAttempt = await rawApi(customer.token, '/api/jobs', {
       method: 'POST',
       body: JSON.stringify({
-        jobId: job.id,
-        traderId: traderUser.id,
-        rating: 5,
-        comment: 'Automated verified review confirming the BuildPair E2E workflow completed successfully.',
+        targetTraderId: traderUser.id,
+        title: `BuildPair direct lead guard ${unique}`,
+        category: 'Tiling',
+        propertyType: 'House',
+        postcode: testPostcode,
+        urgency: 'Flexible',
+        description: 'This direct request must be rejected while the target tradesperson remains on Starter Free.',
+        aiGeneratedSpec: null,
+        budgetRange: '£1,500–£5,000',
+        photos: [],
       }),
     });
-    expect(review.verifiedCompletion).toBe(true);
-
-    detail = await api(customer.token, `/api/jobs/${job.id}`);
-    const paidFinal = detail.milestones.find((milestone) => milestone.id === finalMilestone.id);
-    expect(paidFinal.status).toBe('paid');
-    expect(detail.existingReview).toBeTruthy();
-
-    const publicProfile = await api(customer.token, `/api/traders/${profile.id}`);
-    expect(publicProfile.reviewCount).toBeGreaterThanOrEqual(1);
-    expect(publicProfile.reviews.some((item) => item.id === review.id)).toBe(true);
+    expect(directLeadAttempt.response.status).toBe(409);
+    expect(String(directLeadAttempt.body?.error ?? directLeadAttempt.text)).toMatch(/not currently accepting direct BuildPair leads/i);
   } finally {
     await customer.context.close();
     await trader.context.close();

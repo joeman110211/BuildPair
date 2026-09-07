@@ -13,6 +13,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      BUILDPAIR_BUILD_SHA: ${BUILDPAIR_BUILD_SHA:-unknown}
     restart: unless-stopped
     expose:
       - "3000"

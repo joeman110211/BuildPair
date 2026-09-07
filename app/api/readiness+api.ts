@@ -66,7 +66,12 @@ export async function GET() {
             SELECT 1 FROM pg_trigger
             WHERE tgname = 'verify_review_before_insert'
               AND NOT tgisinternal
-          ) AS "hasReviewVerificationTrigger"
+          ) AS "hasReviewVerificationTrigger",
+          EXISTS (
+            SELECT 1
+            FROM buildpair_migrations
+            WHERE filename = '0020_account_deletion_completion.sql'
+          ) AS "hasLatestAccountDeletionMigration"
       ` as unknown as {
         hasAccountModeColumns: boolean;
         hasAccountStateColumns: boolean;
@@ -75,6 +80,7 @@ export async function GET() {
         hasAcceptQuoteFunction: boolean;
         hasAccountDeleteFunction: boolean;
         hasReviewVerificationTrigger: boolean;
+        hasLatestAccountDeletionMigration: boolean;
       }[];
 
       if (!schema?.hasAccountModeColumns) missingSchema.push('users.account_modes');
@@ -84,6 +90,7 @@ export async function GET() {
       if (!schema?.hasAcceptQuoteFunction) missingSchema.push('accept_job_quote(uuid,text)');
       if (!schema?.hasAccountDeleteFunction) missingSchema.push('buildpair_delete_account(text)');
       if (!schema?.hasReviewVerificationTrigger) missingSchema.push('verify_review_before_insert');
+      if (!schema?.hasLatestAccountDeletionMigration) missingSchema.push('0020_account_deletion_completion.sql');
     } catch {
       missingSchema.push('database_schema_check');
     }

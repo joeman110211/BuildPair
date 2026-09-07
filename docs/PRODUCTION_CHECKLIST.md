@@ -1,104 +1,129 @@
 # BuildPair production checklist
 
-Status reviewed: 5 September 2026.
+Status reviewed: 7 September 2026.
 
-This checklist separates the current private-test stage from the later public-production stage. A green build proves the code compiles and tests pass; it does not magically make third-party services, app stores, payments and legal obligations disappear.
+The detailed current launch gate is in `docs/PRODUCTION_LAUNCH_2026.md`. This checklist is the shorter operational view. A green build proves that code compiles and tests pass; it does not make third-party services, app stores, payments, hosting, legal obligations or real-device testing disappear.
 
 ## Completed in the repository
 
 - [x] Final public product name is BuildPair in user-facing application configuration and copy.
 - [x] GitHub repository is `joeman110211/BuildPair`.
-- [x] Final native identifiers use `uk.co.buildpair.app` and the `buildpair://` URL scheme.
+- [x] Native identifiers use `uk.co.buildpair.app` and the `buildpair://` URL scheme.
 - [x] Public BuildPair landing page, directory, public jobs and public trader profiles exist.
 - [x] Public About, How It Works, Homeowner, Tradesperson, Download and Contact pages exist.
 - [x] Public Terms, Privacy, Cookie and Marketplace Disclaimer pages exist.
 - [x] One Clerk login can enable separate Homeowner and Tradesperson modes.
-- [x] Email/password + verification code auth is implemented.
-- [x] Google and Facebook SSO flows are implemented.
-- [x] Phone OTP is not required for the current beta.
-- [x] Trader onboarding has four steps, a visible 50-character bio minimum, visible skill-selection ticks and Save & Publish routing.
-- [x] New trader profiles use a 14-day trial; previously granted longer stored beta trials remain honoured.
-- [x] Smart related-term trade search and 50+ trade categories are implemented.
+- [x] Email/password + verification-code auth is implemented.
+- [x] Google and Facebook SSO support is implemented in the native auth path; production provider configuration still needs final verification.
+- [x] Phone OTP is not required for launch.
+- [x] Trader onboarding has four steps, a visible 50-character bio minimum, visible skill selection and Save & Publish routing.
+- [x] Current commercial model has Starter Free, Plus and Pro with no automatic free trial.
+- [x] Smart related-term trade search and grouped trade categories/services are implemented.
 - [x] Postcode geocoding and privacy-safe outward-code public job locations are implemented.
 - [x] Homeowner job creation, quote comparison and atomic quote acceptance are implemented.
 - [x] Job-scoped messaging and participant checks are implemented.
-- [x] Completion, milestone state and external-payment confirmation are implemented for the Stripe-disabled beta path.
-- [x] Verified-review enforcement exists at both API and database-trigger level.
+- [x] Completion and milestone state are implemented.
+- [x] Verified-review enforcement exists at API/database level and is restricted to qualifying paid BuildPair work.
 - [x] Trade invoices and Resend delivery code are implemented.
 - [x] Cloudinary signed-upload code is implemented.
 - [x] Admin moderation, reporting, suspension and restoration flows are implemented.
 - [x] Account deletion API/UI exists.
 - [x] Health and readiness endpoints exist.
 - [x] GitHub Quality CI covers lint, TypeScript, unit tests, web export, Android export, iOS export and production dependency audit.
-- [x] Playwright E2E covers the homeowner → trader → job → quote → acceptance → messaging → completion → payment confirmation → verified review lifecycle.
-- [x] GitHub Actions Android release APK build exists as a manual target-environment build.
-- [x] Zero-cost Chromebook test hosting is supported through the real Node server plus Cloudflare Quick Tunnel.
-- [x] Portable Docker/Caddy production infrastructure is retained for the later public-hosting move.
+- [x] GitHub Actions Android release build support exists.
+- [x] Docker/Caddy production infrastructure and production deployment script exist.
+- [x] Live Stripe Plus and Pro monthly products/prices have been created.
 
-## Current private-test phase
+## Current launch blockers / work in progress
 
-- [ ] Complete the Chromebook Linux setup in `docs/CHROMEBOOK_TEST_HOST.md`.
-- [ ] Start the Chromebook test host and confirm `/api/health` returns HTTP 200.
-- [ ] Confirm `/api/readiness` returns HTTP 200 with `ready: true` using the intended test credentials.
-- [ ] Test email/password registration and email verification through the temporary tunnel URL.
-- [ ] Test Google and Facebook login against the temporary test origin if those providers are enabled for the test environment.
-- [ ] Run a complete homeowner → trader workflow with the small tester group.
-- [ ] Send a Contact form message and test invoice through the intended Resend test/domain configuration.
-- [ ] Upload, display and replace/delete test job and trader photos through Cloudinary.
-- [ ] Run the manual Playwright E2E workflow against the current temporary tunnel URL when the test Clerk configuration is ready.
-- [ ] Produce and install an Android APK only when a sufficiently stable API URL is available for that test build.
-
-## Required before wider public launch
-
-- [ ] Move from temporary Chromebook hosting to proper always-on UK/scalable hosting.
-- [ ] Point `buildpair.co.uk` / `www.buildpair.co.uk` at the public production environment.
-- [ ] Confirm `/api/health` and `/api/readiness` on the final public deployment.
-- [ ] Run the full Playwright E2E workflow against that exact public deployment and retain the passing run as launch evidence.
-- [ ] Confirm the Android release APK/AAB build installs on a physical Android phone.
-- [ ] Confirm Clerk production redirect/origin settings for email, Google and Facebook on the final web domain and `buildpair://` native callback.
-- [ ] Confirm the current database has every checked-in migration applied and take a recovery point / backup before public traffic.
-- [ ] Confirm database point-in-time restore is enabled and document how to restore it.
-- [ ] Configure a protected scheduler for `/api/maintenance/credential-expiry` using a strong `CRON_SECRET`; the old hosting-provider cron is intentionally gone.
-- [ ] Add production error reporting with personal-data scrubbing and an external uptime alert for the web/API health endpoint.
-- [ ] Add hosting-level rate limiting/WAF rules to public/contact, Gemini and authenticated write endpoints that are abuse-sensitive.
-- [ ] Remove the quiet-launch `noindex, nofollow` header only when BuildPair is deliberately ready for search-engine discovery.
-
-## Product / legal checks before wider public launch
-
-- [x] UK privacy notice, cookie policy, marketplace terms and marketplace disclaimer pages are present.
-- [x] The current product describes trade credentials as self-certified rather than claiming BuildPair has vetted them.
-- [x] Account deletion workflow exists.
-- [ ] Review final legal wording before a wider paid launch, especially trader subscriptions, cancellation/refunds, consumer contracts, VAT invoicing, platform liability and payments.
-- [ ] Define and document complaints, dangerous-work, disputed-work, chargeback and trader-removal procedures for support/admin use.
-- [ ] Finalise the retention/deletion policy before app-store release.
+- [ ] Bring the browser E2E suite into line with the current Clerk web components and current subscription entitlements without weakening production security rules.
+- [ ] Re-run the complete browser journey against the exact target deployment and retain passing evidence.
+- [ ] Re-test the reported real-device scrolling/reachability problem on trader onboarding and post-a-job screens. The latest automated small-Android reachability checks passed, so this needs device/browser reproduction rather than a blind layout rewrite.
+- [ ] Move public production from Chromebook staging infrastructure to an always-on production Linux host.
+- [ ] Point `buildpair.co.uk` / `www.buildpair.co.uk` at the public production environment and verify TLS/redirects.
+- [ ] Configure production Clerk origin/redirect/provider settings for web and native callbacks.
+- [ ] Confirm the production database has every migration applied and take a recovery point/backup before public traffic.
+- [ ] Confirm database restore/PITR capability and document the restore procedure.
+- [ ] Configure a protected scheduler for credential-expiry maintenance using a strong `CRON_SECRET`.
+- [ ] Add production error reporting, centralised logs, uptime monitoring and payment/email/database alerts with personal-data scrubbing.
+- [ ] Add hosting-level WAF/rate-limit rules around abuse-sensitive public, AI and authenticated-write endpoints.
+- [ ] Ensure production runs with `BUILDPAIR_PREVIEW_DATA_ENABLED=false` and does not present demo accounts/jobs as real customers.
+- [ ] Remove quiet-launch `noindex, nofollow` only when BuildPair is deliberately ready for search-engine discovery.
 
 ## Payments
 
-Stripe code exists but Stripe remains intentionally optional for the current beta.
+The live monthly Stripe catalogue currently contains:
 
-Before enabling paid subscriptions or BuildPair job payments:
+- BuildPair Plus £19.99/month: `price_1UCqAM8bTbZf5Cph1OFqiYPT`
+- BuildPair Pro £29.99/month: `price_1UCqC88bTbZf5CphvqAmDTnC`
 
-- [ ] Test successful, declined, 3DS, cancelled, duplicate-webhook and refunded payments in Stripe test mode.
-- [ ] Test Connect accounts with incomplete verification and disabled charges.
-- [ ] Test subscription start, upgrade, downgrade, cancellation, failed renewal and billing-portal access.
-- [ ] Confirm platform fee policy and who absorbs Stripe processing fees.
-- [ ] Verify both platform and Connect webhook destinations/signing secrets on the final production domain.
+Before enabling public paid traffic:
 
-## App stores and devices
+- [ ] Configure the production Stripe publishable/secret keys only in the correct production environments.
+- [ ] Map the live Plus/Pro price IDs to `STRIPE_BASIC_PRICE_ID` / `STRIPE_FEATURED_PRICE_ID`.
+- [ ] Configure and verify platform and Connect webhook destinations/signing secrets on `https://www.buildpair.co.uk/api/stripe/webhook`.
+- [ ] Configure and verify Billing Portal behaviour.
+- [ ] Test subscription start, upgrade, downgrade, cancellation, failed renewal and portal access.
+- [ ] Test successful, declined, 3DS, cancelled, duplicate-webhook and refunded job payments before public traffic.
+- [ ] Test Connect onboarding including incomplete verification and disabled-payment states.
+- [ ] Confirm the 5% marketplace platform-fee policy and decide who absorbs Stripe processing fees.
+- [ ] Confirm actual UK VAT-registration status before enabling VAT collection or VAT claims.
+- [ ] Configure Stripe/Radar risk controls appropriate to the marketplace model and document chargeback/refund handling.
 
-- [x] Final bundle/package identifiers are configured.
-- [x] BuildPair app icons, favicon, splash assets and PWA manifest exist.
-- [ ] Produce final store screenshots, privacy labels, support URL and store listing copy.
-- [ ] Test at minimum: small Android phone, current Pixel/Samsung size, iPhone SE size, modern iPhone, tablet and desktop web.
-- [ ] Verify deep links and auth/payment return URLs from both cold and warm app states.
-- [ ] Test poor-network/offline behaviour and screen-reader navigation on physical devices.
-- [ ] Complete Play Store signing/release setup and iOS App Store signing/release setup when store launch becomes the target.
+## Android
+
+- [x] Android package is `uk.co.buildpair.app`.
+- [x] BuildPair app icons/splash assets and native build path exist.
+- [x] EAS production profile builds an Android App Bundle.
+- [x] EAS production profile is pinned to the EAS production environment.
+- [ ] Configure production EAS public environment values without exposing server secrets to the bundle.
+- [ ] Generate/confirm Android release signing credentials.
+- [ ] Produce a signed production AAB and install a QA APK on physical Android hardware.
+- [ ] Verify deep links and Clerk/Stripe return URLs from cold and warm app states.
+- [ ] Complete Google Play Console account, app record, Play App Signing, store listing, screenshots, privacy/data-safety forms and release track.
+- [ ] Test small Android and current Pixel/Samsung-sized hardware, including keyboard/scroll reachability.
+
+## iOS
+
+- [x] iOS bundle identifier is `uk.co.buildpair.app`.
+- [x] Shared Expo/React Native codebase and iOS export checks exist.
+- [x] EAS production profile is pinned to the EAS production environment.
+- [ ] Configure production EAS public environment values without exposing server secrets to the bundle.
+- [ ] Configure Apple Developer signing and App Store Connect app record.
+- [ ] Produce an iOS production/TestFlight build.
+- [ ] Verify deep links and Clerk/Stripe return URLs from cold and warm app states.
+- [ ] Complete App Store screenshots, privacy labels, support/privacy URLs and listing metadata.
+- [ ] Test a compact iPhone, current iPhone and iPad layout.
+
+## Product / legal / operations
+
+- [x] UK privacy notice, cookie policy, marketplace terms and marketplace disclaimer pages are present.
+- [x] The product describes trade credentials carefully rather than silently claiming BuildPair has vetted every credential.
+- [x] Account deletion workflow exists.
+- [ ] Review final legal wording before a wider paid launch, especially subscriptions, cancellation/refunds, consumer contracts, VAT invoicing, platform liability and payments.
+- [ ] Define and document complaints, dangerous-work, disputed-work, chargeback and trader-removal procedures for support/admin use.
+- [ ] Finalise the retention/deletion policy before app-store release.
+- [ ] Verify production support mailbox ownership and response process.
+
+## Release evidence
+
+Do not call BuildPair production-ready until there is evidence for the exact release being shipped:
+
+- [ ] exact production Git SHA recorded,
+- [ ] Quality CI green,
+- [ ] production-safe browser smoke/E2E evidence retained,
+- [ ] production health/readiness green,
+- [ ] database backup and restore readiness confirmed,
+- [ ] low-value live Stripe smoke test completed and reconciled appropriately,
+- [ ] Android signed build installed/tested,
+- [ ] iOS TestFlight/App Store build tested,
+- [ ] monitoring and alerts confirmed working.
 
 ## Intentional historical internal names
 
-The product and repository are BuildPair. Two legacy strings remain intentionally inside the migration system because changing them casually could corrupt migration tracking:
+The product and repository are BuildPair. Two legacy strings remain intentionally inside the migration system because renaming already-applied migration identifiers can corrupt migration tracking:
 
 - `db/migrations/0000_buildmate_initial.sql`
 - migration ledger table `buildmate_migrations`
 
-The migration runner records applied filenames. Renaming the already-applied initial migration could make it look new and attempt to replay schema SQL. These are internal historical identifiers, not user-facing branding.
+These are internal historical identifiers, not user-facing branding.

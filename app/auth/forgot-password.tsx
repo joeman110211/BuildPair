@@ -81,7 +81,7 @@ export default function ForgotPasswordScreen() {
 
   if (step === 'email') {
     return <Screen title="Reset your password" subtitle="Enter the email address on your BuildPair account and we’ll send a reset code.">
-      <TextInput label="Email address" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" mode="outlined" />
+      <TextInput label="Email address" accessibilityLabel="Email address" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" mode="outlined" />
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
       <Button mode="contained" loading={busy} disabled={busy || !email.trim()} contentStyle={styles.button} onPress={() => void sendCode()}>Send reset code</Button>
       <Link href={mode ? signInHref(mode) : '/auth/sign-in'} asChild><Button>Back to sign in</Button></Link>
@@ -90,7 +90,7 @@ export default function ForgotPasswordScreen() {
 
   if (step === 'code') {
     return <Screen title="Check your email" subtitle={`Enter the password reset code sent to ${email.trim().toLowerCase()}.`}>
-      <TextInput label="Reset code" value={code} onChangeText={setCode} keyboardType="number-pad" autoComplete="one-time-code" mode="outlined" />
+      <TextInput label="Reset code" accessibilityLabel="Reset code" value={code} onChangeText={setCode} keyboardType="number-pad" autoComplete="one-time-code" mode="outlined" />
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
       <Button mode="contained" loading={busy} disabled={busy || !code.trim()} contentStyle={styles.button} onPress={() => void verifyCode()}>Verify code</Button>
       <Button disabled={busy} onPress={() => void sendCode()}>Send another code</Button>
@@ -99,8 +99,8 @@ export default function ForgotPasswordScreen() {
   }
 
   return <Screen title="Choose a new password" subtitle="Use a new password you do not use elsewhere.">
-    <TextInput label="New password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" mode="outlined" />
-    <TextInput label="Confirm new password" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry autoComplete="new-password" mode="outlined" />
+    <TextInput label="New password" accessibilityLabel="New password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" mode="outlined" />
+    <TextInput label="Confirm new password" accessibilityLabel="Confirm new password" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry autoComplete="new-password" mode="outlined" />
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
     <Button mode="contained" loading={busy} disabled={busy || !password || !confirmPassword} contentStyle={styles.button} onPress={() => void setNewPassword()}>Set new password</Button>
   </Screen>;

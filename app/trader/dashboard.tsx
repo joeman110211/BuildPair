@@ -6,6 +6,7 @@ import { StyleSheet, View } from 'react-native';
 import { Button, Chip, ProgressBar, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
+import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, ApiError, errorMessage } from '@/lib/api';
 import type { Job, Quote, TraderProfile } from '@/types';
@@ -19,7 +20,6 @@ export default function TraderDashboard() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [now] = useState(() => Date.now());
 
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
   const load = useCallback(async () => {
@@ -45,17 +45,36 @@ export default function TraderDashboard() {
   const activeJobs = jobs.filter((job) => job.status === 'in_progress');
   const completedJobs = jobs.filter((job) => job.status === 'completed');
   const pendingQuotes = quotes.filter((quote) => quote.status === 'pending');
-  const trialEnds = profile.trialEndsAt ? new Date(profile.trialEndsAt) : null;
-  const trialDays = trialEnds ? Math.max(0, Math.ceil((trialEnds.getTime() - now) / 86400000)) : 0;
+  const plan = SUBSCRIPTION_TIERS[profile.subscriptionTier];
+  const offerLimit = profile.monthlyQuoteLimit ?? plan.monthlyMarketplaceQuotes;
+  const offersUsed = profile.monthlyQuotesUsed ?? 0;
+  const offerProgress = offerLimit > 0 ? Math.min(1, offersUsed / offerLimit) : 0;
+  const paidActive = profile.subscriptionTier !== 'free' && profile.isSubscriptionActive;
 
   return <Screen title={`Hello, ${profile.businessName}`} subtitle={`${profile.tradeCategory}${profile.locationLabel ? ` · ${profile.locationLabel}` : ''}`}>
-    {profile.isSubscriptionActive && trialEnds ? <AppCard style={styles.trialCard}>
-      <View style={styles.row}><View style={styles.flex}><Text variant="titleLarge" style={styles.cardTitle}>Free trial</Text><Text style={styles.muted}>{trialDays} day{trialDays === 1 ? '' : 's'} remaining · Your BuildPair listing is live.</Text></View><Chip icon="gift-outline">Trial active</Chip></View>
-      <ProgressBar progress={Math.max(0, Math.min(1, trialDays / 14))} color={colors.primary} style={styles.progress} />
-    </AppCard> : null}
+    <AppCard style={[styles.membershipCard, paidActive && styles.membershipCardPaid]}>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Text style={styles.membershipEyebrow}>CURRENT MEMBERSHIP</Text>
+          <Text variant="titleLarge" style={styles.cardTitle}>{plan.name}</Text>
+          <Text style={styles.muted}>{profile.subscriptionTier === 'free'
+            ? 'Your Starter profile can be shared externally and you can browse marketplace jobs. Upgrade to appear in BuildPair search and submit marketplace offers.'
+            : `${offerLimit - offersUsed} of ${offerLimit} open-marketplace offers remaining this month. Direct homeowner requests do not use this allowance.`}</Text>
+        </View>
+        <Chip>{paidActive ? 'Active' : profile.subscriptionTier === 'free' ? 'Free' : 'Needs attention'}</Chip>
+      </View>
+      {offerLimit > 0 ? <>
+        <ProgressBar progress={offerProgress} color={colors.primary} style={styles.progress} />
+        <Text style={styles.offerMeta}>{offersUsed} used · {offerLimit} monthly allowance</Text>
+      </> : null}
+      <View style={styles.membershipActions}>
+        <Link href="/trader/subscription" asChild><Button mode={profile.subscriptionTier === 'free' ? 'contained' : 'outlined'}>{profile.subscriptionTier === 'free' ? 'View membership options' : 'Manage membership'}</Button></Link>
+        <Link href="/trader/analytics" asChild><Button mode="text">Business analytics</Button></Link>
+      </View>
+    </AppCard>
 
     <View style={styles.stats}>
-      <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{newLeads.length}</Text><Text style={styles.statLabel}>New leads</Text></AppCard>
+      <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{newLeads.length}</Text><Text style={styles.statLabel}>New opportunities</Text></AppCard>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{pendingQuotes.length}</Text><Text style={styles.statLabel}>Quotes awaiting reply</Text></AppCard>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{activeJobs.length}</Text><Text style={styles.statLabel}>Active jobs</Text></AppCard>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{completedJobs.length}</Text><Text style={styles.statLabel}>Completed</Text></AppCard>
@@ -63,18 +82,18 @@ export default function TraderDashboard() {
 
     <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.cardTitle}>Quick actions</Text></View>
     <View style={styles.quickActions}>
-      <Link href="/trader/job-board" asChild><Button mode="contained" icon="briefcase-search-outline" contentStyle={styles.actionButton}>Find Jobs</Button></Link>
-      <Link href="/trader/invoices/new" asChild><Button mode="contained-tonal" icon="file-document-edit-outline" contentStyle={styles.actionButton}>Create Invoice</Button></Link>
-      <Link href="/trader/onboarding" asChild><Button mode="outlined" icon="account-edit-outline" contentStyle={styles.actionButton}>Edit Profile</Button></Link>
-      <Button mode="outlined" icon="eye-outline" contentStyle={styles.actionButton} onPress={() => router.push(`/(public)/traders/${profile.id}` as Href)}>View Public Profile</Button>
+      <Link href="/trader/job-board" asChild><Button mode="contained" contentStyle={styles.actionButton}>Find jobs</Button></Link>
+      <Link href="/trader/invoices/new" asChild><Button mode="contained-tonal" contentStyle={styles.actionButton}>Create invoice</Button></Link>
+      <Link href="/trader/onboarding" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Edit profile</Button></Link>
+      <Button mode="outlined" contentStyle={styles.actionButton} onPress={() => router.push(`/(public)/traders/${profile.id}` as Href)}>View public profile</Button>
     </View>
 
     {error ? <EmptyState title="Something needs attention" body={error} action={<Button onPress={load}>Try again</Button>} /> : null}
 
     <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.cardTitle}>Recent opportunities</Text><Link href="/trader/job-board" asChild><Button compact>View all</Button></Link></View>
-    {!newLeads.length ? <EmptyState title="No new leads right now" body={`New ${profile.tradeCategory.toLowerCase()} jobs matching your account will appear here.`} /> : newLeads.slice(0, 3).map((job) => <AppCard key={job.id}>
-      <View style={styles.row}><Text variant="titleMedium" style={styles.cardTitle}>{job.title}</Text>{job.targetTraderId === profile.userId ? <Chip compact icon="account-arrow-left">Direct request</Chip> : <Chip compact>New</Chip>}</View>
-      <Text style={styles.muted}>📍 {job.postcode || job.locationLabel || 'Location available in job'} · {job.budgetRange}</Text>
+    {!newLeads.length ? <EmptyState title="No new opportunities right now" body={`New ${profile.tradeCategory.toLowerCase()} jobs matching your account will appear here.`} /> : newLeads.slice(0, 3).map((job) => <AppCard key={job.id}>
+      <View style={styles.row}><Text variant="titleMedium" style={styles.cardTitle}>{job.title}</Text>{job.targetTraderId === profile.userId ? <Chip compact>Direct request</Chip> : <Chip compact>New</Chip>}</View>
+      <Text style={styles.muted}>{job.postcode || job.locationLabel || 'Location available in job'} · {job.budgetRange}</Text>
       <Text numberOfLines={2} style={styles.description}>{job.description}</Text>
       <Button mode="outlined" onPress={() => router.push('/trader/job-board')}>View opportunity</Button>
     </AppCard>)}
@@ -82,7 +101,11 @@ export default function TraderDashboard() {
 }
 
 const styles = StyleSheet.create({
-  trialCard: { backgroundColor: colors.surfaceSoft },
+  membershipCard: { backgroundColor: colors.surfaceRaised, borderColor: colors.border },
+  membershipCardPaid: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' },
+  membershipEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.1, marginBottom: 3 },
+  membershipActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' },
+  offerMeta: { color: colors.muted, fontSize: 11, fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
   flex: { flex: 1, minWidth: 220 },
   cardTitle: { fontWeight: '900', color: colors.charcoal },

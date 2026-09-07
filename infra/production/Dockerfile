@@ -31,6 +31,8 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=builder /app/dist ./dist
 COPY server.mjs ./server.mjs
+COPY scripts/migrate.mjs ./scripts/migrate.mjs
+COPY db/migrations ./db/migrations
 
 USER node
 EXPOSE 3000

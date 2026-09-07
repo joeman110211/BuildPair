@@ -22,7 +22,7 @@ async function activateTrader(token) {
   if (!response.ok) throw new Error(`Could not enable trader mode: HTTP ${response.status} ${await response.text()}`);
 }
 
-test('trader onboarding allows three trade work types, visibly ticks selections, keeps Continue reachable and enforces the 50-character bio minimum', async ({ page }) => {
+test('Starter trader onboarding visibly selects two categories, keeps Continue reachable and enforces the 50-character bio minimum', async ({ page }) => {
   const state = JSON.parse(await fs.readFile(stateFile, 'utf8'));
   await page.goto(`${baseURL}/`, { waitUntil: 'domcontentloaded' });
   await clerk.signIn({ page, emailAddress: state.traderEmail });
@@ -33,25 +33,24 @@ test('trader onboarding allows three trade work types, visibly ticks selections,
   await expect(page.getByText('What work do you offer?', { exact: true })).toBeVisible();
   await page.getByLabel('Business or trading name').fill('BuildPair Onboarding Check');
 
-  const tiling = page.getByRole('checkbox', { name: 'Tiling' });
-  const bathrooms = page.getByRole('checkbox', { name: 'Bathroom Fitting' });
-  const plumbing = page.getByRole('checkbox', { name: 'Plumbing' });
+  const tiling = page.getByRole('checkbox', { name: 'Tiling', exact: true });
   await tiling.click();
-  await bathrooms.click();
-  await plumbing.click();
-
   await expect(tiling).toBeChecked();
+  await page.getByRole('checkbox', { name: 'Bathroom tiling', exact: true }).click();
+
+  const bathrooms = page.getByRole('checkbox', { name: 'Bathrooms', exact: true });
+  await bathrooms.click();
   await expect(bathrooms).toBeChecked();
-  await expect(plumbing).toBeChecked();
-  await expect(tiling.getByText('✓')).toBeVisible();
-  await expect(page.getByText(/Selected 3 of 3 work types/)).toBeVisible();
+  await page.getByRole('checkbox', { name: 'Full bathroom refits', exact: true }).click();
 
-  const fourthWorkType = page.getByRole('checkbox', { name: 'Electrical' });
-  await expect(fourthWorkType).toBeDisabled();
-  await expect(fourthWorkType).not.toBeChecked();
-  await expect(page.getByText(/Maximum reached for your current plan/)).toBeVisible();
+  await expect(page.getByText(/2 of 2 trade categories selected/)).toBeVisible();
 
-  await page.getByLabel('Base postcode').fill('TW18 4AB');
+  const thirdCategory = page.getByRole('checkbox', { name: 'Plumbing', exact: true });
+  await expect(thirdCategory).toBeDisabled();
+  await expect(thirdCategory).not.toBeChecked();
+  await expect(page.getByText('Plan category limit reached', { exact: true }).first()).toBeVisible();
+
+  await page.getByLabel('Base postcode').fill('SW1A 1AA');
   const firstContinue = page.getByRole('button', { name: 'Continue' });
   await expect(firstContinue).toBeVisible();
   await expect(firstContinue).toBeEnabled();

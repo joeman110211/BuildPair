@@ -120,52 +120,52 @@ export const SUB_SKILLS: Record<TradeCategory, string[]> = {
     'Foundations', 'Footings', 'Concrete slabs', 'Concrete bases', 'Site preparation', 'Mini piling', 'Underpinning',
   ],
   'Drainage & Sewage': [
-    'Blocked drains', 'Drain repairs', 'CCTV drain surveys', 'Drain replacement', 'Soakaways',
-    'Septic tanks', 'Treatment plants', 'Cesspits', 'Drainage fields', 'Septic servicing',
+    'Blocked drains', 'Drain repairs', 'CCTV surveys', 'Drain lining', 'Drain replacement', 'Soakaways',
+    'Sewer connections', 'Septic tanks', 'Pump stations', 'Emergency drainage',
   ],
   'Damp Proofing & Insulation': [
-    'Rising damp', 'Penetrating damp', 'Tanking', 'Mould treatment', 'Basement waterproofing',
-    'Loft insulation', 'Wall insulation', 'Floor insulation', 'Sound insulation', 'Thermal upgrades',
+    'Rising damp', 'Penetrating damp', 'Condensation', 'DPC installation', 'Basement waterproofing',
+    'Tanking', 'Cavity wall insulation', 'Loft insulation', 'Internal wall insulation', 'External wall insulation',
   ],
   'Cladding & Exterior Finishes': [
-    'External cladding', 'Timber cladding', 'Composite cladding', 'Cladding repairs', 'Render finishes',
-    'Exterior panels', 'Weatherproofing',
+    'Timber cladding', 'Composite cladding', 'UPVC cladding', 'Render systems', 'External wall finishes',
+    'Facade repairs', 'Weatherproofing',
   ],
   'Chimneys & Fireplaces': [
-    'Chimney repairs', 'Chimney sweeping', 'Fireplace installation', 'Flue work', 'Wood-burning stoves',
-    'Chimney pots', 'Chimney removal',
+    'Chimney repairs', 'Chimney repointing', 'Chimney removal', 'Chimney caps', 'Flue liners', 'Fireplaces',
+    'Wood burners', 'Stove installation', 'Hearths',
   ],
   'Air Conditioning & Ventilation': [
-    'Air conditioning installation', 'Air conditioning servicing', 'MVHR', 'Extractor fans',
-    'Domestic ventilation', 'Commercial ventilation', 'Ductwork',
+    'Air conditioning installation', 'Air conditioning servicing', 'Air conditioning repairs', 'MVHR',
+    'Extractor fans', 'Ventilation systems', 'Commercial ventilation',
   ],
   'Security, Smart Home & Locksmiths': [
-    'CCTV', 'Burglar alarms', 'Smart lighting', 'Video doorbells', 'Access control', 'Home automation',
-    'Lock changes', 'Emergency entry', 'UPVC locks', 'Security upgrades', 'Automated gates',
+    'CCTV', 'Alarms', 'Access control', 'Video doorbells', 'Smart home systems', 'Smart locks', 'Lock changes',
+    'Emergency locksmith', 'Door entry systems', 'Automated gates',
   ],
   'Handyman & Property Maintenance': [
-    'Small repairs', 'Shelves', 'Flat-pack assembly', 'Curtain poles', 'Picture hanging', 'Odd jobs',
-    'Reactive maintenance', 'Planned maintenance', 'Landlord maintenance', 'Minor building repairs', 'Property inspections',
+    'General repairs', 'Flat-pack assembly', 'Shelving', 'Curtain poles', 'Picture hanging', 'Minor carpentry',
+    'Minor plumbing', 'Minor decorating', 'Property maintenance', 'Landlord maintenance',
   ],
   'Commercial Fit-Out & Access': [
-    'Retail fit-outs', 'Office fit-outs', 'Shopfitting', 'Commercial refurbishments', 'Office partitions',
-    'Suspended ceilings', 'Domestic scaffolds', 'Commercial scaffolds', 'Access towers', 'Roof scaffolds',
+    'Office fit-outs', 'Shop fit-outs', 'Retail fit-outs', 'Partitioning', 'Suspended ceilings', 'Raised floors',
+    'Commercial doors', 'Access systems', 'Cat A fit-out', 'Cat B fit-out',
   ],
   'Demolition, Asbestos & Waste': [
-    'Internal strip-out', 'Outbuilding demolition', 'Wall removal', 'Site clearance', 'Asbestos surveys',
-    'Asbestos sampling', 'Asbestos removal', 'Garage roof removal', 'Builders waste', 'House clearance', 'Garden waste',
+    'Internal strip-out', 'Demolition', 'Site clearance', 'Licensed asbestos removal', 'Asbestos surveys',
+    'Waste removal', 'Builders waste', 'Skip loading',
   ],
   'Cleaning, Exterior Care & Pest Control': [
-    'End-of-build cleaning', 'Deep cleaning', 'Carpet cleaning', 'Window cleaning', 'Gutter cleaning',
-    'Pressure washing', 'Driveway cleaning', 'Patio cleaning', 'Rodent control', 'Wasp removal', 'Insect control', 'Bird control',
+    'End of tenancy cleaning', 'Deep cleaning', 'Builders cleans', 'Window cleaning', 'Gutter cleaning',
+    'Pressure washing', 'Roof cleaning', 'Carpet cleaning', 'Pest control', 'Rodent control', 'Wasp nests',
   ],
   'Garden Buildings & Leisure': [
-    'Garden offices', 'Garden rooms', 'Summerhouses', 'Sheds', 'Studios', 'Conservatories', 'Orangeries',
-    'Swimming pools', 'Hot tubs', 'Pool maintenance', 'Outdoor kitchens',
+    'Garden rooms', 'Summerhouses', 'Sheds', 'Pergolas', 'Outdoor kitchens', 'Hot tub bases', 'Swimming pools',
+    'Pool maintenance', 'Play areas',
   ],
   'Accessibility Adaptations': [
-    'Grab rails', 'Access ramps', 'Accessible bathrooms', 'Door widening', 'Mobility adaptations',
-    'Level-access showers', 'Accessible kitchens',
+    'Grab rails', 'Ramps', 'Accessible bathrooms', 'Walk-in showers', 'Door widening', 'Threshold changes',
+    'Stairlifts', 'Platform lifts', 'Home adaptations',
   ],
   'Professional Building Services': [
     'Planning drawings', 'Building regulations drawings', 'Planning applications', 'Architectural design',
@@ -196,7 +196,7 @@ export const SUBSCRIPTION_TIERS = {
     price: '£19.99/mo',
     categoryLimit: 4,
     monthlyMarketplaceQuotes: 15,
-    features: ['Public searchable profile', '15 marketplace quotes per month', 'Direct quote requests', 'AI-assisted messaging'],
+    features: ['Public searchable profile', '15 open-marketplace offers per month', 'Direct quote requests', 'BuildPair messaging', 'AI-assisted replies and safety tools'],
   },
   featured: {
     name: 'BuildPair Pro',
@@ -204,6 +204,6 @@ export const SUBSCRIPTION_TIERS = {
     price: '£29.99/mo',
     categoryLimit: 6,
     monthlyMarketplaceQuotes: 35,
-    features: ['Everything in Plus', '35 marketplace quotes per month', 'Priority search placement', 'Advanced analytics', 'Priority new-job alerts'],
+    features: ['Everything in Plus', '35 open-marketplace offers per month', 'Modest search boost', 'Advanced analytics', 'Priority new-job alerts'],
   },
 } as const;

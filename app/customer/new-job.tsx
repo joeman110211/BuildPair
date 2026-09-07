@@ -110,11 +110,11 @@ export default function NewJobScreen() {
 
     {step === 1 ? <AppCard>
       <Text variant="titleLarge" style={styles.title}>Tell the tradesperson what needs doing</Text>
-      <TextInput label={directRequest ? 'Short job title (optional)' : 'Short job title'} value={title} onChangeText={setTitle} mode="outlined" maxLength={120} placeholder={directRequest ? `e.g. ${category ?? 'Job'} quote request` : 'e.g. Retile bathroom floor'} />
+      <TextInput label={directRequest ? 'Short job title (optional)' : 'Short job title'} accessibilityLabel={directRequest ? 'Short job title (optional)' : 'Short job title'} value={title} onChangeText={setTitle} mode="outlined" maxLength={120} placeholder={directRequest ? `e.g. ${category ?? 'Job'} quote request` : 'e.g. Retile bathroom floor'} />
       <SegmentedButtons value={mode} onValueChange={setMode} buttons={[{ value: 'manual', label: 'Write it myself' }, { value: 'ai', label: 'BuildPair AI helper' }]} />
       {mode === 'ai' ? <Button mode="outlined" icon="creation" disabled={!readyForAi} onPress={() => setShowAi(true)}>{aiGeneratedSpec ? 'Improve with AI again' : 'Help me write the job'}</Button> : null}
       {mode === 'ai' && !readyForAi ? <HelperText type="info">Choose a trade category first.</HelperText> : null}
-      <TextInput label="Detailed job description" value={description} onChangeText={(value) => { setDescription(value); if (value !== aiGeneratedSpec) setAiGeneratedSpec(null); }} mode="outlined" multiline numberOfLines={10} maxLength={5000} />
+      <TextInput label="Detailed job description" accessibilityLabel="Detailed job description" value={description} onChangeText={(value) => { setDescription(value); if (value !== aiGeneratedSpec) setAiGeneratedSpec(null); }} mode="outlined" multiline numberOfLines={10} maxLength={5000} />
       <HelperText type={description.length > 0 && description.trim().length < 30 ? 'error' : 'info'}>{description.length}/5000 characters · minimum 30 and required {aiGeneratedSpec ? '· AI draft checked by you ✓' : ''}</HelperText>
     </AppCard> : null}
 
@@ -127,7 +127,7 @@ export default function NewJobScreen() {
 
     {step === 3 ? <AppCard>
       <Text variant="titleLarge" style={styles.title}>Where, when and roughly how much?</Text>
-      <TextInput label="Job postcode / area" value={postcode} onChangeText={setPostcode} mode="outlined" autoCapitalize="characters" placeholder="e.g. TW18 4AA" />
+      <TextInput label="Job postcode / area" accessibilityLabel="Job postcode / area" value={postcode} onChangeText={setPostcode} mode="outlined" autoCapitalize="characters" placeholder="e.g. SW1A 1AA" />
       <HelperText type="info">Area is required so BuildPair can confirm the job is within the tradesperson’s service radius.</HelperText>
       <FormSelect label={directRequest ? 'Budget bracket (optional)' : 'Budget bracket'} value={budgetRange} options={BUDGET_OPTIONS} onChange={setBudgetRange} placeholder={directRequest ? 'Not sure / discuss' : undefined} />
       <FormSelect label={directRequest ? 'Timing / urgency (optional)' : 'Urgency'} value={urgency} options={URGENCY_OPTIONS} onChange={setUrgency} placeholder={directRequest ? 'Flexible / discuss' : undefined} />

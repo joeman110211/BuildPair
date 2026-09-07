@@ -2,8 +2,19 @@ name: Quality
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - testing
+      - release/web
+      - release/android
+      - release/ios
   pull_request:
+    branches:
+      - main
+      - testing
+      - release/web
+      - release/android
+      - release/ios
 
 permissions:
   contents: read
