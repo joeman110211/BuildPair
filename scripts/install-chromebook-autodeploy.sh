@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Installs BuildPair automatic deploys for the existing Chromebook runtime:
+# Installs BuildPair automatic deploys for the existing Chromebook staging runtime:
 # PM2 runs BuildPair, and the named Cloudflare tunnel is managed separately.
 # This installer only adds a user-level systemd timer that checks GitHub and
-# deploys new main revisions safely.
+# deploys new testing revisions safely.
 
 ACTION="${1:-install}"
 REPO_DIR="${BUILDPAIR_REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-SYSTEMD_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
+SYSTEMD_DIR="${XDG_CONFIG_HOME:-$HOME/.config/systemd/user}"
 SERVICE_FILE="$SYSTEMD_DIR/buildpair-autodeploy.service"
 TIMER_FILE="$SYSTEMD_DIR/buildpair-autodeploy.timer"
 OLD_HOST_SERVICE="$SYSTEMD_DIR/buildpair-host.service"
@@ -60,7 +60,7 @@ install_timer() {
 
   cat > "$SERVICE_FILE" <<EOF
 [Unit]
-Description=BuildPair Chromebook automatic deploy
+Description=BuildPair Chromebook staging automatic deploy
 After=network-online.target
 Wants=network-online.target
 
@@ -68,6 +68,7 @@ Wants=network-online.target
 Type=oneshot
 WorkingDirectory=$REPO_DIR
 Environment=BUILDPAIR_REPO_DIR=$REPO_DIR
+Environment=BUILDPAIR_DEPLOY_BRANCH=testing
 Environment="PATH=$service_path"
 ExecStart=/usr/bin/env bash $DEPLOY_SCRIPT
 TimeoutStartSec=20min
@@ -76,7 +77,7 @@ EOF
 
   cat > "$TIMER_FILE" <<'EOF'
 [Unit]
-Description=Check GitHub for BuildPair updates
+Description=Check GitHub for BuildPair testing updates
 
 [Timer]
 OnBootSec=2min
@@ -93,8 +94,8 @@ EOF
   systemctl --user enable --now buildpair-autodeploy.timer
 
   echo
-  echo "BuildPair automatic deployment is enabled."
-  echo "The Chromebook will check origin/main roughly every two minutes while Linux is running."
+  echo "BuildPair staging automatic deployment is enabled."
+  echo "The Chromebook will check origin/testing roughly every two minutes while Linux is running."
   echo "Existing PM2 and Cloudflare services are left in place."
   echo "The deploy service is using the same Node/PM2 runtime path as this terminal."
   echo
