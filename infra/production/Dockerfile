@@ -1,5 +1,8 @@
 FROM node:22.23.1-bookworm-slim AS builder
 
+ARG NPM_VERSION=11.19.0
+RUN npm install --global "npm@${NPM_VERSION}"
+
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -20,6 +23,9 @@ ENV EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME=${EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}
 RUN npm run build:web
 
 FROM node:22.23.1-bookworm-slim AS runtime
+
+ARG NPM_VERSION=11.19.0
+RUN npm install --global "npm@${NPM_VERSION}"
 
 ENV NODE_ENV=production
 ENV PORT=3000
