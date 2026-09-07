@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, Searchbar, Text } from 'react-native-paper';
+import { Button, Chip, Text, TextInput } from 'react-native-paper';
 import { FormSelect } from '@/components/FormSelect';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { TraderCard } from '@/components/TraderCard';
@@ -62,8 +62,10 @@ export default function DirectoryScreen() {
   return <Screen title="Find the right trade" subtitle="Search by trade, job or problem. BuildPair understands related work, so you do not need to know the exact trade name first.">
     <View style={styles.searchPanel}>
       <View style={styles.search}>
-        <Searchbar
-          style={styles.searchbar}
+        <TextInput
+          mode="outlined"
+          style={styles.searchInput}
+          outlineStyle={styles.searchOutline}
           placeholder="Try ‘bathroom’, ‘tiler’, ‘boiler’ or ‘roof leak’"
           value={query}
           onChangeText={setQuery}
@@ -89,13 +91,13 @@ export default function DirectoryScreen() {
     </View>
 
     <View style={styles.filterChips}>
-      <Chip icon="magnify">Related trade matching</Chip>
-      <Chip icon="star-outline">Customer reviews</Chip>
-      <Chip icon="image-multiple-outline">Work galleries</Chip>
+      <Chip>Related trade matching</Chip>
+      <Chip>Customer reviews</Chip>
+      <Chip>Work galleries</Chip>
     </View>
 
     <View style={styles.resultsHeader}>
-      <View>
+      <View style={styles.resultsCopy}>
         <Text variant="titleLarge" style={styles.title}>{filtered.length} trade{filtered.length === 1 ? '' : 's'} found</Text>
         {query ? <Text style={styles.muted}>Best matches for “{query}” are shown first.</Text> : null}
       </View>
@@ -112,16 +114,18 @@ export default function DirectoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  searchPanel: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 26, padding: 16, flexDirection: 'row', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' },
+  searchPanel: { backgroundColor: '#FFFCF8', borderWidth: 1, borderTopWidth: 3, borderColor: '#E9D4C2', borderTopColor: colors.primary, borderRadius: 26, padding: 16, flexDirection: 'row', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' },
   search: { flex: 2, minWidth: 250 },
-  searchbar: { backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border, borderRadius: 18 },
+  searchInput: { backgroundColor: colors.surfaceRaised },
+  searchOutline: { borderRadius: 18 },
   select: { flex: 1, minWidth: 220 },
-  examples: { gap: 8 },
-  exampleChips: { flexDirection: 'row', gap: 7, flexWrap: 'wrap' },
-  filterChips: { flexDirection: 'row', gap: 7, flexWrap: 'wrap' },
-  resultsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
-  title: { fontWeight: '900', color: colors.charcoal },
-  muted: { color: colors.muted },
+  examples: { gap: 8, alignItems: 'center' },
+  exampleChips: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
+  filterChips: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
+  resultsHeader: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
+  resultsCopy: { alignItems: 'center', gap: 3 },
+  title: { fontWeight: '900', color: colors.charcoal, textAlign: 'center' },
+  muted: { color: colors.muted, textAlign: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
   disclaimer: { textAlign: 'center', color: colors.muted, marginTop: 8, lineHeight: 19 },
 });

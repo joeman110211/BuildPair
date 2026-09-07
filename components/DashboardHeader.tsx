@@ -23,6 +23,10 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
   const otherEnabled = otherMode === 'customer' ? user?.customerEnabled : user?.traderEnabled;
   const otherLabel = otherMode === 'customer' ? 'Homeowner' : 'Tradesperson';
   const modeAction = otherEnabled ? `Switch to ${otherLabel}` : `Add ${otherLabel}`;
+  const findHref = (currentMode === 'customer' ? '/(public)/directory' : '/trader/job-board') as Href;
+  const findLabel = currentMode === 'customer' ? 'Find trades' : 'Find work';
+  const jobsHref = (currentMode === 'customer' ? '/customer/jobs' : '/trader/my-jobs') as Href;
+  const profileHref = (currentMode === 'customer' ? '/customer/profile' : '/trader/profile') as Href;
   const messagesHref = (currentMode === 'customer' ? '/customer/messages' : '/trader/messages') as Href;
   const notificationsHref = (currentMode === 'customer' ? '/customer/notifications' : '/trader/notifications') as Href;
   const settingsHref = (currentMode === 'customer' ? '/customer/settings' : '/trader/settings') as Href;
@@ -65,15 +69,18 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
     {compact ? <Menu
       visible={menuOpen}
       onDismiss={() => setMenuOpen(false)}
-      anchor={<Button mode="outlined" contentStyle={styles.menuButtonContent} onPress={() => setMenuOpen((value) => !value)}>Account menu</Button>}
+      anchor={<Button mode="outlined" contentStyle={styles.menuButtonContent} onPress={() => setMenuOpen((value) => !value)}>Menu</Button>}
       contentStyle={styles.menuContent}
     >
+      <Menu.Item title="Home" onPress={() => go(home)} />
+      <Menu.Item title={findLabel} onPress={() => go(findHref)} />
+      <Menu.Item title="Jobs" onPress={() => go(jobsHref)} />
+      <Menu.Item title="Messages" onPress={() => go(messagesHref)} />
+      <Menu.Item title="Profile" onPress={() => go(profileHref)} />
+      <Divider />
       <Menu.Item title="Website home" onPress={() => go('/')} />
       <Menu.Item title="Advice Hub" onPress={() => go('/(public)/advice')} />
-      <Menu.Item title="Find trades" onPress={() => go('/(public)/directory')} />
-      <Divider />
       <Menu.Item title="Notifications" onPress={() => go(notificationsHref)} />
-      <Menu.Item title="Messages" onPress={() => go(messagesHref)} />
       <Menu.Item title="Account & security" onPress={() => go(settingsHref)} />
       <Divider />
       <Menu.Item title={modeAction} disabled={switchingMode} onPress={() => void changeMode()} />
@@ -100,5 +107,5 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.xxs, justifyContent: 'flex-end' },
   navButtonContent: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xxs },
   menuButtonContent: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xs },
-  menuContent: { backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, minWidth: 240, borderWidth: 1, borderColor: colors.border, paddingVertical: spacing.xs },
+  menuContent: { backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, minWidth: 250, borderWidth: 1, borderColor: colors.border, paddingVertical: spacing.xs },
 });
