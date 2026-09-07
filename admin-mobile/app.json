@@ -16,7 +16,6 @@
       }
     },
     "plugins": [
-      "@clerk/expo",
       "expo-secure-store"
     ]
   }
