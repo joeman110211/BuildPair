@@ -34,9 +34,40 @@ export const colors = {
   info: '#356C95',
 } as const;
 
+export const spacing = {
+  xxs: 4,
+  xs: 6,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+  huge: 40,
+} as const;
+
+export const radii = {
+  sm: 10,
+  md: 14,
+  lg: 18,
+  xl: 22,
+  pill: 999,
+} as const;
+
+export const layout = {
+  pageMaxWidth: 1180,
+  readingMaxWidth: 760,
+  formMaxWidth: 820,
+} as const;
+
+export const controlHeights = {
+  standard: 46,
+  prominent: 50,
+} as const;
+
 export const paperTheme = {
   ...MD3LightTheme,
-  roundness: 12,
+  roundness: radii.md,
   colors: {
     ...MD3LightTheme.colors,
     primary: colors.primary,
@@ -44,13 +75,18 @@ export const paperTheme = {
     primaryContainer: colors.primarySoft,
     onPrimaryContainer: colors.primaryDark,
     secondary: colors.secondary,
+    onSecondary: colors.charcoal,
     secondaryContainer: colors.secondarySoft,
     onSecondaryContainer: colors.charcoal,
     tertiary: colors.accent,
+    onTertiary: '#FFFFFF',
     tertiaryContainer: colors.accentSoft,
+    onTertiaryContainer: colors.charcoal,
     background: colors.background,
+    onBackground: colors.text,
     surface: colors.surfaceRaised,
     surfaceVariant: colors.surfaceSoft,
+    surfaceDisabled: colors.surfaceStrong,
     outline: colors.border,
     outlineVariant: '#ECE5DE',
     onSurface: colors.text,
