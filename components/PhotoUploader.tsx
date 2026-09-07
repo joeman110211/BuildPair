@@ -4,7 +4,7 @@ import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, HelperText, Text } from 'react-native-paper';
 import { colors } from '@/constants/theme';
 import { errorMessage } from '@/lib/api';
-import { pickAndUploadImage, type MediaKind } from '@/lib/media';
+import { pickAndUploadImages, type MediaKind } from '@/lib/media';
 
 export function PhotoUploader({
   kind,
@@ -13,7 +13,7 @@ export function PhotoUploader({
   max,
   title = 'Photos',
   emptyText = 'Add clear photos from your phone or computer.',
-  buttonLabel = 'Add photo',
+  buttonLabel,
 }: {
   kind: MediaKind;
   photos: string[];
@@ -26,14 +26,17 @@ export function PhotoUploader({
   const { getToken } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const displayButtonLabel = buttonLabel ?? (max > 1 ? 'Add photos' : 'Add photo');
 
   async function addPhoto() {
     if (busy || photos.length >= max) return;
     try {
       setBusy(true);
       setError('');
-      const url = await pickAndUploadImage(kind, getToken);
-      if (url) onChange([...photos, url]);
+      const remaining = max - photos.length;
+      const { urls, failed } = await pickAndUploadImages(kind, getToken, Math.min(10, remaining));
+      if (urls.length) onChange([...photos, ...urls].slice(0, max));
+      if (failed) setError(`${failed} selected photo${failed === 1 ? '' : 's'} could not be uploaded.`);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -47,8 +50,9 @@ export function PhotoUploader({
         <Text variant="titleMedium">{title}</Text>
         <Text style={styles.muted}>{photos.length}/{max}</Text>
       </View>
-      <Button mode="outlined" icon="image-plus" loading={busy} disabled={busy || photos.length >= max} onPress={addPhoto}>{buttonLabel}</Button>
+      <Button mode="outlined" icon="image-plus" loading={busy} disabled={busy || photos.length >= max} onPress={addPhoto}>{displayButtonLabel}</Button>
     </View>
+    {max > 1 ? <Text variant="bodySmall" style={styles.muted}>Select up to 10 photos at once. You can keep adding batches until you reach {max}.</Text> : null}
     {photos.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.gallery}>
       {photos.map((uri, index) => <View key={`${uri}-${index}`} style={styles.photoWrap}>
         <Image source={{ uri }} style={styles.photo} />
