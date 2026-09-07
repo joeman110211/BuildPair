@@ -2,20 +2,22 @@ import { useClerk } from '@clerk/expo';
 import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Divider, Menu } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { colors } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { modeSetupHref } from '@/lib/account-mode';
+import { dashboardHref, modeSetupHref } from '@/lib/account-mode';
+import { apiFetch, errorMessage } from '@/lib/api';
 import type { UserRole } from '@/types';
 
 export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trader/dashboard' }) {
   const { signOut } = useClerk();
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const { user } = useCurrentUser();
+  const { user, getToken } = useCurrentUser();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [switchingMode, setSwitchingMode] = useState(false);
   const currentMode: UserRole = home.startsWith('/customer') ? 'customer' : 'trader';
   const otherMode: UserRole = currentMode === 'customer' ? 'trader' : 'customer';
   const otherEnabled = otherMode === 'customer' ? user?.customerEnabled : user?.traderEnabled;
@@ -29,6 +31,28 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
     setMenuOpen(false);
     router.push(href);
   };
+
+  async function changeMode() {
+    if (switchingMode) return;
+    if (!otherEnabled) {
+      go(modeSetupHref(otherMode));
+      return;
+    }
+
+    setMenuOpen(false);
+    setSwitchingMode(true);
+    try {
+      await apiFetch('/api/me', {
+        method: 'PATCH',
+        body: JSON.stringify({ role: otherMode }),
+      }, getToken);
+      setSwitchingMode(false);
+      router.replace(dashboardHref(otherMode));
+    } catch (error) {
+      setSwitchingMode(false);
+      Alert.alert('Could not switch profile', errorMessage(error));
+    }
+  }
 
   const doSignOut = () => {
     setMenuOpen(false);
@@ -47,7 +71,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
       <Menu.Item title="Messages" onPress={() => go(messagesHref)} />
       <Menu.Item title="Settings" onPress={() => go('/settings')} />
       <Divider />
-      <Menu.Item title={modeAction} onPress={() => go(modeSetupHref(otherMode))} />
+      <Menu.Item title={modeAction} disabled={switchingMode} onPress={() => void changeMode()} />
       {user?.isAdmin ? <Menu.Item title="Owner console" onPress={() => go('/admin')} /> : null}
       <Divider />
       <Menu.Item title="Sign out" onPress={doSignOut} />
@@ -56,7 +80,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
       <Link href={messagesHref} asChild><Button textColor={colors.charcoalSoft}>Messages</Button></Link>
       <Button textColor={colors.charcoalSoft} onPress={() => router.push(notificationsHref)}>Notifications</Button>
       <Button mode="outlined" onPress={() => router.push('/settings')}>Settings</Button>
-      <Link href={modeSetupHref(otherMode)} asChild><Button compact mode={otherEnabled ? 'text' : 'outlined'}>{modeAction}</Button></Link>
+      <Button compact mode={otherEnabled ? 'text' : 'outlined'} disabled={switchingMode} loading={switchingMode} onPress={() => void changeMode()}>{modeAction}</Button>
       {user?.isAdmin ? <Link href="/admin" asChild><Button>Owner console</Button></Link> : null}
       <Button compact textColor={colors.muted} onPress={doSignOut}>Sign out</Button>
     </View>}
