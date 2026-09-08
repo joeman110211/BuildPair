@@ -63,13 +63,28 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     if (payload.action === 'set_payment_mode') {
       if (!modes.customerEnabled || !payload.mode) throw new HttpError(403, 'Homeowner payment choice required');
       const rows = await getSql()`
-        SELECT j.customer_id AS "customerId", j.title, j.status, j.payment_mode AS "paymentMode", q.trader_id AS "traderId"
-        FROM jobs j JOIN quotes q ON q.id = j.accepted_quote_id
-        WHERE j.id = ${id} LIMIT 1
-      ` as unknown as { customerId: string; title: string; status: string; paymentMode: string; traderId: string }[];
+        SELECT j.customer_id AS "customerId", j.title, j.status, j.payment_mode AS "paymentMode",
+               q.trader_id AS "traderId", tp.stripe_account_id AS "stripeAccountId",
+               tp.stripe_charges_enabled AS "stripeChargesEnabled"
+        FROM jobs j
+        JOIN quotes q ON q.id = j.accepted_quote_id
+        JOIN trader_profiles tp ON tp.user_id = q.trader_id
+        WHERE j.id = ${id}
+        LIMIT 1
+      ` as unknown as { customerId: string; title: string; status: string; paymentMode: string; traderId: string; stripeAccountId: string | null; stripeChargesEnabled: boolean }[];
       const row = rows[0];
       if (!row || row.customerId !== userId) throw new HttpError(404, 'Active job not found');
       if (row.status !== 'in_progress') throw new HttpError(409, 'Payment choice is only available for an active accepted job');
+      if (payload.mode === 'buildpair' && (!row.stripeAccountId || !row.stripeChargesEnabled)) {
+        await createNotification(row.traderId, {
+          type: 'payout_setup_required',
+          title: 'Set up payouts to use BuildPair payments',
+          body: `${row.title}: the homeowner wants to use BuildPair payments, but your Stripe payout setup is not complete yet.`,
+          href: '/trader/subscription',
+          email: true,
+        });
+        throw new HttpError(409, 'The tradesperson must finish Stripe payout setup before this job can use BuildPair payments. They have been notified.');
+      }
       if (row.paymentMode === 'buildpair' && payload.mode === 'external') {
         const paid = await getSql()`SELECT 1 FROM payments WHERE job_id = ${id} AND status = 'paid' LIMIT 1`;
         if (paid.length) throw new HttpError(409, 'This job already has a BuildPair payment and can no longer switch to private payment');
