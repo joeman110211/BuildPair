@@ -16,7 +16,6 @@ type Props = {
   onDecline?: (quote: Quote) => void;
   onEditPlan?: (quote: Quote, schedule: PaymentStagePlan[]) => void;
 };
-
 type EditableStage = PaymentStagePlan & { amountText: string };
 
 export function QuoteComparison({ quotes, accepting, messaging, acting, onAccept, onMessage, onDecline, onEditPlan }: Props) {
@@ -34,6 +33,15 @@ export function QuoteComparison({ quotes, accepting, messaging, acting, onAccept
     setEditingId(quote.id);
   }
   function updateDraft(index: number, patch: Partial<EditableStage>) { setDraft((current) => current.map((stage, i) => i === index ? { ...stage, ...patch } : stage)); }
+  function addDraftStage() {
+    setDraft((current) => {
+      const finalIndex = current.findIndex((stage) => stage.kind === 'final');
+      const next: EditableStage = { key: `customer-stage-${Date.now()}`, title: `Stage ${current.filter((stage) => stage.kind === 'stage').length + 1}`, amount: 0, amountText: '', kind: 'stage', trigger: '', sortOrder: Math.max(1, finalIndex + 1) };
+      if (finalIndex < 0) return [...current, next];
+      return [...current.slice(0, finalIndex), next, ...current.slice(finalIndex)];
+    });
+  }
+  function removeDraftStage(index: number) { setDraft((current) => current.filter((stage, i) => i !== index || stage.kind === 'final')); }
   function savePlan(quote: Quote) {
     const schedule = draft.map(({ amountText, ...stage }, index) => ({ ...stage, amount: poundsToPence(amountText), sortOrder: index + 1 }));
     onEditPlan?.(quote, schedule);
@@ -54,7 +62,6 @@ export function QuoteComparison({ quotes, accepting, messaging, acting, onAccept
 
       return <View key={quote.id} style={styles.column}><AppCard style={[styles.card, lowest && styles.lowestCard]}>
         <View style={styles.heading}><View style={styles.flex}><Text variant="titleLarge" style={styles.title}>{quote.businessName ?? 'Trade quote'}</Text><Text variant="headlineMedium" style={styles.total}>{formatMoney(quote.totalAmount)}</Text></View><View style={styles.badges}>{lowest ? <Chip compact icon="cash-check">Lowest total</Chip> : null}{earliest ? <Chip compact icon="calendar-fast">Earliest start</Chip> : null}{warrantyLeader ? <Chip compact icon="shield-check-outline">Longest warranty</Chip> : null}<Chip compact>{expired && quote.status === 'pending' ? 'expired' : quote.status}</Chip></View></View>
-
         <View style={styles.breakdown}><PriceRow label="Labour" value={formatMoney(quote.laborCost)} /><PriceRow label="Materials" value={formatMoney(quote.materialsCost)} /><PriceRow label="VAT" value={formatMoney(quote.vatAmount)} /><View style={styles.divider} /><PriceRow label="Quote total" value={formatMoney(quote.totalAmount)} strong /></View>
         <View style={styles.facts}><Fact label="Proposed start" value={quote.proposedStartAt ? new Date(quote.proposedStartAt).toLocaleDateString('en-GB') : 'Not specified'} /><Fact label="Estimated duration" value={quote.durationDays ? `${quote.durationDays} day${quote.durationDays === 1 ? '' : 's'}` : 'Not specified'} /><Fact label="Warranty" value={quote.warrantyMonths != null ? `${quote.warrantyMonths} month${quote.warrantyMonths === 1 ? '' : 's'}` : 'Not specified'} /></View>
         {quote.validUntil ? <Text variant="bodySmall" style={expired ? styles.expired : styles.muted}>{expired ? 'Expired' : 'Valid until'} {new Date(quote.validUntil).toLocaleDateString('en-GB')}</Text> : null}
@@ -65,12 +72,14 @@ export function QuoteComparison({ quotes, accepting, messaging, acting, onAccept
         <View style={styles.terms}>
           <View style={styles.heading}><Text variant="titleMedium" style={styles.title}>Proposed payment stages</Text>{awaitingTrader ? <Chip compact icon="clock-outline">Awaiting trader approval</Chip> : quote.paymentScheduleStatus === 'agreed' ? <Chip compact icon="check">Agreed</Chip> : null}</View>
           {!editing ? (plan.length ? plan.map((stage) => <View key={stage.key} style={styles.stage}><View style={styles.priceRow}><Text style={styles.strong}>{stage.title}</Text><Text style={styles.strong}>{formatMoney(stage.amount)}</Text></View>{stage.trigger ? <Text variant="bodySmall" style={styles.muted}>{stage.trigger}</Text> : null}<Chip compact>{stage.kind}</Chip></View>) : <Text style={styles.muted}>This older quote has no custom stage plan. BuildPair will use its deposit/final-balance fallback.</Text>) : <>
-            <Text style={styles.muted}>You can change the payment split and stage descriptions, but the builder's total stays fixed at {formatMoney(quote.totalAmount)}.</Text>
+            <Text style={styles.muted}>You can change the payment split and stage descriptions, but the total quoted by the builder stays fixed at {formatMoney(quote.totalAmount)}.</Text>
             {draft.map((stage, index) => <View key={stage.key} style={styles.editStage}>
               <TextInput mode="outlined" label="Stage name" value={stage.title} onChangeText={(value) => updateDraft(index, { title: value })} disabled={stage.kind === 'final'} />
               <TextInput mode="outlined" label="Amount (£)" value={stage.amountText} onChangeText={(value) => updateDraft(index, { amountText: value })} keyboardType="decimal-pad" />
               <TextInput mode="outlined" label="When is this due?" value={stage.trigger} onChangeText={(value) => updateDraft(index, { trigger: value })} multiline />
+              {stage.kind === 'stage' ? <Button mode="text" onPress={() => removeDraftStage(index)}>Remove this stage</Button> : null}
             </View>)}
+            <Button mode="outlined" icon="plus" disabled={draft.length >= 10} onPress={addDraftStage}>Add another stage</Button>
             <HelperText type={draftValid ? 'info' : 'error'}>{draftValid ? `Stages total ${formatMoney(quote.totalAmount)}.` : `Stages currently total ${formatMoney(draftTotal)}. They must equal the fixed quote total ${formatMoney(quote.totalAmount)}.`}</HelperText>
             <View style={styles.actions}><Button mode="text" onPress={() => setEditingId(undefined)}>Cancel</Button><Button mode="contained" disabled={!draftValid || Boolean(acting)} onPress={() => savePlan(quote)}>Send revised stages</Button></View>
           </>}
