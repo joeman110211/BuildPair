@@ -51,6 +51,8 @@ export default function JobDetailScreen() {
   const [stageBusy, setStageBusy] = useState<string>();
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [confirmExternal, setConfirmExternal] = useState(false);
+  const [confirmBuildPairPayments, setConfirmBuildPairPayments] = useState(false);
+  const [confirmReleaseId, setConfirmReleaseId] = useState<string>();
   const [issueMilestoneId, setIssueMilestoneId] = useState<string>();
   const [issueReason, setIssueReason] = useState('');
 
@@ -82,8 +84,9 @@ export default function JobDetailScreen() {
   async function setPaymentMode(mode: 'buildpair' | 'external') {
     try {
       setBusy(true); setError('');
-      await apiFetch(`/api/jobs/${id}`, { method: 'PATCH', body: JSON.stringify({ action: 'set_payment_mode', mode }) }, getToken);
+      await apiFetch(`/api/jobs/${id}`, { method: 'PATCH', body: JSON.stringify({ action: 'set_payment_mode', mode, acknowledgedPaymentTerms: mode === 'buildpair' ? true : undefined }) }, getToken);
       setConfirmExternal(false);
+      setConfirmBuildPairPayments(false);
       await load();
     } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
   }
@@ -107,7 +110,8 @@ export default function JobDetailScreen() {
   async function releaseStage(milestoneId: string) {
     try {
       setStageBusy(milestoneId); setError('');
-      await apiFetch('/api/payments/release', { method: 'POST', body: JSON.stringify({ milestoneId, action: 'release' }) }, getToken);
+      await apiFetch('/api/payments/release', { method: 'POST', body: JSON.stringify({ milestoneId, action: 'release', acknowledgedReleaseResponsibility: true }) }, getToken);
+      setConfirmReleaseId(undefined);
       await load();
     } catch (e) { setError(errorMessage(e)); } finally { setStageBusy(undefined); }
   }
@@ -116,7 +120,7 @@ export default function JobDetailScreen() {
     try {
       setStageBusy(milestoneId); setError('');
       await apiFetch('/api/payments/release', { method: 'POST', body: JSON.stringify({ milestoneId, action: 'dispute', reason: issueReason }) }, getToken);
-      setIssueMilestoneId(undefined); setIssueReason('');
+      setIssueMilestoneId(undefined); setIssueReason(''); setConfirmReleaseId(undefined);
       await load();
     } catch (e) { setError(errorMessage(e)); } finally { setStageBusy(undefined); }
   }
@@ -151,12 +155,17 @@ export default function JobDetailScreen() {
     {data.acceptedQuote && data.job.status === 'in_progress' ? <AppCard style={paymentMode === 'external' ? styles.externalCard : styles.protectionCard}>
       <Text variant="titleLarge" style={styles.heading}>{paymentMode === 'undecided' ? 'Choose how this job will be paid' : paymentMode === 'buildpair' ? 'BuildPair staged payments' : 'Private payment arrangement'}</Text>
       {paymentMode === 'undecided' ? <>
-        <Text style={styles.muted}>Your quote is accepted. Choose one route once, then BuildPair keeps showing the next action instead of making you hunt through notifications.</Text>
+        <Text style={styles.muted}>Your quote and payment schedule are accepted. Choose one payment route once, then BuildPair keeps showing the next action instead of making you hunt through notifications.</Text>
         <AppCard elevated={false}>
           <Text variant="titleMedium" style={styles.heading}>Use BuildPair staged payments</Text>
-          <Text>The agreed stages are handled through Stripe. Materials payments are released to the tradesperson for materials. Other stages are funded first, then released only after the tradesperson reaches the agreed trigger and you approve it.</Text>
-          <Text style={styles.muted}>BuildPair records the payment trail and can pause an unreleased stage if you raise an issue. This is not described as a legal escrow service and it does not guarantee workmanship.</Text>
-          <Button mode="contained" icon="shield-check-outline" loading={busy} disabled={busy} onPress={() => void setPaymentMode('buildpair')}>Use BuildPair payments</Button>
+          <Text>The agreed deposit or materials amount can be released to the tradesperson when paid. Progress and final stages are funded first, then released only after the tradesperson says the agreed trigger is complete and you approve that release.</Text>
+          <Text style={styles.muted}>You are responsible for reviewing the agreed schedule before choosing this route and for checking each controlled stage before you later approve its release. The tradesperson is responsible for only requesting release when the agreed trigger has genuinely been reached. BuildPair records those decisions but does not inspect the work for either side.</Text>
+          <Text style={styles.muted}>Approval does not remove statutory consumer rights, contractual rights, warranties or applicable card/chargeback rights. BuildPair does not describe this as legal escrow and does not guarantee workmanship.</Text>
+          {!confirmBuildPairPayments ? <Button mode="contained" icon="shield-check-outline" disabled={busy} onPress={() => setConfirmBuildPairPayments(true)}>Review & choose BuildPair payments</Button> : <AppCard elevated={false} style={styles.confirmBox}>
+            <Text variant="titleSmall" style={styles.heading}>Confirm BuildPair staged payments</Text>
+            <Text>I have reviewed the accepted quote and payment schedule. I understand that upfront deposit/materials money identified for immediate release can be transferred when paid, and that each later approval I make is my instruction to release that funded stage to the tradesperson.</Text>
+            <View style={styles.row}><Button disabled={busy} onPress={() => setConfirmBuildPairPayments(false)}>Go back</Button><Button mode="contained" loading={busy} disabled={busy} onPress={() => void setPaymentMode('buildpair')}>I understand — use BuildPair</Button></View>
+          </AppCard>}
         </AppCard>
         {!confirmExternal ? <Button mode="outlined" onPress={() => setConfirmExternal(true)}>Arrange payments privately instead</Button> : <AppCard style={styles.externalCard} elevated={false}>
           <Text variant="titleMedium" style={styles.heading}>Continue outside BuildPair?</Text>
@@ -164,7 +173,7 @@ export default function JobDetailScreen() {
           <Text style={styles.muted}>BuildPair payment-stage controls and Stripe payment evidence will not apply. That limitation affects both homeowner and tradesperson.</Text>
           <View style={styles.row}><Button onPress={() => setConfirmExternal(false)}>Go back</Button><Button mode="contained" buttonColor={colors.danger} loading={busy} disabled={busy} onPress={() => void setPaymentMode('external')}>Continue privately</Button></View>
         </AppCard>}
-      </> : paymentMode === 'buildpair' ? <Text style={styles.muted}>Only the next unpaid stage needs your attention. Fund it, wait for the agreed trigger, then approve release. Materials are the exception because the agreed materials payment is released when paid.</Text> : <><Text style={styles.muted}>BuildPair is not processing this job’s payments. The agreed quote and project record stay here, but private payments do not get BuildPair payment-stage controls.</Text><Button mode="outlined" loading={busy} disabled={busy} onPress={() => void completeExternalJob()}>Mark privately managed job complete</Button></>}
+      </> : paymentMode === 'buildpair' ? <Text style={styles.muted}>Only the next unpaid stage needs your attention. Fund it, wait for the agreed trigger, then check the stage before approving release. Your release approval is your instruction to transfer that funded amount. Deposit/materials stages identified as upfront are the exception because they are released when paid.</Text> : <><Text style={styles.muted}>BuildPair is not processing this job’s payments. The agreed quote and project record stay here, but private payments do not get BuildPair payment-stage controls.</Text><Button mode="outlined" loading={busy} disabled={busy} onPress={() => void completeExternalJob()}>Mark privately managed job complete</Button></>}
     </AppCard> : null}
 
     {data.acceptedQuote ? <>
@@ -183,22 +192,30 @@ export default function JobDetailScreen() {
         const canFund = paymentMode === 'buildpair' && isNext && milestone.status === 'pending';
         const canRelease = paymentMode === 'buildpair' && milestone.status === 'completed';
         const issueOpen = issueMilestoneId === milestone.id;
+        const releaseConfirmOpen = confirmReleaseId === milestone.id;
         const minimumTooSmall = milestone.amount < 30;
+        const immediateUpfront = milestone.kind === 'materials' || milestone.kind === 'deposit';
         return <AppCard key={milestone.id} style={isNext ? styles.currentStageCard : undefined}>
           <View style={styles.row}>
             <View style={styles.flex}><Text variant="titleMedium" style={styles.heading}>{milestone.title}</Text><Text style={styles.money}>{formatMoney(milestone.amount)}</Text>{milestone.triggerDescription ? <Text style={styles.muted}>{milestone.triggerDescription}</Text> : null}</View>
             <View style={styles.badges}>{isNext ? <Chip icon="arrow-right-circle-outline">Next</Chip> : null}<Chip>{milestone.kind}</Chip><Chip>{stageStatusLabel(milestone.status)}</Chip></View>
           </View>
 
-          {paymentMode === 'buildpair' && milestone.kind === 'materials' && milestone.status === 'pending' ? <Text style={styles.notice}>Materials payment: when you pay this stage, the agreed amount is released to the tradesperson so the materials can be bought. It is not held for later approval.</Text> : null}
-          {paymentMode === 'buildpair' && milestone.status === 'pending' && milestone.kind !== 'materials' ? <Text style={styles.muted}>{isNext ? 'Fund this stage through BuildPair before the tradesperson progresses it. Stripe confirms the payment, but it is not transferred to the tradesperson until the agreed trigger is reached and you approve release.' : 'Complete the earlier stage first. BuildPair unlocks one payment stage at a time.'}</Text> : null}
+          {paymentMode === 'buildpair' && immediateUpfront && milestone.status === 'pending' ? <Text style={styles.notice}>Upfront {milestone.kind === 'deposit' ? 'deposit' : 'materials'} payment: when you authorise this stage, the agreed amount is released to the tradesperson. It is not held for a later completion approval, so check the amount and purpose before paying.</Text> : null}
+          {paymentMode === 'buildpair' && milestone.status === 'pending' && !immediateUpfront ? <Text style={styles.muted}>{isNext ? 'Fund this stage through BuildPair before the tradesperson relies on it. Stripe confirms the payment, but it is not transferred to the tradesperson until the agreed trigger is reached and you approve release.' : 'Complete the earlier stage first. BuildPair unlocks one payment stage at a time.'}</Text> : null}
           {paymentMode === 'buildpair' && milestone.status === 'funded' ? <Text style={styles.notice}>Funded ✓ The money has been collected by Stripe for this stage and has not yet been transferred to the tradesperson. Waiting for them to reach the agreed trigger.</Text> : null}
-          {paymentMode === 'buildpair' && milestone.status === 'completed' ? <Text style={styles.notice}>The tradesperson says this stage is complete and has requested release. Check the work against the agreed trigger before approving.</Text> : null}
+          {paymentMode === 'buildpair' && milestone.status === 'completed' ? <Text style={styles.notice}>Release requested. The tradesperson is stating that the agreed trigger has been reached. Check the work against that trigger before approving. Your approval instructs BuildPair to transfer this funded stage.</Text> : null}
           {paymentMode === 'buildpair' && milestone.status === 'paid' ? <Text style={styles.success}>Released ✓ This stage is recorded as paid and released.</Text> : null}
           {milestone.status === 'disputed' ? <Text style={styles.issue}>Release paused. {milestone.disputeReason || 'An issue has been raised and this stage needs resolving before any further release.'}</Text> : null}
           {minimumTooSmall && canFund ? <HelperText type="error">Stripe’s minimum GBP charge is £0.30. This test stage is only {formatMoney(milestone.amount)}; use a test stage of at least £0.30.</HelperText> : null}
           {canFund && !minimumTooSmall ? <PayMilestoneButton milestoneId={milestone.id} onPaid={() => setTimeout(load, 1500)} /> : null}
-          {canRelease ? <View style={styles.stageActions}><Button mode="contained" icon="check-circle-outline" loading={stageBusy === milestone.id} disabled={Boolean(stageBusy)} onPress={() => void releaseStage(milestone.id)}>Approve & release {formatMoney(milestone.amount)}</Button><Button mode="outlined" textColor={colors.danger} disabled={Boolean(stageBusy)} onPress={() => { setIssueMilestoneId(milestone.id); setIssueReason(''); }}>Raise an issue</Button></View> : null}
+          {canRelease && !releaseConfirmOpen ? <View style={styles.stageActions}><Button mode="contained" icon="check-circle-outline" disabled={Boolean(stageBusy)} onPress={() => { setConfirmReleaseId(milestone.id); setIssueMilestoneId(undefined); }}>Review release {formatMoney(milestone.amount)}</Button><Button mode="outlined" textColor={colors.danger} disabled={Boolean(stageBusy)} onPress={() => { setIssueMilestoneId(milestone.id); setIssueReason(''); setConfirmReleaseId(undefined); }}>Raise an issue</Button></View> : null}
+          {canRelease && releaseConfirmOpen ? <AppCard elevated={false} style={styles.confirmBox}>
+            <Text variant="titleSmall" style={styles.heading}>Confirm release of {formatMoney(milestone.amount)}</Text>
+            <Text>I have checked this stage against the agreed trigger and I am instructing BuildPair to arrange release of this funded amount to the tradesperson.</Text>
+            <Text style={styles.muted}>BuildPair has not inspected the work for you. Once Stripe transfers the money, BuildPair cannot guarantee that the transfer can simply be reversed. This confirmation does not waive your statutory consumer rights, contractual claims, warranties or applicable card/chargeback rights.</Text>
+            <View style={styles.row}><Button disabled={Boolean(stageBusy)} onPress={() => setConfirmReleaseId(undefined)}>Check again</Button><Button mode="contained" icon="check-circle-outline" loading={stageBusy === milestone.id} disabled={Boolean(stageBusy)} onPress={() => void releaseStage(milestone.id)}>I confirm — release {formatMoney(milestone.amount)}</Button></View>
+          </AppCard> : null}
           {issueOpen ? <AppCard elevated={false} style={styles.issueBox}><Text variant="titleSmall" style={styles.heading}>Pause this release?</Text><Text style={styles.muted}>Explain what has not been completed or what needs resolving. BuildPair will record the issue and stop this unreleased stage from being paid out.</Text><TextInput mode="outlined" label="What is the issue?" value={issueReason} onChangeText={setIssueReason} multiline /><View style={styles.row}><Button onPress={() => { setIssueMilestoneId(undefined); setIssueReason(''); }}>Cancel</Button><Button mode="contained" buttonColor={colors.danger} disabled={issueReason.trim().length < 10 || Boolean(stageBusy)} onPress={() => void disputeStage(milestone.id)}>Pause release</Button></View></AppCard> : null}
           {paymentMode === 'external' && milestone.status !== 'paid' ? <Text style={styles.externalText}>Private payment arrangement. BuildPair is not processing this stage.</Text> : null}
         </AppCard>;
@@ -242,6 +259,7 @@ const styles = StyleSheet.create({
   externalCard: { backgroundColor: colors.goldSoft, borderColor: colors.gold },
   currentStageCard: { borderColor: colors.primary, borderWidth: 2 },
   issueBox: { backgroundColor: colors.goldSoft, borderColor: colors.gold },
+  confirmBox: { backgroundColor: colors.surfaceSoft, borderColor: colors.primary },
   heading: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 21 },
   notice: { color: colors.charcoalSoft, lineHeight: 21, fontWeight: '700' },
