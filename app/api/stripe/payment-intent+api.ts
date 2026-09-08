@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { getDb } from '@/db/client';
 import { payments } from '@/db/schema';
-import { stagePlatformFee, validateStripeStageAmount } from '@/lib/payment-protection';
+import { feeableQuoteAmount, stagePlatformFee, validateStripeStageAmount } from '@/lib/payment-protection';
 import { platformFeePercent } from '@/lib/platform-fee';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
@@ -21,6 +21,7 @@ type PaymentRow = {
   customerId: string;
   paymentMode: 'undecided' | 'buildpair' | 'external';
   traderId: string;
+  quoteId: string;
   quoteTotal: number;
   stripeAccountId: string | null;
   stripeChargesEnabled: boolean;
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
     const rows = await getSql()`
       SELECT m.id AS "milestoneId", m.title AS "milestoneTitle", m.amount AS "milestoneAmount", m.status AS "milestoneStatus", m.kind AS "milestoneKind", m.sort_order AS "sortOrder",
              j.id AS "jobId", j.title AS "jobTitle", j.customer_id AS "customerId", j.payment_mode AS "paymentMode",
-             q.trader_id AS "traderId", q.total_amount AS "quoteTotal",
+             q.trader_id AS "traderId", q.id AS "quoteId", q.total_amount AS "quoteTotal",
              tp.stripe_account_id AS "stripeAccountId", tp.stripe_charges_enabled AS "stripeChargesEnabled",
              tp.stripe_payouts_enabled AS "stripePayoutsEnabled"
       FROM job_milestones m
@@ -64,8 +65,16 @@ export async function POST(request: Request) {
     try { validateStripeStageAmount(row.milestoneAmount); }
     catch (error) { throw new HttpError(400, error instanceof Error ? error.message : 'Payment amount is below Stripe minimum'); }
 
+    const depositRows = await getSql()`
+      SELECT COALESCE(SUM(amount), 0)::int AS "depositTotal"
+      FROM job_milestones
+      WHERE quote_id = ${row.quoteId} AND kind = 'deposit'
+    ` as unknown as { depositTotal: number }[];
+    const depositTotal = Math.max(0, Number(depositRows[0]?.depositTotal ?? 0));
+    const platformFeeBase = feeableQuoteAmount(row.quoteTotal, depositTotal);
+
     const stripe = getStripe();
-    const fee = stagePlatformFee(row.milestoneKind, row.quoteTotal);
+    const fee = stagePlatformFee(row.milestoneKind, row.quoteTotal, depositTotal);
     if (fee > row.milestoneAmount) throw new HttpError(409, 'The final payment is too small to cover the BuildPair transaction fee. The payment schedule must be revised.');
     const transferGroup = `buildpair_job_${row.jobId}`;
     const metadata = {
@@ -74,6 +83,8 @@ export async function POST(request: Request) {
       customerId: customer.id,
       traderId: row.traderId,
       milestoneKind: row.milestoneKind,
+      depositTotal: String(depositTotal),
+      platformFeeBase: String(platformFeeBase),
       platformFeePercent: String(platformFeePercent()),
       platformFeeAmount: String(fee),
       transferGroup,
