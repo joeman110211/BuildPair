@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { colors, radii, spacing } from '@/constants/theme';
 
@@ -12,6 +12,8 @@ export type CompactNavItem = {
 
 export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: CompactNavItem[]; accessibilityLabel?: string }) {
   const [open, setOpen] = useState(false);
+  const { height: viewportHeight } = useWindowDimensions();
+  const menuMaxHeight = Math.max(180, viewportHeight - 120);
 
   function run(item: CompactNavItem) {
     if (item.disabled) return;
@@ -29,7 +31,14 @@ export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: 
     >
       Menu
     </Button>
-    {open ? <View accessibilityRole="menu" style={styles.panel}>
+    {open ? <ScrollView
+      accessibilityRole="menu"
+      style={[styles.panel, { maxHeight: menuMaxHeight }]}
+      contentContainerStyle={styles.panelContent}
+      showsVerticalScrollIndicator
+      nestedScrollEnabled
+      keyboardShouldPersistTaps="handled"
+    >
       {items.map((item, index) => <View key={`${item.label}-${index}`}>
         {item.dividerBefore ? <View style={styles.divider} /> : null}
         <Pressable
@@ -43,7 +52,7 @@ export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: 
           <Text style={styles.itemText}>{item.label}</Text>
         </Pressable>
       </View>)}
-    </View> : null}
+    </ScrollView> : null}
   </View>;
 }
 
@@ -55,7 +64,6 @@ const styles = StyleSheet.create({
     top: 52,
     right: 0,
     width: 285,
-    paddingVertical: spacing.xs,
     backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
     borderColor: colors.border,
@@ -66,6 +74,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     elevation: 12,
   },
+  panelContent: { paddingVertical: spacing.xs },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.xs },
   item: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
   itemPressed: { backgroundColor: colors.surfaceSoft },
