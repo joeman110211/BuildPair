@@ -5,7 +5,7 @@ import { getSql } from '@/lib/sql';
 import { getStripe } from '@/lib/stripe';
 
 const schema = z.discriminatedUnion('action', [
-  z.object({ milestoneId: z.uuid(), action: z.literal('release') }),
+  z.object({ milestoneId: z.uuid(), action: z.literal('release'), acknowledgedReleaseResponsibility: z.literal(true) }),
   z.object({ milestoneId: z.uuid(), action: z.literal('dispute'), reason: z.string().trim().min(10).max(1000) }),
 ]);
 
@@ -130,6 +130,8 @@ export async function POST(request: Request) {
         milestoneId: row.milestoneId,
         traderId: row.traderId,
         approvedBy: customer.id,
+        approvalTermsVersion: '2026-09-09-v2',
+        homeownerAcknowledgedReleaseResponsibility: 'true',
         grossStageAmount: String(grossStageAmount),
         buildPairFeeAmount: String(buildPairFee),
         stripeProcessingFeesRecovered: String(stripeProcessingFees),
@@ -140,8 +142,8 @@ export async function POST(request: Request) {
     await getSql()`UPDATE payments SET status = 'released', stripe_transfer_id = ${transfer.id}, released_at = now() WHERE id = ${row.paymentId} AND status = 'funded'`;
     await getSql()`UPDATE job_milestones SET status = 'paid', paid_at = now(), release_approved_at = now(), release_approved_by = ${customer.id}, payment_method = 'stripe', payment_confirmed_by = ${customer.id} WHERE id = ${row.milestoneId}`;
     const releaseDetail = row.milestoneKind === 'final'
-      ? `The homeowner approved the £${(grossStageAmount / 100).toFixed(2)} final stage. Stripe was instructed to transfer £${(transferAmount / 100).toFixed(2)} to the tradesperson after £${(stripeProcessingFees / 100).toFixed(2)} of recorded Stripe processing costs and the £${(buildPairFee / 100).toFixed(2)} BuildPair service fee.`
-      : `The homeowner approved release of £${(grossStageAmount / 100).toFixed(2)} through Stripe.`;
+      ? `The homeowner confirmed the agreed final-stage trigger and approved the £${(grossStageAmount / 100).toFixed(2)} release. Stripe was instructed to transfer £${(transferAmount / 100).toFixed(2)} to the tradesperson after £${(stripeProcessingFees / 100).toFixed(2)} of recorded Stripe processing costs and the £${(buildPairFee / 100).toFixed(2)} BuildPair service fee.`
+      : `The homeowner confirmed the agreed stage trigger and instructed BuildPair to release £${(grossStageAmount / 100).toFixed(2)} through Stripe.`;
     await addJobEvent(row.jobId, customer.id, 'payment_stage_released', `${row.milestoneTitle} approved and released`, releaseDetail, {
       milestoneId: row.milestoneId,
       stripeTransferId: transfer.id,
@@ -149,6 +151,8 @@ export async function POST(request: Request) {
       platformFee: buildPairFee,
       stripeProcessingFees,
       netTraderTransfer: transferAmount,
+      approvalTermsVersion: '2026-09-09-v2',
+      homeownerAcknowledgedReleaseResponsibility: true,
     });
     await Promise.allSettled([
       createNotification(row.traderId, {
@@ -160,7 +164,7 @@ export async function POST(request: Request) {
         href: `/trader/jobs/${row.jobId}`,
         email: true,
       }),
-      createNotification(customer.id, { type: 'payment_released', title: 'Stage payment released', body: `${row.jobTitle}: ${row.milestoneTitle.toLowerCase()} is recorded as approved and released.`, href: `/customer/jobs/${row.jobId}` }),
+      createNotification(customer.id, { type: 'payment_released', title: 'Stage payment released', body: `${row.jobTitle}: ${row.milestoneTitle.toLowerCase()} is recorded as approved and released on your instruction.`, href: `/customer/jobs/${row.jobId}` }),
     ]);
     return Response.json({
       released: true,
