@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   heroVisual: { flex: 0.9, minHeight: 380, justifyContent: 'flex-end', padding: 22, overflow: 'hidden', borderRadius: 30 },
   heroImage: { borderRadius: 30 },
-  heroShade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(14,30,43,0.38)', borderRadius: 30 },
+  heroShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(14,30,43,0.38)', borderRadius: 30 },
   heroCaption: { gap: 5, maxWidth: 520 },
   heroCaptionSmall: { color: '#FFD7BA', fontWeight: '900', fontSize: 11, letterSpacing: 1.2 },
   heroCaptionBig: { color: '#FFFFFF', fontSize: 22, lineHeight: 29, fontWeight: '900' },
