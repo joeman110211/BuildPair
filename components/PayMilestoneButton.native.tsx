@@ -7,37 +7,6 @@ import { apiFetch, errorMessage } from '@/lib/api';
 
 type Props = { milestoneId: string; onPaid: () => void };
 
-function ExternalPaymentButton({ milestoneId, onPaid }: Props) {
-  const { getToken } = useAuth();
-  const [busy, setBusy] = useState(false);
-
-  function confirm() {
-    Alert.alert(
-      'Confirm external payment',
-      'Only continue if you have already paid the tradesperson outside BuildPair. BuildPair will record your confirmation but will not process any money.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm paid',
-          onPress: () => void (async () => {
-            try {
-              setBusy(true);
-              await apiFetch('/api/payments/external-confirm', { method: 'POST', body: JSON.stringify({ milestoneId }) }, getToken);
-              onPaid();
-            } catch (e) {
-              Alert.alert('Could not confirm payment', errorMessage(e));
-            } finally {
-              setBusy(false);
-            }
-          })(),
-        },
-      ],
-    );
-  }
-
-  return <Button mode="contained" icon="check-circle-outline" loading={busy} disabled={busy} onPress={confirm}>Confirm paid outside BuildPair</Button>;
-}
-
 function StripePaymentButton({ milestoneId, onPaid }: Props) {
   const { getToken } = useAuth();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
@@ -57,10 +26,10 @@ function StripePaymentButton({ milestoneId, onPaid }: Props) {
       setBusy(false);
     }
   }
-  return <Button mode="contained" icon="credit-card" loading={busy} disabled={busy} onPress={pay}>Pay securely</Button>;
+  return <Button mode="contained" icon="credit-card" loading={busy} disabled={busy} onPress={pay}>Pay through BuildPair</Button>;
 }
 
 export function PayMilestoneButton(props: Props) {
   const stripeEnabled = Boolean(process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim());
-  return stripeEnabled ? <StripePaymentButton {...props} /> : <ExternalPaymentButton {...props} />;
+  return stripeEnabled ? <StripePaymentButton {...props} /> : <Button mode="contained" icon="credit-card-off-outline" disabled>BuildPair payments temporarily unavailable</Button>;
 }
