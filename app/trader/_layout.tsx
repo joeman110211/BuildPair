@@ -19,6 +19,7 @@ export default function TraderLayout() {
     <Stack.Screen name="onboarding" options={{ title: 'Build your profile' }} />
     <Stack.Screen name="subscription" options={{ title: 'Plans and payouts' }} />
     <Stack.Screen name="quotes/new" options={{ title: 'Create quote' }} />
+    <Stack.Screen name="visits/new" options={{ title: 'Arrange site visit' }} />
     <Stack.Screen name="invoices/new" options={{ title: 'Create invoice' }} />
     <Stack.Screen name="messages" options={{ headerShown: false }} />
     <Stack.Screen name="messages/[id]" options={{ title: 'Conversation' }} />
