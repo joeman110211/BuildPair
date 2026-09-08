@@ -4,6 +4,17 @@ export type JobStatus = 'open' | 'quoted' | 'in_progress' | 'completed' | 'cance
 export type QuoteStatus = 'pending' | 'accepted' | 'declined' | 'withdrawn';
 export type TraderProfileTemplate = 'classic' | 'portfolio' | 'modern';
 export type TraderProfileColour = 'burnt_orange' | 'navy' | 'forest' | 'charcoal' | 'burgundy';
+export type PaymentMode = 'undecided' | 'buildpair' | 'external';
+export type PaymentStageKind = 'materials' | 'deposit' | 'stage' | 'final';
+
+export interface PaymentStagePlan {
+  key: string;
+  title: string;
+  amount: number;
+  kind: PaymentStageKind;
+  trigger: string;
+  sortOrder: number;
+}
 
 export interface CurrentUser {
   id: string;
@@ -18,53 +29,25 @@ export interface CurrentUser {
   createdAt: string;
 }
 
-export interface BeforeAfterProject {
-  before: string;
-  after: string;
-  caption?: string;
-}
+export interface BeforeAfterProject { before: string; after: string; caption?: string; }
 
 export interface TraderCredential {
-  id: string;
-  credentialType: string;
-  name: string;
-  issuer?: string | null;
-  referenceNumber?: string | null;
-  documentUrl?: string | null;
-  expiresAt?: string | null;
-  status: 'submitted' | 'verified' | 'rejected' | 'expired';
-  verifiedAt?: string | null;
-  rejectionReason?: string | null;
+  id: string; credentialType: string; name: string; issuer?: string | null; referenceNumber?: string | null; documentUrl?: string | null; expiresAt?: string | null;
+  status: 'submitted' | 'verified' | 'rejected' | 'expired'; verifiedAt?: string | null; rejectionReason?: string | null;
 }
 
-export interface AvailabilitySlot {
-  id: string;
-  startsAt: string;
-  endsAt: string;
-  status: 'available' | 'busy' | 'unavailable';
-  note?: string | null;
-}
+export interface AvailabilitySlot { id: string; startsAt: string; endsAt: string; status: 'available' | 'busy' | 'unavailable'; note?: string | null; }
 
 export interface ProjectStory {
-  id: string;
-  traderId?: string;
-  title: string;
-  locationLabel?: string | null;
-  summary: string;
-  beforePhotos: string[];
-  afterPhotos: string[];
-  durationDays?: number | null;
-  completedAt?: string | null;
-  createdAt?: string;
+  id: string; traderId?: string; title: string; locationLabel?: string | null; summary: string; beforePhotos: string[]; afterPhotos: string[];
+  durationDays?: number | null; completedAt?: string | null; createdAt?: string;
 }
 
 export interface TraderProfile {
   id: string;
   userId: string;
   businessName: string;
-  /** Legacy primary category retained while routes migrate to tradeCategories. */
   tradeCategory: string;
-  /** Legacy flattened service labels retained for compatibility/search. */
   subSkills: string[];
   tradeCategories?: string[];
   serviceSelections?: Record<string, string[]>;
@@ -127,6 +110,7 @@ export interface Job {
   scheduledStartAt?: string | null;
   status: JobStatus;
   acceptedQuoteId?: string | null;
+  paymentMode?: PaymentMode;
   createdAt: string;
   quotes?: Quote[];
   isPreview?: boolean;
@@ -143,6 +127,9 @@ export interface Quote {
   depositAmount: number;
   totalAmount: number;
   paymentTerms: string;
+  paymentSchedule?: PaymentStagePlan[];
+  paymentScheduleStatus?: 'proposed' | 'customer_edited' | 'agreed';
+  paymentScheduleRevision?: number;
   scope?: string | null;
   exclusions?: string | null;
   notes?: string | null;
@@ -154,46 +141,18 @@ export interface Quote {
 }
 
 export interface JobVariation {
-  id: string;
-  jobId: string;
-  traderId: string;
-  customerId: string;
-  title: string;
-  description: string;
-  amountDelta: number;
-  durationDeltaDays: number;
-  status: 'pending' | 'accepted' | 'declined' | 'withdrawn';
-  createdAt: string;
-  respondedAt?: string | null;
+  id: string; jobId: string; traderId: string; customerId: string; title: string; description: string; amountDelta: number; durationDeltaDays: number;
+  status: 'pending' | 'accepted' | 'declined' | 'withdrawn'; createdAt: string; respondedAt?: string | null;
 }
 
 export interface JobTimelineEvent {
-  id: string;
-  eventType: string;
-  title: string;
-  description?: string | null;
-  metadata: Record<string, unknown>;
-  actorId?: string | null;
-  createdAt: string;
+  id: string; eventType: string; title: string; description?: string | null; metadata: Record<string, unknown>; actorId?: string | null; createdAt: string;
 }
 
 export interface BuildPairNotification {
-  id: string;
-  type: string;
-  title: string;
-  body: string;
-  href?: string | null;
-  readAt?: string | null;
-  createdAt: string;
+  id: string; type: string; title: string; body: string; href?: string | null; readAt?: string | null; createdAt: string;
 }
 
 export interface SavedJobSearch {
-  id: string;
-  name: string;
-  category?: string | null;
-  keywords?: string | null;
-  postcode?: string | null;
-  radiusMiles: number;
-  emergencyOnly: boolean;
-  enabled: boolean;
+  id: string; name: string; category?: string | null; keywords?: string | null; postcode?: string | null; radiusMiles: number; emergencyOnly: boolean; enabled: boolean;
 }
