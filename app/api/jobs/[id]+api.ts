@@ -48,7 +48,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     const userId = await authenticatedUserId(request);
     await ensureDbUser(userId);
     const modes = await accountModes(userId);
-    const payload = await request.json() as { action?: string; mode?: 'buildpair' | 'external' };
+    const payload = await request.json() as { action?: string; mode?: 'buildpair' | 'external'; acknowledgedPaymentTerms?: boolean };
     const db = getDb();
 
     if (payload.action === 'cancel') {
@@ -65,6 +65,9 @@ export async function PATCH(request: Request, { id }: { id: string }) {
 
     if (payload.action === 'set_payment_mode') {
       if (!modes.customerEnabled || !payload.mode) throw new HttpError(403, 'Homeowner payment choice required');
+      if (payload.mode === 'buildpair' && payload.acknowledgedPaymentTerms !== true) {
+        throw new HttpError(400, 'Confirm that you have reviewed the agreed payment stages and understand your responsibility for later release approvals.');
+      }
       const rows = await getSql()`
         SELECT j.customer_id AS "customerId", j.title, j.status, j.payment_mode AS "paymentMode",
                q.trader_id AS "traderId", tp.stripe_account_id AS "stripeAccountId",
@@ -94,8 +97,15 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       }
       await getSql()`UPDATE jobs SET payment_mode = ${payload.mode}, updated_at = now() WHERE id = ${id}`;
       if (payload.mode === 'buildpair') {
-        await addJobEvent(id, userId, 'buildpair_payments_selected', 'BuildPair staged payments selected', 'The homeowner chose to keep the agreed payment stages and payment record inside BuildPair.');
-        await createNotification(row.traderId, { type: 'payment_mode_selected', title: 'BuildPair payments selected', body: `${row.title}: the homeowner chose BuildPair staged payments. The next agreed stage must be funded before work on that stage progresses.`, href: `/trader/jobs/${id}`, email: true });
+        await addJobEvent(
+          id,
+          userId,
+          'buildpair_payments_selected',
+          'BuildPair staged payments selected',
+          'The homeowner confirmed the agreed payment stages, accepted the BuildPair staged-payment terms and acknowledged that later stage-release approvals are their instructions to release the applicable funded amount.',
+          { paymentTermsVersion: '2026-09-09-v2', homeownerAcknowledgedPaymentTerms: true },
+        );
+        await createNotification(row.traderId, { type: 'payment_mode_selected', title: 'BuildPair payments selected', body: `${row.title}: the homeowner accepted the BuildPair staged-payment arrangement. Only request a stage release after its agreed trigger has genuinely been reached.`, href: `/trader/jobs/${id}`, email: true });
       } else {
         await addJobEvent(id, userId, 'external_payments_selected', 'Private payment arrangement selected', 'The homeowner chose to arrange payment outside BuildPair. BuildPair cannot process, control or recover private payments.');
         await createNotification(row.traderId, { type: 'external_payment_selected', title: 'Private payment arrangement selected', body: `${row.title}: the homeowner chose to arrange payments outside BuildPair. BuildPair payment-stage protections will not apply to those payments.`, href: `/trader/jobs/${id}`, email: true });
