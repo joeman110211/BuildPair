@@ -19,32 +19,13 @@ const NAV_ITEMS: { label: string; href: Href }[] = [
   { label: 'Membership', href: '/(public)/pricing' as Href },
   { label: 'Advice Hub', href: '/(public)/advice' as Href },
   { label: 'For Trades', href: '/(public)/for-tradespeople' },
-  { label: 'Trust & Safety', href: '/(public)/trust-safety' as Href },
-  { label: 'About', href: '/(public)/about' },
 ];
 
 const QUICK_NAV: { label: string; href: Href }[] = [
   { label: 'Home', href: '/' },
-  { label: 'Advice Hub', href: '/(public)/advice' as Href },
-  { label: 'Membership', href: '/(public)/pricing' as Href },
+  { label: 'Find Trades', href: '/(public)/directory' },
   { label: 'How It Works', href: '/(public)/how-it-works' },
-];
-
-const SUPPORT_ITEMS: { label: string; href: Href }[] = [
-  { label: 'Building Rules', href: '/(public)/building-regulations' as Href },
-  { label: 'Report a User', href: '/(public)/report' as Href },
-  { label: 'Browse Jobs', href: '/(public)/jobs' },
-  { label: 'For Homeowners', href: '/(public)/for-homeowners' },
-  { label: 'Download App', href: '/(public)/download' },
-  { label: 'Contact Us', href: '/(public)/contact' },
-];
-
-const LEGAL_ITEMS: { label: string; href: Href }[] = [
-  { label: 'Marketplace Standards', href: '/(public)/marketplace-standards' as Href },
-  { label: 'Terms & Conditions', href: '/(public)/terms' },
-  { label: 'Privacy Policy', href: '/(public)/privacy' },
-  { label: 'Cookie Policy', href: '/(public)/cookies' },
-  { label: 'Disclaimer', href: '/(public)/disclaimer' },
+  { label: 'Membership', href: '/(public)/pricing' as Href },
 ];
 
 function HeaderBrand() {
@@ -55,18 +36,24 @@ function NavMenu({ dashboard, signedIn, onSignOut, preview = false }: { dashboar
   const router = useRouter();
   const go = (href: Href) => router.push(href);
   const items: CompactNavItem[] = [
-    ...NAV_ITEMS.map((item) => ({ label: item.label, onPress: () => go(item.href) })),
-    ...SUPPORT_ITEMS.map((item, index) => ({ label: item.label, dividerBefore: index === 0, onPress: () => go(item.href) })),
-    ...LEGAL_ITEMS.map((item, index) => ({ label: item.label, dividerBefore: index === 0, onPress: () => go(item.href) })),
+    { label: 'Home', sectionLabel: 'Explore', onPress: () => go('/') },
+    { label: 'Find Trades', onPress: () => go('/(public)/directory') },
+    { label: 'How It Works', onPress: () => go('/(public)/how-it-works') },
+    { label: 'Membership', onPress: () => go('/(public)/pricing') },
+    { label: 'For Homeowners', sectionLabel: 'Guides', dividerBefore: true, onPress: () => go('/(public)/for-homeowners') },
+    { label: 'For Tradespeople', onPress: () => go('/(public)/for-tradespeople') },
+    { label: 'Advice Hub', onPress: () => go('/(public)/advice') },
+    { label: 'Trust & Safety', sectionLabel: 'Support', dividerBefore: true, onPress: () => go('/(public)/trust-safety') },
+    { label: 'Contact Us', onPress: () => go('/(public)/contact') },
   ];
 
   if (preview) {
-    items.push({ label: 'Sign in unavailable in public preview', dividerBefore: true, disabled: true, onPress: () => undefined });
+    items.push({ label: 'Sign in unavailable in public preview', sectionLabel: 'Account', dividerBefore: true, disabled: true, onPress: () => undefined });
   } else if (signedIn && dashboard) {
-    items.push({ label: 'Dashboard', dividerBefore: true, onPress: () => go(dashboard) });
+    items.push({ label: 'Dashboard', sectionLabel: 'Account', dividerBefore: true, onPress: () => go(dashboard) });
     items.push({ label: 'Sign out', onPress: () => onSignOut?.() });
   } else {
-    items.push({ label: 'Sign in', dividerBefore: true, onPress: () => go('/auth/account') });
+    items.push({ label: 'Sign in', sectionLabel: 'Account', dividerBefore: true, onPress: () => go('/auth/account') });
     items.push({ label: 'Join BuildPair', onPress: () => go('/auth/account') });
   }
 
@@ -75,23 +62,18 @@ function NavMenu({ dashboard, signedIn, onSignOut, preview = false }: { dashboar
 
 function DesktopNav() {
   return <View style={styles.desktopNav}>
-    {NAV_ITEMS.slice(1, 6).map((item) => <Link href={item.href} asChild key={item.label}><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{item.label}</Button></Link>)}
+    {NAV_ITEMS.slice(1).map((item) => <Link href={item.href} asChild key={item.label}><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{item.label}</Button></Link>)}
   </View>;
 }
 
 function MobileQuickNav() {
   return <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickNav} contentContainerStyle={styles.quickNavContent} accessibilityLabel="BuildPair quick navigation">
-    {QUICK_NAV.map((item) => <Link key={item.label} href={item.href} asChild>
-      <Button mode="text" textColor={colors.charcoalSoft} contentStyle={styles.quickButtonContent} style={styles.quickButton}>{item.label}</Button>
-    </Link>)}
+    {QUICK_NAV.map((item) => <Link key={item.label} href={item.href} asChild><Button mode="text" textColor={colors.charcoalSoft} contentStyle={styles.quickButtonContent} style={styles.quickButton}>{item.label}</Button></Link>)}
   </ScrollView>;
 }
 
 function CompactShell({ menu }: { menu: ReactNode }) {
-  return <View style={styles.shell}>
-    <View style={styles.compactHeader}><HeaderBrand />{menu}</View>
-    <MobileQuickNav />
-  </View>;
+  return <View style={styles.shell}><View style={styles.compactHeader}><HeaderBrand />{menu}</View><MobileQuickNav /></View>;
 }
 
 function AuthenticatedHeader() {
@@ -108,25 +90,14 @@ function AuthenticatedHeader() {
   else if (user?.traderEnabled) mode = 'trader';
 
   const dashboard = (mode ? dashboardHref(mode) : '/auth/choose-role') as Href;
-  const doSignOut = async () => {
-    await signOut();
-    router.replace('/');
-  };
+  const doSignOut = async () => { await signOut(); router.replace('/'); };
 
   if (compact) return <CompactShell menu={<NavMenu dashboard={dashboard} signedIn={isSignedIn} onSignOut={() => void doSignOut()} />} />;
-
   return <View style={styles.header}>
     <HeaderBrand />
     <View style={styles.actions}>
       <DesktopNav />
-      {isSignedIn ? <>
-        <Button mode="contained" contentStyle={styles.primaryAction} onPress={() => router.push(dashboard)}>Dashboard</Button>
-        <NavMenu dashboard={dashboard} signedIn onSignOut={() => void doSignOut()} />
-      </> : <>
-        <Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link>
-        <Link href="/auth/account" asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join BuildPair</Button></Link>
-        <NavMenu />
-      </>}
+      {isSignedIn ? <><Button mode="contained" contentStyle={styles.primaryAction} onPress={() => router.push(dashboard)}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href="/auth/account" asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join BuildPair</Button></Link><NavMenu /></>}
     </View>
   </View>;
 }
@@ -135,11 +106,7 @@ function PreviewHeader() {
   const { width } = useWindowDimensions();
   const compact = width < 1040;
   if (compact) return <CompactShell menu={<NavMenu preview />} />;
-
-  return <View style={styles.header}>
-    <HeaderBrand />
-    <View style={styles.actions}><DesktopNav /><Text variant="bodySmall" style={styles.preview}>Public preview</Text><NavMenu preview /></View>
-  </View>;
+  return <View style={styles.header}><HeaderBrand /><View style={styles.actions}><DesktopNav /><Text variant="bodySmall" style={styles.preview}>Public preview</Text><NavMenu preview /></View></View>;
 }
 
 export function PublicHeader() {
@@ -147,14 +114,7 @@ export function PublicHeader() {
   return authAvailable ? <AuthenticatedHeader /> : <PreviewHeader />;
 }
 
-const baseHeader = {
-  minHeight: 72,
-  paddingHorizontal: spacing.xxl,
-  backgroundColor: 'rgba(255,255,255,0.985)',
-  flexDirection: 'row' as const,
-  justifyContent: 'space-between' as const,
-  alignItems: 'center' as const,
-};
+const baseHeader = { minHeight: 72, paddingHorizontal: spacing.xxl, backgroundColor: 'rgba(255,255,255,0.985)', flexDirection: 'row' as const, justifyContent: 'space-between' as const, alignItems: 'center' as const };
 
 const styles = StyleSheet.create({
   shell: { backgroundColor: 'rgba(255,255,255,0.985)', borderBottomWidth: 1, borderColor: colors.border, zIndex: 200, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4, overflow: 'visible' },
