@@ -4,12 +4,16 @@ export const STRIPE_GBP_MINIMUM = 30;
 
 export type MilestonePaymentKind = 'materials' | 'deposit' | 'stage' | 'final';
 
-export function stagePlatformFee(kind: MilestonePaymentKind, quoteTotal: number) {
-  return kind === 'final' ? platformFeeAmount(quoteTotal) : 0;
+export function feeableQuoteAmount(quoteTotal: number, depositTotal = 0) {
+  return Math.max(0, quoteTotal - Math.max(0, depositTotal));
 }
 
-export function transferAmountForStage(kind: MilestonePaymentKind, milestoneAmount: number, quoteTotal: number) {
-  const fee = stagePlatformFee(kind, quoteTotal);
+export function stagePlatformFee(kind: MilestonePaymentKind, quoteTotal: number, depositTotal = 0) {
+  return kind === 'final' ? platformFeeAmount(feeableQuoteAmount(quoteTotal, depositTotal)) : 0;
+}
+
+export function transferAmountForStage(kind: MilestonePaymentKind, milestoneAmount: number, quoteTotal: number, depositTotal = 0) {
+  const fee = stagePlatformFee(kind, quoteTotal, depositTotal);
   if (fee > milestoneAmount) throw new Error('The final payment must be large enough to cover the BuildPair transaction fee');
   return milestoneAmount - fee;
 }
