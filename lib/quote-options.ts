@@ -24,7 +24,7 @@ export const QUOTE_DURATION_VALUES = QUOTE_DURATION_OPTIONS.map((option) => opti
 export function closestQuoteDuration(days: number) {
   return QUOTE_DURATION_VALUES.reduce((closest, value) => (
     Math.abs(value - days) < Math.abs(closest - days) ? value : closest
-  ), QUOTE_DURATION_VALUES[0]);
+  ), 1);
 }
 
 function toDateValue(date: Date) {
