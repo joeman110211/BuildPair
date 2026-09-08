@@ -82,6 +82,7 @@ export interface TraderProfile {
   averageRating: number;
   reviewCount: number;
   stripeAccountId?: string | null;
+  stripeChargesEnabled?: boolean;
   isPreview?: boolean;
   shareOnly?: boolean;
   canRequestQuote?: boolean;
