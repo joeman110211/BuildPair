@@ -30,10 +30,13 @@ export function useActivityCounts(refreshMs = 8000) {
   }, [isSignedIn]);
 
   useEffect(() => {
-    void load();
-    if (!isSignedIn) return;
+    const initial = setTimeout(() => void load(), 0);
+    if (!isSignedIn) return () => clearTimeout(initial);
     const timer = setInterval(() => void load(), refreshMs);
-    return () => clearInterval(timer);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(timer);
+    };
   }, [isSignedIn, load, refreshMs]);
 
   return { ...counts, refreshActivityCounts: load };
