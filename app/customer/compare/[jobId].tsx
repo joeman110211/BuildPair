@@ -7,6 +7,7 @@ import { Button } from 'react-native-paper';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { QuoteComparison } from '@/components/QuoteComparison';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { formatMoney } from '@/lib/money';
 import type { Job, PaymentStagePlan, Quote } from '@/types';
 
 export default function CompareQuotesScreen() {
@@ -21,13 +22,25 @@ export default function CompareQuotesScreen() {
   const load = useCallback(async () => { try { setData(await apiFetch(`/api/jobs/${jobId}/quotes`, {}, getToken)); setError(''); } catch (e) { setError(errorMessage(e)); } }, [getToken, jobId]);
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
-  async function accept(quote: Quote) {
+  async function performAccept(quote: Quote) {
     try {
       setAccepting(quote.id); setError('');
-      await apiFetch(`/api/quotes/${quote.id}`, { method: 'PATCH', body: JSON.stringify({ action: 'accept' }) }, getToken);
+      await apiFetch(`/api/quotes/${quote.id}`, { method: 'PATCH', body: JSON.stringify({ action: 'accept', acknowledgedPaymentSchedule: true }) }, getToken);
       router.replace(`/customer/jobs/${jobId}`);
     } catch (e) { setError(errorMessage(e)); }
     finally { setAccepting(undefined); }
+  }
+
+  function accept(quote: Quote) {
+    const message = `You are accepting the ${formatMoney(quote.totalAmount)} quote and the payment schedule shown with it. Check the scope, exclusions, upfront amounts and every payment stage before continuing. If you later use BuildPair staged payments, approving a completed stage will be your instruction to release that funded stage to the tradesperson. This does not remove your statutory consumer rights.`;
+    if (typeof window !== 'undefined') {
+      if (window.confirm(message)) void performAccept(quote);
+      return;
+    }
+    Alert.alert('Accept quote and payment schedule?', message, [
+      { text: 'Review again', style: 'cancel' },
+      { text: 'Accept quote', onPress: () => void performAccept(quote) },
+    ]);
   }
 
   async function decline(quote: Quote) {
