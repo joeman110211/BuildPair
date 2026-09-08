@@ -26,7 +26,7 @@ services:
       - key: BUILDPAIR_NOINDEX
         value: "true"
       - key: PLATFORM_FEE_PERCENT
-        value: "5"
+        value: "1"
       - key: INVOICE_FROM_EMAIL
         value: "BuildPair <info@buildpair.co.uk>"
       - key: SUPPORT_EMAIL
