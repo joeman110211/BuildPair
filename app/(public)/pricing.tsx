@@ -38,6 +38,11 @@ export default function PricingPage() {
       </View>
 
       <View style={styles.notice}>
+        <Text variant="titleMedium" style={styles.noticeTitle}>BuildPair staged-payment fee</Text>
+        <Text style={styles.noticeText}>For jobs paid through BuildPair staged payments, BuildPair’s current service fee is 1% of the accepted quote total after agreed deposit stages are excluded. The actual Stripe processing fees recorded for that job are also recovered from the tradesperson. The current workflow retains those amounts from the final tradesperson payout, while earlier agreed progress stages can be released at their full stage amount.</Text>
+      </View>
+
+      <View style={styles.notice}>
         <Text variant="titleMedium" style={styles.noticeTitle}>Commercial launch note</Text>
         <Text style={styles.noticeText}>The agreed monthly prices are £19.99 for BuildPair Plus and £29.99 for BuildPair Pro. VAT presentation, annual billing and final subscription cancellation/refund wording are being completed before public paid launch, so BuildPair will not invent those terms on the website before they are decided.</Text>
       </View>
