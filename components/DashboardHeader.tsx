@@ -3,10 +3,11 @@ import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Badge, Button, IconButton } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { CompactNavMenu, type CompactNavItem } from '@/components/CompactNavMenu';
 import { colors, controlHeights, spacing } from '@/constants/theme';
+import { useActivityCounts } from '@/hooks/useActivityCounts';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref, modeSetupHref } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
@@ -17,6 +18,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { user, getToken } = useCurrentUser();
+  const { unreadMessages, unreadNotifications } = useActivityCounts(10000);
   const [switchingMode, setSwitchingMode] = useState(false);
   const currentMode: UserRole = home.startsWith('/customer') ? 'customer' : 'trader';
   const otherMode: UserRole = currentMode === 'customer' ? 'trader' : 'customer';
@@ -60,15 +62,17 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
     router.replace('/');
   }
 
+  const messageLabel = unreadMessages ? `Messages (${unreadMessages > 99 ? '99+' : unreadMessages})` : 'Messages';
+  const notificationLabel = unreadNotifications ? `Notifications (${unreadNotifications > 99 ? '99+' : unreadNotifications})` : 'Notifications';
   const compactItems: CompactNavItem[] = [
     { label: 'Home', onPress: () => go(home) },
     { label: findLabel, onPress: () => go(findHref) },
     { label: 'Jobs', onPress: () => go(jobsHref) },
-    { label: 'Messages', onPress: () => go(messagesHref) },
+    { label: messageLabel, onPress: () => go(messagesHref) },
     { label: 'Profile', onPress: () => go(profileHref) },
     { label: 'Website home', dividerBefore: true, onPress: () => go('/') },
     { label: 'Advice Hub', onPress: () => go('/(public)/advice') },
-    { label: 'Notifications', onPress: () => go(notificationsHref) },
+    { label: notificationLabel, onPress: () => go(notificationsHref) },
     { label: 'Account & security', onPress: () => go(settingsHref) },
     { label: modeAction, dividerBefore: true, disabled: switchingMode, onPress: () => void changeMode() },
     { label: 'Sign out', dividerBefore: true, onPress: () => void doSignOut() },
@@ -76,13 +80,19 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
 
   return <View style={[styles.header, compact ? styles.headerCompact : styles.headerDesktop]}>
     <Link href="/" asChild><Pressable style={styles.brandButton} accessibilityLabel="BuildPair website home"><BuildPairLogo compact /></Pressable></Link>
-    {compact ? <CompactNavMenu items={compactItems} accessibilityLabel="Menu" /> : <View style={styles.actions}>
+    {compact ? <View style={styles.compactActions}>
+      <View style={styles.notificationWrap}>
+        <IconButton icon="bell-outline" size={24} onPress={() => router.push(notificationsHref)} accessibilityLabel={notificationLabel} />
+        {unreadNotifications ? <Badge style={styles.notificationBadge} size={18}>{unreadNotifications > 99 ? '99+' : unreadNotifications}</Badge> : null}
+      </View>
+      <CompactNavMenu items={compactItems} accessibilityLabel="Menu" />
+    </View> : <View style={styles.actions}>
       <Link href="/" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Website home</Button></Link>
       <Link href="/(public)/advice" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Advice Hub</Button></Link>
       <Link href={findHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{findLabel}</Button></Link>
       <Link href={jobsHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Jobs</Button></Link>
-      <Link href={messagesHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Messages</Button></Link>
-      <Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft} onPress={() => router.push(notificationsHref)}>Notifications</Button>
+      <Link href={messagesHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{messageLabel}</Button></Link>
+      <Button mode="text" contentStyle={styles.navButtonContent} textColor={unreadNotifications ? colors.primary : colors.charcoalSoft} onPress={() => router.push(notificationsHref)}>{notificationLabel}</Button>
       <Button mode="outlined" contentStyle={styles.navButtonContent} onPress={() => router.push(settingsHref)}>Account</Button>
       <Button mode={otherEnabled ? 'text' : 'outlined'} contentStyle={styles.navButtonContent} disabled={switchingMode} loading={switchingMode} onPress={() => void changeMode()}>{modeAction}</Button>
       <Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.muted} onPress={() => void doSignOut()}>Sign out</Button>
@@ -95,6 +105,9 @@ const styles = StyleSheet.create({
   headerCompact: { paddingHorizontal: spacing.md },
   headerDesktop: { paddingHorizontal: spacing.xxl },
   brandButton: { minHeight: 56, justifyContent: 'center', paddingHorizontal: spacing.xxs },
+  compactActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
+  notificationWrap: { position: 'relative' },
+  notificationBadge: { position: 'absolute', top: 2, right: 0 },
   actions: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.xxs, justifyContent: 'flex-end' },
   navButtonContent: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xxs },
 });
