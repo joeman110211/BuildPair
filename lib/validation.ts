@@ -73,7 +73,7 @@ export const traderProfileSchema = z.object({
 
 export const jobSchema = z.object({
   targetTraderId: z.string().min(1).nullable().optional(),
-  title: z.string().trim().min(5).max(120),
+  title: z.string().trim().min(1, 'Enter a job title').max(120),
   category: z.enum(TRADE_CATEGORIES),
   propertyType: z.enum(PROPERTY_TYPES),
   postcode: postcodeSchema,
@@ -83,6 +83,10 @@ export const jobSchema = z.object({
   budgetRange: z.enum(BUDGET_OPTIONS),
   photos: z.array(z.url()).max(8).default([]),
   isEmergency: z.boolean().default(false),
+}).superRefine((data, ctx) => {
+  if (!data.targetTraderId && data.title.length < 5) {
+    ctx.addIssue({ code: 'custom', path: ['title'], message: 'Job title must be at least 5 characters' });
+  }
 });
 
 export const quoteSchema = z.object({
