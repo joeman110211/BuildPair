@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { classifyMessageSafety, isRiskAtLeast, type MessageRiskLevel } from '@/lib/message-safety';
+import { createNotification } from '@/lib/notifications';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
@@ -9,6 +10,7 @@ const messageSchema = z.object({ body: z.string().trim().min(1).max(4000) });
 type Participant = {
   id: string;
   jobId: string;
+  jobTitle: string;
   customerId: string;
   traderId: string;
   moderationStatus: 'open' | 'warned' | 'restricted' | 'closed';
@@ -28,14 +30,16 @@ type MessageRow = {
 async function requireParticipant(conversationId: string, userId: string) {
   const sql = getSql();
   const rows = await sql`
-    SELECT id,
-           job_id AS "jobId",
-           customer_id AS "customerId",
-           trader_id AS "traderId",
-           moderation_status AS "moderationStatus",
-           moderation_reason AS "moderationReason"
-    FROM conversations
-    WHERE id = ${conversationId} AND (customer_id = ${userId} OR trader_id = ${userId})
+    SELECT c.id,
+           c.job_id AS "jobId",
+           j.title AS "jobTitle",
+           c.customer_id AS "customerId",
+           c.trader_id AS "traderId",
+           c.moderation_status AS "moderationStatus",
+           c.moderation_reason AS "moderationReason"
+    FROM conversations c
+    JOIN jobs j ON j.id = c.job_id
+    WHERE c.id = ${conversationId} AND (c.customer_id = ${userId} OR c.trader_id = ${userId})
     LIMIT 1
   ` as unknown as Participant[];
   if (!rows[0]) throw new HttpError(404, 'Conversation not found');
@@ -134,6 +138,16 @@ export async function POST(request: Request, { id }: { id: string }) {
         )
       `;
     }
+
+    const recipientId = userId === participant.customerId ? participant.traderId : participant.customerId;
+    const recipientMode = recipientId === participant.customerId ? 'customer' : 'trader';
+    const preview = payload.body.length > 160 ? `${payload.body.slice(0, 157)}…` : payload.body;
+    await Promise.allSettled([createNotification(recipientId, {
+      type: 'message_received',
+      title: `New message · ${participant.jobTitle}`,
+      body: preview,
+      href: `/${recipientMode}/messages/${id}`,
+    })]);
 
     const warning = restrict
       ? 'BuildPair has temporarily restricted this conversation and sent it to moderation for review.'
