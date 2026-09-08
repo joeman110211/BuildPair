@@ -1,4 +1,5 @@
 import { useAuth } from '@clerk/expo';
+import { type Href, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { Button, Chip, IconButton, Text, TextInput } from 'react-native-paper';
@@ -18,8 +19,21 @@ type Message = {
   aiRiskLevel?: MessageRiskLevel;
   aiModerationReason?: string | null;
 };
+type SiteVisitStatus = 'proposed' | 'confirmed' | 'declined' | 'completed' | 'cancelled';
 type ConversationStatus = {
   id: string;
+  jobId: string;
+  jobTitle: string;
+  jobStatus: 'open' | 'quoted' | 'in_progress' | 'completed' | 'cancelled';
+  acceptedQuoteId: string | null;
+  customerId: string;
+  traderId: string;
+  quoteId: string | null;
+  quoteStatus: 'pending' | 'accepted' | 'declined' | 'withdrawn' | null;
+  siteVisitId: string | null;
+  siteVisitStatus: SiteVisitStatus | null;
+  siteVisitProposedAt: string | null;
+  siteVisitNote: string | null;
   moderationStatus: 'open' | 'warned' | 'restricted' | 'closed';
   moderationReason: string;
   moderationUpdatedAt: string | null;
@@ -30,6 +44,7 @@ type AssistantResult = { summary: string; suggestions: string[]; source: 'ai' | 
 export function MessageThread({ conversationId }: { conversationId: string }) {
   const { getToken, userId } = useAuth();
   const getTokenRef = useRef(getToken);
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversation, setConversation] = useState<ConversationStatus>();
   const [body, setBody] = useState('');
@@ -37,6 +52,7 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
   const [warning, setWarning] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
   const [assistantLoading, setAssistantLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -95,6 +111,16 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
     } catch (e) { Alert.alert('Could not report message', errorMessage(e)); }
   };
 
+  const visitAction = async (action: 'accept' | 'decline' | 'cancel' | 'complete') => {
+    if (!conversation?.siteVisitId || actionBusy) return;
+    try {
+      setActionBusy(true); setError('');
+      await apiFetch('/api/site-visits', { method: 'PATCH', body: JSON.stringify({ id: conversation.siteVisitId, action }) }, () => getTokenRef.current());
+      await load();
+    } catch (e) { setError(errorMessage(e)); }
+    finally { setActionBusy(false); }
+  };
+
   if (loading) return <LoadingScreen label="Loading conversation…" />;
   const moderationStatus = conversation?.moderationStatus ?? 'open';
   const locked = moderationStatus === 'restricted' || moderationStatus === 'closed';
@@ -105,8 +131,36 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
       : moderationStatus === 'warned'
         ? 'BuildPair has detected language or behaviour that may breach the chat rules. Keep messages factual and respectful.'
         : '';
+  const isTrader = Boolean(conversation && userId === conversation.traderId);
 
-  return <Screen title="Job Conversation" subtitle="Keep arrangements and changes here so both sides have a clear record.">
+  const quoteNow = () => {
+    if (!conversation) return;
+    router.push({ pathname: '/trader/quotes/new', params: { jobId: conversation.jobId, title: conversation.jobTitle } });
+  };
+  const arrangeVisit = () => {
+    if (!conversation) return;
+    router.push({ pathname: '/trader/visits/new', params: { jobId: conversation.jobId, conversationId: conversation.id, title: conversation.jobTitle } });
+  };
+  const openJob = () => {
+    if (!conversation) return;
+    router.push((isTrader ? `/trader/jobs/${conversation.jobId}` : `/customer/jobs/${conversation.jobId}`) as Href);
+  };
+  const compareQuote = () => {
+    if (conversation) router.push(`/customer/compare/${conversation.jobId}` as Href);
+  };
+
+  return <Screen title={conversation?.jobTitle ?? 'Job Conversation'} subtitle="Message, arrange a visit, quote and keep the job moving without losing the project record.">
+    {conversation ? <NextStepCard
+      conversation={conversation}
+      isTrader={isTrader}
+      busy={actionBusy}
+      onQuoteNow={quoteNow}
+      onArrangeVisit={arrangeVisit}
+      onVisitAction={visitAction}
+      onOpenJob={openJob}
+      onCompareQuote={compareQuote}
+    /> : null}
+
     <AppCard style={styles.aiNotice} elevated={false}>
       <View style={styles.noticeHeader}><Chip icon="creation">BuildPair AI</Chip><Text variant="labelMedium" style={styles.noticeTitle}>Reply help and safety moderation</Text></View>
       <Text style={styles.muted}>BuildPair AI may analyse messages in this conversation to suggest replies, identify possible scams or abuse, and help keep the marketplace safe. AI can make mistakes, so serious moderation decisions can be reviewed by a person.</Text>
@@ -152,7 +206,127 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
   </Screen>;
 }
 
+function NextStepCard({
+  conversation,
+  isTrader,
+  busy,
+  onQuoteNow,
+  onArrangeVisit,
+  onVisitAction,
+  onOpenJob,
+  onCompareQuote,
+}: {
+  conversation: ConversationStatus;
+  isTrader: boolean;
+  busy: boolean;
+  onQuoteNow: () => void;
+  onArrangeVisit: () => void;
+  onVisitAction: (action: 'accept' | 'decline' | 'cancel' | 'complete') => Promise<void>;
+  onOpenJob: () => void;
+  onCompareQuote: () => void;
+}) {
+  const visitWhen = conversation.siteVisitProposedAt ? formatVisitTime(conversation.siteVisitProposedAt) : '';
+  const visitNote = conversation.siteVisitNote?.trim();
+
+  if (conversation.jobStatus === 'cancelled') return <AppCard style={styles.nextStepCard}>
+    <Chip icon="close-circle-outline">Job closed</Chip>
+    <Text variant="titleLarge" style={styles.title}>This job has been cancelled</Text>
+    <Text style={styles.muted}>The conversation remains as a record, but no quote or site visit should progress from here.</Text>
+  </AppCard>;
+
+  if (conversation.jobStatus === 'in_progress') return <AppCard style={styles.nextStepCard}>
+    <Chip icon="check-decagram-outline">Quote accepted</Chip>
+    <Text variant="titleLarge" style={styles.title}>{isTrader ? 'You have the job. Keep the project here.' : 'The job is now active in BuildPair'}</Text>
+    <Text style={styles.muted}>{isTrader
+      ? 'Use the job record for the agreed quote, payment stages, timeline and any variations. If the scope changes, propose it in BuildPair before doing the extra work.'
+      : 'The accepted quote is the agreed baseline. Deposits/payment stages, project progress and any scope changes can stay attached to the same job record.'}</Text>
+    <View style={styles.nextActions}><Button mode="contained" icon="briefcase-check-outline" onPress={onOpenJob}>{isTrader ? 'Manage active job' : 'View job & payment stages'}</Button></View>
+  </AppCard>;
+
+  if (conversation.jobStatus === 'completed') return <AppCard style={styles.nextStepCard}>
+    <Chip icon="flag-checkered">Work complete</Chip>
+    <Text variant="titleLarge" style={styles.title}>{isTrader ? 'Work is marked complete' : 'Review the completed job'}</Text>
+    <Text style={styles.muted}>{isTrader
+      ? 'The project record remains available for final payment status, history and the verified review path.'
+      : 'Check the final payment stage and project history. Once the qualifying payment is recorded, BuildPair can unlock the verified review.'}</Text>
+    <View style={styles.nextActions}><Button mode="contained" onPress={onOpenJob}>Open completed job</Button></View>
+  </AppCard>;
+
+  if (conversation.quoteStatus === 'pending') return <AppCard style={styles.nextStepCard}>
+    <Chip icon="file-document-check-outline">Quote ready</Chip>
+    <Text variant="titleLarge" style={styles.title}>{isTrader ? 'Quote sent. Waiting for the homeowner.' : 'A structured quote is ready to review'}</Text>
+    <Text style={styles.muted}>{isTrader
+      ? 'The homeowner can compare the price, scope, exclusions, timing, warranty, deposit and payment terms before accepting.'
+      : 'Review the full quote before accepting. Acceptance moves the job into the project stage rather than ending the BuildPair process.'}</Text>
+    <View style={styles.nextActions}>{isTrader
+      ? <Button mode="outlined" icon="file-document-edit-outline" onPress={onQuoteNow}>Update quote</Button>
+      : <Button mode="contained" icon="compare" onPress={onCompareQuote}>Review & compare quote</Button>}
+    </View>
+  </AppCard>;
+
+  if (conversation.siteVisitStatus === 'proposed') return <AppCard style={styles.nextStepCard}>
+    <Chip icon="calendar-clock">Site visit proposed</Chip>
+    <Text variant="titleLarge" style={styles.title}>{isTrader ? 'Waiting for the homeowner to confirm' : 'The tradesperson wants to inspect the job first'}</Text>
+    <Text style={styles.visitMeta}>{visitWhen}</Text>
+    {visitNote ? <Text style={styles.muted}>{visitNote}</Text> : null}
+    <Text style={styles.muted}>{isTrader
+      ? 'You can still quote immediately if enough information becomes available, or change/cancel the proposed visit.'
+      : 'This is normal for work that cannot be priced properly from a description and a couple of photos. Confirm the time, or decline it and agree another time in the chat.'}</Text>
+    <View style={styles.nextActions}>{isTrader ? <>
+      <Button mode="contained" icon="calendar-edit" onPress={onArrangeVisit}>Change time</Button>
+      <Button mode="outlined" icon="file-document-edit-outline" onPress={onQuoteNow}>Quote now instead</Button>
+      <Button mode="text" disabled={busy} onPress={() => void onVisitAction('cancel')}>Cancel visit</Button>
+    </> : <>
+      <Button mode="outlined" disabled={busy} onPress={() => void onVisitAction('decline')}>Decline</Button>
+      <Button mode="contained" icon="calendar-check" loading={busy} disabled={busy} onPress={() => void onVisitAction('accept')}>Confirm visit</Button>
+    </>}</View>
+  </AppCard>;
+
+  if (conversation.siteVisitStatus === 'confirmed') return <AppCard style={styles.nextStepCard}>
+    <Chip icon="calendar-check">Site visit confirmed</Chip>
+    <Text variant="titleLarge" style={styles.title}>{visitWhen}</Text>
+    {visitNote ? <Text style={styles.muted}>{visitNote}</Text> : null}
+    <Text style={styles.muted}>{isTrader
+      ? 'Inspect the job, clarify the scope, then create the formal BuildPair quote. The visit itself does not award the work.'
+      : 'After the visit, the tradesperson can put the formal quote into BuildPair. You can then review and accept it here.'}</Text>
+    <View style={styles.nextActions}>{isTrader ? <>
+      <Button mode="contained" icon="check" loading={busy} disabled={busy} onPress={() => void onVisitAction('complete')}>Mark visit complete</Button>
+      <Button mode="outlined" icon="file-document-edit-outline" onPress={onQuoteNow}>Create quote now</Button>
+    </> : null}</View>
+  </AppCard>;
+
+  if (conversation.siteVisitStatus === 'completed') return <AppCard style={styles.nextStepCard}>
+    <Chip icon="home-check-outline">Site visit complete</Chip>
+    <Text variant="titleLarge" style={styles.title}>{isTrader ? 'Now turn the visit into the formal quote' : 'The visit is done. The quote is the next step.'}</Text>
+    <Text style={styles.muted}>{isTrader
+      ? 'Enter the agreed scope, labour, materials, VAT, deposit, programme, exclusions and terms. Do not leave the actual commercial agreement buried in chat.'
+      : 'The tradesperson can now prepare the structured BuildPair quote. Nothing is awarded until you review and accept it.'}</Text>
+    <View style={styles.nextActions}>{isTrader ? <Button mode="contained" icon="file-document-edit-outline" onPress={onQuoteNow}>Create quote</Button> : null}</View>
+  </AppCard>;
+
+  return <AppCard style={styles.nextStepCard}>
+    <Chip icon="arrow-decision-outline">Next step</Chip>
+    <Text variant="titleLarge" style={styles.title}>{isTrader ? 'Can you price it now, or do you need to see it?' : 'Your request is live. This is not where the process ends.'}</Text>
+    <Text style={styles.muted}>{isTrader
+      ? 'If the description and photos are enough, send the structured quote now. If you need to inspect access, condition, measurements or scope first, arrange a site visit. Use chat for questions, not as a substitute for the quote.'
+      : 'The tradesperson can ask questions, send a quote immediately, or request a site visit before quoting. If you hire them, the accepted quote, payment stages, changes, completion and review can all continue through BuildPair.'}</Text>
+    <View style={styles.nextActions}>{isTrader ? <>
+      <Button mode="contained" icon="file-document-edit-outline" onPress={onQuoteNow}>Quote now</Button>
+      <Button mode="outlined" icon="calendar-account-outline" onPress={onArrangeVisit}>Arrange site visit</Button>
+    </> : null}</View>
+  </AppCard>;
+}
+
+function formatVisitTime(value: string) {
+  return new Date(value).toLocaleString('en-GB', {
+    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+}
+
 const styles = StyleSheet.create({
+  nextStepCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  nextActions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
+  visitMeta: { color: colors.charcoal, fontWeight: '900', fontSize: 17 },
   aiNotice: { backgroundColor: colors.blueSoft, borderColor: '#C9DDEA' },
   noticeHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
   noticeTitle: { color: colors.charcoal, fontWeight: '800' },
