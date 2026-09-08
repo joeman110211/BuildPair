@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { getDb } from '@/db/client';
 import { payments } from '@/db/schema';
+import { platformFeeAmount, platformFeePercent } from '@/lib/platform-fee';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { getStripe, providerReturnUrl } from '@/lib/stripe';
@@ -48,8 +49,8 @@ export async function POST(request: Request) {
     if (!row.stripeAccountId || !row.stripeChargesEnabled) throw new HttpError(409, 'The tradesperson must complete Stripe payout onboarding before BuildPair can take this payment');
 
     const stripe = getStripe();
-    const feePercent = Math.min(20, Math.max(0, Number(process.env.PLATFORM_FEE_PERCENT ?? 4)));
-    const overallFee = Math.round(row.quoteTotal * feePercent / 100);
+    const feePercent = platformFeePercent();
+    const overallFee = platformFeeAmount(row.quoteTotal);
     const fee = row.milestoneKind === 'final' ? Math.min(row.milestoneAmount, overallFee) : 0;
     const metadata = {
       buildpairJobId: row.jobId,
