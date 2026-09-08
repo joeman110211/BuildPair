@@ -48,6 +48,8 @@ export default function JobDetailScreen() {
   const reportedTraderId = data.acceptedQuote?.traderId ?? data.job.targetTraderId;
   const reportTraderHref = reportedTraderId ? ({ pathname: '/(public)/report', params: { subjectUserId: reportedTraderId, subjectLabel: data.trader?.businessName ?? 'Tradesperson on this job', subjectType: 'trader' } } as Href) : null;
   return <Screen title={data.job.title} subtitle={`${data.job.category} · ${data.job.status.replace('_', ' ')}`}>
+    <HomeownerNextStep data={data} jobId={id} reviewAllowed={reviewAllowed} />
+
     <AppCard><View style={styles.row}><Chip>{data.job.propertyType}</Chip><Chip>{data.job.urgency}</Chip><Chip>{data.job.budgetRange}</Chip>{data.job.isEmergency ? <Chip icon="alert">Emergency</Chip> : null}</View>{location ? <Text variant="titleSmall">Job location: {location}</Text> : null}<Text>{data.job.description}</Text>{data.job.aiGeneratedSpec ? <Text variant="bodySmall" style={styles.muted}>Drafted with AI and approved by the customer.</Text> : null}{data.job.scheduledStartAt ? <Text style={styles.muted}>Scheduled start: {new Date(data.job.scheduledStartAt).toLocaleDateString('en-GB')}</Text> : null}{cancellable && !confirmCancel ? <Button mode="outlined" textColor={colors.danger} onPress={() => setConfirmCancel(true)}>Cancel job</Button> : null}{cancellable && confirmCancel ? <View style={styles.cancelBox}><Text variant="titleSmall">Cancel this job?</Text><Text style={styles.muted}>Pending quotes will be declined and the job will stop appearing to tradespeople.</Text><View style={styles.row}><Button onPress={() => setConfirmCancel(false)} disabled={busy}>Keep job</Button><Button mode="contained" buttonColor={colors.danger} loading={busy} disabled={busy} onPress={() => void cancelJob()}>Confirm cancellation</Button></View></View> : null}</AppCard>
     {data.job.photos?.length ? <View style={styles.gallery}>{data.job.photos.map((uri) => <Image key={uri} source={{ uri }} style={styles.photo} />)}</View> : null}
 
@@ -68,7 +70,36 @@ export default function JobDetailScreen() {
   </Screen>;
 }
 
+function HomeownerNextStep({ data, jobId, reviewAllowed }: { data: Detail; jobId: string; reviewAllowed: boolean }) {
+  if (data.job.status === 'cancelled') return <AppCard style={styles.nextCard}><Chip icon="close-circle-outline">Closed</Chip><Text variant="titleLarge" style={styles.heading}>This job is cancelled</Text><Text style={styles.muted}>The record remains here, but no further quote or project action is expected.</Text></AppCard>;
+
+  if (!data.acceptedQuote) return <AppCard style={styles.nextCard}>
+    <Chip icon={data.job.status === 'quoted' ? 'file-document-check-outline' : 'clock-outline'}>{data.job.status === 'quoted' ? 'Quote received' : 'Awaiting response'}</Chip>
+    <Text variant="titleLarge" style={styles.heading}>{data.job.status === 'quoted' ? 'Next: review the quote before hiring' : 'Next: quote now or a site visit first'}</Text>
+    <Text style={styles.muted}>{data.job.status === 'quoted'
+      ? 'Compare price, scope, exclusions, timing, deposit and terms. Accepting a quote starts the BuildPair project workflow rather than ending it.'
+      : 'A tradesperson may quote from the details you supplied, ask questions in Messages, or propose a site visit before pricing. Nothing is awarded until you accept a formal BuildPair quote.'}</Text>
+    {data.job.status === 'quoted' ? <Link href={`/customer/compare/${jobId}` as Href} asChild><Button mode="contained" icon="compare">Review quotes</Button></Link> : null}
+  </AppCard>;
+
+  if (data.job.status === 'in_progress') return <AppCard style={styles.nextCard}>
+    <Chip icon="briefcase-check-outline">Job in progress</Chip>
+    <Text variant="titleLarge" style={styles.heading}>The accepted quote is now the project baseline</Text>
+    <Text style={styles.muted}>Use Messages for arrangements, the payment cards below for deposits/stages, and Variations for any change to price or scope. Do not rely on an informal chat message for extra work that changes the agreement.</Text>
+    <Text style={styles.muted}>Next: complete any due deposit, agree access/start arrangements, then follow progress here until the tradesperson marks the work complete.</Text>
+  </AppCard>;
+
+  return <AppCard style={styles.nextCard}>
+    <Chip icon="flag-checkered">Work complete</Chip>
+    <Text variant="titleLarge" style={styles.heading}>{reviewAllowed ? 'Final payment recorded. You can now review the work.' : 'Next: check the work and final payment stage'}</Text>
+    <Text style={styles.muted}>{reviewAllowed
+      ? 'The verified review form is available below and is tied to this completed BuildPair job.'
+      : 'Check the completed work before confirming the final qualifying payment. Once completion/payment conditions are met, the verified review option will appear.'}</Text>
+  </AppCard>;
+}
+
 const styles = StyleSheet.create({
+  nextCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
   flex: { flex: 1, minWidth: 220, gap: 4 },
   heading: { color: colors.charcoal, fontWeight: '900' },
