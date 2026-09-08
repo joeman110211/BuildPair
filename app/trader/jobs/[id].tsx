@@ -43,11 +43,30 @@ export default function TraderJobDetail() {
     try { setBusy(true); await apiFetch(`/api/variations/${variationId}`, { method: 'PATCH', body: JSON.stringify({ action: 'withdraw' }) }, getToken); await load(); }
     catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
   }
+  async function complete() {
+    try {
+      setBusy(true); setError('');
+      await apiFetch(`/api/jobs/${id}`, { method: 'PATCH', body: JSON.stringify({ action: 'complete' }) }, getToken);
+      await load();
+    } catch (e) { setError(errorMessage(e)); }
+    finally { setBusy(false); }
+  }
 
   if (error && !data) return <Screen><EmptyState title="Job unavailable" body={error} /></Screen>;
   if (!data) return <LoadingScreen />;
   const reportCustomerHref = ({ pathname: '/(public)/report', params: { subjectUserId: data.job.customerId, subjectLabel: 'Homeowner on this job', subjectType: 'customer' } } as Href);
+  const hasPendingVariation = data.variations?.some((variation) => variation.status === 'pending');
   return <Screen title={data.job.title} subtitle={`${data.job.category} · ${data.job.status.replace('_', ' ')}`}>
+    <AppCard style={styles.nextCard}>
+      <Chip icon={data.job.status === 'completed' ? 'flag-checkered' : 'briefcase-check-outline'}>{data.job.status === 'completed' ? 'Work complete' : 'Active BuildPair job'}</Chip>
+      <Text variant="titleLarge" style={styles.title}>{data.job.status === 'completed' ? 'The project record is now in completion' : 'Next: deliver the accepted scope and keep changes recorded'}</Text>
+      <Text style={styles.muted}>{data.job.status === 'completed'
+        ? 'The homeowner can review the completed work, confirm the final payment stage and leave a verified review when the qualifying conditions are met.'
+        : 'The accepted quote is the baseline. Use Variations below before carrying out chargeable extras or material scope changes. Payment stages and the project timeline stay attached to the job.'}</Text>
+      {data.job.status === 'in_progress' ? <Button mode="contained" icon="check-circle-outline" loading={busy} disabled={busy || hasPendingVariation} onPress={() => void complete()}>Mark work complete</Button> : null}
+      {hasPendingVariation ? <HelperText type="info">Resolve the pending variation before marking the job complete.</HelperText> : null}
+    </AppCard>
+
     <AppCard><View style={styles.row}><Chip>{data.job.budgetRange}</Chip>{data.job.isEmergency ? <Chip icon="alert">Emergency</Chip> : null}{data.job.scheduledStartAt ? <Chip icon="calendar">Starts {new Date(data.job.scheduledStartAt).toLocaleDateString('en-GB')}</Chip> : null}</View><Text style={styles.body}>{data.job.description}</Text>{data.acceptedQuote ? <Text style={styles.muted}>Agreed quote: {formatMoney(data.acceptedQuote.totalAmount)}{data.acceptedQuote.durationDays ? ` · ${data.acceptedQuote.durationDays} days` : ''}</Text> : null}<Link href={reportCustomerHref} asChild><Button mode="text" icon="alert-outline" textColor={colors.danger}>Report this homeowner</Button></Link></AppCard>
 
     <Text variant="titleLarge" style={styles.title}>Project timeline</Text>
@@ -60,6 +79,7 @@ export default function TraderJobDetail() {
 }
 
 const styles = StyleSheet.create({
+  nextCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
   title: { color: colors.charcoal, fontWeight: '900' }, body: { color: colors.text, lineHeight: 22 }, muted: { color: colors.muted, lineHeight: 21 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }, flex: { flex: 1, minWidth: 220, gap: 3 }, moneyInput: { flex: 1, minWidth: 140 },
   timelineRow: { position: 'relative', flexDirection: 'row', gap: 12, paddingBottom: 18 }, dot: { width: 16, height: 16, borderRadius: 8, backgroundColor: colors.primary, marginTop: 3, zIndex: 2 }, line: { position: 'absolute', left: 7, top: 19, bottom: 0, width: 2, backgroundColor: colors.border },
