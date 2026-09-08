@@ -29,8 +29,6 @@ const serviceSelectionsSchema = z.record(
 
 export const traderProfileSchema = z.object({
   businessName: z.string().trim().min(2, 'Enter your business or trading name').max(100),
-  // New clients use structured multi-category fields. Legacy fields remain
-  // optional during rollout so an older app build cannot corrupt a profile.
   tradeCategories: z.array(z.enum(TRADE_CATEGORIES)).min(1, 'Select at least one trade category').max(6, 'A trader profile can contain no more than 6 trade categories').optional(),
   serviceSelections: serviceSelectionsSchema,
   tradeCategory: z.enum(TRADE_CATEGORIES).optional(),
@@ -44,15 +42,11 @@ export const traderProfileSchema = z.object({
   selfCertified: z.literal(true),
   showcase: traderShowcaseSchema,
 }).superRefine((data, ctx) => {
-  const categories = data.tradeCategories?.length
-    ? data.tradeCategories
-    : data.tradeCategory ? [data.tradeCategory] : [];
-
+  const categories = data.tradeCategories?.length ? data.tradeCategories : data.tradeCategory ? [data.tradeCategory] : [];
   if (!categories.length) {
     ctx.addIssue({ code: 'custom', path: ['tradeCategories'], message: 'Select at least one trade category' });
     return;
   }
-
   const categorySet = new Set<string>(categories);
   for (const [category, services] of Object.entries(data.serviceSelections ?? {})) {
     if (!categorySet.has(category)) {
@@ -65,9 +59,7 @@ export const traderProfileSchema = z.object({
     }
     const allowed = new Set<string>(SUB_SKILLS[category as (typeof TRADE_CATEGORIES)[number]]);
     for (const service of services) {
-      if (!allowed.has(service)) {
-        ctx.addIssue({ code: 'custom', path: ['serviceSelections', category], message: `${service} is not a recognised ${category} service` });
-      }
+      if (!allowed.has(service)) ctx.addIssue({ code: 'custom', path: ['serviceSelections', category], message: `${service} is not a recognised ${category} service` });
     }
   }
 });
@@ -85,9 +77,7 @@ export const jobSchema = z.object({
   photos: z.array(z.url()).max(8).default([]),
   isEmergency: z.boolean().default(false),
 }).superRefine((data, ctx) => {
-  if (!data.targetTraderId && data.title.length < 5) {
-    ctx.addIssue({ code: 'custom', path: ['title'], message: 'Job title must be at least 5 characters' });
-  }
+  if (!data.targetTraderId && data.title.length < 5) ctx.addIssue({ code: 'custom', path: ['title'], message: 'Job title must be at least 5 characters' });
 });
 
 export const quoteSchema = z.object({
@@ -100,15 +90,15 @@ export const quoteSchema = z.object({
   scope: z.string().trim().min(QUOTE_SCOPE_MIN_LENGTH, `Included scope must be at least ${QUOTE_SCOPE_MIN_LENGTH} characters`).max(4000),
   exclusions: z.string().trim().max(3000).optional(),
   notes: z.string().trim().max(3000).optional(),
-  durationDays: z.number().int().refine((value) => QUOTE_DURATION_VALUES.includes(value), 'Choose an estimated duration from the available options').optional(),
+  durationDays: z.number().int().refine((value) => QUOTE_DURATION_VALUES.includes(value), 'Choose an estimated duration from the available options'),
   warrantyMonths: z.number().int().min(0).max(240).optional(),
-  proposedStartAt: z.iso.datetime().optional(),
+  proposedStartAt: z.iso.datetime(),
   validUntil: z.iso.datetime().optional(),
 }).superRefine((data, ctx) => {
   const total = data.laborCost + data.materialsCost + data.vatAmount;
   if (data.depositAmount >= total && data.depositAmount > 0) ctx.addIssue({ code: 'custom', path: ['depositAmount'], message: 'Deposit must be less than the quote total so a final balance remains' });
   if (data.validUntil && new Date(data.validUntil).getTime() <= Date.now()) ctx.addIssue({ code: 'custom', path: ['validUntil'], message: 'Quote expiry must be in the future' });
-  if (data.proposedStartAt && new Date(data.proposedStartAt).getTime() <= Date.now()) ctx.addIssue({ code: 'custom', path: ['proposedStartAt'], message: 'Proposed start date must be in the future' });
+  if (new Date(data.proposedStartAt).getTime() <= Date.now()) ctx.addIssue({ code: 'custom', path: ['proposedStartAt'], message: 'Proposed start date must be in the future' });
 });
 
 export const reviewSchema = z.object({
@@ -130,11 +120,7 @@ export const invoiceSchema = z.object({
   customerName: z.string().trim().min(2).max(100),
   customerEmail: z.email(),
   jobId: z.uuid().optional(),
-  items: z.array(z.object({
-    description: z.string().trim().min(2).max(300),
-    quantity: z.number().positive().max(10000),
-    unitPrice: z.number().int().nonnegative(),
-  })).min(1).max(100),
+  items: z.array(z.object({ description: z.string().trim().min(2).max(300), quantity: z.number().positive().max(10000), unitPrice: z.number().int().nonnegative() })).min(1).max(100),
   vatAmount: z.number().int().nonnegative(),
   depositAmount: z.number().int().nonnegative(),
   notes: z.string().max(2000).optional(),
