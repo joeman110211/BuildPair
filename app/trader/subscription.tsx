@@ -49,7 +49,6 @@ const PLAN_COPY = {
 export default function SubscriptionScreen() {
   const { getToken } = useAuth();
   const isWeb = Platform.OS === 'web';
-  const paymentsEnabled = Boolean(process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim());
   const [profile, setProfile] = useState<TraderProfile>();
   const [error, setError] = useState('');
 
@@ -120,9 +119,9 @@ export default function SubscriptionScreen() {
           {tier.detail.map((feature) => <Text key={feature} style={styles.feature}>✓ {feature}</Text>)}
           {isWeb && key !== 'free' ? <Button
             mode={isCurrent ? 'outlined' : 'contained'}
-            disabled={!paymentsEnabled || isCurrent}
+            disabled={isCurrent}
             onPress={() => openEndpoint('/api/stripe/subscription', { tier: key })}
-          >{!paymentsEnabled ? 'Stripe setup in progress' : isCurrent ? 'Current plan' : `Choose ${tier.shortName}`}</Button> : null}
+          >{isCurrent ? 'Current plan' : `Choose ${tier.shortName}`}</Button> : null}
         </AppCard>
       </View>;
     })}</View>
@@ -136,9 +135,9 @@ export default function SubscriptionScreen() {
       <Text variant="titleLarge" style={styles.title}>BuildPair payouts are required to receive job payments</Text>
       <Text style={styles.muted}>To receive materials payments, deposits, progress-stage payments or final payments through BuildPair, you must complete BuildPair payout onboarding with Stripe. Stripe collects and stores the payout and bank details. BuildPair stores only the connected-account reference and payout readiness status.</Text>
       <Text style={styles.muted}>You can build your profile and send eligible quotes before payout setup is complete, but a homeowner cannot select BuildPair staged payments for an accepted job until your payouts are ready.</Text>
-      <Button mode="contained" icon="bank" disabled={!paymentsEnabled} onPress={() => openEndpoint('/api/stripe/connect')}>{paymentsEnabled ? 'Set up BuildPair payouts' : 'Stripe setup in progress'}</Button>
+      <Button mode="contained" icon="bank" onPress={() => openEndpoint('/api/stripe/connect')}>Set up BuildPair payouts</Button>
     </AppCard>
-    {isWeb ? <Button mode="outlined" disabled={!paymentsEnabled} onPress={() => openEndpoint('/api/stripe/billing-portal')}>Manage or cancel subscription</Button> : null}
+    {isWeb ? <Button mode="outlined" onPress={() => openEndpoint('/api/stripe/billing-portal')}>Manage or cancel subscription</Button> : null}
     {error ? <Text style={styles.error}>{error}</Text> : null}
   </Screen>;
 }
