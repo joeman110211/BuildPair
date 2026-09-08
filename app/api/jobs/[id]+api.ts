@@ -20,12 +20,15 @@ export async function GET(request: Request, { id }: { id: string }) {
     const milestones = await getSql()`
       SELECT id, job_id AS "jobId", quote_id AS "quoteId", title, amount, status, kind,
              trigger_description AS "triggerDescription", sort_order AS "sortOrder", release_mode AS "releaseMode",
-             completed_at AS "completedAt", paid_at AS "paidAt", payment_method AS "paymentMethod"
+             completed_at AS "completedAt", paid_at AS "paidAt", funded_at AS "fundedAt",
+             release_requested_at AS "releaseRequestedAt", release_approved_at AS "releaseApprovedAt",
+             disputed_at AS "disputedAt", dispute_reason AS "disputeReason", payment_method AS "paymentMethod"
       FROM job_milestones WHERE job_id = ${id} ORDER BY sort_order ASC, created_at ASC
     `;
     const existingReview = job.customerId === userId ? await db.query.reviews.findFirst({ where: and(eq(reviews.jobId, id), eq(reviews.customerId, userId)) }) : null;
     let trader = null;
     if (accepted) trader = await db.query.traderProfiles.findFirst({ where: eq(traderProfiles.userId, accepted.traderId) });
+    const payoutRows = accepted ? await getSql()`SELECT stripe_payouts_enabled AS "stripePayoutsEnabled" FROM trader_profiles WHERE user_id = ${accepted.traderId} LIMIT 1` as unknown as { stripePayoutsEnabled: boolean }[] : [];
     const variations = await getSql()`
       SELECT id, job_id AS "jobId", trader_id AS "traderId", customer_id AS "customerId", title, description,
              amount_delta AS "amountDelta", duration_delta_days AS "durationDeltaDays", status,
@@ -36,7 +39,7 @@ export async function GET(request: Request, { id }: { id: string }) {
       SELECT id, event_type AS "eventType", title, description, metadata, actor_id AS "actorId", created_at AS "createdAt"
       FROM job_events WHERE job_id = ${id} ORDER BY created_at ASC
     `;
-    return Response.json({ job: { ...job, paymentMode: modeRows[0]?.paymentMode ?? 'undecided' }, acceptedQuote: accepted, milestones, trader, existingReview, variations, timeline });
+    return Response.json({ job: { ...job, paymentMode: modeRows[0]?.paymentMode ?? 'undecided' }, acceptedQuote: accepted, milestones, trader: trader ? { ...trader, stripePayoutsEnabled: payoutRows[0]?.stripePayoutsEnabled ?? false } : null, existingReview, variations, timeline });
   } catch (error) { return jsonError(error); }
 }
 
@@ -65,17 +68,17 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       const rows = await getSql()`
         SELECT j.customer_id AS "customerId", j.title, j.status, j.payment_mode AS "paymentMode",
                q.trader_id AS "traderId", tp.stripe_account_id AS "stripeAccountId",
-               tp.stripe_charges_enabled AS "stripeChargesEnabled"
+               tp.stripe_charges_enabled AS "stripeChargesEnabled", tp.stripe_payouts_enabled AS "stripePayoutsEnabled"
         FROM jobs j
         JOIN quotes q ON q.id = j.accepted_quote_id
         JOIN trader_profiles tp ON tp.user_id = q.trader_id
         WHERE j.id = ${id}
         LIMIT 1
-      ` as unknown as { customerId: string; title: string; status: string; paymentMode: string; traderId: string; stripeAccountId: string | null; stripeChargesEnabled: boolean }[];
+      ` as unknown as { customerId: string; title: string; status: string; paymentMode: string; traderId: string; stripeAccountId: string | null; stripeChargesEnabled: boolean; stripePayoutsEnabled: boolean }[];
       const row = rows[0];
       if (!row || row.customerId !== userId) throw new HttpError(404, 'Active job not found');
       if (row.status !== 'in_progress') throw new HttpError(409, 'Payment choice is only available for an active accepted job');
-      if (payload.mode === 'buildpair' && (!row.stripeAccountId || !row.stripeChargesEnabled)) {
+      if (payload.mode === 'buildpair' && (!row.stripeAccountId || (!row.stripePayoutsEnabled && !row.stripeChargesEnabled))) {
         await createNotification(row.traderId, {
           type: 'payout_setup_required',
           title: 'Set up payouts to use BuildPair payments',
@@ -86,13 +89,13 @@ export async function PATCH(request: Request, { id }: { id: string }) {
         throw new HttpError(409, 'The tradesperson must finish Stripe payout setup before this job can use BuildPair payments. They have been notified.');
       }
       if (row.paymentMode === 'buildpair' && payload.mode === 'external') {
-        const paid = await getSql()`SELECT 1 FROM payments WHERE job_id = ${id} AND status = 'paid' LIMIT 1`;
-        if (paid.length) throw new HttpError(409, 'This job already has a BuildPair payment and can no longer switch to private payment');
+        const collected = await getSql()`SELECT 1 FROM payments WHERE job_id = ${id} AND status IN ('funded', 'released', 'paid', 'disputed') LIMIT 1`;
+        if (collected.length) throw new HttpError(409, 'This job already has a BuildPair payment and can no longer switch to private payment');
       }
       await getSql()`UPDATE jobs SET payment_mode = ${payload.mode}, updated_at = now() WHERE id = ${id}`;
       if (payload.mode === 'buildpair') {
         await addJobEvent(id, userId, 'buildpair_payments_selected', 'BuildPair staged payments selected', 'The homeowner chose to keep the agreed payment stages and payment record inside BuildPair.');
-        await createNotification(row.traderId, { type: 'payment_mode_selected', title: 'BuildPair payments selected', body: `${row.title}: the homeowner chose BuildPair staged payments. Check the first agreed payment stage before starting.`, href: `/trader/jobs/${id}`, email: true });
+        await createNotification(row.traderId, { type: 'payment_mode_selected', title: 'BuildPair payments selected', body: `${row.title}: the homeowner chose BuildPair staged payments. The next agreed stage must be funded before work on that stage progresses.`, href: `/trader/jobs/${id}`, email: true });
       } else {
         await addJobEvent(id, userId, 'external_payments_selected', 'Private payment arrangement selected', 'The homeowner chose to arrange payment outside BuildPair. BuildPair cannot process, control or recover private payments.');
         await createNotification(row.traderId, { type: 'external_payment_selected', title: 'Private payment arrangement selected', body: `${row.title}: the homeowner chose to arrange payments outside BuildPair. BuildPair payment-stage protections will not apply to those payments.`, href: `/trader/jobs/${id}`, email: true });
@@ -115,7 +118,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     if (owned.paymentMode === 'undecided') throw new HttpError(409, 'The homeowner must choose BuildPair or private payments first');
     if (owned.paymentMode === 'buildpair') {
       const unpaid = await getSql()`SELECT title FROM job_milestones WHERE job_id = ${id} AND status <> 'paid' ORDER BY sort_order ASC LIMIT 1` as unknown as { title: string }[];
-      if (unpaid[0]) throw new HttpError(409, `${unpaid[0].title} must be completed and paid before the job can be marked complete`);
+      if (unpaid[0]) throw new HttpError(409, `${unpaid[0].title} must be completed and released before the job can be marked complete`);
     }
     await db.update(jobs).set({ status: 'completed', updatedAt: new Date() }).where(eq(jobs.id, id));
     await addJobEvent(id, userId, 'work_completed', 'Tradesperson marked work complete', owned.title);
