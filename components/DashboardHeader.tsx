@@ -38,23 +38,14 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
 
   async function changeMode() {
     if (switchingMode) return;
-    if (!otherEnabled) {
-      go(modeSetupHref(otherMode));
-      return;
-    }
-
+    if (!otherEnabled) { go(modeSetupHref(otherMode)); return; }
     setSwitchingMode(true);
     try {
-      await apiFetch('/api/me', {
-        method: 'PATCH',
-        body: JSON.stringify({ role: otherMode }),
-      }, getToken);
+      await apiFetch('/api/me', { method: 'PATCH', body: JSON.stringify({ role: otherMode }) }, getToken);
       router.replace(dashboardHref(otherMode));
     } catch (error) {
       Alert.alert('Could not switch profile', errorMessage(error));
-    } finally {
-      setSwitchingMode(false);
-    }
+    } finally { setSwitchingMode(false); }
   }
 
   async function doSignOut() {
@@ -65,21 +56,21 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
   const messageLabel = unreadMessages ? `Messages (${unreadMessages > 99 ? '99+' : unreadMessages})` : 'Messages';
   const notificationLabel = unreadNotifications ? `Notifications (${unreadNotifications > 99 ? '99+' : unreadNotifications})` : 'Notifications';
   const compactItems: CompactNavItem[] = [
-    { label: 'Home', onPress: () => go(home) },
+    { label: 'Home', sectionLabel: 'BuildPair', onPress: () => go('/') },
+    { label: 'Dashboard', onPress: () => go(home) },
     { label: findLabel, onPress: () => go(findHref) },
     { label: 'Jobs', onPress: () => go(jobsHref) },
     { label: messageLabel, onPress: () => go(messagesHref) },
-    { label: 'Profile', onPress: () => go(profileHref) },
-    { label: 'Website home', dividerBefore: true, onPress: () => go('/') },
-    { label: 'Advice Hub', onPress: () => go('/(public)/advice') },
     { label: notificationLabel, onPress: () => go(notificationsHref) },
+    { label: 'Profile', sectionLabel: 'Your account', dividerBefore: true, onPress: () => go(profileHref) },
     { label: 'Account & security', onPress: () => go(settingsHref) },
-    { label: modeAction, dividerBefore: true, disabled: switchingMode, onPress: () => void changeMode() },
-    { label: 'Sign out', dividerBefore: true, onPress: () => void doSignOut() },
+    { label: 'Advice Hub', sectionLabel: 'Help', dividerBefore: true, onPress: () => go('/(public)/advice') },
+    { label: modeAction, sectionLabel: 'Account mode', dividerBefore: true, disabled: switchingMode, onPress: () => void changeMode() },
+    { label: 'Sign out', onPress: () => void doSignOut() },
   ];
 
   return <View style={[styles.header, compact ? styles.headerCompact : styles.headerDesktop]}>
-    <Link href="/" asChild><Pressable style={styles.brandButton} accessibilityLabel="BuildPair website home"><BuildPairLogo compact /></Pressable></Link>
+    <Link href="/" asChild><Pressable style={styles.brandButton} accessibilityLabel="BuildPair home"><BuildPairLogo compact /></Pressable></Link>
     {compact ? <View style={styles.compactActions}>
       <View style={styles.notificationWrap}>
         <IconButton icon="bell-outline" size={24} onPress={() => router.push(notificationsHref)} accessibilityLabel={notificationLabel} />
@@ -87,8 +78,8 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
       </View>
       <CompactNavMenu items={compactItems} accessibilityLabel="Menu" />
     </View> : <View style={styles.actions}>
-      <Link href="/" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Website home</Button></Link>
-      <Link href="/(public)/advice" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Advice Hub</Button></Link>
+      <Link href="/" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Home</Button></Link>
+      <Link href={home} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Dashboard</Button></Link>
       <Link href={findHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{findLabel}</Button></Link>
       <Link href={jobsHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Jobs</Button></Link>
       <Link href={messagesHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{messageLabel}</Button></Link>
