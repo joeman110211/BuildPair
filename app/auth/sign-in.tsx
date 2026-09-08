@@ -11,7 +11,8 @@ import { errorMessage } from '@/lib/api';
 export default function SignInScreen() {
   const { signIn, fetchStatus } = useSignIn();
   const router = useRouter();
-  const params = useLocalSearchParams<{ mode?: string | string[] }>();
+  const params = useLocalSearchParams<{ mode?: string | string[]; admin?: string | string[] }>();
+  const admin = Array.isArray(params.admin) ? params.admin[0] === '1' : params.admin === '1';
   const mode = parseAccountMode(params.mode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,18 +21,30 @@ export default function SignInScreen() {
   const [error, setError] = useState('');
 
   const busy = fetchStatus === 'fetching';
-  const title = mode === 'trader' ? 'Tradesperson Sign In' : mode === 'customer' ? 'Homeowner Sign In' : 'Welcome back';
-  const subtitle = mode === 'trader'
-    ? 'Sign in to find work, manage quotes and run your trade profile.'
-    : mode === 'customer'
-      ? 'Sign in to post work, compare quotes and manage your jobs.'
-      : 'Sign in to BuildPair.';
+  const title = admin
+    ? 'BuildPair Administrator Sign In'
+    : mode === 'trader'
+      ? 'Tradesperson Sign In'
+      : mode === 'customer'
+        ? 'Homeowner Sign In'
+        : 'Welcome back';
+  const subtitle = admin
+    ? 'Sign in with an authorised BuildPair administrator account.'
+    : mode === 'trader'
+      ? 'Sign in to find work, manage quotes and run your trade profile.'
+      : mode === 'customer'
+        ? 'Sign in to post work, compare quotes and manage your jobs.'
+        : 'Sign in to BuildPair.';
 
   async function finishSignIn() {
     await signIn.finalize({
       navigate: async ({ session }) => {
         if (session?.currentTask) {
           throw new Error('Your account needs another Clerk setup step before BuildPair can continue.');
+        }
+        if (admin) {
+          router.replace('/admin');
+          return;
         }
         router.replace(modeSetupHref(mode));
       },
@@ -110,7 +123,7 @@ export default function SignInScreen() {
 
   return (
     <Screen title={title} subtitle={subtitle}>
-      <SocialAuthButtons onError={setError} mode={mode} />
+      {admin ? null : <SocialAuthButtons onError={setError} mode={mode} />}
       <TextInput
         label="Email address"
         value={email}
@@ -128,7 +141,7 @@ export default function SignInScreen() {
         autoComplete="current-password"
         mode="outlined"
       />
-      <Link href={forgotPasswordHref(mode)} asChild><Button compact>Forgot password?</Button></Link>
+      {admin ? null : <Link href={forgotPasswordHref(mode)} asChild><Button compact>Forgot password?</Button></Link>}
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
       <Button
         mode="contained"
@@ -139,11 +152,15 @@ export default function SignInScreen() {
       >
         Sign in with email
       </Button>
-      <View style={styles.footer}>
-        <Text>New to BuildPair?</Text>
-        <Link href={mode ? signUpHref(mode) : '/auth/account'} asChild><Button>Create account</Button></Link>
-      </View>
-      <Link href="/auth/account" asChild><Button>Back to account options</Button></Link>
+      {admin ? null : (
+        <>
+          <View style={styles.footer}>
+            <Text>New to BuildPair?</Text>
+            <Link href={mode ? signUpHref(mode) : '/auth/account'} asChild><Button>Create account</Button></Link>
+          </View>
+          <Link href="/auth/account" asChild><Button>Back to account options</Button></Link>
+        </>
+      )}
     </Screen>
   );
 }
