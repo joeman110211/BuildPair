@@ -57,11 +57,12 @@ export async function PATCH(request: Request, { id }: { id: string }) {
 
     if (payload.action === 'accept_payment_plan') {
       if (!modes.traderEnabled || candidate.quote.traderId !== userId) throw new HttpError(403, 'Tradesperson account required');
+      if (payload.acknowledgedPaymentSchedule !== true) throw new HttpError(400, 'Confirm that you reviewed the revised payment stages and understand your responsibility when later requesting release.');
       if (candidate.quote.status !== 'pending' || !['open', 'quoted'].includes(candidate.job.status)) throw new HttpError(409, 'This payment plan can no longer be accepted');
       const rows = await getSql()`SELECT payment_schedule_status AS "status" FROM quotes WHERE id = ${id} LIMIT 1` as unknown as { status: string }[];
       if (rows[0]?.status !== 'customer_edited') throw new HttpError(409, 'There is no homeowner-edited payment plan waiting for approval');
       await getSql()`UPDATE quotes SET payment_schedule_status = 'agreed', payment_schedule_updated_by = ${userId}, updated_at = now() WHERE id = ${id}`;
-      await addJobEvent(candidate.job.id, userId, 'payment_plan_agreed', 'Payment stages agreed', 'The tradesperson accepted the homeowner revised payment schedule and is responsible for requesting each controlled release only when its agreed trigger has genuinely been reached.', { quoteId: id, tradespersonAcknowledgedPaymentSchedule: true });
+      await addJobEvent(candidate.job.id, userId, 'payment_plan_agreed', 'Payment stages agreed', 'The tradesperson accepted the homeowner revised payment schedule and confirmed responsibility for requesting each controlled release only when its agreed trigger has genuinely been reached.', { quoteId: id, tradespersonAcknowledgedPaymentSchedule: true });
       await createNotification(candidate.job.customerId, { type: 'payment_plan_agreed', title: 'Payment stages agreed', body: `${candidate.job.title}: the tradesperson accepted your revised stages. You can now accept the quote.`, href: `/customer/compare/${candidate.job.id}`, email: true });
       return Response.json({ agreed: true });
     }
