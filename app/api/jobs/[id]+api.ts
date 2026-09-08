@@ -103,6 +103,30 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       return Response.json({ paymentMode: payload.mode });
     }
 
+    if (payload.action === 'complete_external') {
+      if (!modes.customerEnabled) throw new HttpError(403, 'Homeowner account required');
+      const rows = await getSql()`
+        SELECT j.customer_id AS "customerId", j.title, j.status, j.payment_mode AS "paymentMode", q.trader_id AS "traderId"
+        FROM jobs j JOIN quotes q ON q.id = j.accepted_quote_id
+        WHERE j.id = ${id} LIMIT 1
+      ` as unknown as { customerId: string; title: string; status: string; paymentMode: 'undecided' | 'buildpair' | 'external'; traderId: string }[];
+      const row = rows[0];
+      if (!row || row.customerId !== userId) throw new HttpError(404, 'Active job not found');
+      if (row.status !== 'in_progress' || row.paymentMode !== 'external') throw new HttpError(409, 'Only an active privately managed job can be closed this way');
+      const pendingVariation = await getSql()`SELECT 1 FROM job_variations WHERE job_id = ${id} AND status = 'pending' LIMIT 1`;
+      if (pendingVariation.length) throw new HttpError(409, 'Resolve outstanding variations before closing the project');
+      await db.update(jobs).set({ status: 'completed', updatedAt: new Date() }).where(eq(jobs.id, id));
+      await addJobEvent(id, userId, 'external_job_completed', 'Privately managed job marked complete', 'The homeowner marked the project complete. BuildPair did not process or verify private payments on this job.');
+      await createNotification(row.traderId, {
+        type: 'external_job_completed',
+        title: 'Privately managed job marked complete',
+        body: `${row.title}: the homeowner marked the project complete. Private payment status is not verified by BuildPair.`,
+        href: `/trader/jobs/${id}`,
+        email: true,
+      });
+      return Response.json({ completed: true, paymentVerification: 'external_unverified' });
+    }
+
     if (payload.action !== 'complete') throw new HttpError(400, 'Unsupported job action');
     if (!modes.traderEnabled) throw new HttpError(403, 'Trader account required');
     const rows = await getSql()`
