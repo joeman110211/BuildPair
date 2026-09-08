@@ -11,7 +11,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     const userId = await authenticatedUserId(request);
     await ensureDbUser(userId);
     const modes = await accountModes(userId);
-    const payload = await request.json() as { action?: string; paymentSchedule?: unknown };
+    const payload = await request.json() as { action?: string; paymentSchedule?: unknown; acknowledgedPaymentSchedule?: boolean };
     const db = getDb();
 
     if (payload.action === 'withdraw') {
@@ -61,13 +61,14 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       const rows = await getSql()`SELECT payment_schedule_status AS "status" FROM quotes WHERE id = ${id} LIMIT 1` as unknown as { status: string }[];
       if (rows[0]?.status !== 'customer_edited') throw new HttpError(409, 'There is no homeowner-edited payment plan waiting for approval');
       await getSql()`UPDATE quotes SET payment_schedule_status = 'agreed', payment_schedule_updated_by = ${userId}, updated_at = now() WHERE id = ${id}`;
-      await addJobEvent(candidate.job.id, userId, 'payment_plan_agreed', 'Payment stages agreed', 'The tradesperson accepted the homeowner revised payment schedule.', { quoteId: id });
+      await addJobEvent(candidate.job.id, userId, 'payment_plan_agreed', 'Payment stages agreed', 'The tradesperson accepted the homeowner revised payment schedule and is responsible for requesting each controlled release only when its agreed trigger has genuinely been reached.', { quoteId: id, tradespersonAcknowledgedPaymentSchedule: true });
       await createNotification(candidate.job.customerId, { type: 'payment_plan_agreed', title: 'Payment stages agreed', body: `${candidate.job.title}: the tradesperson accepted your revised stages. You can now accept the quote.`, href: `/customer/compare/${candidate.job.id}`, email: true });
       return Response.json({ agreed: true });
     }
 
     if (payload.action !== 'accept') throw new HttpError(400, 'Unsupported quote action');
     if (!modes.customerEnabled || candidate.job.customerId !== userId) throw new HttpError(403, 'Customer account required');
+    if (payload.acknowledgedPaymentSchedule !== true) throw new HttpError(400, 'Confirm that you have reviewed the quote and agreed payment schedule before accepting.');
     if (!['open', 'quoted'].includes(candidate.job.status)) throw new HttpError(409, 'This job already has an accepted quote');
     if (candidate.quote.status !== 'pending') throw new HttpError(409, 'This quote is no longer available');
     if (candidate.quote.validUntil && candidate.quote.validUntil.getTime() < Date.now()) throw new HttpError(409, 'This quote has expired. Ask the tradesperson for an updated quote.');
@@ -77,7 +78,14 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     const otherQuotes = await db.select({ traderId: quotes.traderId }).from(quotes).where(and(eq(quotes.jobId, candidate.job.id), eq(quotes.status, 'pending')));
     await db.execute(sql`select accept_job_quote(${id}::uuid, ${userId}::text)`);
     if (candidate.quote.proposedStartAt) await db.update(jobs).set({ scheduledStartAt: candidate.quote.proposedStartAt, updatedAt: new Date() }).where(eq(jobs.id, candidate.job.id));
-    await addJobEvent(candidate.job.id, userId, 'quote_accepted', 'Quote accepted', 'The homeowner accepted the quote. Next choose BuildPair staged payments or an unprotected private payment arrangement.', { quoteId: id, traderId: candidate.quote.traderId, totalAmount: candidate.quote.totalAmount });
+    await addJobEvent(
+      candidate.job.id,
+      userId,
+      'quote_accepted',
+      'Quote and payment schedule accepted',
+      'The homeowner confirmed that they reviewed the quote total, scope and recorded payment schedule before accepting. Next choose BuildPair staged payments or an unprotected private payment arrangement.',
+      { quoteId: id, traderId: candidate.quote.traderId, totalAmount: candidate.quote.totalAmount, homeownerAcknowledgedPaymentSchedule: true },
+    );
     await createNotification(candidate.quote.traderId, { type: 'quote_accepted', title: 'Your quote was accepted', body: `You have won ${candidate.job.title}. Open the job to see the agreed payment stages and what is due next.`, href: `/trader/jobs/${candidate.job.id}`, email: true });
     await createNotification(candidate.job.customerId, { type: 'job_started', title: 'Quote accepted. Choose how to manage payments', body: `${candidate.job.title} is now an active project. Choose BuildPair staged payments or record that you are paying privately.`, href: `/customer/jobs/${candidate.job.id}` });
     await Promise.allSettled(otherQuotes.filter((quote) => quote.traderId !== candidate.quote.traderId).map((quote) => createNotification(quote.traderId, { type: 'quote_declined', title: 'Customer chose another quote', body: `${candidate.job.title} has been awarded to another tradesperson.`, href: '/trader/my-jobs' })));
