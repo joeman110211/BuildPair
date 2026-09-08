@@ -1,13 +1,14 @@
 import { useAuth } from '@clerk/expo';
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
-import { Button, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
+import { ScrollView, View } from 'react-native';
+import { Button, Chip, HelperText, Menu, SegmentedButtons, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { calculateQuote, formatMoney, poundsToPence } from '@/lib/money';
-import type { Job, PaymentStagePlan } from '@/types';
+import { buildQuoteStartDateOptions, closestQuoteDuration, QUOTE_DURATION_OPTIONS, QUOTE_SCOPE_MIN_LENGTH } from '@/lib/quote-options';
+import type { Job, PaymentStagePlan, TraderProfile } from '@/types';
 
 type AiQuote = {
   laborCost: number; materialsCost: number; vatAmount: number; depositAmount: number; scope: string; exclusions: string; paymentTerms: string;
@@ -16,6 +17,27 @@ type AiQuote = {
 type SentQuote = { conversationId: string | null };
 type DraftStage = { key: string; title: string; amount: string; trigger: string };
 type PlanMode = 'single' | 'deposit' | 'staged';
+type SelectOption = { value: string; label: string };
+
+const START_DATE_OPTIONS: SelectOption[] = buildQuoteStartDateOptions(365);
+const DURATION_OPTIONS: SelectOption[] = QUOTE_DURATION_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }));
+
+function QuoteDropdown({ label, value, options, placeholder, onSelect }: { label: string; value: string; options: SelectOption[]; placeholder: string; onSelect: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find((option) => option.value === value);
+  return <View style={{ flex: 1, minWidth: 180, gap: 5 }}>
+    <Text variant="labelLarge">{label}</Text>
+    <Menu
+      visible={open}
+      onDismiss={() => setOpen(false)}
+      anchor={<Button mode="outlined" icon="chevron-down" contentStyle={{ minHeight: 48, justifyContent: 'space-between' }} onPress={() => setOpen(true)}>{selected?.label ?? placeholder}</Button>}
+    >
+      <ScrollView style={{ maxHeight: 320 }} nestedScrollEnabled keyboardShouldPersistTaps="handled">
+        {options.map((option) => <Menu.Item key={option.value} title={option.label} onPress={() => { onSelect(option.value); setOpen(false); }} />)}
+      </ScrollView>
+    </Menu>
+  </View>;
+}
 
 export default function NewQuoteScreen() {
   const { jobId, title } = useLocalSearchParams<{ jobId: string; title?: string }>();
@@ -23,6 +45,7 @@ export default function NewQuoteScreen() {
   const getTokenRef = useRef(getToken);
   const router = useRouter();
   const [job, setJob] = useState<Job>();
+  const [profile, setProfile] = useState<TraderProfile>();
   const [labor, setLabor] = useState('');
   const [materials, setMaterials] = useState('');
   const [vat, setVat] = useState('no');
@@ -46,7 +69,11 @@ export default function NewQuoteScreen() {
   const [error, setError] = useState('');
 
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
-  useEffect(() => { void apiFetch<Job[]>('/api/jobs', {}, () => getTokenRef.current()).then((rows) => setJob(rows.find((item) => item.id === jobId))).catch(() => undefined); }, [jobId]);
+  useEffect(() => {
+    const tokenGetter = () => getTokenRef.current();
+    void apiFetch<Job[]>('/api/jobs', {}, tokenGetter).then((rows) => setJob(rows.find((item) => item.id === jobId))).catch(() => undefined);
+    void apiFetch<TraderProfile>('/api/me/profile', {}, tokenGetter).then(setProfile).catch(() => undefined);
+  }, [jobId]);
 
   const totals = useMemo(() => calculateQuote(poundsToPence(labor), poundsToPence(materials), vat === 'yes' ? 0.2 : 0), [labor, materials, vat]);
   const materialsUpfrontAmount = planMode === 'single' ? 0 : poundsToPence(materialsUpfront);
@@ -55,6 +82,9 @@ export default function NewQuoteScreen() {
   const allocatedBeforeFinal = materialsUpfrontAmount + depositAmount + customStageTotal;
   const finalAmount = totals.totalAmount - allocatedBeforeFinal;
   const planInvalid = totals.totalAmount <= 0 || finalAmount <= 0 || allocatedBeforeFinal < 0;
+  const scopeLength = scope.trim().length;
+  const scopeInvalid = scopeLength < QUOTE_SCOPE_MIN_LENGTH;
+  const payoutReady = Boolean(profile?.stripeAccountId && (profile.stripePayoutsEnabled || profile.stripeChargesEnabled));
 
   const paymentSchedule = useMemo<PaymentStagePlan[]>(() => {
     if (totals.totalAmount <= 0) return [];
@@ -89,7 +119,7 @@ export default function NewQuoteScreen() {
       if (result.materialsCost) setMaterials((result.materialsCost / 100).toFixed(2));
       if (result.depositAmount) { setDeposit((result.depositAmount / 100).toFixed(2)); setPlanMode('deposit'); }
       setScope(result.scope); setExclusions(result.exclusions); setTerms(result.paymentTerms); setNotes(result.notes);
-      if (result.durationDays) setDurationDays(String(result.durationDays));
+      if (result.durationDays) setDurationDays(String(closestQuoteDuration(result.durationDays)));
       if (result.warrantyMonths != null) setWarrantyMonths(String(result.warrantyMonths));
       setAiSource(result.source);
     } catch (e) { setError(errorMessage(e)); }
@@ -97,20 +127,18 @@ export default function NewQuoteScreen() {
   }
 
   async function submit() {
+    if (scopeInvalid) { setError(`Included scope must be at least ${QUOTE_SCOPE_MIN_LENGTH} characters so the homeowner can see what is actually included.`); return; }
+    if (!durationDays) { setError('Choose an estimated duration from the list.'); return; }
+    if (!proposedStartDate) { setError('Choose an exact proposed start date from the list.'); return; }
     if (planInvalid || !paymentSchedule.length) { setError('Payment stages must leave a positive final payment and add up to the quote total.'); return; }
     if (planMode === 'staged' && stages.some((stage) => poundsToPence(stage.amount) > 0 && stage.trigger.trim().length < 3)) { setError('Give each staged payment a clear completion point so the homeowner knows when it becomes due.'); return; }
     const validUntil = new Date(Date.now() + Number(validDays) * 24 * 60 * 60 * 1000).toISOString();
-    let proposedStartAt: string | undefined;
-    if (proposedStartDate.trim()) {
-      const date = new Date(`${proposedStartDate.trim()}T08:00:00`);
-      if (Number.isNaN(date.getTime())) { setError('Enter the proposed start date as YYYY-MM-DD.'); return; }
-      proposedStartAt = date.toISOString();
-    }
+    const proposedStartAt = `${proposedStartDate}T12:00:00.000Z`;
     try {
       setBusy(true); setError('');
       const sent = await apiFetch<SentQuote>('/api/quotes', {
         method: 'POST',
-        body: JSON.stringify({ jobId, laborCost: poundsToPence(labor), materialsCost: poundsToPence(materials), vatAmount: totals.vatAmount, depositAmount, paymentTerms: terms, paymentSchedule, scope: scope || undefined, exclusions: exclusions || undefined, notes: notes || undefined, durationDays: durationDays ? Number(durationDays) : undefined, warrantyMonths: warrantyMonths ? Number(warrantyMonths) : undefined, proposedStartAt, validUntil }),
+        body: JSON.stringify({ jobId, laborCost: poundsToPence(labor), materialsCost: poundsToPence(materials), vatAmount: totals.vatAmount, depositAmount, paymentTerms: terms, paymentSchedule, scope: scope.trim(), exclusions: exclusions || undefined, notes: notes || undefined, durationDays: Number(durationDays), warrantyMonths: warrantyMonths ? Number(warrantyMonths) : undefined, proposedStartAt, validUntil }),
       }, getToken);
       if (sent.conversationId) router.replace(`/trader/messages/${sent.conversationId}` as Href);
       else router.replace('/trader/dashboard');
@@ -118,7 +146,7 @@ export default function NewQuoteScreen() {
     finally { setBusy(false); }
   }
 
-  const footer = <Button mode="contained" loading={busy} disabled={busy || planInvalid || terms.length < 5} onPress={() => void submit()}>Send quote & payment plan</Button>;
+  const footer = <Button mode="contained" loading={busy} disabled={busy || planInvalid || scopeInvalid || !durationDays || !proposedStartDate || terms.length < 5} onPress={() => void submit()}>Send quote & payment plan</Button>;
 
   return <Screen title="Create an itemised quote" subtitle={job?.title ?? title ?? 'Customer job'} footer={footer}>
     {job ? <AppCard><Text variant="titleMedium">{job.title}</Text><Text>{job.description}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}><Chip compact>{job.category}</Chip><Chip compact>{job.budgetRange}</Chip>{job.isEmergency ? <Chip compact icon="alert">Emergency</Chip> : null}</View></AppCard> : null}
@@ -135,10 +163,22 @@ export default function NewQuoteScreen() {
 
     <AppCard>
       <Text variant="titleLarge">Scope & programme</Text>
-      <TextInput label="Included scope" value={scope} onChangeText={setScope} mode="outlined" multiline numberOfLines={5} />
+      <TextInput label={`Included scope · minimum ${QUOTE_SCOPE_MIN_LENGTH} characters`} value={scope} onChangeText={setScope} mode="outlined" multiline numberOfLines={5} />
+      <HelperText type={scopeInvalid ? 'error' : 'info'} visible>{scopeLength}/{QUOTE_SCOPE_MIN_LENGTH} minimum characters. Be specific about the work, preparation and finish included in this price.</HelperText>
       <TextInput label="Exclusions / assumptions" value={exclusions} onChangeText={setExclusions} mode="outlined" multiline numberOfLines={4} />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><TextInput style={{ flex: 1, minWidth: 160 }} label="Estimated duration (days)" value={durationDays} onChangeText={setDurationDays} keyboardType="number-pad" mode="outlined" /><TextInput style={{ flex: 1, minWidth: 160 }} label="Warranty (months)" value={warrantyMonths} onChangeText={setWarrantyMonths} keyboardType="number-pad" mode="outlined" /></View>
-      <TextInput label="Proposed start date (YYYY-MM-DD)" value={proposedStartDate} onChangeText={setProposedStartDate} mode="outlined" />
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+        <QuoteDropdown label="Estimated duration" value={durationDays} options={DURATION_OPTIONS} placeholder="Choose duration" onSelect={setDurationDays} />
+        <TextInput style={{ flex: 1, minWidth: 180 }} label="Warranty (months)" value={warrantyMonths} onChangeText={setWarrantyMonths} keyboardType="number-pad" mode="outlined" />
+      </View>
+      <QuoteDropdown label="Exact proposed start date" value={proposedStartDate} options={START_DATE_OPTIONS} placeholder="Choose start date" onSelect={setProposedStartDate} />
+      <HelperText type="info">The start date and estimated duration are selected from fixed options, so the homeowner sees an unambiguous programme rather than free-text dates.</HelperText>
+    </AppCard>
+
+    <AppCard>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}><Text variant="titleLarge">BuildPair payouts</Text><Chip icon={payoutReady ? 'check-circle-outline' : 'alert-circle-outline'}>{payoutReady ? 'Payouts ready' : 'Setup required'}</Chip></View>
+      <Text>To receive any materials payment, deposit, stage payment or final payment through BuildPair, you must complete BuildPair payouts through Stripe.</Text>
+      <Text variant="bodySmall">You can still send this quote before payout setup is complete, but the homeowner will not be able to choose BuildPair staged payments for the accepted job until your Stripe payout account is ready. BuildPair does not store your bank or card details.</Text>
+      {!payoutReady ? <Button mode="contained" icon="bank-outline" onPress={() => router.push('/trader/subscription')}>Set up BuildPair payouts</Button> : null}
     </AppCard>
 
     <AppCard>
@@ -147,7 +187,7 @@ export default function NewQuoteScreen() {
       <SegmentedButtons value={planMode} onValueChange={(value) => setPlanMode(value as PlanMode)} buttons={[{ value: 'single', label: 'Full at end' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Staged' }]} />
       {planMode !== 'single' ? <>
         <TextInput label="Upfront materials payment (£, optional)" value={materialsUpfront} onChangeText={setMaterialsUpfront} keyboardType="decimal-pad" mode="outlined" />
-        <HelperText type="info">Use this only for money genuinely needed to order agreed materials. If the homeowner pays it through BuildPair, it is released to your Stripe payout account for those materials.</HelperText>
+        <HelperText type="info">Use this only for money genuinely needed to order agreed materials. If the homeowner pays it through BuildPair, it is released to your connected Stripe payout account for those materials.</HelperText>
         <TextInput label="Project deposit (£, optional)" value={deposit} onChangeText={setDeposit} keyboardType="decimal-pad" mode="outlined" />
       </> : null}
       {planMode === 'staged' ? <>
