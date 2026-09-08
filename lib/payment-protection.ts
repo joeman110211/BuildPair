@@ -26,5 +26,5 @@ export function validateStripeStageAmount(amount: number) {
 }
 
 export function isImmediatelyReleasedStage(kind: MilestonePaymentKind) {
-  return kind === 'materials';
+  return kind === 'materials' || kind === 'deposit';
 }
