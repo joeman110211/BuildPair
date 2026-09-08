@@ -67,7 +67,7 @@ async function resolveChargeId(intent: Stripe.PaymentIntent) {
   return chargeIdFromIntent(expanded);
 }
 
-async function releaseMaterialPayment(args: {
+async function releaseImmediatePayment(args: {
   paymentIntentId: string;
   chargeId: string;
   jobId: string;
@@ -76,6 +76,7 @@ async function releaseMaterialPayment(args: {
   stripeAccountId: string;
   amount: number;
   transferGroup: string;
+  kind: 'materials' | 'deposit';
 }) {
   const existing = await getSql()`SELECT stripe_transfer_id AS "transferId" FROM payments WHERE stripe_payment_intent_id = ${args.paymentIntentId} LIMIT 1` as unknown as { transferId: string | null }[];
   if (existing[0]?.transferId) return existing[0].transferId;
@@ -85,8 +86,8 @@ async function releaseMaterialPayment(args: {
     destination: args.stripeAccountId,
     source_transaction: args.chargeId,
     transfer_group: args.transferGroup,
-    metadata: { buildpairJobId: args.jobId, milestoneId: args.milestoneId, traderId: args.traderId, releaseReason: 'materials' },
-  }, { idempotencyKey: `buildpair-materials-${args.milestoneId}-${args.paymentIntentId}` });
+    metadata: { buildpairJobId: args.jobId, milestoneId: args.milestoneId, traderId: args.traderId, releaseReason: args.kind },
+  }, { idempotencyKey: `buildpair-upfront-${args.milestoneId}-${args.paymentIntentId}` });
   return transfer.id;
 }
 
@@ -124,8 +125,9 @@ async function handlePaymentSucceeded(intent: Stripe.PaymentIntent) {
   `;
 
   if (isImmediatelyReleasedStage(milestone.kind)) {
-    if (!milestone.stripeAccountId || !chargeId) throw new Error('Materials payment cannot be released because payout details are incomplete');
-    const transferId = await releaseMaterialPayment({
+    if (milestone.kind !== 'materials' && milestone.kind !== 'deposit') return;
+    if (!milestone.stripeAccountId || !chargeId) throw new Error('Upfront payment cannot be released because payout details are incomplete');
+    const transferId = await releaseImmediatePayment({
       paymentIntentId: intent.id,
       chargeId,
       jobId,
@@ -134,13 +136,34 @@ async function handlePaymentSucceeded(intent: Stripe.PaymentIntent) {
       stripeAccountId: milestone.stripeAccountId,
       amount: chargeAmount,
       transferGroup: intent.metadata.transferGroup || `buildpair_job_${jobId}`,
+      kind: milestone.kind,
     });
     await getSql()`UPDATE payments SET status = 'released', stripe_transfer_id = ${transferId}, released_at = COALESCE(released_at, now()) WHERE stripe_payment_intent_id = ${intent.id}`;
     await getSql()`UPDATE job_milestones SET status = 'paid', funded_at = COALESCE(funded_at, now()), paid_at = COALESCE(paid_at, now()), payment_method = 'stripe', payment_confirmed_by = NULL WHERE id = ${milestoneId}`;
-    await addJobEvent(jobId, customerId, 'materials_payment_released', `${milestone.title} paid`, `Stripe confirmed £${(chargeAmount / 100).toFixed(2)} and the agreed materials payment was released to the tradesperson.`, { milestoneId, stripePaymentIntentId: intent.id, stripeTransferId: transferId });
+    const isDeposit = milestone.kind === 'deposit';
+    const paymentLabel = isDeposit ? 'deposit' : 'materials payment';
+    await addJobEvent(
+      jobId,
+      customerId,
+      isDeposit ? 'deposit_payment_released' : 'materials_payment_released',
+      `${milestone.title} paid`,
+      `Stripe confirmed £${(chargeAmount / 100).toFixed(2)} and the agreed ${paymentLabel} was released to the tradesperson.`,
+      { milestoneId, stripePaymentIntentId: intent.id, stripeTransferId: transferId, milestoneKind: milestone.kind },
+    );
     await Promise.allSettled([
-      createNotification(traderId, { type: 'materials_payment_received', title: `${milestone.title} received`, body: `${milestone.jobTitle}: £${(chargeAmount / 100).toFixed(2)} was paid for the agreed materials.`, href: `/trader/jobs/${jobId}`, email: true }),
-      createNotification(customerId, { type: 'materials_payment_confirmed', title: 'Materials payment released', body: `${milestone.jobTitle}: your materials payment was processed and released to the tradesperson for the agreed materials.`, href: `/customer/jobs/${jobId}` }),
+      createNotification(traderId, {
+        type: isDeposit ? 'deposit_payment_received' : 'materials_payment_received',
+        title: `${milestone.title} received`,
+        body: `${milestone.jobTitle}: £${(chargeAmount / 100).toFixed(2)} was released for the agreed ${paymentLabel}.`,
+        href: `/trader/jobs/${jobId}`,
+        email: true,
+      }),
+      createNotification(customerId, {
+        type: isDeposit ? 'deposit_payment_confirmed' : 'materials_payment_confirmed',
+        title: isDeposit ? 'Deposit released' : 'Materials payment released',
+        body: `${milestone.jobTitle}: your ${paymentLabel} was processed and released to the tradesperson.`,
+        href: `/customer/jobs/${jobId}`,
+      }),
     ]);
     return;
   }
