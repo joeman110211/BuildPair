@@ -23,9 +23,10 @@ export function validatePaymentSchedule(schedule: PaymentStagePlan[], totalAmoun
   if (sum !== totalAmount) throw new Error(`Payment stages must add up exactly to the quote total (${totalAmount}p).`);
   const finalStages = sorted.filter((stage) => stage.kind === 'final');
   if (finalStages.length !== 1) throw new Error('Payment plan must contain exactly one final payment stage.');
+  const finalStage = finalStages[0];
+  if (!finalStage) throw new Error('Payment plan must contain a final payment stage.');
   if (sorted.at(-1)?.kind !== 'final') throw new Error('The final payment must be the last payment stage.');
   if (sorted.some((stage) => stage.amount < STRIPE_GBP_MINIMUM)) throw new Error('Each payment stage must be at least £0.30 if the job may use BuildPair payments.');
-  const finalStage = finalStages[0];
   const fee = platformFeeAmount(totalAmount);
   if (finalStage.amount <= fee) throw new Error(`The final payment must be more than the BuildPair transaction fee (£${(fee / 100).toFixed(2)}) so a positive final payout remains.`);
   const workStages = sorted.filter((stage) => stage.kind === 'stage');
