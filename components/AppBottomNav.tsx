@@ -1,8 +1,9 @@
 import type { Href } from 'expo-router';
 import { usePathname, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Badge, Text } from 'react-native-paper';
 import { colors, radii, spacing } from '@/constants/theme';
+import { useActivityCounts } from '@/hooks/useActivityCounts';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import type { UserRole } from '@/types';
 
@@ -11,7 +12,7 @@ type NavItem = { label: string; href: Href; matches: string[] };
 const traderItems: NavItem[] = [
   { label: 'Home', href: '/trader/dashboard', matches: ['/trader/dashboard'] },
   { label: 'Find work', href: '/trader/job-board', matches: ['/trader/job-board'] },
-  { label: 'Jobs', href: '/trader/my-jobs', matches: ['/trader/my-jobs', '/trader/jobs/', '/trader/quotes/', '/trader/invoices'] },
+  { label: 'Jobs', href: '/trader/my-jobs', matches: ['/trader/my-jobs', '/trader/jobs/', '/trader/quotes/', '/trader/invoices', '/trader/visits/'] },
   { label: 'Messages', href: '/trader/messages', matches: ['/trader/messages'] },
   { label: 'Profile', href: '/trader/profile', matches: ['/trader/profile', '/trader/onboarding', '/trader/trust', '/trader/analytics', '/trader/stories', '/trader/saved-searches', '/trader/subscription'] },
 ];
@@ -28,21 +29,26 @@ export function AppBottomNav({ role }: { role: UserRole }) {
   const router = useRouter();
   const pathname = usePathname();
   const { width } = useWindowDimensions();
+  const { unreadMessages } = useActivityCounts(10000);
   if (width >= 900) return null;
 
   const items = role === 'trader' ? traderItems : customerItems;
   return <View style={styles.wrap} accessibilityLabel={`${role === 'trader' ? 'Tradesperson' : 'Homeowner'} navigation`}>
     {items.map((item) => {
       const active = item.matches.some((match) => pathname.includes(match));
+      const showUnread = item.label === 'Messages' && unreadMessages > 0;
       return <Pressable
         key={item.label}
         onPress={() => router.push(item.href)}
         style={({ pressed }) => [styles.item, active && styles.itemActive, pressed && styles.itemPressed]}
         accessibilityRole="button"
         accessibilityState={{ selected: active }}
-        accessibilityLabel={item.label}
+        accessibilityLabel={showUnread ? `Messages, ${unreadMessages} unread` : item.label}
       >
-        <Text numberOfLines={1} style={[styles.label, active && styles.labelActive]}>{item.label}</Text>
+        <View style={styles.labelRow}>
+          <Text numberOfLines={1} style={[styles.label, active && styles.labelActive]}>{item.label}</Text>
+          {showUnread ? <Badge size={18}>{unreadMessages > 99 ? '99+' : unreadMessages}</Badge> : null}
+        </View>
       </Pressable>;
     })}
   </View>;
@@ -89,6 +95,7 @@ const styles = StyleSheet.create({
   },
   itemActive: { backgroundColor: colors.primarySoft },
   itemPressed: { opacity: 0.72 },
-  label: { color: colors.muted, fontWeight: '800', fontSize: 11, textAlign: 'center' },
+  labelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, maxWidth: '100%' },
+  label: { color: colors.muted, fontWeight: '800', fontSize: 11, textAlign: 'center', flexShrink: 1 },
   labelActive: { color: colors.primaryDark, fontWeight: '900' },
 });
