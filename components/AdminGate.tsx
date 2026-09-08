@@ -6,13 +6,21 @@ import { LoadingScreen, Screen } from '@/components/Screen';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export function AdminGate({ children }: PropsWithChildren) {
-  const { user, loading, isSignedIn } = useCurrentUser();
+  const { user, loading, error, refresh, isSignedIn } = useCurrentUser();
   const { signOut } = useClerk();
   const router = useRouter();
 
   if (loading) return <LoadingScreen label="Checking administrator access…" />;
   if (!isSignedIn) return <Redirect href="/auth/sign-in?admin=1" />;
-  if (!user) return <LoadingScreen label="Loading administrator account…" />;
+  if (!user) {
+    return (
+      <Screen title="Unable to load administrator account" subtitle="Check your connection and try again.">
+        <Text>{error || 'The account service did not return your account.'}</Text>
+        <Button mode="contained" onPress={() => void refresh()}>Try again</Button>
+        <Button onPress={() => signOut(() => router.replace('/auth/sign-in?admin=1'))}>Sign out</Button>
+      </Screen>
+    );
+  }
 
   if (!user.isAdmin) {
     return (

@@ -6,8 +6,20 @@ on:
       api_url:
         description: 'HTTPS BuildPair API/web origin to embed in the admin APK'
         required: false
-        default: 'https://staging.buildpair.co.uk'
+        default: 'https://admin.buildpair.co.uk'
         type: string
+  pull_request:
+    branches: [main, testing]
+    paths:
+      - '.github/workflows/admin-android-apk.yml'
+      - '.github/workflows/android-apk.yml'
+      - 'components/AdminGate.tsx'
+      - 'app/admin/**'
+      - 'app/auth/**'
+      - 'lib/api.ts'
+      - 'app.json'
+      - 'package.json'
+      - 'package-lock.json'
   push:
     branches: [main]
     paths:
@@ -27,7 +39,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: buildpair-admin-android-apk
+  group: buildpair-admin-android-apk-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -40,7 +52,7 @@ jobs:
       NODE_ENV: production
       EXPO_PUBLIC_ADMIN_APP: '1'
       EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-      EXPO_PUBLIC_API_URL: ${{ inputs.api_url || 'https://staging.buildpair.co.uk' }}
+      EXPO_PUBLIC_API_URL: ${{ inputs.api_url || 'https://admin.buildpair.co.uk' }}
       EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
       EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME: qrrcn7ma
 
@@ -73,17 +85,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ -z "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" ] || [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ]; then
-            config=$(curl --fail --show-error --silent --retry 8 --retry-delay 3 "$EXPO_PUBLIC_API_URL/api/client-config")
-            clerk=$(printf '%s' "$config" | jq -r '.clerkPublishableKey // empty')
-            stripe=$(printf '%s' "$config" | jq -r '.stripePublishableKey // empty')
-            if [ -z "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" ] && [ -n "$clerk" ]; then
-              echo "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=$clerk" >> "$GITHUB_ENV"
-            fi
-            if [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ] && [ -n "$stripe" ]; then
-              echo "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=$stripe" >> "$GITHUB_ENV"
-            fi
-          fi
+          # Native tokens must come from the same Clerk instance as the target API.
+          config=$(curl --fail --show-error --silent --connect-timeout 15 --max-time 30 --retry 3 "$EXPO_PUBLIC_API_URL/api/client-config")
+          clerk=$(printf '%s' "$config" | jq -r '.clerkPublishableKey // empty')
+          stripe=$(printf '%s' "$config" | jq -r '.stripePublishableKey // empty')
+          test -n "$clerk" || { echo "::error::Target has no Clerk publishable key"; exit 1; }
+          echo "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=$clerk" >> "$GITHUB_ENV"
+          echo "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=$stripe" >> "$GITHUB_ENV"
+
+      - name: Verify target serves protected administrator APIs
+        shell: bash
+        run: |
+          set -euo pipefail
+          for route in overview system-health; do
+            status=$(curl --silent --show-error --connect-timeout 15 --max-time 30 --output /dev/null --write-out '%{http_code}' "$EXPO_PUBLIC_API_URL/api/admin/$route")
+            case "$status" in
+              401|403) ;;
+              *) echo "::error::Admin API $route returned HTTP $status; use the dedicated admin origin with protected admin routes"; exit 1 ;;
+            esac
+          done
 
       - name: Require admin client configuration
         shell: bash
@@ -115,6 +135,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Expo may generate gradle.properties without a final newline.
+          printf '\n' >> gradle.properties
           sed -i 's/^org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -Dfile.encoding=UTF-8/' gradle.properties
           if grep -q '^reactNativeArchitectures=' gradle.properties; then
             sed -i 's/^reactNativeArchitectures=.*/reactNativeArchitectures=armeabi-v7a,arm64-v8a/' gradle.properties
