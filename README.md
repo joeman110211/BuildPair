@@ -2,84 +2,108 @@
 
 BuildPair is a UK-focused homeowner and tradesperson marketplace built from one Expo / React Native codebase for Android, iOS and web.
 
-The product uses Expo Router, Clerk authentication, Neon Postgres with Drizzle, Cloudinary media, Resend email, Google Gemini assistance and Stripe code paths for subscriptions / marketplace payments.
+It connects the whole job journey rather than stopping at lead generation: discovery, job planning, structured quotes, messaging, approved changes, project timelines, payment stages, reviews and trade-business tools can stay attached to one project record.
 
 Repository: `joeman110211/BuildPair`
 
-## Current hosting phase
+## Current product and hosting
 
-BuildPair is currently in a **private test phase**. The web app and API can be run directly from the Chromebook Linux environment and exposed to a small group of testers through a free Cloudflare Quick Tunnel.
+BuildPair is in a public quiet-launch / pre-release phase.
 
-```bash
-cd ~/buildpair
-git pull --ff-only origin main
-npm ci
-bash scripts/start-chromebook-test.sh
-```
+- `https://www.buildpair.co.uk` is the canonical public web app and API origin.
+- `https://buildpair.co.uk` redirects to `www`.
+- `https://admin.buildpair.co.uk` is the dedicated owner/admin hostname when its DNS record is configured.
+- The public host deliberately blocks `/admin` and `/api/admin/*`.
+- Production is packaged with Docker and Caddy; the application and Expo Router API run together behind HTTPS.
+- Search indexing can remain disabled during quiet launch while the product is tested and polished.
+- Bundled preview marketplace fixtures are for staging/local preview only and must never be presented as genuine production activity.
 
-See `docs/CHROMEBOOK_TEST_HOST.md` for the one-time Chromebook setup and operating commands.
+The older Chromebook-hosting documents remain useful for local/private testing and recovery, but the Chromebook is no longer the intended public production host.
 
-The Docker/Caddy files under `infra/production/` are intentionally retained for the later public-production move. The Chromebook test host is not intended to be the final public infrastructure.
-
-## Current beta product
+## Product structure
 
 ### Public marketplace
-- Public BuildPair landing site with responsive navigation and legal / information pages.
-- Smart trade search that understands related job terms rather than requiring an exact trade name.
-- 50+ trade categories with specialist skills.
+
+- Responsive BuildPair landing site and public information/legal pages.
+- 33 broad trade categories with detailed services beneath them.
+- Smart trade search that understands related work and plain-English job descriptions.
 - Public tradesperson directory and detailed profiles.
 - Public job browsing with privacy-safe location information.
-- Contact form delivered through Resend.
+- Contact form delivered through Resend when configured.
 - PWA manifest, icons and installable web experience.
 
 ### Accounts and authentication
-- Email + password registration with email-code verification.
-- Google and Facebook social sign-in through Clerk.
-- Phone OTP is intentionally not required for the current beta.
-- One Clerk login identity can enable a Homeowner profile, a Tradesperson profile, or both.
-- Users can switch between enabled account modes instead of maintaining unrelated logins.
+
+- Clerk email/password authentication with email-code verification.
+- Google and Facebook social sign-in where enabled in Clerk.
+- One identity can enable Homeowner, Tradesperson, or both account modes.
+- Account mode persists and users can switch between enabled modes.
 - Suspended accounts are rejected by protected server routes.
+- A separate administrator flow protects the owner console.
 
 ### Homeowners
-- Create and manage jobs.
-- Add job photos and postcode-based location data.
-- Use Gemini to help turn a rough description into a clearer job specification.
-- Contact tradespeople directly from appropriate listings.
-- Receive and compare quotes.
-- Accept one quote atomically.
-- Message the selected tradesperson in a job-scoped conversation.
-- Confirm external milestone payments while Stripe marketplace payments remain optional during beta.
-- Leave verified reviews only after qualifying completed work.
+
+- Create, save and manage jobs.
+- Add photos and postcode-based location data.
+- Use AI assistance to turn a rough description into a clearer job specification.
+- Find relevant tradespeople and request quotes directly.
+- Receive, compare and accept structured quotes.
+- Message in a job-scoped conversation.
+- Keep timeline events, approved variations and payment stages connected to the job.
+- Confirm supported payment activity and leave verified reviews after qualifying completed work.
+- Save tradespeople and manage notifications.
 
 ### Tradespeople
-- Four-step profile onboarding.
-- Minimum 50-character business bio.
-- Primary trade, specialist skills, service radius and service areas.
-- Cover image, profile image, logo, work gallery and before / after projects.
-- Qualifications, register links and social links.
-- 14-day free Basic lead-access period for new profiles without requiring Stripe during onboarding.
-- Job board, quote creation, messaging, job management and invoices.
-- Subscription and Stripe Express screens remain available but are disabled when Stripe client configuration is not enabled.
 
-### Operations
-- Admin moderation queue and account suspension / restoration.
-- User reporting flows.
-- Resend invoice email support.
-- Readiness and health endpoints.
-- Database migrations tracked and applied in order.
-- GitHub Actions quality checks for lint, TypeScript, unit tests, web export, Android export, iOS export and production dependency audit.
-- Playwright E2E coverage for the homeowner → job → trader → quote → acceptance → messaging → completion → payment confirmation → review lifecycle.
-- Manual GitHub Actions Android APK build for a chosen test/public API URL.
+- Structured business-profile onboarding with a minimum 50-character bio.
+- Broad categories plus detailed service selections, service radius and service areas.
+- Cover image, profile image, logo, work gallery, before/after projects and project stories.
+- Qualifications, credential submissions, register links and social links.
+- Job board, saved searches, availability, quote creation, messaging, job management and invoices.
+- AI-assisted quote wording and message replies with deterministic financial calculations.
+- Business analytics and marketplace alerts where included by plan.
 
-## Trial policy
+### Memberships
 
-`TRADER_TRIAL_DAYS` is the product source of truth and is currently **14 days**.
+Database values remain `free`, `basic` and `featured` for compatibility, but the product-facing plans are:
 
-Existing beta profiles that were previously granted a longer stored trial keep that existing end date. Editing a profile does not restart its trial.
+| Plan | Monthly price | Main categories | Open-marketplace offers | Key marketplace position |
+| --- | ---: | ---: | ---: | --- |
+| Starter | £0 | 2 | 0 | Profile setup, marketplace browsing and external profile sharing |
+| BuildPair Plus | £19.99 | 4 | 15/month | Searchable profile, direct quote requests, messaging and AI reply tools |
+| BuildPair Pro | £29.99 | 6 | 35/month | Plus features, modest search boost, advanced analytics and priority alerts |
+
+Direct homeowner quote requests do not consume the monthly open-marketplace offer allowance. Main-category changes use a 14-day cooldown; services within an already selected category can be maintained separately.
+
+Annual billing, VAT presentation and final paid-launch cancellation/refund wording should only be published once those commercial terms are implemented and approved.
+
+### Trust, moderation and operations
+
+- Credential submission, moderation and expiry handling.
+- Verified-review eligibility tied to qualifying marketplace project activity.
+- User reporting and evidence-led moderation workflows.
+- Admin user management, suspension/restoration and operational views.
+- Presence, notifications and system-health checks.
+- Rate limiting, security headers and privacy-safe public location handling.
+- Account deletion workflow.
+
+## Core services
+
+BuildPair currently contains integration paths for:
+
+- **Clerk**: authentication and identity.
+- **Neon Postgres + Drizzle**: application data and migrations.
+- **Cloudinary**: media uploads.
+- **Resend**: transactional/contact/invoice email.
+- **Google Gemini**: constrained AI assistance with deterministic/rule-based fallbacks where appropriate.
+- **Stripe**: subscriptions, billing portal, Connect onboarding and marketplace payment infrastructure.
+
+A feature should not be described as operational in a target environment merely because code exists for it. Provider configuration and end-to-end checks still matter, because software remains annoyingly literal about such things.
 
 ## Local development
 
 Requirements:
+
 - Node 22.12+
 - npm
 - Git
@@ -107,53 +131,54 @@ Native installed apps require `EXPO_PUBLIC_API_URL` to point at the HTTPS deploy
 
 ## Environment
 
-Copy `.env.example` to a local ignored environment file and configure the services needed by the environment.
+Copy `.env.example` to a local ignored environment file and configure only the services required by that environment.
 
-### Required for the core connected beta
+### Core connected environment
+
 - `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `CLERK_SECRET_KEY`
 - `DATABASE_URL`
 - `DATABASE_URL_UNPOOLED` for migrations
 
 ### Feature-specific
+
 - Gemini: `GEMINI_API_KEY`
 - Resend: `RESEND_API_KEY`, `INVOICE_FROM_EMAIL`, `SUPPORT_EMAIL`
 - Cloudinary: `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
-- Stripe when payments are enabled: publishable key, secret key, price IDs and webhook secrets
+- Stripe when billing/payments are enabled: publishable key, secret key, price IDs and webhook secrets
 
 Never put a server secret into an `EXPO_PUBLIC_` variable.
 
+For real public production, keep `BUILDPAIR_PREVIEW_DATA_ENABLED=false`. The application also hard-blocks preview fixtures on the canonical production hostnames as a defence against stale deployment configuration.
+
 ## Database
 
-Apply checked-in migrations using the direct / unpooled Neon connection:
+Apply checked-in migrations using the direct/unpooled Neon connection:
 
 ```bash
 npm run db:migrate
 ```
 
-The migration runner records applied filenames. The historical initial migration filename and migration-ledger table therefore remain unchanged internally even though the product and repository are BuildPair. Renaming those after they have been applied could make migrations run incorrectly.
+Migration filenames and historical internal database values are compatibility contracts. Do not rename old applied migrations simply to make their labels prettier.
 
 ## Authentication configuration
 
-For the current beta, configure Clerk for:
-- email address
-- password
-- email verification code
-- Google OAuth
-- Facebook OAuth
+Configure Clerk for the sign-in methods enabled by the product and register the production web/native callback origins. The native app uses the `buildpair://` callback scheme.
 
-For temporary Chromebook testing, use development/test Clerk configuration where practical. For the eventual public deployment, add the BuildPair production web origin and the `buildpair://` native callback scheme to the relevant Clerk / OAuth redirect configuration.
+The complete user journey that matters is:
 
-Phone OTP can be added later if the production Clerk plan and UK SMS setup make it worthwhile, but it is not a dependency for launch.
+`sign up/sign in → choose or restore account mode → /api/me succeeds → mode persists → correct dashboard opens`
+
+Administrator access is separate and must remain restricted to the dedicated admin surface and authorised admin accounts.
 
 ## Payments
 
-Stripe integration code exists for subscriptions, billing portal access, Connect onboarding and job PaymentIntents. The beta is deliberately able to operate with Stripe client configuration disabled.
-
-Before enabling live payments, complete end-to-end Stripe test-mode verification for subscription start / cancel, webhook handling, Connect onboarding, deposits, balances, refunds, failures and idempotency.
+Stripe integration code exists for subscriptions, billing portal access, Connect onboarding and job PaymentIntents. Before enabling or expanding live money movement, verify subscription lifecycle, webhooks, Connect onboarding, deposits, balances, refunds, failures and idempotency in the actual target environment.
 
 ## Release rule
 
-A change is not considered release-ready merely because it renders. Before promotion it should pass the GitHub Quality workflow and the relevant test/build checks for the target environment.
+A change is not release-ready merely because it renders.
 
-See `docs/PRODUCTION_CHECKLIST.md` for the later public-launch checks.
+Before promotion, run the GitHub quality checks and the relevant target-specific build/E2E checks. Native APK/AAB changes also require install/build proof, and important journeys should be checked on a physical device before public release.
+
+See `docs/PRODUCTION_HOSTING.md` and `docs/PRODUCTION_CHECKLIST.md` for the production shape and release gates.
