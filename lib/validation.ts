@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { BUDGET_OPTIONS, PROPERTY_TYPES, SUB_SKILLS, TRADE_CATEGORIES, TRADER_BIO_MIN_LENGTH, URGENCY_OPTIONS } from '@/constants/options';
+import { QUOTE_DURATION_VALUES, QUOTE_SCOPE_MIN_LENGTH } from '@/lib/quote-options';
 
 const postcodeSchema = z.string().trim().min(5, 'Enter a UK postcode').max(8, 'Enter a UK postcode');
 
@@ -96,10 +97,10 @@ export const quoteSchema = z.object({
   vatAmount: z.number().int().nonnegative(),
   depositAmount: z.number().int().nonnegative(),
   paymentTerms: z.string().trim().min(5).max(2000),
-  scope: z.string().trim().max(4000).optional(),
+  scope: z.string().trim().min(QUOTE_SCOPE_MIN_LENGTH, `Included scope must be at least ${QUOTE_SCOPE_MIN_LENGTH} characters`).max(4000),
   exclusions: z.string().trim().max(3000).optional(),
   notes: z.string().trim().max(3000).optional(),
-  durationDays: z.number().int().min(1).max(3650).optional(),
+  durationDays: z.number().int().refine((value) => QUOTE_DURATION_VALUES.includes(value), 'Choose an estimated duration from the available options').optional(),
   warrantyMonths: z.number().int().min(0).max(240).optional(),
   proposedStartAt: z.iso.datetime().optional(),
   validUntil: z.iso.datetime().optional(),
@@ -107,6 +108,7 @@ export const quoteSchema = z.object({
   const total = data.laborCost + data.materialsCost + data.vatAmount;
   if (data.depositAmount >= total && data.depositAmount > 0) ctx.addIssue({ code: 'custom', path: ['depositAmount'], message: 'Deposit must be less than the quote total so a final balance remains' });
   if (data.validUntil && new Date(data.validUntil).getTime() <= Date.now()) ctx.addIssue({ code: 'custom', path: ['validUntil'], message: 'Quote expiry must be in the future' });
+  if (data.proposedStartAt && new Date(data.proposedStartAt).getTime() <= Date.now()) ctx.addIssue({ code: 'custom', path: ['proposedStartAt'], message: 'Proposed start date must be in the future' });
 });
 
 export const reviewSchema = z.object({
