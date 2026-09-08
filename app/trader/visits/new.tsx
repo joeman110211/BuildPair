@@ -8,12 +8,15 @@ import { apiFetch, errorMessage } from '@/lib/api';
 
 type SiteVisit = { id: string; proposedAt: string; status: string };
 
+const defaultVisitDate = new Date();
+defaultVisitDate.setUTCDate(defaultVisitDate.getUTCDate() + 1);
+const DEFAULT_VISIT_DATE = defaultVisitDate.toISOString().slice(0, 10);
+
 export default function NewSiteVisitScreen() {
   const { jobId, conversationId, title } = useLocalSearchParams<{ jobId: string; conversationId?: string; title?: string }>();
   const { getToken } = useAuth();
   const router = useRouter();
-  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  const [date, setDate] = useState(tomorrow.toISOString().slice(0, 10));
+  const [date, setDate] = useState(DEFAULT_VISIT_DATE);
   const [time, setTime] = useState('10:00');
   const [note, setNote] = useState('I need to inspect the job on site before I can give you an accurate fixed quote.');
   const [busy, setBusy] = useState(false);
