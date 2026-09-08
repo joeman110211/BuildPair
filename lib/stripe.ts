@@ -28,6 +28,13 @@ export function providerReturnUrl(
     url.searchParams.set('payment', state);
     return url.toString();
   }
+
+  if (type === 'subscription' || type === 'connect') {
+    const url = new URL('/trader/subscription', `${appUrl()}/`);
+    url.searchParams.set(type === 'subscription' ? 'subscription' : 'payouts', state);
+    return url.toString();
+  }
+
   const url = new URL('/status', `${appUrl()}/`);
   url.searchParams.set('type', type);
   url.searchParams.set('state', state);
