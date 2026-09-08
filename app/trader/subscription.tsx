@@ -133,9 +133,10 @@ export default function SubscriptionScreen() {
     </AppCard> : null}
 
     <AppCard>
-      <Text variant="titleLarge" style={styles.title}>Receive job payments</Text>
-      <Text style={styles.muted}>Complete Stripe Express onboarding so customer deposits and balances for real-world building work can be routed to your bank. BuildPair never handles raw card numbers.</Text>
-      <Button mode="contained" icon="bank" disabled={!paymentsEnabled} onPress={() => openEndpoint('/api/stripe/connect')}>{paymentsEnabled ? 'Set up Stripe payouts' : 'Stripe setup in progress'}</Button>
+      <Text variant="titleLarge" style={styles.title}>BuildPair payouts are required to receive job payments</Text>
+      <Text style={styles.muted}>To receive materials payments, deposits, progress-stage payments or final payments through BuildPair, you must complete BuildPair payout onboarding with Stripe. Stripe collects and stores the payout and bank details. BuildPair stores only the connected-account reference and payout readiness status.</Text>
+      <Text style={styles.muted}>You can build your profile and send eligible quotes before payout setup is complete, but a homeowner cannot select BuildPair staged payments for an accepted job until your payouts are ready.</Text>
+      <Button mode="contained" icon="bank" disabled={!paymentsEnabled} onPress={() => openEndpoint('/api/stripe/connect')}>{paymentsEnabled ? 'Set up BuildPair payouts' : 'Stripe setup in progress'}</Button>
     </AppCard>
     {isWeb ? <Button mode="outlined" disabled={!paymentsEnabled} onPress={() => openEndpoint('/api/stripe/billing-portal')}>Manage or cancel subscription</Button> : null}
     {error ? <Text style={styles.error}>{error}</Text> : null}
