@@ -1,4 +1,4 @@
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { colors } from '@/constants/theme';
 
 type Props = {
@@ -82,7 +82,6 @@ const glyphs: Record<string, string> = {
   shower: '≈',
   'chart-line': '>',
   'chart-box-outline': '▦',
-  'bell-outline': '♢',
   'bell-plus-outline': '+',
   'eye-outline': '○',
   'information-outline': 'i',
@@ -117,6 +116,40 @@ const glyphs: Record<string, string> = {
 };
 
 export function PaperIcon({ name, color = colors.muted, size }: Props) {
+  if (name === 'bell-outline') {
+    const stroke = Math.max(1.5, size * 0.08);
+    return (
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no"
+        style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}
+      >
+        <View
+          style={{
+            width: size * 0.52,
+            height: size * 0.48,
+            borderWidth: stroke,
+            borderColor: color,
+            borderTopLeftRadius: size * 0.26,
+            borderTopRightRadius: size * 0.26,
+            borderBottomLeftRadius: size * 0.08,
+            borderBottomRightRadius: size * 0.08,
+            marginTop: size * 0.04,
+          }}
+        />
+        <View
+          style={{
+            width: size * 0.18,
+            height: stroke,
+            backgroundColor: color,
+            borderRadius: stroke,
+            marginTop: size * 0.05,
+          }}
+        />
+      </View>
+    );
+  }
+
   const glyph = glyphs[name] ?? '';
   if (!glyph) return null;
 
