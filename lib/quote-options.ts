@@ -19,7 +19,7 @@ export const QUOTE_DURATION_OPTIONS = [
   { value: 365, label: 'Up to 1 year' },
 ] as const;
 
-export const QUOTE_DURATION_VALUES = QUOTE_DURATION_OPTIONS.map((option) => option.value);
+export const QUOTE_DURATION_VALUES: readonly number[] = QUOTE_DURATION_OPTIONS.map((option) => option.value);
 
 export function closestQuoteDuration(days: number) {
   return QUOTE_DURATION_VALUES.reduce((closest, value) => (
