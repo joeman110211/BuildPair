@@ -6,6 +6,7 @@ export type TraderProfileTemplate = 'classic' | 'portfolio' | 'modern';
 export type TraderProfileColour = 'burnt_orange' | 'navy' | 'forest' | 'charcoal' | 'burgundy';
 export type PaymentMode = 'undecided' | 'buildpair' | 'external';
 export type PaymentStageKind = 'materials' | 'deposit' | 'stage' | 'final';
+export type PaymentStageStatus = 'pending' | 'funded' | 'completed' | 'paid' | 'disputed';
 
 export interface PaymentStagePlan {
   key: string;
@@ -83,6 +84,7 @@ export interface TraderProfile {
   reviewCount: number;
   stripeAccountId?: string | null;
   stripeChargesEnabled?: boolean;
+  stripePayoutsEnabled?: boolean;
   isPreview?: boolean;
   shareOnly?: boolean;
   canRequestQuote?: boolean;
