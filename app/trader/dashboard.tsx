@@ -50,8 +50,22 @@ export default function TraderDashboard() {
   const offersUsed = profile.monthlyQuotesUsed ?? 0;
   const offerProgress = offerLimit > 0 ? Math.min(1, offersUsed / offerLimit) : 0;
   const paidActive = profile.subscriptionTier !== 'free' && profile.isSubscriptionActive;
+  const payoutsReady = Boolean(profile.stripeAccountId && profile.stripeChargesEnabled);
 
   return <Screen title={profile.businessName} subtitle={`${profile.tradeCategory}${profile.locationLabel ? ` · ${profile.locationLabel}` : ''}`}>
+    {!payoutsReady ? <AppCard style={styles.payoutCard}>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Text variant="titleLarge" style={styles.cardTitle}>Set up BuildPair payouts</Text>
+          <Text style={styles.muted}>Homeowners cannot use BuildPair staged payments with you until Stripe payout onboarding is complete. Stripe handles the payout details and identity checks, so BuildPair does not store your bank or card details itself.</Text>
+        </View>
+        <Chip icon="alert-circle-outline">Action needed</Chip>
+      </View>
+      <Link href="/trader/subscription" asChild><Button mode="contained" icon="bank-outline" contentStyle={styles.actionButton}>Set up payouts</Button></Link>
+    </AppCard> : <AppCard style={styles.payoutReadyCard}>
+      <View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.cardTitle}>BuildPair payouts ready</Text><Text style={styles.muted}>You can receive materials, deposit and staged job payments through your connected Stripe payout account.</Text></View><Chip icon="check-circle-outline">Ready</Chip></View>
+    </AppCard>}
+
     <AppCard style={[styles.membershipCard, paidActive && styles.membershipCardPaid]}>
       <View style={styles.row}>
         <View style={styles.flex}>
@@ -63,12 +77,9 @@ export default function TraderDashboard() {
         </View>
         <Chip>{paidActive ? 'Active' : profile.subscriptionTier === 'free' ? 'Starter' : 'Needs attention'}</Chip>
       </View>
-      {offerLimit > 0 ? <>
-        <ProgressBar progress={offerProgress} color={colors.primary} style={styles.progress} />
-        <Text style={styles.offerMeta}>{offersUsed} used · {offerLimit} monthly allowance</Text>
-      </> : null}
+      {offerLimit > 0 ? <><ProgressBar progress={offerProgress} color={colors.primary} style={styles.progress} /><Text style={styles.offerMeta}>{offersUsed} used · {offerLimit} monthly allowance</Text></> : null}
       <View style={styles.membershipActions}>
-        <Link href="/trader/subscription" asChild><Button mode={profile.subscriptionTier === 'free' ? 'contained' : 'outlined'} contentStyle={styles.actionButton}>{profile.subscriptionTier === 'free' ? 'View membership options' : 'Manage membership'}</Button></Link>
+        <Link href="/trader/subscription" asChild><Button mode={profile.subscriptionTier === 'free' ? 'contained' : 'outlined'} contentStyle={styles.actionButton}>{profile.subscriptionTier === 'free' ? 'View membership options' : 'Manage membership & payouts'}</Button></Link>
         <Link href="/trader/analytics" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Business analytics</Button></Link>
       </View>
     </AppCard>
@@ -83,12 +94,16 @@ export default function TraderDashboard() {
     <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.cardTitle}>Quick actions</Text></View>
     <View style={styles.quickActions}>
       <Link href="/trader/job-board" asChild><Button mode="contained" contentStyle={styles.actionButton}>Find jobs</Button></Link>
+      <Link href="/trader/my-jobs" asChild><Button mode="outlined" contentStyle={styles.actionButton}>My active jobs</Button></Link>
       <Link href="/trader/invoices/new" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Create invoice</Button></Link>
       <Link href="/trader/onboarding" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Edit profile</Button></Link>
       <Button mode="outlined" contentStyle={styles.actionButton} onPress={() => router.push(`/(public)/traders/${profile.id}` as Href)}>View public profile</Button>
     </View>
 
     {error ? <EmptyState title="Something needs attention" body={error} action={<Button mode="outlined" onPress={load}>Try again</Button>} /> : null}
+
+    <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.cardTitle}>Active jobs</Text><Link href="/trader/my-jobs" asChild><Button mode="text">View all</Button></Link></View>
+    {activeJobs.length ? activeJobs.slice(0, 3).map((job) => <AppCard key={job.id} style={styles.activeJobCard}><View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.cardTitle}>{job.title}</Text><Text style={styles.muted}>Accepted job · open this for payment stages, variations and completion.</Text></View><Chip icon="progress-clock">In progress</Chip></View><Button mode="contained" onPress={() => router.push(`/trader/jobs/${job.id}` as Href)}>Continue job</Button></AppCard>) : <EmptyState title="No active jobs" body="Accepted jobs will stay visible here so the workflow does not disappear after a quote is accepted." />}
 
     <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.cardTitle}>Recent opportunities</Text><Link href="/trader/job-board" asChild><Button mode="text">View all</Button></Link></View>
     {!newLeads.length ? <EmptyState title="No new opportunities right now" body={`New ${profile.tradeCategory.toLowerCase()} jobs matching your account will appear here.`} /> : newLeads.slice(0, 3).map((job) => <AppCard key={job.id}>
@@ -101,23 +116,7 @@ export default function TraderDashboard() {
 }
 
 const styles = StyleSheet.create({
-  membershipCard: { backgroundColor: colors.surfaceRaised, borderColor: colors.border },
-  membershipCardPaid: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' },
-  membershipEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.1, marginBottom: spacing.xxs },
-  membershipActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center', justifyContent: 'flex-start' },
-  offerMeta: { color: colors.muted, fontSize: 11, fontWeight: '700' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' },
-  cardActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' },
-  flex: { flex: 1, minWidth: 220, gap: spacing.xxs },
-  cardTitle: { fontWeight: '900', color: colors.charcoal },
-  muted: { color: colors.muted, lineHeight: 21 },
-  progress: { height: 7, borderRadius: 4, backgroundColor: colors.surfaceStrong },
-  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  stat: { flexGrow: 1, flexBasis: 145, minWidth: 135, paddingVertical: spacing.lg, alignItems: 'center' },
-  statNumber: { color: colors.primary, fontWeight: '900', textAlign: 'center' },
-  statLabel: { color: colors.muted, fontWeight: '700', textAlign: 'center' },
-  sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.xxs },
-  quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'center' },
-  actionButton: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xs },
-  description: { color: colors.text, lineHeight: 21 },
+  payoutCard: { backgroundColor: colors.goldSoft, borderColor: colors.gold }, payoutReadyCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent }, activeJobCard: { borderColor: colors.primary, borderWidth: 2 },
+  membershipCard: { backgroundColor: colors.surfaceRaised, borderColor: colors.border }, membershipCardPaid: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' }, membershipEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.1, marginBottom: spacing.xxs }, membershipActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center', justifyContent: 'flex-start' }, offerMeta: { color: colors.muted, fontSize: 11, fontWeight: '700' },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' }, cardActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }, flex: { flex: 1, minWidth: 220, gap: spacing.xxs }, cardTitle: { fontWeight: '900', color: colors.charcoal }, muted: { color: colors.muted, lineHeight: 21 }, progress: { height: 7, borderRadius: 4, backgroundColor: colors.surfaceStrong }, stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }, stat: { flexGrow: 1, flexBasis: 145, minWidth: 135, paddingVertical: spacing.lg, alignItems: 'center' }, statNumber: { color: colors.primary, fontWeight: '900', textAlign: 'center' }, statLabel: { color: colors.muted, fontWeight: '700', textAlign: 'center' }, sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.xxs }, quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'center' }, actionButton: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xs }, description: { color: colors.text, lineHeight: 21 },
 });
