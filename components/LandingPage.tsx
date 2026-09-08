@@ -1,343 +1,175 @@
 import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ImageBackground, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Text, TextInput } from 'react-native-paper';
 import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
 import { TRADE_CATEGORIES } from '@/constants/options';
 import { colors } from '@/constants/theme';
-import { apiFetch } from '@/lib/api';
-import type { Job } from '@/types';
 
-const POPULAR_TRADES = [
-  'Tiling',
-  'Plumbing',
-  'Electrical',
-  'Building & Extensions',
-  'Roofing & Roofline',
-  'Painting & Decorating',
-  'Kitchens',
-  'Bathrooms',
-] as const;
-
-const SYSTEM_CARDS = [
-  {
-    eyebrow: 'AI TRADE TRIAGE',
-    title: 'Describe the problem, not the trade.',
-    text: 'BuildPair can use Google Gemini to interpret a plain-English homeowner problem, choose the closest BuildPair trade category, suggest alternatives and ask useful follow-up questions. If the AI service is unavailable, rule-based matching provides a fallback rather than leaving the journey dead.',
-    background: colors.primarySoft,
-    accent: colors.primary,
-  },
-  {
-    eyebrow: 'AI JOB SPEC',
-    title: 'Turn rough answers into a useful brief.',
-    text: 'The job-spec assistant turns homeowner answers into a concise UK domestic work specification with scope, current condition, access and timing, materials responsibility and points the tradesperson still needs to confirm. It is explicitly instructed not to invent dimensions, prices, certifications or safety claims.',
-    background: colors.accentSoft,
-    accent: colors.accent,
-  },
-  {
-    eyebrow: 'AI QUOTE ASSISTANT',
-    title: 'Better commercial wording without invented numbers.',
-    text: 'Tradespeople can get help drafting scope, exclusions, payment wording, duration, warranty and notes. The important bit: BuildPair calculates supplied labour, materials and VAT figures deterministically. The AI is used for wording, not trusted to make up financial totals.',
-    background: colors.blueSoft,
-    accent: colors.blue,
-  },
-  {
-    eyebrow: 'AI MESSAGE ASSISTANT',
-    title: 'Replies that understand the actual job.',
-    text: 'The message assistant can use the job context and recent conversation to offer three calm, practical reply options. It is instructed not to invent prices, dates, measurements, qualifications or promises, not to escalate arguments and not to encourage users to bypass BuildPair safeguards.',
-    background: colors.violetSoft,
-    accent: colors.violet,
-  },
-] as const;
-
-const OPERATING_LAYER = [
-  ['Matching that understands area', 'Trade categories, specific services, related search terms, postcodes and service radius work together so discovery is more useful than a name-and-number directory.'],
-  ['One connected project record', 'Job details, messages, quotes, approved variations, timeline events and payment milestones can stay attached to the same piece of work.'],
-  ['Trust with context', 'Credentials, work examples, availability, completed-project reviews, reporting and human moderation provide signals without pretending one badge can guarantee a job.'],
-  ['Tools after the lead is won', 'Tradespeople can use saved searches, alerts, invoices, profile tools and analytics so BuildPair remains useful beyond the first introduction.'],
-] as const;
-
-const ADVICE_LINKS: { title: string; text: string; href: Href }[] = [
-  { title: 'Advice Hub', text: 'Practical homeowner and tradesperson guidance for planning, quoting, communication and project decisions.', href: '/(public)/advice' as Href },
-  { title: 'Building Rules', text: 'Start from current official UK sources when a project may involve building regulations, permissions or specialist requirements.', href: '/(public)/building-regulations' as Href },
-  { title: 'Trust & Safety', text: 'Understand the checks, reporting tools, marketplace standards and limits of what a platform can verify.', href: '/(public)/trust-safety' as Href },
-] as const;
+const POPULAR_TRADES = ['Tiling', 'Plumbing', 'Electrical', 'Building & Extensions', 'Roofing & Roofline', 'Painting & Decorating', 'Kitchens', 'Bathrooms'] as const;
 
 const FAQS = [
-  ['Is BuildPair just another trades directory?', 'No. Discovery is only the first layer. BuildPair is designed to keep the job, quote, conversation, approved changes, project timeline, payment stages and eventual reputation connected after the introduction.'],
-  ['What does the AI actually do?', 'Current AI-assisted features cover trade triage, job-spec drafting, quote wording and job-aware message suggestions. They are assistive tools with constrained prompts and fallbacks where appropriate. They do not replace a qualified trade, inspection, professional advice or the user’s responsibility for what they agree and send.'],
-  ['Do I need to know which trade I need?', 'No. You can search a trade directly or describe the symptom or project in ordinary language. BuildPair can match that description against related trade categories and services.'],
-  ['What memberships are available to tradespeople?', 'Starter is £0/month, BuildPair Plus is £19.99/month and BuildPair Pro is £29.99/month. The plans differ by marketplace visibility, category allowance, monthly open-marketplace offers and business tools.'],
-  ['Can one account be both a homeowner and a tradesperson?', 'Yes. One BuildPair identity can enable both account modes, so a trade business owner does not need another login when they need work done at home.'],
-  ['Does BuildPair guarantee a tradesperson or their work?', 'No. BuildPair provides marketplace information, records and trust signals, but customers still need to make checks appropriate to the job, particularly for regulated or specialist work.'],
+  ['What happens if a tradesperson cannot quote from photos?', 'They can arrange a site visit through the BuildPair job before quoting. After the visit, the formal quote and proposed payment stages are sent back through BuildPair so the project can continue in one place.'],
+  ['Can I change the payment stages in a quote?', 'You can propose a different split or timing for the payment stages without changing the tradesperson’s total quote. If you edit the stages, the tradesperson must agree the revised plan before you can accept the quote.'],
+  ['How do BuildPair staged payments work?', 'After a quote is accepted, you can choose BuildPair staged payments. Materials payments are released for the agreed materials. Other agreed stages are funded through Stripe first, then released after the tradesperson reaches the agreed trigger and the homeowner approves release.'],
+  ['Can we just arrange payment ourselves?', 'Yes. Both sides can choose a private payment arrangement. BuildPair will keep the quote, messages and project record, but its payment-stage controls and Stripe payment evidence do not apply to money exchanged privately.'],
+  ['Does BuildPair hold money in legal escrow?', 'No. BuildPair does not describe its payment service as legal escrow. Payments are processed through Stripe and BuildPair controls the project workflow and transfer instructions for eligible stages. The platform does not guarantee workmanship.'],
+  ['What memberships are available to tradespeople?', 'Starter is £0/month, BuildPair Plus is £19.99/month and BuildPair Pro is £29.99/month. Paid plans add marketplace selling capacity and business tools. Project transaction fees are separate and shown in the applicable payment information.'],
 ] as const;
 
-function SectionHeading({ eyebrow, title, body, centred = true }: { eyebrow?: string; title: string; body?: string; centred?: boolean }) {
-  return <View style={[styles.sectionHeading, centred && styles.sectionHeadingCentred]}>
-    {eyebrow ? <Text style={[styles.eyebrow, centred && styles.textCentred]}>{eyebrow}</Text> : null}
-    <Text variant="headlineMedium" style={[styles.sectionTitle, centred && styles.textCentred]}>{title}</Text>
-    {body ? <Text style={[styles.sectionBody, centred && styles.textCentred]}>{body}</Text> : null}
+function SectionHeading({ eyebrow, title, body }: { eyebrow?: string; title: string; body?: string }) {
+  return <View style={styles.sectionHeading}>
+    {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
+    <Text variant="headlineMedium" style={styles.sectionTitle}>{title}</Text>
+    {body ? <Text style={styles.sectionBody}>{body}</Text> : null}
   </View>;
 }
 
 export default function LandingPage() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isWide = width >= 920;
-  const isPhone = width < 600;
+  const wide = width >= 920;
   const [search, setSearch] = useState('');
-  const [problem, setProblem] = useState('');
-  const [jobs, setJobs] = useState<Job[]>([]);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-
-  useEffect(() => {
-    let active = true;
-    apiFetch<Job[]>('/api/public/jobs').then((result) => {
-      if (active) setJobs(result);
-    }).catch(() => undefined);
-    return () => { active = false; };
-  }, []);
 
   const goSearch = (value: string) => {
     const q = value.trim();
     router.push((q ? `/(public)/directory?q=${encodeURIComponent(q)}` : '/(public)/directory') as Href);
   };
-
   const goTrade = (trade: string) => router.push(`/(public)/directory?trade=${encodeURIComponent(trade)}` as Href);
-  const visibleTrades = isWide ? POPULAR_TRADES : POPULAR_TRADES.slice(0, 4);
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.pageContent}>
-    <View style={[styles.hero, isWide && styles.heroWide]}>
-      <View style={[styles.heroCopy, isWide && styles.heroCopyWide]}>
-        <View style={styles.heroBadge}><View style={styles.liveDot} /><Text style={styles.heroBadgeText}>Built specifically for UK homeowners and tradespeople</Text></View>
-        <Text style={[styles.heroTitle, !isWide && styles.heroTitleCompact]}>Find the right trade. Compare properly. Keep the whole job together.</Text>
-        <Text variant="titleMedium" style={styles.heroSubtitle}>BuildPair is more than a directory. It combines local trade discovery with AI-assisted job planning, structured quotes, job-linked messaging, changes, payment stages, reputation and trade business tools in one connected platform.</Text>
-
+    <View style={[styles.hero, wide && styles.heroWide]}>
+      <View style={styles.heroCopy}>
+        <View style={styles.heroBadge}><View style={styles.liveDot} /><Text style={styles.heroBadgeText}>Built for UK homeowners and tradespeople</Text></View>
+        <Text style={[styles.heroTitle, !wide && styles.heroTitleCompact]}>Find the right trade. Compare properly. Keep the whole job together.</Text>
+        <Text variant="titleMedium" style={styles.heroSubtitle}>BuildPair takes a project from “who do I need?” through messages, site visits, structured quotes, agreed payment stages, variations, completion and review without making the introduction the end of the app.</Text>
         <View style={styles.heroSearch}>
-          <TextInput
-            mode="outlined"
-            value={search}
-            onChangeText={setSearch}
-            onSubmitEditing={() => goSearch(search)}
-            placeholder="What do you need done? e.g. bathroom tiling"
-            style={styles.heroSearchInput}
-            outlineStyle={styles.inputOutline}
-          />
-          <Button mode="contained" contentStyle={styles.searchButtonContent} onPress={() => goSearch(search)}>Find a trade</Button>
+          <TextInput mode="outlined" value={search} onChangeText={setSearch} onSubmitEditing={() => goSearch(search)} placeholder="What do you need done? e.g. bathroom tiling" outlineStyle={styles.inputOutline} />
+          <Button mode="contained" contentStyle={styles.searchButton} onPress={() => goSearch(search)}>Find a trade</Button>
         </View>
-
         <View style={styles.heroActions}>
           <Link href="/auth/account" asChild><Button mode="contained-tonal">Post a job</Button></Link>
           <Link href="/(public)/for-tradespeople" asChild><Button mode="outlined">I’m a tradesperson</Button></Link>
           <Link href="/(public)/how-it-works" asChild><Button mode="text">How it works</Button></Link>
         </View>
       </View>
-
-      <View style={[styles.heroVisualWrap, isWide && styles.heroVisualWide]}>
-        <ImageBackground
-          source={{ uri: 'https://images.unsplash.com/photo-1625577816360-32388b70471c?auto=format&fit=crop&w=1600&q=84' }}
-          style={styles.heroImage}
-          imageStyle={styles.heroImageRadius}
-          resizeMode="cover"
-          accessibilityLabel="Home renovation project"
-        >
-          <View style={styles.heroImageShade} />
-          <View style={styles.imageCaption}>
-            <Text style={styles.imageCaptionSmall}>ONE CONNECTED PROJECT</Text>
-            <Text style={styles.imageCaptionBig}>Search → Match → Quote → Hire → Message → Track → Pay → Review</Text>
-          </View>
-          <View style={styles.heroFloatCard}>
-            <Text style={styles.heroFloatTitle}>AI where it removes friction</Text>
-            <Text style={styles.heroFloatText}>Human decisions where judgement matters.</Text>
-          </View>
-        </ImageBackground>
-      </View>
+      <ImageBackground source={{ uri: 'https://images.unsplash.com/photo-1625577816360-32388b70471c?auto=format&fit=crop&w=1600&q=84' }} style={styles.heroVisual} imageStyle={styles.heroImage} accessibilityLabel="Home renovation project">
+        <View style={styles.heroShade} />
+        <View style={styles.heroCaption}><Text style={styles.heroCaptionSmall}>ONE PROJECT RECORD</Text><Text style={styles.heroCaptionBig}>Request → Visit or quote → Agree → Fund → Build → Approve → Complete</Text></View>
+      </ImageBackground>
     </View>
 
     <View style={styles.credibilityBand}>
       <View style={styles.credibilityInner}>
-        {[
-          [`${TRADE_CATEGORIES.length}`, 'broad UK trade categories'],
-          ['2', 'account modes, one login'],
-          ['4', 'purpose-built AI assistants'],
-          ['1', 'connected project record'],
-        ].map(([value, label]) => <View key={label} style={styles.credibilityItem}><Text style={styles.credibilityValue}>{value}</Text><Text style={styles.credibilityLabel}>{label}</Text></View>)}
+        <View style={styles.credibilityItem}><Text style={styles.credibilityValue}>{TRADE_CATEGORIES.length}</Text><Text style={styles.credibilityLabel}>broad trade categories</Text></View>
+        <View style={styles.credibilityItem}><Text style={styles.credibilityValue}>1</Text><Text style={styles.credibilityLabel}>connected project record</Text></View>
+        <View style={styles.credibilityItem}><Text style={styles.credibilityValue}>2</Text><Text style={styles.credibilityLabel}>payment routes after hiring</Text></View>
+        <View style={styles.credibilityItem}><Text style={styles.credibilityValue}>0</Text><Text style={styles.credibilityLabel}>need to know the trade first</Text></View>
       </View>
     </View>
 
     <View style={styles.section}>
-      <SectionHeading eyebrow="Choose your route" title="What are you here to do?" body="BuildPair serves both sides of the same project, but you should not have to read a novel written for the other one before finding your next step." />
-      <View style={styles.audienceGrid}>
-        <View style={[styles.audienceCard, styles.homeownerCard]}>
-          <Text style={styles.audienceEyebrow}>HOMEOWNER</Text>
-          <Text variant="headlineSmall" style={styles.audienceTitle}>I need work done.</Text>
-          <Text style={styles.audienceText}>Find the likely trade, post a detailed job, compare people and quotes, keep changes recorded and manage the project in one place.</Text>
-          <View style={styles.audienceButtons}>
-            <Button mode="contained" onPress={() => goSearch('')}>Find local trades</Button>
-            <Link href="/auth/account" asChild><Button mode="outlined">Post a job</Button></Link>
-          </View>
-        </View>
-        <View style={[styles.audienceCard, styles.tradeCardAudience]}>
-          <Text style={[styles.audienceEyebrow, styles.audienceEyebrowTrade]}>TRADESPERSON</Text>
-          <Text variant="headlineSmall" style={styles.audienceTitle}>I want to win and manage work.</Text>
-          <Text style={styles.audienceText}>Build a proper business profile, find relevant jobs, send structured quotes, message customers and use the same platform for invoices, alerts and insight.</Text>
-          <View style={styles.audienceButtons}>
-            <Link href="/auth/account" asChild><Button mode="contained" buttonColor={colors.accent}>Create trade profile</Button></Link>
-            <Link href="/(public)/pricing" asChild><Button mode="outlined" textColor={colors.accent}>Memberships</Button></Link>
-          </View>
-        </View>
+      <SectionHeading eyebrow="Start where you are" title="Post a job without pretending every quote can be done from a photograph." body="Some jobs can be priced remotely. Plenty cannot. BuildPair supports both routes rather than forcing the real world into a neat little internet form." />
+      <View style={styles.routeGrid}>
+        <View style={styles.routeCard}><Text style={styles.routeNumber}>01</Text><Text variant="titleLarge" style={styles.cardTitle}>Post or request a quote</Text><Text style={styles.cardText}>Describe the job, add photos if useful and contact a suitable tradesperson directly or publish it to the marketplace.</Text></View>
+        <View style={styles.routeCard}><Text style={styles.routeNumber}>02</Text><Text variant="titleLarge" style={styles.cardTitle}>Quote now or arrange a visit</Text><Text style={styles.cardText}>The tradesperson can ask questions, quote from the information available, or arrange a site visit in BuildPair before pricing.</Text></View>
+        <View style={styles.routeCard}><Text style={styles.routeNumber}>03</Text><Text variant="titleLarge" style={styles.cardTitle}>Agree the quote and stages</Text><Text style={styles.cardText}>The quote shows scope, exclusions, timing and proposed payment stages. The homeowner can propose stage changes without changing the quote total.</Text></View>
+        <View style={styles.routeCard}><Text style={styles.routeNumber}>04</Text><Text variant="titleLarge" style={styles.cardTitle}>Keep working from the job</Text><Text style={styles.cardText}>Once accepted, the job stays on both dashboards with the next action, messages, payment stages, variations, timeline and completion record.</Text></View>
       </View>
     </View>
 
-    <View style={styles.howBand}>
+    <View style={styles.paymentBand}>
       <View style={styles.section}>
-        <SectionHeading eyebrow="How it works" title="A clearer route from first problem to finished project." body="The important difference is that the useful information does not vanish after the introduction." />
-        <View style={styles.stepsGrid}>
-          {[
-            ['01', 'Explain the job', 'Search a trade or describe the problem. BuildPair can help turn rough information into a clearer starting point.'],
-            ['02', 'Compare properly', 'Review relevant profiles and structured quotes with scope, exclusions, timing and project context.'],
-            ['03', 'Keep agreements visible', 'Messages, approved variations, timeline events and payment stages can stay connected to the same job.'],
-            ['04', 'Finish with useful history', 'Completion can feed genuine project reputation, portfolio stories and a better record for both sides.'],
-          ].map(([number, title, text]) => <View key={number} style={styles.stepCard}>
-            <Text style={styles.stepNumber}>{number}</Text><Text variant="titleMedium" style={styles.stepTitle}>{title}</Text><Text style={styles.stepText}>{text}</Text>
-          </View>)}
+        <SectionHeading eyebrow="BuildPair staged payments" title="Agree the money before the work gets awkward." body="An accepted quote can become a staged project instead of a handshake followed by six weeks of trying to remember what somebody said in a kitchen." />
+        <View style={styles.paymentGrid}>
+          <View style={[styles.paymentCard, styles.protectedCard]}>
+            <Chip icon="shield-check-outline" style={styles.cardChip}>BuildPair staged payments</Chip>
+            <Text variant="headlineSmall" style={styles.cardTitle}>Keep the payment stages inside the project.</Text>
+            <Text style={styles.cardText}>Materials can be paid and released for the agreed materials. Deposits, progress stages and the final stage can be funded through Stripe, then released after the agreed trigger is reached and the homeowner approves it.</Text>
+            <View style={styles.checkList}>
+              {['One agreed payment schedule attached to the quote', 'One stage unlocked at a time', 'Homeowner approval before controlled stage release', 'Unreleased stage can be paused if an issue is raised', 'Variations and payment history stay attached to the job'].map((item) => <View key={item} style={styles.checkRow}><Text style={styles.check}>✓</Text><Text style={styles.checkText}>{item}</Text></View>)}
+            </View>
+            <Text style={styles.smallPrint}>Payments are processed by Stripe. BuildPair does not store raw card or bank details, does not describe the service as legal escrow and does not guarantee the quality of building work.</Text>
+          </View>
+          <View style={[styles.paymentCard, styles.privateCard]}>
+            <Chip icon="account-arrow-right-outline" style={styles.cardChip}>Private payment arrangement</Chip>
+            <Text variant="headlineSmall" style={styles.cardTitle}>You can still deal directly.</Text>
+            <Text style={styles.cardText}>BuildPair does not trap users inside the platform. You can arrange payment privately after hiring, while keeping the quote, messages and project record in BuildPair.</Text>
+            <View style={styles.warningBox}><Text style={styles.warningTitle}>What changes if you pay privately</Text><Text style={styles.warningText}>BuildPair cannot process, control, release, refund or recover money exchanged outside its payment flow. BuildPair payment-stage controls and Stripe payment evidence do not apply to those transactions.</Text></View>
+            <Link href="/(public)/terms" asChild><Button mode="outlined">Read payment terms</Button></Link>
+          </View>
         </View>
-        <Link href="/(public)/how-it-works" asChild><Button mode="outlined" style={styles.inlineCta}>See the full journey and what happens behind the scenes</Button></Link>
+        <View style={styles.paymentFlow}>
+          {[
+            ['1', 'Stage funded', 'The homeowner pays the next agreed stage through Stripe.'],
+            ['2', 'Work reaches trigger', 'The tradesperson marks the agreed completion point reached.'],
+            ['3', 'Homeowner checks', 'Approve release or raise an issue before an unreleased controlled stage moves.'],
+            ['4', 'Stripe transfer', 'BuildPair instructs the approved payout to the connected tradesperson account.'],
+          ].map(([number, title, copy]) => <View key={number} style={styles.paymentStep}><Text style={styles.paymentStepNumber}>{number}</Text><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
+        </View>
       </View>
     </View>
 
     <View style={styles.section}>
-      <SectionHeading eyebrow="Find the right starting point" title="Search the work you need, not the construction vocabulary you happen to know." body="Pick a trade if you know it. If you do not, describe what is happening and let BuildPair narrow the starting point." />
-      <View style={styles.findGrid}>
-        <View style={styles.findTradesPanel}>
-          <View style={styles.tradeGrid}>
-            {visibleTrades.map((trade) => <Pressable key={trade} style={styles.tradeCard} onPress={() => goTrade(trade)} accessibilityRole="button">
-              <Text style={styles.tradeName}>{trade}</Text>
-              <Text style={styles.cardArrow}>→</Text>
-            </Pressable>)}
-          </View>
-          <Button mode="text" onPress={() => router.push('/(public)/directory')}>Browse all {TRADE_CATEGORIES.length} trade categories →</Button>
-        </View>
-        <View style={styles.problemBox}>
-          <Text style={styles.problemEyebrow}>NOT SURE WHO YOU NEED?</Text>
-          <Text variant="titleLarge" style={styles.problemTitle}>Start with the problem.</Text>
-          <Text style={styles.problemText}>Describe the symptom or project in ordinary language. BuildPair can identify the closest trade category and useful alternatives.</Text>
-          <View style={styles.problemExamples}>
-            <Chip compact onPress={() => setProblem('Water is coming through the kitchen ceiling when the shower is used')}>Ceiling leak after shower</Chip>
-            <Chip compact onPress={() => setProblem('I want my bathroom stripped out and completely refitted')}>Full bathroom refit</Chip>
-          </View>
-          <TextInput mode="outlined" multiline numberOfLines={4} value={problem} onChangeText={setProblem} placeholder="Example: Water comes through my kitchen ceiling when somebody showers upstairs…" outlineStyle={styles.inputOutline} />
-          <Button mode="contained" disabled={!problem.trim()} onPress={() => goSearch(problem)}>Find likely trades</Button>
-        </View>
+      <SectionHeading eyebrow="Find a starting point" title="Search by the work, not the vocabulary." body="Pick a trade if you know it. If you do not, describe the problem and let BuildPair narrow the starting point." />
+      <View style={styles.tradeGrid}>
+        {POPULAR_TRADES.map((trade) => <Pressable key={trade} style={styles.tradeCard} onPress={() => goTrade(trade)} accessibilityRole="button"><Text style={styles.tradeName}>{trade}</Text><Text style={styles.tradeArrow}>→</Text></Pressable>)}
       </View>
+      <Link href="/(public)/directory" asChild><Button mode="text">Browse all {TRADE_CATEGORIES.length} trade categories →</Button></Link>
     </View>
 
-    <View style={styles.intelligenceBand}>
+    <View style={styles.featureBand}>
       <View style={styles.section}>
-        <SectionHeading eyebrow="What is actually behind BuildPair" title="Useful automation, not an AI sticker slapped on a directory." body="BuildPair’s current architecture uses purpose-built assistance at specific moments where it can reduce ambiguity or admin. It does not hand important project decisions to a chatbot." />
-        <View style={styles.systemGrid}>
-          {SYSTEM_CARDS.map((card) => <View key={card.title} style={[styles.systemCard, { backgroundColor: card.background, borderTopColor: card.accent }]}>
-            <Text style={styles.systemEyebrow}>{card.eyebrow}</Text>
-            <Text variant="titleLarge" style={styles.systemTitle}>{card.title}</Text>
-            <Text style={styles.systemText}>{card.text}</Text>
-          </View>)}
-        </View>
-        <View style={styles.aiPrinciple}>
-          <View style={styles.aiPrincipleCopy}><Text variant="titleMedium" style={styles.aiPrincipleTitle}>AI assists. People remain responsible.</Text><Text style={styles.aiPrincipleText}>A generated specification or suggested reply is a starting point, not a professional diagnosis, quotation guarantee, legal opinion or safety certification. Users review what they send and qualified people still make the decisions that require real-world judgement.</Text></View>
-        </View>
-        <Link href="/(public)/about" asChild><Button mode="text" style={styles.inlineCta}>Read more about the platform and its design →</Button></Link>
-      </View>
-    </View>
-
-    <View style={styles.section}>
-      <SectionHeading eyebrow="Beyond the AI" title="The boring machinery is what makes the clever bits useful." body="A marketplace only becomes genuinely helpful when the workflow around the match is connected too." />
-      <View style={styles.operatingGrid}>
-        {OPERATING_LAYER.map(([title, text]) => <View key={title} style={styles.operatingCard}>
-          <Text variant="titleMedium" style={styles.operatingTitle}>{title}</Text>
-          <Text style={styles.operatingText}>{text}</Text>
-        </View>)}
-      </View>
-    </View>
-
-    <View style={styles.trustBand}>
-      <View style={[styles.section, styles.trustInner, isWide && styles.trustInnerWide]}>
-        <View style={styles.trustCopy}>
-          <View style={[styles.sectionHeading, styles.sectionHeadingCentred]}>
-            <Text style={[styles.trustEyebrow, styles.textCentred]}>TRUST & SAFETY</Text>
-            <Text variant="headlineMedium" style={[styles.trustHeading, styles.textCentred]}>Better signals, clearer records and human moderation.</Text>
-            <Text style={[styles.trustBody, styles.textCentred]}>BuildPair is deliberately not built around the fantasy that a logo badge can make every home-improvement project safe.</Text>
-          </View>
+        <SectionHeading eyebrow="Useful after the match" title="The boring machinery is the point." body="Matching is useful. Keeping the agreement, conversation and money tied to the same job is what stops BuildPair becoming another lead list." />
+        <View style={styles.featureGrid}>
           {[
-            'Credentials and review status can add useful context to a trade profile.',
-            'Reviews can be tied back to genuine marketplace project activity.',
-            'Reporting covers scams, harassment, unsafe behaviour, poor workmanship, misleading credentials, payment disputes and more.',
-            'Moderation is evidence-led, with human actions such as warnings, restrictions, suspensions, restoration and recorded reasons.',
-            'Regulated and specialist work still requires the appropriate real-world checks.',
-          ].map((item) => <View key={item} style={styles.trustRow}><View style={styles.trustTick}><Text style={styles.trustTickText}>✓</Text></View><Text style={styles.trustText}>{item}</Text></View>)}
-          <Link href="/(public)/trust-safety" asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.inlineCta}>How BuildPair handles trust & safety</Button></Link>
-        </View>
-        <View style={styles.trustVisual}>
-          <View style={styles.recordCard}><Text style={styles.recordEyebrow}>PROJECT RECORD</Text><Text variant="headlineSmall" style={styles.recordTitle}>What was agreed stays easier to find.</Text><Text style={styles.recordText}>Original job → quote → messages → variation → milestone → completion → review</Text></View>
+            ['AI-assisted job planning', 'Turn an ordinary-language problem into a clearer job brief without pretending AI replaces a qualified trade or inspection.'],
+            ['Structured quotes', 'Labour, materials, VAT, scope, exclusions, timing, warranty and payment stages can be compared rather than buried in messages.'],
+            ['Job-linked messages', 'The conversation stays attached to the job, with notifications and clear next actions instead of becoming the endpoint.'],
+            ['Variations before extras', 'Price and scope changes can be proposed and approved before additional work becomes another argument after the fact.'],
+            ['Project timeline', 'Quote acceptance, stage funding, release, variations and completion events remain easier to follow later.'],
+            ['Verified project reputation', 'Completed BuildPair activity can contribute useful review context rather than leaving reputation detached from the work.'],
+          ].map(([title, copy]) => <View key={title} style={styles.featureCard}><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
         </View>
       </View>
     </View>
-
-    {jobs.length ? <View style={styles.section}>
-      <SectionHeading eyebrow="Live marketplace" title="Real work currently visible on BuildPair." body="No invented activity counters. When public jobs exist, this section shows genuine marketplace work." />
-      <View style={styles.jobGrid}>
-        {jobs.slice(0, 3).map((job) => <Link key={job.id} href={`/(public)/jobs/${job.id}` as Href} asChild><Pressable style={styles.jobCard}>
-          <View style={styles.jobTop}><Chip compact>{job.category}</Chip><Text style={styles.jobLocation}>{job.locationLabel || job.postcode || 'UK'}</Text></View>
-          <Text variant="titleMedium" style={styles.jobTitle}>{job.title}</Text>
-          <Text numberOfLines={3} style={styles.jobDescription}>{job.description}</Text>
-          <Text style={styles.jobLink}>View job →</Text>
-        </Pressable></Link>)}
-      </View>
-      <Link href="/(public)/jobs" asChild><Button mode="outlined" style={styles.inlineCta}>Browse public jobs</Button></Link>
-    </View> : null}
 
     <View style={styles.pricingBand}>
       <View style={styles.section}>
-        <SectionHeading eyebrow="Tradesperson membership" title="Start free, then pay for the marketplace capacity you actually need." body="BuildPair Starter lets a trade establish a profile before choosing Plus or Pro for selling capacity and deeper business tools." />
+        <SectionHeading eyebrow="Tradesperson membership" title="Start free. Upgrade when BuildPair is helping you win work." body="Starter establishes the profile. Plus and Pro add marketplace capacity and deeper business tools. Payment transaction fees are separate from membership and disclosed in the applicable payment information." />
         <PricingCards compact />
-        <Link href="/(public)/pricing" asChild><Button mode="text" style={styles.inlineCta}>See full membership details →</Button></Link>
+        <Link href="/(public)/pricing" asChild><Button mode="text">See full membership details →</Button></Link>
       </View>
     </View>
 
     <View style={styles.section}>
-      <SectionHeading eyebrow="Free practical guidance" title="Get the job right before anyone picks up a tool." body="BuildPair should still be useful when somebody is researching, planning or trying to understand what good project practice looks like." />
+      <SectionHeading eyebrow="Practical guidance" title="Useful even before you hire anyone." body="Project planning, building-rules links and trust information remain public." />
       <View style={styles.adviceGrid}>
-        {ADVICE_LINKS.map((item) => <Link key={item.title} href={item.href} asChild><Pressable style={styles.adviceCard}>
-          <Text variant="titleLarge" style={styles.adviceTitle}>{item.title}</Text>
-          <Text style={styles.adviceText}>{item.text}</Text>
-          <Text style={styles.adviceLink}>Explore →</Text>
-        </Pressable></Link>)}
+        <Link href="/(public)/advice" asChild><Pressable style={styles.adviceCard}><Text variant="titleLarge" style={styles.cardTitle}>Advice Hub</Text><Text style={styles.cardText}>Planning, quoting, communication and project guidance.</Text><Text style={styles.tradeArrow}>Explore →</Text></Pressable></Link>
+        <Link href="/(public)/building-regulations" asChild><Pressable style={styles.adviceCard}><Text variant="titleLarge" style={styles.cardTitle}>Building Rules</Text><Text style={styles.cardText}>Start from current official sources for permissions and regulated work.</Text><Text style={styles.tradeArrow}>Explore →</Text></Pressable></Link>
+        <Link href="/(public)/trust-safety" asChild><Pressable style={styles.adviceCard}><Text variant="titleLarge" style={styles.cardTitle}>Trust & Safety</Text><Text style={styles.cardText}>Understand checks, reports, records and the limits of platform protection.</Text><Text style={styles.tradeArrow}>Explore →</Text></Pressable></Link>
       </View>
     </View>
 
     <View style={styles.faqBand}>
       <View style={styles.section}>
-        <SectionHeading eyebrow="Questions" title="The useful answers before you create an account." />
+        <SectionHeading eyebrow="Questions" title="The useful bits before you create an account." />
         <View style={styles.faqList}>
           {FAQS.map(([question, answer], index) => {
             const open = openFaq === index;
-            return <Pressable key={question} style={styles.faqCard} onPress={() => setOpenFaq(open ? null : index)} accessibilityRole="button" accessibilityState={{ expanded: open }}>
-              <View style={styles.faqQuestionRow}><Text variant="titleMedium" style={styles.faqQuestion}>{question}</Text><Text style={styles.faqToggle}>{open ? '−' : '+'}</Text></View>
-              {open ? <Text style={styles.faqAnswer}>{answer}</Text> : null}
-            </Pressable>;
+            return <Pressable key={question} style={styles.faqCard} onPress={() => setOpenFaq(open ? null : index)} accessibilityRole="button" accessibilityState={{ expanded: open }}><View style={styles.faqRow}><Text variant="titleMedium" style={styles.cardTitle}>{question}</Text><Text style={styles.faqToggle}>{open ? '−' : '+'}</Text></View>{open ? <Text style={styles.cardText}>{answer}</Text> : null}</Pressable>;
           })}
         </View>
       </View>
     </View>
 
     <View style={styles.section}>
-      <View style={[styles.finalCta, isPhone && styles.finalCtaPhone]}>
-        <View style={styles.finalCopy}><Text style={styles.finalEyebrow}>BUILDPAIR UK</Text><Text variant="headlineSmall" style={styles.finalTitle}>Start with the job you need done, or the work you want to win.</Text><Text style={styles.finalText}>One platform from first question to finished project record.</Text></View>
-        <View style={styles.finalButtons}>
-          <Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} onPress={() => router.push('/(public)/directory')}>Find a trade</Button>
-          <Link href="/auth/account" asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.finalOutline}>Join BuildPair</Button></Link>
-        </View>
+      <View style={styles.finalCta}>
+        <View style={styles.finalCopy}><Text style={styles.finalEyebrow}>BUILDPAIR UK</Text><Text variant="headlineSmall" style={styles.finalTitle}>Start with the job. Keep going until it is finished.</Text><Text style={styles.finalText}>Search, visit, quote, agree, pay, change, complete and review in one connected project.</Text></View>
+        <View style={styles.finalButtons}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} onPress={() => goSearch('')}>Find a trade</Button><Link href="/auth/account" asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.finalOutline}>Join BuildPair</Button></Link></View>
       </View>
     </View>
 
@@ -348,127 +180,77 @@ export default function LandingPage() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   pageContent: { flexGrow: 1 },
-  hero: { width: '100%', maxWidth: 1240, alignSelf: 'center', paddingHorizontal: 18, paddingTop: 28, paddingBottom: 30, gap: 22 },
-  heroWide: { flexDirection: 'row', alignItems: 'stretch', paddingTop: 38, paddingBottom: 40, gap: 30 },
+  hero: { width: '100%', maxWidth: 1240, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 32, gap: 24 },
+  heroWide: { flexDirection: 'row', alignItems: 'stretch', paddingVertical: 42, gap: 30 },
   heroCopy: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 15 },
-  heroCopyWide: { flexBasis: 560 },
   heroBadge: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: colors.primarySoft, borderRadius: 999, borderWidth: 1, borderColor: '#F2D7C3' },
   liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
   heroBadgeText: { color: colors.primaryDark, fontWeight: '800', fontSize: 12, textAlign: 'center' },
-  heroTitle: { color: colors.charcoal, fontSize: 50, lineHeight: 54, fontWeight: '900', letterSpacing: -1.8, textAlign: 'center' },
-  heroTitleCompact: { fontSize: 36, lineHeight: 40, letterSpacing: -1.1 },
-  heroSubtitle: { color: colors.charcoalSoft, lineHeight: 27, maxWidth: 650, textAlign: 'center' },
-  heroSearch: { gap: 9, width: '100%', maxWidth: 720, alignSelf: 'center' },
-  heroSearchInput: { backgroundColor: colors.surfaceRaised },
+  heroTitle: { color: colors.charcoal, fontSize: 50, lineHeight: 55, fontWeight: '900', letterSpacing: -1.8, textAlign: 'center' },
+  heroTitleCompact: { fontSize: 36, lineHeight: 41 },
+  heroSubtitle: { color: colors.charcoalSoft, lineHeight: 27, maxWidth: 660, textAlign: 'center' },
+  heroSearch: { gap: 9, width: '100%', maxWidth: 700 },
   inputOutline: { borderRadius: 16 },
-  searchButtonContent: { minHeight: 50 },
-  heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, alignItems: 'center', justifyContent: 'center' },
-  heroVisualWrap: { minHeight: 330 },
-  heroVisualWide: { flex: 0.9, minHeight: 520, flexBasis: 490 },
-  heroImage: { flex: 1, minHeight: 330, justifyContent: 'flex-end', padding: 20, overflow: 'hidden' },
-  heroImageRadius: { borderRadius: 30 },
-  heroImageShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(14,30,43,0.32)', borderRadius: 30 },
-  imageCaption: { gap: 5, maxWidth: 500 },
-  imageCaptionSmall: { color: '#FFD7BA', fontWeight: '900', fontSize: 11, letterSpacing: 1.2 },
-  imageCaptionBig: { color: '#FFFFFF', fontSize: 21, lineHeight: 28, fontWeight: '900' },
-  heroFloatCard: { position: 'absolute', right: 17, top: 18, maxWidth: 250, borderRadius: 18, padding: 14, backgroundColor: 'rgba(255,255,255,0.95)', gap: 3, alignItems: 'center', borderTopWidth: 3, borderTopColor: colors.primary },
-  heroFloatTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' },
-  heroFloatText: { color: colors.muted, fontSize: 12, lineHeight: 17, textAlign: 'center' },
+  searchButton: { minHeight: 50 },
+  heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
+  heroVisual: { flex: 0.9, minHeight: 380, justifyContent: 'flex-end', padding: 22, overflow: 'hidden', borderRadius: 30 },
+  heroImage: { borderRadius: 30 },
+  heroShade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(14,30,43,0.38)', borderRadius: 30 },
+  heroCaption: { gap: 5, maxWidth: 520 },
+  heroCaptionSmall: { color: '#FFD7BA', fontWeight: '900', fontSize: 11, letterSpacing: 1.2 },
+  heroCaptionBig: { color: '#FFFFFF', fontSize: 22, lineHeight: 29, fontWeight: '900' },
   credibilityBand: { backgroundColor: colors.navy },
-  credibilityInner: { width: '100%', maxWidth: 1140, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 17, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 },
-  credibilityItem: { flexGrow: 1, flexBasis: 150, minWidth: 135, alignItems: 'center', gap: 2 },
-  credibilityValue: { color: '#FFFFFF', fontSize: 24, lineHeight: 29, fontWeight: '900' },
+  credibilityInner: { width: '100%', maxWidth: 1140, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 18, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 },
+  credibilityItem: { flexGrow: 1, flexBasis: 160, minWidth: 140, alignItems: 'center', gap: 2 },
+  credibilityValue: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
   credibilityLabel: { color: '#DCE7EE', fontSize: 11, textAlign: 'center' },
-  section: { width: '100%', maxWidth: 1140, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 30, gap: 20 },
-  sectionHeading: { gap: 8, maxWidth: 820 },
-  sectionHeadingCentred: { alignSelf: 'center', alignItems: 'center' },
-  eyebrow: { color: colors.primary, fontWeight: '900', fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase' },
-  sectionTitle: { color: colors.charcoal, fontWeight: '900', letterSpacing: -0.5 },
-  sectionBody: { color: colors.muted, lineHeight: 24 },
-  textCentred: { textAlign: 'center' },
-  audienceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 15 },
-  audienceCard: { flexGrow: 1, flexBasis: 390, minWidth: 280, borderRadius: 26, padding: 23, gap: 10, borderWidth: 1, borderTopWidth: 4, alignItems: 'center' },
-  homeownerCard: { backgroundColor: '#FFFBF7', borderColor: '#F0D8C7', borderTopColor: colors.primary },
-  tradeCardAudience: { backgroundColor: '#F7FCFB', borderColor: '#CFE5E1', borderTopColor: colors.accent },
-  audienceEyebrow: { color: colors.primaryDark, fontWeight: '900', fontSize: 11, letterSpacing: 1.1, textAlign: 'center' },
-  audienceEyebrowTrade: { color: colors.accent },
-  audienceTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' },
-  audienceText: { color: colors.muted, lineHeight: 23, flexGrow: 1, textAlign: 'center', maxWidth: 540 },
-  audienceButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 4, justifyContent: 'center' },
-  howBand: { backgroundColor: '#FFF4EA' },
-  stepsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  stepCard: { flexGrow: 1, flexBasis: 225, minWidth: 220, backgroundColor: colors.surfaceRaised, borderRadius: 22, padding: 19, gap: 8, borderWidth: 1, borderTopWidth: 3, borderColor: '#ECDCCD', borderTopColor: colors.primary, alignItems: 'center' },
-  stepNumber: { color: colors.primary, fontWeight: '900', fontSize: 13, letterSpacing: 1 },
-  stepTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' },
-  stepText: { color: colors.muted, lineHeight: 22, textAlign: 'center' },
-  inlineCta: { alignSelf: 'center' },
-  findGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 18, alignItems: 'stretch' },
-  findTradesPanel: { flex: 1.1, flexBasis: 480, minWidth: 280, gap: 10, alignItems: 'center' },
-  tradeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, width: '100%' },
-  tradeCard: { flexGrow: 1, flexBasis: 200, minWidth: 150, backgroundColor: colors.surfaceRaised, borderRadius: 18, padding: 15, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  tradeName: { flex: 1, color: colors.charcoal, fontWeight: '800', lineHeight: 20, textAlign: 'center' },
-  cardArrow: { color: colors.primary, fontWeight: '900', fontSize: 18 },
-  problemBox: { flex: 0.9, flexBasis: 360, minWidth: 280, backgroundColor: colors.navy, borderRadius: 26, padding: 22, gap: 11, alignItems: 'center' },
-  problemEyebrow: { color: '#FFD7BA', fontWeight: '900', fontSize: 11, letterSpacing: 1.1, textAlign: 'center' },
-  problemTitle: { color: '#FFFFFF', fontWeight: '900', textAlign: 'center' },
-  problemText: { color: '#DCE7EE', lineHeight: 22, textAlign: 'center' },
-  problemExamples: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' },
-  intelligenceBand: { backgroundColor: colors.accentSoft },
-  systemGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 13 },
-  systemCard: { flexGrow: 1, flexBasis: 420, minWidth: 280, borderRadius: 25, padding: 21, gap: 10, borderWidth: 1, borderTopWidth: 4, borderColor: 'rgba(35,41,48,0.08)', alignItems: 'center' },
-  systemEyebrow: { color: colors.charcoalSoft, fontWeight: '900', fontSize: 10, letterSpacing: 1, textAlign: 'center' },
-  systemTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' },
-  systemText: { color: colors.charcoalSoft, lineHeight: 23, textAlign: 'center' },
-  aiPrinciple: { backgroundColor: colors.surfaceRaised, borderRadius: 22, padding: 19, borderWidth: 1, borderColor: colors.border, alignItems: 'center' },
-  aiPrincipleCopy: { gap: 4, maxWidth: 820 },
-  aiPrincipleTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' },
-  aiPrincipleText: { color: colors.muted, lineHeight: 22, textAlign: 'center' },
-  operatingGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  operatingCard: { flexGrow: 1, flexBasis: 230, minWidth: 220, backgroundColor: colors.surfaceRaised, borderRadius: 22, padding: 19, gap: 9, borderWidth: 1, borderTopWidth: 3, borderColor: colors.border, borderTopColor: colors.blue, alignItems: 'center' },
-  operatingTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' },
-  operatingText: { color: colors.muted, lineHeight: 22, textAlign: 'center' },
-  trustBand: { backgroundColor: colors.navy },
-  trustInner: { maxWidth: 1140 },
-  trustInnerWide: { flexDirection: 'row', gap: 30, alignItems: 'center' },
-  trustCopy: { flex: 1, gap: 10 },
-  trustEyebrow: { color: '#FFD7BA', fontWeight: '900', fontSize: 11, letterSpacing: 1.2 },
-  trustHeading: { color: '#FFFFFF', fontWeight: '900', letterSpacing: -0.5 },
-  trustBody: { color: '#DCE7EE', lineHeight: 24 },
-  trustRow: { flexDirection: 'row', gap: 9, alignItems: 'flex-start' },
-  trustTick: { width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  trustTickText: { color: '#FFD7BA', fontWeight: '900', fontSize: 11 },
-  trustText: { color: '#DCE7EE', lineHeight: 22, flex: 1 },
-  trustVisual: { flex: 0.7, minWidth: 280 },
-  recordCard: { backgroundColor: '#FFFFFF', borderRadius: 26, padding: 24, gap: 10, borderTopWidth: 4, borderTopColor: colors.primary, alignItems: 'center' },
-  recordEyebrow: { color: colors.primary, fontWeight: '900', fontSize: 11, letterSpacing: 1.1, textAlign: 'center' },
-  recordTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' },
-  recordText: { color: colors.muted, lineHeight: 24, textAlign: 'center' },
-  jobGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  jobCard: { flexGrow: 1, flexBasis: 290, minWidth: 270, backgroundColor: colors.surfaceRaised, borderRadius: 22, padding: 18, gap: 9, borderWidth: 1, borderTopWidth: 3, borderColor: colors.border, borderTopColor: colors.accent, alignItems: 'center' },
-  jobTop: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  jobLocation: { color: colors.muted, fontSize: 12, textAlign: 'center' },
-  jobTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' },
-  jobDescription: { color: colors.muted, lineHeight: 21, textAlign: 'center' },
-  jobLink: { color: colors.primary, fontWeight: '900' },
-  pricingBand: { backgroundColor: colors.violetSoft },
+  section: { width: '100%', maxWidth: 1140, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 42, gap: 22 },
+  sectionHeading: { alignSelf: 'center', alignItems: 'center', gap: 8, maxWidth: 840 },
+  eyebrow: { color: colors.primary, fontWeight: '900', fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', textAlign: 'center' },
+  sectionTitle: { color: colors.charcoal, fontWeight: '900', letterSpacing: -0.5, textAlign: 'center' },
+  sectionBody: { color: colors.muted, lineHeight: 24, textAlign: 'center' },
+  routeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  routeCard: { flexGrow: 1, flexBasis: 240, minWidth: 220, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderTopWidth: 3, borderTopColor: colors.primary, borderRadius: 20, padding: 18, gap: 8 },
+  routeNumber: { color: colors.primary, fontWeight: '900', letterSpacing: 1 },
+  cardTitle: { color: colors.charcoal, fontWeight: '900' },
+  cardText: { color: colors.muted, lineHeight: 22 },
+  paymentBand: { backgroundColor: '#FFF4EA' },
+  paymentGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+  paymentCard: { flexGrow: 1, flexBasis: 430, minWidth: 280, borderRadius: 24, padding: 22, gap: 12, borderWidth: 1 },
+  protectedCard: { backgroundColor: '#F6FBFA', borderColor: '#CDE2DE' },
+  privateCard: { backgroundColor: '#FFFFFF', borderColor: '#E8D7C7' },
+  cardChip: { alignSelf: 'flex-start' },
+  checkList: { gap: 8 },
+  checkRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  check: { color: colors.accent, fontWeight: '900' },
+  checkText: { flex: 1, color: colors.charcoalSoft, lineHeight: 21 },
+  smallPrint: { color: colors.muted, fontSize: 12, lineHeight: 18 },
+  warningBox: { backgroundColor: colors.goldSoft, borderRadius: 14, padding: 13, gap: 5 },
+  warningTitle: { color: colors.charcoal, fontWeight: '900' },
+  warningText: { color: colors.charcoalSoft, lineHeight: 21 },
+  paymentFlow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  paymentStep: { flexGrow: 1, flexBasis: 220, minWidth: 200, backgroundColor: colors.surfaceRaised, borderRadius: 16, padding: 15, gap: 6, borderWidth: 1, borderColor: colors.border },
+  paymentStepNumber: { width: 26, height: 26, borderRadius: 13, textAlign: 'center', textAlignVertical: 'center', backgroundColor: colors.primary, color: '#FFFFFF', fontWeight: '900' },
+  tradeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  tradeCard: { flexGrow: 1, flexBasis: 230, minWidth: 200, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  tradeName: { color: colors.charcoal, fontWeight: '800' },
+  tradeArrow: { color: colors.primary, fontWeight: '900' },
+  featureBand: { backgroundColor: colors.surfaceSoft },
+  featureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  featureCard: { flexGrow: 1, flexBasis: 310, minWidth: 260, backgroundColor: colors.surfaceRaised, borderRadius: 18, padding: 17, gap: 7, borderWidth: 1, borderColor: colors.border },
+  pricingBand: { backgroundColor: '#FBF8F5' },
   adviceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  adviceCard: { flexGrow: 1, flexBasis: 290, minWidth: 270, backgroundColor: colors.surfaceRaised, borderRadius: 22, padding: 20, gap: 9, borderWidth: 1, borderTopWidth: 3, borderColor: colors.border, borderTopColor: colors.primary, alignItems: 'center' },
-  adviceTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' },
-  adviceText: { color: colors.muted, lineHeight: 22, flexGrow: 1, textAlign: 'center' },
-  adviceLink: { color: colors.primary, fontWeight: '900' },
-  faqBand: { backgroundColor: colors.blueSoft },
-  faqList: { gap: 9 },
-  faqCard: { backgroundColor: colors.surfaceRaised, borderRadius: 18, padding: 17, gap: 9, borderWidth: 1, borderColor: colors.border },
-  faqQuestionRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  faqQuestion: { color: colors.charcoal, fontWeight: '900', flex: 1 },
-  faqToggle: { color: colors.primary, fontSize: 25, fontWeight: '700' },
-  faqAnswer: { color: colors.muted, lineHeight: 22, paddingRight: 24 },
-  finalCta: { backgroundColor: colors.navy, borderRadius: 28, padding: 25, flexDirection: 'row', gap: 20, justifyContent: 'space-between', alignItems: 'center' },
-  finalCtaPhone: { flexDirection: 'column', alignItems: 'center' },
-  finalCopy: { flex: 1, gap: 5, alignItems: 'center' },
-  finalEyebrow: { color: '#FFD7BA', fontWeight: '900', fontSize: 11, letterSpacing: 1.1, textAlign: 'center' },
-  finalTitle: { color: '#FFFFFF', fontWeight: '900', textAlign: 'center' },
-  finalText: { color: '#DCE7EE', textAlign: 'center' },
-  finalButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, justifyContent: 'center' },
-  finalOutline: { borderColor: 'rgba(255,255,255,0.65)' },
+  adviceCard: { flexGrow: 1, flexBasis: 310, minWidth: 260, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 18, gap: 8 },
+  faqBand: { backgroundColor: colors.surfaceSoft },
+  faqList: { gap: 9, maxWidth: 900, width: '100%', alignSelf: 'center' },
+  faqCard: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 16, gap: 9 },
+  faqRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  faqToggle: { color: colors.primary, fontSize: 24, fontWeight: '900' },
+  finalCta: { backgroundColor: colors.navy, borderRadius: 28, padding: 25, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 18 },
+  finalCopy: { flex: 1, minWidth: 250, gap: 6 },
+  finalEyebrow: { color: '#FFD7BA', fontSize: 11, fontWeight: '900', letterSpacing: 1.2 },
+  finalTitle: { color: '#FFFFFF', fontWeight: '900' },
+  finalText: { color: '#DCE7EE', lineHeight: 22 },
+  finalButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  finalOutline: { borderColor: '#FFFFFF' },
 });
