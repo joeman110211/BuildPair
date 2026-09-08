@@ -34,7 +34,7 @@ concurrency:
 jobs:
   apk:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       CI: '1'
       EXPO_NO_TELEMETRY: '1'
@@ -189,3 +189,64 @@ jobs:
           path: android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
           retention-days: 30
+
+      - name: Build x86_64 release for launch smoke test
+        working-directory: android
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed -i 's/^reactNativeArchitectures=.*/reactNativeArchitectures=x86_64/' gradle.properties
+          ./gradlew clean assembleRelease --no-daemon --max-workers=2 --stacktrace
+
+      - name: Enable KVM group permissions
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Launch-test BuildPair APK on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          emulator-boot-timeout: 600
+          script: |
+            set -euo pipefail
+            apk=$(find android/app/build/outputs/apk/release -name '*.apk' -print -quit)
+            test -n "$apk" || { echo "::error::x86_64 BuildPair APK was not produced"; exit 1; }
+            adb install -r "$apk"
+            adb logcat -c
+            adb shell am force-stop uk.co.buildpair.app || true
+            activity=$(adb shell cmd package resolve-activity --brief uk.co.buildpair.app | tr -d '\r' | tail -1)
+            test -n "$activity" || { echo "::error::Could not resolve BuildPair launch activity"; exit 1; }
+            echo "Launching $activity"
+            adb shell am start -W -n "$activity" | tee /tmp/buildpair-am-start.txt
+            sleep 12
+            adb logcat -d -v threadtime > /tmp/buildpair-launch-logcat.txt
+            pid=$(adb shell pidof uk.co.buildpair.app | tr -d '\r' || true)
+            if [ -z "$pid" ]; then
+              echo "::error::BuildPair process exited after launch"
+              grep -E 'AndroidRuntime|FATAL EXCEPTION|ReactNativeJS|Expo|Clerk|uk\.co\.buildpair\.app' /tmp/buildpair-launch-logcat.txt | tail -250 || true
+              exit 1
+            fi
+            if grep -Eq 'FATAL EXCEPTION.*uk\.co\.buildpair\.app|Process: uk\.co\.buildpair\.app.*FATAL EXCEPTION' /tmp/buildpair-launch-logcat.txt; then
+              echo "::error::BuildPair emitted a fatal runtime exception"
+              grep -E 'AndroidRuntime|FATAL EXCEPTION|ReactNativeJS|Expo|Clerk|uk\.co\.buildpair\.app' /tmp/buildpair-launch-logcat.txt | tail -250 || true
+              exit 1
+            fi
+            resumed=$(adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity' | grep 'uk.co.buildpair.app' || true)
+            test -n "$resumed" || { echo "::error::BuildPair is alive but not the resumed foreground activity"; exit 1; }
+            echo "BuildPair stayed alive and foregrounded after release launch (pid=$pid)."
+
+      - name: Upload Android launch diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildpair-android-launch-diagnostics
+          path: |
+            /tmp/buildpair-launch-logcat.txt
+            /tmp/buildpair-am-start.txt
+          if-no-files-found: warn
+          retention-days: 14
