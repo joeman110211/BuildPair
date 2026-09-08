@@ -8,6 +8,7 @@ export type CompactNavItem = {
   onPress: () => void;
   disabled?: boolean;
   dividerBefore?: boolean;
+  sectionLabel?: string;
 };
 
 export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: CompactNavItem[]; accessibilityLabel?: string }) {
@@ -22,25 +23,18 @@ export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: 
   }
 
   return <View style={styles.wrapper}>
-    <Button
-      mode="outlined"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ expanded: open }}
-      onPress={() => setOpen((value) => !value)}
-      contentStyle={styles.buttonContent}
-    >
-      Menu
-    </Button>
+    <Button mode="outlined" accessibilityLabel={accessibilityLabel} accessibilityState={{ expanded: open }} onPress={() => setOpen((value) => !value)} contentStyle={styles.buttonContent}>Menu</Button>
     {open ? <ScrollView
       accessibilityRole="menu"
       style={[styles.panel, { maxHeight: menuMaxHeight }]}
       contentContainerStyle={styles.panelContent}
-      showsVerticalScrollIndicator
+      showsVerticalScrollIndicator={false}
       nestedScrollEnabled
       keyboardShouldPersistTaps="handled"
     >
       {items.map((item, index) => <View key={`${item.label}-${index}`}>
         {item.dividerBefore ? <View style={styles.divider} /> : null}
+        {item.sectionLabel ? <Text style={styles.sectionLabel}>{item.sectionLabel}</Text> : null}
         <Pressable
           accessibilityRole="menuitem"
           accessibilityLabel={item.label}
@@ -59,24 +53,11 @@ export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: 
 const styles = StyleSheet.create({
   wrapper: { position: 'relative', zIndex: 1000 },
   buttonContent: { minHeight: 44, paddingHorizontal: spacing.xs },
-  panel: {
-    position: 'absolute',
-    top: 52,
-    right: 0,
-    width: 285,
-    backgroundColor: colors.surfaceRaised,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
-    shadowColor: colors.charcoal,
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 12,
-  },
+  panel: { position: 'absolute', top: 52, right: 0, width: 285, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, shadowColor: colors.charcoal, shadowOpacity: 0.12, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 12 },
   panelContent: { paddingVertical: spacing.xs },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.xs },
-  item: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  sectionLabel: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: spacing.xxs },
+  item: { minHeight: 42, justifyContent: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
   itemPressed: { backgroundColor: colors.surfaceSoft },
   itemDisabled: { opacity: 0.45 },
   itemText: { color: colors.charcoal, fontWeight: '700' },
