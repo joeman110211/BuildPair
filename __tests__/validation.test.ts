@@ -32,6 +32,16 @@ describe('marketplace validation', () => {
     expect(jobSchema.parse(validJob)).toMatchObject({ category: 'Tiling', postcode: 'TW18 4AB' });
   });
 
+  it('accepts a short custom title for a direct quote request', () => {
+    const result = jobSchema.safeParse({ ...validJob, targetTraderId: 'user_test_trader', title: 'wood' });
+    expect(result.success).toBe(true);
+  });
+
+  it('still requires a useful title for an open marketplace job', () => {
+    const result = jobSchema.safeParse({ ...validJob, title: 'wood' });
+    expect(result.success).toBe(false);
+  });
+
   it('rejects an unrealistically short job description', () => {
     expect(jobSchema.safeParse({ ...validJob, description: 'Tile it please' }).success).toBe(false);
   });
