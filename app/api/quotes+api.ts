@@ -2,6 +2,7 @@ import { desc, eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { jobs, quotes, traderProfiles } from '@/db/schema';
 import { addJobEvent, createNotification } from '@/lib/notifications';
+import { paymentScheduleSchema, type PaymentStagePlan, validatePaymentSchedule } from '@/lib/payment-plan';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
@@ -38,15 +39,32 @@ async function ensureMarketplaceOfferAllowance(traderId: string, jobId: string, 
   await sql`
     INSERT INTO trader_job_offers(job_id, trader_id)
     VALUES (${jobId}, ${traderId})
-    ON CONFLICT (job_id, trader_id) DO NOTHING
+    ON CONFLICT (job_id, trader_id)
+    DO NOTHING
   `;
+}
+
+function fallbackSchedule(totalAmount: number, depositAmount: number): PaymentStagePlan[] {
+  if (depositAmount > 0 && depositAmount < totalAmount) {
+    return [
+      { key: 'deposit', title: 'Deposit', amount: depositAmount, kind: 'deposit', trigger: 'Due after the quote and payment plan are accepted.', sortOrder: 1 },
+      { key: 'final', title: 'Final payment', amount: totalAmount - depositAmount, kind: 'final', trigger: 'Due after the agreed work is complete and approved.', sortOrder: 2 },
+    ];
+  }
+  return [{ key: 'final', title: 'Full payment', amount: totalAmount, kind: 'final', trigger: 'Due after the agreed work is complete and approved.', sortOrder: 1 }];
 }
 
 export async function GET(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
     const rows = await getDb().select().from(quotes).where(eq(quotes.traderId, trader.id)).orderBy(desc(quotes.updatedAt));
-    return Response.json(rows);
+    const plans = await getSql()`
+      SELECT id, payment_schedule AS "paymentSchedule", payment_schedule_status AS "paymentScheduleStatus",
+             payment_schedule_revision AS "paymentScheduleRevision"
+      FROM quotes WHERE trader_id = ${trader.id}
+    ` as unknown as { id: string; paymentSchedule: PaymentStagePlan[]; paymentScheduleStatus: string; paymentScheduleRevision: number }[];
+    const byId = new Map(plans.map((plan) => [plan.id, plan]));
+    return Response.json(rows.map((row) => ({ ...row, ...(byId.get(row.id) ?? {}) })));
   } catch (error) { return jsonError(error); }
 }
 
@@ -58,7 +76,8 @@ export async function POST(request: Request) {
     const profile = await db.query.traderProfiles.findFirst({ where: eq(traderProfiles.userId, trader.id) });
     if (!profile) throw new HttpError(409, 'Complete your trader profile before quoting');
 
-    const payload = quoteSchema.parse(await request.json());
+    const raw = await request.json() as Record<string, unknown>;
+    const payload = quoteSchema.parse(raw);
     const job = await db.query.jobs.findFirst({ where: eq(jobs.id, payload.jobId) });
     if (!job || !['open', 'quoted'].includes(job.status)) throw new HttpError(409, 'This job is not open for quotes');
     if (job.targetTraderId && job.targetTraderId !== trader.id) throw new HttpError(403, 'This direct request belongs to another tradesperson');
@@ -76,6 +95,14 @@ export async function POST(request: Request) {
     }
 
     const totalAmount = payload.laborCost + payload.materialsCost + payload.vatAmount;
+    const suppliedSchedule = raw.paymentSchedule == null ? fallbackSchedule(totalAmount, payload.depositAmount) : paymentScheduleSchema.parse(raw.paymentSchedule);
+    let paymentSchedule: PaymentStagePlan[];
+    try {
+      paymentSchedule = validatePaymentSchedule(suppliedSchedule, totalAmount);
+    } catch (error) {
+      throw new HttpError(400, error instanceof Error ? error.message : 'Invalid payment plan');
+    }
+
     const validUntil = payload.validUntil ? new Date(payload.validUntil) : null;
     const proposedStartAt = payload.proposedStartAt ? new Date(payload.proposedStartAt) : null;
     const quoteValues = {
@@ -101,6 +128,17 @@ export async function POST(request: Request) {
         set: { ...quoteValues, status: 'pending', updatedAt: new Date() },
       }).returning();
     if (!quote) throw new Error('Quote could not be saved');
+
+    await getSql()`
+      UPDATE quotes
+      SET payment_schedule = ${JSON.stringify(paymentSchedule)}::jsonb,
+          payment_schedule_status = 'proposed',
+          payment_schedule_revision = payment_schedule_revision + 1,
+          payment_schedule_updated_by = ${trader.id},
+          updated_at = now()
+      WHERE id = ${quote.id}
+    `;
+
     await db.update(jobs).set({ status: 'quoted', updatedAt: new Date() }).where(eq(jobs.id, payload.jobId));
 
     const conversations = await getSql()`
@@ -111,15 +149,15 @@ export async function POST(request: Request) {
       RETURNING id
     ` as unknown as { id: string }[];
 
-    await addJobEvent(payload.jobId, trader.id, 'quote_received', 'Quote received', `${profile.businessName} submitted a quote.`, { quoteId: quote.id, totalAmount });
+    await addJobEvent(payload.jobId, trader.id, 'quote_received', 'Quote received', `${profile.businessName} submitted a quote with ${paymentSchedule.length} payment stage${paymentSchedule.length === 1 ? '' : 's'}.`, { quoteId: quote.id, totalAmount });
     await createNotification(job.customerId, {
       type: 'quote_received',
       title: `New quote from ${profile.businessName}`,
-      body: `A quote for ${job.title} is ready to compare.`,
+      body: `A quote for ${job.title} is ready to compare, including the proposed payment stages.`,
       href: `/customer/compare/${job.id}`,
       email: true,
     });
 
-    return Response.json({ ...quote, conversationId: conversations[0]?.id ?? null }, { status: 201 });
+    return Response.json({ ...quote, paymentSchedule, paymentScheduleStatus: 'proposed', conversationId: conversations[0]?.id ?? null }, { status: 201 });
   } catch (error) { return jsonError(error); }
 }
