@@ -11,7 +11,7 @@ type MilestoneRow = {
   jobTitle: string;
   title: string;
   kind: 'materials' | 'deposit' | 'stage' | 'final';
-  status: 'pending' | 'completed' | 'paid';
+  status: 'pending' | 'funded' | 'completed' | 'paid' | 'disputed';
   sortOrder: number;
   paymentMode: 'undecided' | 'buildpair' | 'external';
 };
@@ -34,33 +34,42 @@ export async function PATCH(request: Request) {
     ` as unknown as MilestoneRow[];
     const milestone = rows[0];
     if (!milestone || milestone.traderId !== trader.id) throw new HttpError(404, 'Payment stage not found');
-    if (milestone.status === 'paid') throw new HttpError(409, 'This payment stage is already paid');
-    if (milestone.kind === 'materials' || milestone.kind === 'deposit') throw new HttpError(409, 'Upfront materials and deposits do not need a work-complete confirmation');
+    if (milestone.status === 'paid') throw new HttpError(409, 'This payment stage is already released');
+    if (milestone.status === 'disputed') throw new HttpError(409, 'This payment stage is paused because an issue has been raised');
+    if (milestone.kind === 'materials') throw new HttpError(409, 'Materials payments are released when the homeowner makes the agreed materials payment');
     if (milestone.paymentMode === 'undecided') throw new HttpError(409, 'The homeowner must choose how payments will be managed before stages can progress');
 
-    if (milestone.paymentMode === 'buildpair') {
-      const earlier = await getSql()`
-        SELECT title, status FROM job_milestones
-        WHERE job_id = ${milestone.jobId} AND sort_order < ${milestone.sortOrder}
-        ORDER BY sort_order ASC
-      ` as unknown as { title: string; status: string }[];
-      const unpaid = earlier.find((stage) => stage.status !== 'paid');
-      if (unpaid) throw new HttpError(409, `${unpaid.title} must be paid before this stage can be completed`);
+    const earlier = await getSql()`
+      SELECT title, status FROM job_milestones
+      WHERE job_id = ${milestone.jobId} AND sort_order < ${milestone.sortOrder}
+      ORDER BY sort_order ASC
+    ` as unknown as { title: string; status: string }[];
+    const unfinished = earlier.find((stage) => stage.status !== 'paid');
+    if (unfinished) throw new HttpError(409, `${unfinished.title} must be completed before this stage can progress`);
+
+    if (milestone.paymentMode === 'buildpair' && milestone.status !== 'funded') {
+      throw new HttpError(409, 'The homeowner must fund this agreed stage through BuildPair before you can request release');
     }
+    if (milestone.paymentMode === 'external' && milestone.status !== 'pending') throw new HttpError(409, 'This stage cannot be completed at its current state');
 
     await getSql()`
       UPDATE job_milestones
-      SET status = 'completed', completed_at = COALESCE(completed_at, now())
-      WHERE id = ${milestone.id} AND status = 'pending'
+      SET status = 'completed', completed_at = COALESCE(completed_at, now()), release_requested_at = CASE WHEN ${milestone.paymentMode} = 'buildpair' THEN now() ELSE release_requested_at END
+      WHERE id = ${milestone.id}
     `;
-    await addJobEvent(milestone.jobId, trader.id, 'payment_stage_completed', `${milestone.title} marked complete`, 'The tradesperson marked this agreed payment stage complete.', { milestoneId: milestone.id });
+    const description = milestone.paymentMode === 'buildpair'
+      ? 'The tradesperson marked the agreed trigger complete and requested release of the funded stage.'
+      : 'The tradesperson marked this agreed stage complete. Payment remains a private arrangement outside BuildPair.';
+    await addJobEvent(milestone.jobId, trader.id, 'payment_stage_completed', `${milestone.title} marked complete`, description, { milestoneId: milestone.id });
     await createNotification(milestone.customerId, {
       type: 'payment_stage_completed',
-      title: `${milestone.title} is ready for review`,
-      body: `${milestone.jobTitle}: the tradesperson says this stage is complete. Review it before making the stage payment.`,
+      title: milestone.paymentMode === 'buildpair' ? `${milestone.title} is ready for approval` : `${milestone.title} marked complete`,
+      body: milestone.paymentMode === 'buildpair'
+        ? `${milestone.jobTitle}: the tradesperson says the agreed trigger is complete. Review the work, then approve release or raise an issue.`
+        : `${milestone.jobTitle}: the tradesperson marked this stage complete. BuildPair is not processing the private payment.`,
       href: `/customer/jobs/${milestone.jobId}`,
       email: true,
     });
-    return Response.json({ completed: true });
+    return Response.json({ completed: true, releaseRequested: milestone.paymentMode === 'buildpair' });
   } catch (error) { return jsonError(error); }
 }
