@@ -66,12 +66,14 @@ export async function GET(request: Request) {
     const resetRows = await getSql()`
       SELECT (date_trunc('month', now()) + interval '1 month') AS "resetAt"
     ` as unknown as { resetAt: string }[];
+    const payoutRows = await getSql()`SELECT stripe_payouts_enabled AS "stripePayoutsEnabled" FROM trader_profiles WHERE user_id = ${trader.id} LIMIT 1` as unknown as { stripePayoutsEnabled: boolean }[];
 
     const normalisedCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
     const active = hasActiveLeadAccess(profile);
     return Response.json({
       ...profile,
       ...(showcase ?? {}),
+      stripePayoutsEnabled: payoutRows[0]?.stripePayoutsEnabled ?? false,
       tradeCategories: normalisedCategories,
       isSubscriptionActive: active,
       categoryLimit: traderWorkTypeLimit(profile),
