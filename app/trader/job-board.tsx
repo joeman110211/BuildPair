@@ -86,7 +86,7 @@ export default function TraderJobBoard() {
   const allowanceUsed = limit > 0 && used >= limit;
   const resetLabel = profile?.monthlyQuoteResetAt ? new Date(profile.monthlyQuoteResetAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'next month';
 
-  return <Screen title="Job Board" subtitle="Browse work matching your trades and service area. Starter can look; Plus and Pro can open a real offer conversation.">
+  return <Screen title="Job Board" subtitle="Browse work matching your trades and service area. Direct requests can move straight to a quote or to a site visit first when the job needs inspecting.">
     <AppCard>
       <View style={styles.usageTop}>
         <View style={styles.flex}>
@@ -122,6 +122,7 @@ export default function TraderJobBoard() {
         {job.photos?.[0] ? <Image source={{ uri: job.photos[0] }} style={styles.photo} /> : null}
         <View style={styles.meta}><Chip compact icon="home-outline">{job.propertyType}</Chip><Chip compact icon="clock-outline">{job.urgency}</Chip><Chip compact>{job.category}</Chip></View>
         <Text numberOfLines={4} style={styles.description}>{job.description}</Text>
+        {direct && !ownQuote ? <Text variant="bodySmall" style={styles.nextHint}>Next step: quote now if you have enough information, or arrange a site visit before quoting if you need to inspect the job.</Text> : null}
         <View style={styles.actions}>
           {job.isPreview ? <Button mode="outlined" disabled>Example only</Button> : <>
             <Button
@@ -131,7 +132,8 @@ export default function TraderJobBoard() {
               disabled={!canOpen || openingJobId === job.id}
               onPress={() => void openOffer(job)}
             >{conversation ? 'Open Conversation' : direct ? 'Open Direct Request' : blockedByPlan ? 'Plus or Pro required' : blockedByAllowance ? `${used}/${limit} offers used` : 'Offer / Message'}</Button>
-            {conversation || ownQuote ? <Button mode="outlined" icon="file-document-edit-outline" onPress={() => router.push({ pathname: '/trader/quotes/new', params: { jobId: job.id, title: job.title } })}>{ownQuote ? 'Update Quote' : 'Create Quote'}</Button> : null}
+            {conversation || ownQuote ? <Button mode="outlined" icon="file-document-edit-outline" onPress={() => router.push({ pathname: '/trader/quotes/new', params: { jobId: job.id, title: job.title } })}>{ownQuote ? 'Update Quote' : 'Quote now'}</Button> : null}
+            {conversation && !ownQuote ? <Button mode="outlined" icon="calendar-account-outline" onPress={() => router.push({ pathname: '/trader/visits/new', params: { jobId: job.id, conversationId: conversation.id, title: job.title } } as Href)}>Visit before quote</Button> : null}
             {(blockedByPlan || blockedByAllowance) ? <Button mode="text" onPress={() => router.push('/trader/subscription')}>{blockedByAllowance && profile?.subscriptionTier === 'basic' ? 'Upgrade to Pro' : 'View plans'}</Button> : null}
           </>}
         </View>
@@ -155,6 +157,7 @@ const styles = StyleSheet.create({
   photo: { width: '100%', height: 210, borderRadius: 14, backgroundColor: colors.border },
   meta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   description: { color: colors.text, lineHeight: 22 },
+  nextHint: { color: colors.primaryDark, fontWeight: '800', lineHeight: 20 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   error: { color: colors.danger },
   limitText: { color: colors.warning, fontWeight: '700' },
