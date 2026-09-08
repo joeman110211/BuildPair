@@ -17,6 +17,7 @@ type ConversationRow = {
   otherUserId: string;
   lastMessage: string | null;
   lastMessageAt: string;
+  unreadCount: number;
 };
 
 type JobRow = {
@@ -56,7 +57,8 @@ export async function GET(request: Request) {
                  c.trader_id AS "traderId",
                  c.trader_id AS "otherUserId",
                  (SELECT m.body FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) AS "lastMessage",
-                 c.last_message_at AS "lastMessageAt"
+                 c.last_message_at AS "lastMessageAt",
+                 (SELECT count(*)::int FROM messages m WHERE m.conversation_id = c.id AND m.sender_id <> ${userId} AND m.read_at IS NULL) AS "unreadCount"
           FROM conversations c
           JOIN jobs j ON j.id = c.job_id
           WHERE c.customer_id = ${userId}
@@ -71,7 +73,8 @@ export async function GET(request: Request) {
                  c.trader_id AS "traderId",
                  c.customer_id AS "otherUserId",
                  (SELECT m.body FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) AS "lastMessage",
-                 c.last_message_at AS "lastMessageAt"
+                 c.last_message_at AS "lastMessageAt",
+                 (SELECT count(*)::int FROM messages m WHERE m.conversation_id = c.id AND m.sender_id <> ${userId} AND m.read_at IS NULL) AS "unreadCount"
           FROM conversations c
           JOIN jobs j ON j.id = c.job_id
           WHERE c.trader_id = ${userId}
