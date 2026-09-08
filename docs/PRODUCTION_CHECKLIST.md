@@ -1,22 +1,25 @@
 # BuildPair production checklist
 
-Status reviewed: 7 September 2026.
+Status reviewed: 8 September 2026.
 
 The detailed current launch gate is in `docs/PRODUCTION_LAUNCH_2026.md`. This checklist is the shorter operational view. A green build proves that code compiles and tests pass; it does not make third-party services, app stores, payments, hosting, legal obligations or real-device testing disappear.
 
-## Completed in the repository
+## Completed in the repository / current production shape
 
 - [x] Final public product name is BuildPair in user-facing application configuration and copy.
 - [x] GitHub repository is `joeman110211/BuildPair`.
 - [x] Native identifiers use `uk.co.buildpair.app` and the `buildpair://` URL scheme.
+- [x] `https://www.buildpair.co.uk` is the canonical public production web/API origin and the root domain redirects to `www`.
+- [x] Docker/Caddy production infrastructure and the production deployment script exist; the Chromebook is not the intended public production host.
+- [x] The public host blocks `/admin` and `/api/admin/*`; admin is designed for the dedicated `admin.buildpair.co.uk` hostname.
 - [x] Public BuildPair landing page, directory, public jobs and public trader profiles exist.
 - [x] Public About, How It Works, Homeowner, Tradesperson, Download and Contact pages exist.
 - [x] Public Terms, Privacy, Cookie and Marketplace Disclaimer pages exist.
 - [x] One Clerk login can enable separate Homeowner and Tradesperson modes.
 - [x] Email/password + verification-code auth is implemented.
-- [x] Google and Facebook SSO support is implemented in the native auth path; production provider configuration still needs final verification.
+- [x] Google and Facebook SSO support is implemented in the native auth path; production provider configuration still needs final verification where those providers are enabled.
 - [x] Phone OTP is not required for launch.
-- [x] Trader onboarding has four steps, a visible 50-character bio minimum, visible skill selection and Save & Publish routing.
+- [x] Trader onboarding has four steps, a visible 50-character bio minimum, visible category/service selection and Save & Publish routing.
 - [x] Current commercial model has Starter Free, Plus and Pro with no automatic free trial.
 - [x] Smart related-term trade search and grouped trade categories/services are implemented.
 - [x] Postcode geocoding and privacy-safe outward-code public job locations are implemented.
@@ -31,23 +34,22 @@ The detailed current launch gate is in `docs/PRODUCTION_LAUNCH_2026.md`. This ch
 - [x] Health and readiness endpoints exist.
 - [x] GitHub Quality CI covers lint, TypeScript, unit tests, web export, Android export, iOS export and production dependency audit.
 - [x] GitHub Actions Android release build support exists.
-- [x] Docker/Caddy production infrastructure and production deployment script exist.
 - [x] Live Stripe Plus and Pro monthly products/prices have been created.
 
 ## Current launch blockers / work in progress
 
-- [ ] Bring the browser E2E suite into line with the current Clerk web components and current subscription entitlements without weakening production security rules.
-- [ ] Re-run the complete browser journey against the exact target deployment and retain passing evidence.
-- [ ] Re-test the reported real-device scrolling/reachability problem on trader onboarding and post-a-job screens. The latest automated small-Android reachability checks passed, so this needs device/browser reproduction rather than a blind layout rewrite.
-- [ ] Move public production from Chromebook staging infrastructure to an always-on production Linux host.
-- [ ] Point `buildpair.co.uk` / `www.buildpair.co.uk` at the public production environment and verify TLS/redirects.
-- [ ] Configure production Clerk origin/redirect/provider settings for web and native callbacks.
-- [ ] Confirm the production database has every migration applied and take a recovery point/backup before public traffic.
+- [ ] Keep the browser E2E suite aligned with the current Clerk web components and current subscription entitlements without weakening production security rules.
+- [ ] Re-run the complete browser journey against the exact target deployment and retain passing evidence for the SHA being promoted.
+- [ ] Re-test the reported real-device scrolling/reachability problem on trader onboarding and post-a-job screens. The shared mobile footer now lives inside the scrollable content and the latest automated small-Android reachability checks cover both flows, so any remaining failure needs device/browser reproduction rather than a blind layout rewrite.
+- [ ] Resolve public DNS for `admin.buildpair.co.uk`, then re-run the dedicated Admin Android APK workflow. Its current pre-build client-config check cannot resolve that hostname, so the APK has not yet reached the Gradle build stage.
+- [ ] Record the exact Git SHA deployed to public production for each release and compare it with the approved GitHub `main` SHA.
+- [ ] Verify production Clerk origin/redirect/provider settings for web and native callbacks after each auth/provider configuration change.
+- [ ] Confirm the production database has every migration applied and take a recovery point/backup before wider public traffic.
 - [ ] Confirm database restore/PITR capability and document the restore procedure.
 - [ ] Configure a protected scheduler for credential-expiry maintenance using a strong `CRON_SECRET`.
 - [ ] Add production error reporting, centralised logs, uptime monitoring and payment/email/database alerts with personal-data scrubbing.
 - [ ] Add hosting-level WAF/rate-limit rules around abuse-sensitive public, AI and authenticated-write endpoints.
-- [ ] Ensure production runs with `BUILDPAIR_PREVIEW_DATA_ENABLED=false` and does not present demo accounts/jobs as real customers.
+- [ ] Keep `BUILDPAIR_PREVIEW_DATA_ENABLED=false` in production. The application also hard-blocks bundled preview fixtures on canonical production hostnames as defence in depth.
 - [ ] Remove quiet-launch `noindex, nofollow` only when BuildPair is deliberately ready for search-engine discovery.
 
 ## Payments
@@ -57,14 +59,14 @@ The live monthly Stripe catalogue currently contains:
 - BuildPair Plus £19.99/month: `price_1UCqAM8bTbZf5Cph1OFqiYPT`
 - BuildPair Pro £29.99/month: `price_1UCqC88bTbZf5CphvqAmDTnC`
 
-Before enabling public paid traffic:
+Before enabling wider public paid traffic:
 
 - [ ] Configure the production Stripe publishable/secret keys only in the correct production environments.
 - [ ] Map the live Plus/Pro price IDs to `STRIPE_BASIC_PRICE_ID` / `STRIPE_FEATURED_PRICE_ID`.
 - [ ] Configure and verify platform and Connect webhook destinations/signing secrets on `https://www.buildpair.co.uk/api/stripe/webhook`.
 - [ ] Configure and verify Billing Portal behaviour.
 - [ ] Test subscription start, upgrade, downgrade, cancellation, failed renewal and portal access.
-- [ ] Test successful, declined, 3DS, cancelled, duplicate-webhook and refunded job payments before public traffic.
+- [ ] Test successful, declined, 3DS, cancelled, duplicate-webhook and refunded job payments before public paid traffic.
 - [ ] Test Connect onboarding including incomplete verification and disabled-payment states.
 - [ ] Confirm the 5% marketplace platform-fee policy and decide who absorbs Stripe processing fees.
 - [ ] Confirm actual UK VAT-registration status before enabling VAT collection or VAT claims.
@@ -76,7 +78,7 @@ Before enabling public paid traffic:
 - [x] BuildPair app icons/splash assets and native build path exist.
 - [x] EAS production profile builds an Android App Bundle.
 - [x] EAS production profile is pinned to the EAS production environment.
-- [ ] Configure production EAS public environment values without exposing server secrets to the bundle.
+- [ ] Configure/verify production EAS public environment values without exposing server secrets to the bundle.
 - [ ] Generate/confirm Android release signing credentials.
 - [ ] Produce a signed production AAB and install a QA APK on physical Android hardware.
 - [ ] Verify deep links and Clerk/Stripe return URLs from cold and warm app states.
@@ -88,7 +90,7 @@ Before enabling public paid traffic:
 - [x] iOS bundle identifier is `uk.co.buildpair.app`.
 - [x] Shared Expo/React Native codebase and iOS export checks exist.
 - [x] EAS production profile is pinned to the EAS production environment.
-- [ ] Configure production EAS public environment values without exposing server secrets to the bundle.
+- [ ] Configure/verify production EAS public environment values without exposing server secrets to the bundle.
 - [ ] Configure Apple Developer signing and App Store Connect app record.
 - [ ] Produce an iOS production/TestFlight build.
 - [ ] Verify deep links and Clerk/Stripe return URLs from cold and warm app states.
@@ -107,16 +109,16 @@ Before enabling public paid traffic:
 
 ## Release evidence
 
-Do not call BuildPair production-ready until there is evidence for the exact release being shipped:
+Do not call BuildPair release-ready for wider promotion until there is evidence for the exact release being shipped:
 
 - [ ] exact production Git SHA recorded,
 - [ ] Quality CI green,
 - [ ] production-safe browser smoke/E2E evidence retained,
 - [ ] production health/readiness green,
 - [ ] database backup and restore readiness confirmed,
-- [ ] low-value live Stripe smoke test completed and reconciled appropriately,
+- [ ] low-value live Stripe smoke test completed and reconciled appropriately before paid launch,
 - [ ] Android signed build installed/tested,
-- [ ] iOS TestFlight/App Store build tested,
+- [ ] iOS TestFlight/App Store build tested before iOS release,
 - [ ] monitoring and alerts confirmed working.
 
 ## Intentional historical internal names
