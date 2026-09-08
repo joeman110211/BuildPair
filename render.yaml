@@ -1,0 +1,71 @@
+services:
+  - type: web
+    name: buildpair-web
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    dockerfilePath: ./infra/production/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    maxShutdownDelaySeconds: 15
+    autoDeployTrigger: commit
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: NODE_ENV
+        value: production
+      - key: EXPO_PUBLIC_API_URL
+        value: https://www.buildpair.co.uk
+      - key: APP_URL
+        value: https://www.buildpair.co.uk
+      - key: BUILDPAIR_ADMIN_HOST
+        value: admin.buildpair.co.uk
+      - key: BUILDPAIR_PREVIEW_DATA_ENABLED
+        value: "false"
+      - key: BUILDPAIR_NOINDEX
+        value: "true"
+      - key: PLATFORM_FEE_PERCENT
+        value: "5"
+      - key: INVOICE_FROM_EMAIL
+        value: "BuildPair <info@buildpair.co.uk>"
+      - key: SUPPORT_EMAIL
+        value: info@buildpair.co.uk
+      - key: CLOUDINARY_CLOUD_NAME
+        value: qrrcn7ma
+      - key: EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME
+        value: qrrcn7ma
+
+      # Client-safe values that must exist while Expo builds the web bundle.
+      - key: EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        sync: false
+
+      # Server-side credentials. Render prompts for these during initial Blueprint setup.
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_BASIC_PRICE_ID
+        sync: false
+      - key: STRIPE_FEATURED_PRICE_ID
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_CONNECT_WEBHOOK_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: ADMIN_CLERK_USER_IDS
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CRON_SECRET
+        generateValue: true
