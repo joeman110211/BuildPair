@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { addJobEvent, createNotification } from '@/lib/notifications';
-import { transferAmountForStage } from '@/lib/payment-protection';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { getStripe } from '@/lib/stripe';
@@ -31,6 +30,30 @@ type ReleaseRow = {
   stripeChargeId: string | null;
   stripeTransferId: string | null;
 };
+
+async function stripeProcessingFeeForCharge(chargeId: string) {
+  const stripe = getStripe();
+  const charge = await stripe.charges.retrieve(chargeId, { expand: ['balance_transaction'] });
+  const transaction = charge.balance_transaction;
+  if (!transaction) return 0;
+  if (typeof transaction === 'string') {
+    const balanceTransaction = await stripe.balanceTransactions.retrieve(transaction);
+    return Math.max(0, balanceTransaction.fee);
+  }
+  return Math.max(0, transaction.fee);
+}
+
+async function actualStripeProcessingFeesForJob(jobId: string) {
+  const rows = await getSql()`
+    SELECT DISTINCT stripe_charge_id AS "stripeChargeId"
+    FROM payments
+    WHERE job_id = ${jobId} AND stripe_charge_id IS NOT NULL
+  ` as unknown as { stripeChargeId: string }[];
+  const chargeIds = rows.map((row) => row.stripeChargeId).filter(Boolean);
+  if (chargeIds.length === 0) return 0;
+  const fees = await Promise.all(chargeIds.map((chargeId) => stripeProcessingFeeForCharge(chargeId)));
+  return fees.reduce((total, fee) => total + fee, 0);
+}
 
 export async function POST(request: Request) {
   try {
@@ -80,27 +103,72 @@ export async function POST(request: Request) {
     if (!row.stripeChargeId) throw new HttpError(409, 'Stripe charge reference is not ready yet. Refresh and try again.');
     if (row.stripeTransferId) throw new HttpError(409, 'This stage has already been released');
 
-    let transferAmount: number;
-    try { transferAmount = transferAmountForStage(row.milestoneKind, row.paymentAmount ?? row.milestoneAmount, row.quoteTotal); }
-    catch (error) { throw new HttpError(409, error instanceof Error ? error.message : 'Payment schedule cannot be released'); }
-    if (transferAmount <= 0) throw new HttpError(409, 'The final payment does not leave a positive tradesperson payout after the BuildPair fee');
+    const grossStageAmount = row.paymentAmount ?? row.milestoneAmount;
+    const buildPairFee = row.milestoneKind === 'final' ? Math.max(0, row.platformFee ?? 0) : 0;
+    let stripeProcessingFees = 0;
+    if (row.milestoneKind === 'final') {
+      try {
+        stripeProcessingFees = await actualStripeProcessingFeesForJob(row.jobId);
+      } catch (error) {
+        console.error('Unable to calculate actual Stripe processing fees before final release', error);
+        throw new HttpError(503, 'Stripe fee information is not available yet. Refresh and try the final release again shortly.');
+      }
+    }
 
-    const transfer = await getStripe().transfers.create({
+    const transferAmount = grossStageAmount - buildPairFee - stripeProcessingFees;
+    if (transferAmount <= 0) throw new HttpError(409, 'The final payment is too small to cover the recorded Stripe costs and BuildPair fee. The payment schedule must be reviewed before release.');
+
+    const stripe = getStripe();
+    const transfer = await stripe.transfers.create({
       amount: transferAmount,
       currency: 'gbp',
       destination: row.stripeAccountId,
       source_transaction: row.stripeChargeId,
       transfer_group: `buildpair_job_${row.jobId}`,
-      metadata: { buildpairJobId: row.jobId, milestoneId: row.milestoneId, traderId: row.traderId, approvedBy: customer.id },
+      metadata: {
+        buildpairJobId: row.jobId,
+        milestoneId: row.milestoneId,
+        traderId: row.traderId,
+        approvedBy: customer.id,
+        grossStageAmount: String(grossStageAmount),
+        buildPairFeeAmount: String(buildPairFee),
+        stripeProcessingFeesRecovered: String(stripeProcessingFees),
+        netTraderTransfer: String(transferAmount),
+      },
     }, { idempotencyKey: `buildpair-release-${row.milestoneId}-${row.stripePaymentIntentId}` });
 
     await getSql()`UPDATE payments SET status = 'released', stripe_transfer_id = ${transfer.id}, released_at = now() WHERE id = ${row.paymentId} AND status = 'funded'`;
     await getSql()`UPDATE job_milestones SET status = 'paid', paid_at = now(), release_approved_at = now(), release_approved_by = ${customer.id}, payment_method = 'stripe', payment_confirmed_by = ${customer.id} WHERE id = ${row.milestoneId}`;
-    await addJobEvent(row.jobId, customer.id, 'payment_stage_released', `${row.milestoneTitle} approved and released`, `The homeowner approved release of £${((row.paymentAmount ?? row.milestoneAmount) / 100).toFixed(2)} through Stripe.`, { milestoneId: row.milestoneId, stripeTransferId: transfer.id, platformFee: row.platformFee ?? 0 });
+    const releaseDetail = row.milestoneKind === 'final'
+      ? `The homeowner approved the £${(grossStageAmount / 100).toFixed(2)} final stage. Stripe was instructed to transfer £${(transferAmount / 100).toFixed(2)} to the tradesperson after £${(stripeProcessingFees / 100).toFixed(2)} of recorded Stripe processing costs and the £${(buildPairFee / 100).toFixed(2)} BuildPair service fee.`
+      : `The homeowner approved release of £${(grossStageAmount / 100).toFixed(2)} through Stripe.`;
+    await addJobEvent(row.jobId, customer.id, 'payment_stage_released', `${row.milestoneTitle} approved and released`, releaseDetail, {
+      milestoneId: row.milestoneId,
+      stripeTransferId: transfer.id,
+      grossStageAmount,
+      platformFee: buildPairFee,
+      stripeProcessingFees,
+      netTraderTransfer: transferAmount,
+    });
     await Promise.allSettled([
-      createNotification(row.traderId, { type: 'payment_released', title: `${row.milestoneTitle} released`, body: `${row.jobTitle}: the homeowner approved this stage and BuildPair instructed Stripe to transfer your payout.`, href: `/trader/jobs/${row.jobId}`, email: true }),
+      createNotification(row.traderId, {
+        type: 'payment_released',
+        title: `${row.milestoneTitle} released`,
+        body: row.milestoneKind === 'final'
+          ? `${row.jobTitle}: £${(transferAmount / 100).toFixed(2)} was released after the recorded Stripe processing costs and BuildPair service fee.`
+          : `${row.jobTitle}: the homeowner approved this stage and BuildPair instructed Stripe to transfer £${(transferAmount / 100).toFixed(2)}.`,
+        href: `/trader/jobs/${row.jobId}`,
+        email: true,
+      }),
       createNotification(customer.id, { type: 'payment_released', title: 'Stage payment released', body: `${row.jobTitle}: ${row.milestoneTitle.toLowerCase()} is recorded as approved and released.`, href: `/customer/jobs/${row.jobId}` }),
     ]);
-    return Response.json({ released: true, transferId: transfer.id });
+    return Response.json({
+      released: true,
+      transferId: transfer.id,
+      grossStageAmount,
+      buildPairFee,
+      stripeProcessingFees,
+      netTraderTransfer: transferAmount,
+    });
   } catch (error) { return jsonError(error); }
 }
