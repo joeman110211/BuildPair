@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { STRIPE_GBP_MINIMUM } from '@/lib/payment-protection';
+import { platformFeeAmount } from '@/lib/platform-fee';
 
 export const paymentStageKindSchema = z.enum(['materials', 'deposit', 'stage', 'final']);
 
@@ -22,5 +24,11 @@ export function validatePaymentSchedule(schedule: PaymentStagePlan[], totalAmoun
   const finalStages = sorted.filter((stage) => stage.kind === 'final');
   if (finalStages.length !== 1) throw new Error('Payment plan must contain exactly one final payment stage.');
   if (sorted.at(-1)?.kind !== 'final') throw new Error('The final payment must be the last payment stage.');
+  if (sorted.some((stage) => stage.amount < STRIPE_GBP_MINIMUM)) throw new Error('Each payment stage must be at least £0.30 if the job may use BuildPair payments.');
+  const finalStage = finalStages[0];
+  const fee = platformFeeAmount(totalAmount);
+  if (finalStage.amount <= fee) throw new Error(`The final payment must be more than the BuildPair transaction fee (£${(fee / 100).toFixed(2)}) so a positive final payout remains.`);
+  const workStages = sorted.filter((stage) => stage.kind === 'stage');
+  if (workStages.some((stage) => stage.trigger.trim().length < 3)) throw new Error('Each progress stage needs a clear completion point before it can be funded and released.');
   return sorted;
 }
