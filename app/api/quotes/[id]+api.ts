@@ -35,6 +35,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       if (!modes.customerEnabled || candidate.job.customerId !== userId) throw new HttpError(403, 'Customer account required');
       if (candidate.quote.status !== 'pending' || !['open', 'quoted'].includes(candidate.job.status)) throw new HttpError(409, 'This quote can no longer be declined');
       await db.update(quotes).set({ status: 'declined', updatedAt: new Date() }).where(eq(quotes.id, id));
+      await db.update(jobs).set({ status: 'open', updatedAt: new Date() }).where(and(eq(jobs.id, candidate.job.id), isNull(jobs.acceptedQuoteId), sql`not exists (select 1 from quotes q where q.job_id = ${candidate.job.id} and q.status = 'pending')`));
       await addJobEvent(candidate.job.id, userId, 'quote_declined', 'Quote declined', 'The homeowner declined this quote.', { quoteId: id, traderId: candidate.quote.traderId });
       await createNotification(candidate.quote.traderId, { type: 'quote_declined', title: 'Your quote was declined', body: `${candidate.job.title}: the homeowner has declined this quote.`, href: '/trader/my-jobs', email: true });
       return Response.json({ declined: true });
