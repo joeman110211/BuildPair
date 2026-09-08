@@ -27,6 +27,18 @@ const validTraderProfile = {
   selfCertified: true as const,
 };
 
+const validQuote = {
+  jobId: '10000000-0000-4000-8000-000000000001',
+  laborCost: 100000,
+  materialsCost: 50000,
+  vatAmount: 0,
+  depositAmount: 30000,
+  paymentTerms: '£300 deposit with the balance due on completion',
+  scope: 'Remove the existing wall tiles, prepare the background and install the agreed new tiles with grout and silicone finish.',
+  durationDays: 5,
+  proposedStartAt: '2099-01-10T12:00:00.000Z',
+};
+
 describe('marketplace validation', () => {
   it('accepts a valid customer job', () => {
     expect(jobSchema.parse(validJob)).toMatchObject({ category: 'Tiling', postcode: 'TW18 4AB' });
@@ -47,27 +59,27 @@ describe('marketplace validation', () => {
   });
 
   it('rejects a quote where the deposit consumes the whole total', () => {
-    const result = quoteSchema.safeParse({
-      jobId: '10000000-0000-4000-8000-000000000001',
-      laborCost: 100000,
-      materialsCost: 50000,
-      vatAmount: 0,
-      depositAmount: 150000,
-      paymentTerms: 'Balance on completion',
-    });
+    const result = quoteSchema.safeParse({ ...validQuote, depositAmount: 150000 });
     expect(result.success).toBe(false);
   });
 
-  it('accepts a sensible staged quote', () => {
-    const result = quoteSchema.safeParse({
-      jobId: '10000000-0000-4000-8000-000000000001',
-      laborCost: 100000,
-      materialsCost: 50000,
-      vatAmount: 0,
-      depositAmount: 30000,
-      paymentTerms: '£300 deposit with the balance due on completion',
-    });
-    expect(result.success).toBe(true);
+  it('accepts a sensible staged quote with a clear scope and programme', () => {
+    expect(quoteSchema.safeParse(validQuote).success).toBe(true);
+  });
+
+  it('requires at least 50 characters in the included scope', () => {
+    const result = quoteSchema.safeParse({ ...validQuote, scope: 'Tile bathroom walls.' });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues.some((issue) => issue.message.includes('at least 50 characters'))).toBe(true);
+  });
+
+  it('only accepts estimated durations from the fixed quote options', () => {
+    expect(quoteSchema.safeParse({ ...validQuote, durationDays: 13 }).success).toBe(false);
+    expect(quoteSchema.safeParse({ ...validQuote, durationDays: 14 }).success).toBe(true);
+  });
+
+  it('requires a future proposed start date', () => {
+    expect(quoteSchema.safeParse({ ...validQuote, proposedStartAt: '2020-01-01T12:00:00.000Z' }).success).toBe(false);
   });
 
   it('accepts a complete trader profile ready for publication', () => {
