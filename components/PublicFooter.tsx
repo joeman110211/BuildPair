@@ -28,6 +28,7 @@ const linkGroups = [
     title: 'BuildPair',
     links: [
       ['Membership', '/(public)/pricing'],
+      ['How staged payments work', '/(public)/payments'],
       ['About us', '/(public)/about'],
       ['Download app', '/(public)/download'],
       ['Marketplace standards', '/(public)/marketplace-standards'],
@@ -51,8 +52,8 @@ export function PublicFooter() {
       <View style={styles.brandBlock}>
         <Text variant="headlineSmall" style={styles.brand}>BuildPair</Text>
         <Text style={styles.tagline}>From “who do I need?” to “job complete”.</Text>
-        <Text style={styles.description}>A UK marketplace and project workflow connecting homeowners with local tradespeople, keeping search, quotes, messages, changes, payment stages and reputation in one place.</Text>
-        <Text style={styles.description}>Public advice and official building-rules links remain available whether or not you have a paid membership.</Text>
+        <Text style={styles.description}>A UK marketplace and project workflow connecting homeowners with local tradespeople, keeping search, quotes, messages, approved changes, staged payments and reputation in one place.</Text>
+        <Text style={styles.description}>Payments can stay inside the BuildPair project through Stripe, or users can choose a private payment arrangement with reduced platform payment controls.</Text>
         <View style={styles.contactPill}><Text style={styles.contactText}>info@buildpair.co.uk</Text></View>
       </View>
       {linkGroups.map((group) => <View key={group.title} style={styles.group}>
@@ -62,7 +63,7 @@ export function PublicFooter() {
     </View>
     <View style={styles.bottom}>
       <Text style={styles.small}>© {new Date().getFullYear()} BuildPair. All rights reserved.</Text>
-      <Text style={styles.small}>BuildPair provides marketplace and project-management technology. It does not carry out building work, provide building-control approval or replace checks required for regulated work.</Text>
+      <Text style={styles.small}>BuildPair provides marketplace, project-management and payment-workflow technology. It does not carry out building work, provide building-control approval, guarantee workmanship or describe its staged-payment service as legal escrow.</Text>
     </View>
   </View>;
 }
