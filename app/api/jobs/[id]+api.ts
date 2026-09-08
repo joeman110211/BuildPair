@@ -1,6 +1,6 @@
-import { and, eq, inArray, isNull, ne } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { getDb } from '@/db/client';
-import { jobMilestones, jobs, quotes, reviews, traderProfiles } from '@/db/schema';
+import { jobs, quotes, reviews, traderProfiles } from '@/db/schema';
 import { addJobEvent, createNotification } from '@/lib/notifications';
 import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
@@ -15,7 +15,14 @@ export async function GET(request: Request, { id }: { id: string }) {
     const accepted = job.acceptedQuoteId ? await db.query.quotes.findFirst({ where: eq(quotes.id, job.acceptedQuoteId) }) : null;
     const allowed = job.customerId === userId || accepted?.traderId === userId;
     if (!allowed) throw new HttpError(403, 'You cannot access this job');
-    const milestones = await db.select().from(jobMilestones).where(eq(jobMilestones.jobId, id));
+
+    const modeRows = await getSql()`SELECT payment_mode AS "paymentMode" FROM jobs WHERE id = ${id} LIMIT 1` as unknown as { paymentMode: 'undecided' | 'buildpair' | 'external' }[];
+    const milestones = await getSql()`
+      SELECT id, job_id AS "jobId", quote_id AS "quoteId", title, amount, status, kind,
+             trigger_description AS "triggerDescription", sort_order AS "sortOrder", release_mode AS "releaseMode",
+             completed_at AS "completedAt", paid_at AS "paidAt", payment_method AS "paymentMethod"
+      FROM job_milestones WHERE job_id = ${id} ORDER BY sort_order ASC, created_at ASC
+    `;
     const existingReview = job.customerId === userId ? await db.query.reviews.findFirst({ where: and(eq(reviews.jobId, id), eq(reviews.customerId, userId)) }) : null;
     let trader = null;
     if (accepted) trader = await db.query.traderProfiles.findFirst({ where: eq(traderProfiles.userId, accepted.traderId) });
@@ -29,7 +36,7 @@ export async function GET(request: Request, { id }: { id: string }) {
       SELECT id, event_type AS "eventType", title, description, metadata, actor_id AS "actorId", created_at AS "createdAt"
       FROM job_events WHERE job_id = ${id} ORDER BY created_at ASC
     `;
-    return Response.json({ job, acceptedQuote: accepted, milestones, trader, existingReview, variations, timeline });
+    return Response.json({ job: { ...job, paymentMode: modeRows[0]?.paymentMode ?? 'undecided' }, acceptedQuote: accepted, milestones, trader, existingReview, variations, timeline });
   } catch (error) { return jsonError(error); }
 }
 
@@ -38,46 +45,67 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     const userId = await authenticatedUserId(request);
     await ensureDbUser(userId);
     const modes = await accountModes(userId);
-    const payload = await request.json() as { action?: string };
+    const payload = await request.json() as { action?: string; mode?: 'buildpair' | 'external' };
     const db = getDb();
 
     if (payload.action === 'cancel') {
       if (!modes.customerEnabled) throw new HttpError(403, 'Customer account required');
       const pendingTraders = await db.select({ traderId: quotes.traderId }).from(quotes).where(and(eq(quotes.jobId, id), eq(quotes.status, 'pending')));
       const [cancelled] = await db.update(jobs).set({ status: 'cancelled', updatedAt: new Date() })
-        .where(and(eq(jobs.id, id), eq(jobs.customerId, userId), isNull(jobs.acceptedQuoteId), inArray(jobs.status, ['open', 'quoted'])))
-        .returning();
+        .where(and(eq(jobs.id, id), eq(jobs.customerId, userId), isNull(jobs.acceptedQuoteId), inArray(jobs.status, ['open', 'quoted']))).returning();
       if (!cancelled) throw new HttpError(409, 'Only open jobs can be cancelled before a quote is accepted');
-      await db.update(quotes).set({ status: 'declined', updatedAt: new Date() })
-        .where(and(eq(quotes.jobId, id), eq(quotes.status, 'pending')));
+      await db.update(quotes).set({ status: 'declined', updatedAt: new Date() }).where(and(eq(quotes.jobId, id), eq(quotes.status, 'pending')));
       await addJobEvent(id, userId, 'job_cancelled', 'Job cancelled', cancelled.title);
-      await Promise.allSettled(pendingTraders.map(({ traderId }) => createNotification(traderId, {
-        type: 'job_cancelled',
-        title: 'Job cancelled by homeowner',
-        body: `${cancelled.title} is no longer accepting quotes.`,
-        href: '/trader/my-jobs',
-      })));
+      await Promise.allSettled(pendingTraders.map(({ traderId }) => createNotification(traderId, { type: 'job_cancelled', title: 'Job cancelled by homeowner', body: `${cancelled.title} is no longer accepting quotes.`, href: '/trader/my-jobs' })));
       return Response.json({ cancelled: true });
+    }
+
+    if (payload.action === 'set_payment_mode') {
+      if (!modes.customerEnabled || !payload.mode) throw new HttpError(403, 'Homeowner payment choice required');
+      const rows = await getSql()`
+        SELECT j.customer_id AS "customerId", j.title, j.status, j.payment_mode AS "paymentMode", q.trader_id AS "traderId"
+        FROM jobs j JOIN quotes q ON q.id = j.accepted_quote_id
+        WHERE j.id = ${id} LIMIT 1
+      ` as unknown as { customerId: string; title: string; status: string; paymentMode: string; traderId: string }[];
+      const row = rows[0];
+      if (!row || row.customerId !== userId) throw new HttpError(404, 'Active job not found');
+      if (row.status !== 'in_progress') throw new HttpError(409, 'Payment choice is only available for an active accepted job');
+      if (row.paymentMode === 'buildpair' && payload.mode === 'external') {
+        const paid = await getSql()`SELECT 1 FROM payments WHERE job_id = ${id} AND status = 'paid' LIMIT 1`;
+        if (paid.length) throw new HttpError(409, 'This job already has a BuildPair payment and can no longer switch to private payment');
+      }
+      await getSql()`UPDATE jobs SET payment_mode = ${payload.mode}, updated_at = now() WHERE id = ${id}`;
+      if (payload.mode === 'buildpair') {
+        await addJobEvent(id, userId, 'buildpair_payments_selected', 'BuildPair staged payments selected', 'The homeowner chose to keep the agreed payment stages and payment record inside BuildPair.');
+        await createNotification(row.traderId, { type: 'payment_mode_selected', title: 'BuildPair payments selected', body: `${row.title}: the homeowner chose BuildPair staged payments. Check the first agreed payment stage before starting.`, href: `/trader/jobs/${id}`, email: true });
+      } else {
+        await addJobEvent(id, userId, 'external_payments_selected', 'Private payment arrangement selected', 'The homeowner chose to arrange payment outside BuildPair. BuildPair cannot process, control or recover private payments.');
+        await createNotification(row.traderId, { type: 'external_payment_selected', title: 'Private payment arrangement selected', body: `${row.title}: the homeowner chose to arrange payments outside BuildPair. BuildPair payment-stage protections will not apply to those payments.`, href: `/trader/jobs/${id}`, email: true });
+      }
+      return Response.json({ paymentMode: payload.mode });
     }
 
     if (payload.action !== 'complete') throw new HttpError(400, 'Unsupported job action');
     if (!modes.traderEnabled) throw new HttpError(403, 'Trader account required');
-    const [owned] = await db.select({ job: jobs, quote: quotes }).from(jobs).innerJoin(quotes, eq(quotes.id, jobs.acceptedQuoteId))
-      .where(and(eq(jobs.id, id), eq(quotes.traderId, userId))).limit(1);
-    if (!owned) throw new HttpError(404, 'Job not found');
-    if (owned.job.status !== 'in_progress') throw new HttpError(409, 'Only work in progress can be marked complete');
+    const rows = await getSql()`
+      SELECT j.customer_id AS "customerId", j.title, j.status, j.payment_mode AS "paymentMode", q.trader_id AS "traderId"
+      FROM jobs j JOIN quotes q ON q.id = j.accepted_quote_id
+      WHERE j.id = ${id} LIMIT 1
+    ` as unknown as { customerId: string; title: string; status: string; paymentMode: 'undecided' | 'buildpair' | 'external'; traderId: string }[];
+    const owned = rows[0];
+    if (!owned || owned.traderId !== userId) throw new HttpError(404, 'Job not found');
+    if (owned.status !== 'in_progress') throw new HttpError(409, 'Only work in progress can be marked complete');
     const pendingVariation = await getSql()`SELECT 1 FROM job_variations WHERE job_id = ${id} AND status = 'pending' LIMIT 1`;
     if (pendingVariation.length) throw new HttpError(409, 'Resolve outstanding job variations before marking the work complete');
-    await db.update(jobMilestones).set({ status: 'completed', completedAt: new Date() })
-      .where(and(eq(jobMilestones.jobId, id), ne(jobMilestones.title, 'Deposit'), ne(jobMilestones.status, 'paid')));
+    if (owned.paymentMode === 'undecided') throw new HttpError(409, 'The homeowner must choose BuildPair or private payments first');
+    if (owned.paymentMode === 'buildpair') {
+      const unpaid = await getSql()`SELECT title FROM job_milestones WHERE job_id = ${id} AND status <> 'paid' ORDER BY sort_order ASC LIMIT 1` as unknown as { title: string }[];
+      if (unpaid[0]) throw new HttpError(409, `${unpaid[0].title} must be completed and paid before the job can be marked complete`);
+    }
     await db.update(jobs).set({ status: 'completed', updatedAt: new Date() }).where(eq(jobs.id, id));
-    await addJobEvent(id, userId, 'work_completed', 'Tradesperson marked work complete', owned.job.title);
-    await createNotification(owned.job.customerId, {
-      type: 'work_completed',
-      title: 'Work marked complete',
-      body: `${owned.job.title} has been marked complete. Review the job, confirm the final payment stage and leave feedback when you are satisfied.`,
-      href: `/customer/jobs/${id}`,
-      email: true,
+    await addJobEvent(id, userId, 'work_completed', 'Tradesperson marked work complete', owned.title);
+    await createNotification(owned.customerId, {
+      type: 'work_completed', title: 'Work marked complete', body: `${owned.title} has been marked complete. Review the project history and leave feedback when you are satisfied.`, href: `/customer/jobs/${id}`, email: true,
     });
     return Response.json({ completed: true });
   } catch (error) { return jsonError(error); }
