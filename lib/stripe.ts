@@ -18,7 +18,16 @@ export function appUrl() {
   return 'http://localhost:8081';
 }
 
-export function providerReturnUrl(type: 'subscription' | 'connect' | 'payment', state: 'complete' | 'cancelled' | 'retry') {
+export function providerReturnUrl(
+  type: 'subscription' | 'connect' | 'payment',
+  state: 'complete' | 'cancelled' | 'retry',
+  context?: { jobId?: string },
+) {
+  if (type === 'payment' && context?.jobId) {
+    const url = new URL(`/customer/jobs/${encodeURIComponent(context.jobId)}`, `${appUrl()}/`);
+    url.searchParams.set('payment', state);
+    return url.toString();
+  }
   const url = new URL('/status', `${appUrl()}/`);
   url.searchParams.set('type', type);
   url.searchParams.set('state', state);
