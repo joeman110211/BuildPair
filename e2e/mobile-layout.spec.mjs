@@ -116,6 +116,23 @@ test('small Android public and auth surfaces fit without furniture-removal chaos
   await expectNoHorizontalOverflow(page, 'preview trader profile');
 });
 
+test('narrow public card layouts stay inside a 320px viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  const routes = [
+    ['/contact', 'contact'],
+    ['/advice', 'advice hub'],
+    ['/pricing', 'membership'],
+    ['/download', 'download'],
+    ['/report', 'reporting'],
+  ];
+
+  for (const [route, label] of routes) {
+    await page.goto(route);
+    await page.waitForLoadState('networkidle');
+    await expectNoHorizontalOverflow(page, label);
+  }
+});
+
 test('small Android trader forms keep primary actions and top navigation reachable', async ({ page }) => {
   const state = JSON.parse(await fs.readFile(stateFile, 'utf8'));
   await page.goto('/');
