@@ -46,7 +46,12 @@ const convertSchema = z.object({
   conversionType: z.enum(['signup', 'signin']).default('signup'),
 });
 
-const requestSchema = z.discriminatedUnion('action', [eventSchema, convertSchema]);
+const withdrawSchema = z.object({
+  action: z.literal('withdraw'),
+  visitorId: z.string().uuid(),
+});
+
+const requestSchema = z.discriminatedUnion('action', [eventSchema, convertSchema, withdrawSchema]);
 
 type JsonMap = Record<string, string | number | boolean | null>;
 
@@ -82,6 +87,11 @@ export async function POST(request: Request) {
   try {
     const payload = requestSchema.parse(await request.json());
     const sql = getSql();
+
+    if (payload.action === 'withdraw') {
+      await sql`DELETE FROM visitor_sessions WHERE visitor_id = ${payload.visitorId}::uuid`;
+      return Response.json({ accepted: true, detailedRecordsDeleted: true });
+    }
 
     if (payload.action === 'convert') {
       await sql`
