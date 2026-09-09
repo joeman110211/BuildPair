@@ -155,6 +155,10 @@ export async function POST(request: Request) {
         return Response.json({ error: 'Invalid analytics consent timestamp' }, { status: 400 });
       }
 
+      if (payload.eventType === 'page_view') {
+        await sql`DELETE FROM visitor_sessions WHERE last_seen_at < now() - interval '90 days'`;
+      }
+
       const acquisition = {
         referrerHost: safe(payload.acquisition.referrerHost, 200),
         utmSource: safe(payload.acquisition.utmSource, 150),
