@@ -1,4 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
+import { assertAiDailyBudget, recordAiRequest } from '@/lib/ai-audit';
+import { assertRateLimit } from '@/lib/rate-limit';
 import { getSql } from '@/lib/sql';
 import { jsonError, requireAdmin } from '@/lib/server';
 
@@ -66,8 +68,6 @@ async function clerkCheck() {
     return unconfigured('Clerk', 'Clerk server or publishable credentials are missing', 'Sign-up, sign-in and administrator access', envVars);
   }
 
-  // requireAdmin(request) has already verified this Clerk session. A second users
-  // API request here just creates avoidable rate-limit noise when checks are rerun.
   return {
     name: 'Clerk',
     state: 'ok' as const,
@@ -79,22 +79,51 @@ async function clerkCheck() {
   };
 }
 
-async function geminiCheck() {
+async function geminiCheck(userId: string) {
   const envVars = ['GEMINI_API_KEY'];
   const key = process.env.GEMINI_API_KEY?.trim();
   if (!key) return unconfigured('Gemini', 'GEMINI_API_KEY is missing', 'AI job planning, quote and message assistants', envVars);
+  const model = process.env.GEMINI_MODEL?.trim() || 'gemini-3.5-flash';
   return timed('Gemini', 'AI job planning, quote and message assistants', envVars, async () => {
-    const ai = new GoogleGenAI({ apiKey: key });
-    const response = await Promise.race([
-      ai.models.generateContent({
-        model: process.env.GEMINI_MODEL?.trim() || 'gemini-3.5-flash',
-        contents: 'Reply with exactly BUILDPAIR_OK',
-        config: { temperature: 0, maxOutputTokens: 20 },
-      }),
-      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Gemini health check timed out')), TIMEOUT_MS)),
-    ]);
-    if (!response.text?.includes('BUILDPAIR_OK')) throw new Error('Gemini returned an unexpected health response');
-    return `Gemini ${process.env.GEMINI_MODEL?.trim() || 'gemini-3.5-flash'} responded`;
+    const startedAt = Date.now();
+    let providerCalled = false;
+    try {
+      await assertAiDailyBudget();
+      providerCalled = true;
+      const ai = new GoogleGenAI({ apiKey: key });
+      const response = await Promise.race([
+        ai.models.generateContent({
+          model,
+          contents: 'Reply with exactly BUILDPAIR_OK',
+          config: { temperature: 0, maxOutputTokens: 20 },
+        }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Gemini health check timed out')), TIMEOUT_MS)),
+      ]);
+      if (!response.text?.includes('BUILDPAIR_OK')) throw new Error('Gemini returned an unexpected health response');
+      await recordAiRequest({
+        userId,
+        endpoint: 'system-health-gemini',
+        request: 'Reply with exactly BUILDPAIR_OK',
+        response: response.text?.trim() || 'BUILDPAIR_OK',
+        status: 'success',
+        model,
+        providerCalled: true,
+        latencyMs: Date.now() - startedAt,
+      });
+      return `Gemini ${model} responded`;
+    } catch (error) {
+      await recordAiRequest({
+        userId,
+        endpoint: 'system-health-gemini',
+        request: 'Reply with exactly BUILDPAIR_OK',
+        response: error instanceof Error ? error.message : 'Gemini health check failed',
+        status: providerCalled ? 'error' : 'blocked',
+        model,
+        providerCalled,
+        latencyMs: Date.now() - startedAt,
+      });
+      throw error;
+    }
   });
 }
 
@@ -118,11 +147,6 @@ async function resendCheck() {
   const key = process.env.RESEND_API_KEY?.trim();
   if (!key) return unconfigured('Resend', 'RESEND_API_KEY is missing', 'Transactional emails and notifications', envVars);
   return timed('Resend', 'Transactional emails and notifications', envVars, async () => {
-    // Sending-only keys are the right privilege level for the production app.
-    // Probe the send endpoint with an intentionally incomplete payload: a valid
-    // key returns a validation error before an email can be created, while an
-    // invalid key is rejected as unauthorised. This verifies the credential
-    // without requiring full account access or generating a test email.
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       cache: 'no-store',
@@ -161,11 +185,12 @@ async function stripeCheck() {
 
 export async function GET(request: Request) {
   try {
-    await requireAdmin(request);
+    const { user } = await requireAdmin(request);
+    await assertRateLimit(request, 'admin-system-health', 30, 3600, user.id);
     const checks = await Promise.all([
       databaseCheck(),
       clerkCheck(),
-      geminiCheck(),
+      geminiCheck(user.id),
       cloudinaryCheck(),
       resendCheck(),
       stripeCheck(),
