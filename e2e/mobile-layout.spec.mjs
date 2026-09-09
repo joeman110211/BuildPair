@@ -75,6 +75,19 @@ test('small Android public and auth surfaces fit without furniture-removal chaos
   expect(actionsBox, 'homepage hero actions have no layout box').not.toBeNull();
   expect(visualBox, 'homepage hero visual has no layout box').not.toBeNull();
   expect((actionsBox?.y ?? 0) + (actionsBox?.height ?? 0), 'homepage image overlaps the hero action buttons').toBeLessThanOrEqual((visualBox?.y ?? 0) + 1);
+
+  const heroActionButtons = heroActions.getByRole('button');
+  await expect(heroActionButtons).toHaveCount(3);
+  const actionButtonBoxes = await heroActionButtons.evaluateAll((elements) => elements.map((element) => {
+    const rect = element.getBoundingClientRect();
+    return { top: Math.round(rect.top), bottom: Math.round(rect.bottom), left: Math.round(rect.left), right: Math.round(rect.right) };
+  }));
+  const actionTops = actionButtonBoxes.map((box) => box.top);
+  expect(Math.max(...actionTops) - Math.min(...actionTops), 'homepage hero action buttons wrap onto another row').toBeLessThanOrEqual(2);
+  for (let index = 1; index < actionButtonBoxes.length; index += 1) {
+    expect(actionButtonBoxes[index].left, `homepage hero action ${index + 1} starts before the previous button ends`).toBeGreaterThanOrEqual(actionButtonBoxes[index - 1].right - 1);
+  }
+
   await expectNoHorizontalOverflow(page, 'homepage');
 
   await page.goto('/auth/account');
