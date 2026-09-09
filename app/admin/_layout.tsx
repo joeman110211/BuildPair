@@ -9,20 +9,21 @@ export default function AdminLayout() {
       <View style={styles.shell}>
         <AdminNav />
         <View style={styles.content}>
-          <Stack screenOptions={{ headerTintColor: '#D35400', headerShadowVisible: false }}>
-            <Stack.Screen name="dashboard" options={{ title: 'Owner Console' }} />
-            <Stack.Screen name="users" options={{ title: 'User Control Centre' }} />
-            <Stack.Screen name="insights" options={{ title: 'User & Product Insights' }} />
-            <Stack.Screen name="visitors" options={{ title: 'Visitor Analytics' }} />
-            <Stack.Screen name="system" options={{ title: 'System Health' }} />
-            <Stack.Screen name="presence" options={{ title: 'Live Users' }} />
-            <Stack.Screen name="jobs" options={{ title: 'Jobs' }} />
-            <Stack.Screen name="profiles" options={{ title: 'Trade Profiles' }} />
-            <Stack.Screen name="messages" options={{ title: 'Messages' }} />
-            <Stack.Screen name="media" options={{ title: 'Photos & Media' }} />
-            <Stack.Screen name="activity" options={{ title: 'Marketplace Activity' }} />
-            <Stack.Screen name="moderation" options={{ title: 'Moderation' }} />
-            <Stack.Screen name="credentials" options={{ title: 'Credential Verification' }} />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="dashboard" />
+            <Stack.Screen name="assistant" />
+            <Stack.Screen name="users" />
+            <Stack.Screen name="insights" />
+            <Stack.Screen name="visitors" />
+            <Stack.Screen name="system" />
+            <Stack.Screen name="presence" />
+            <Stack.Screen name="jobs" />
+            <Stack.Screen name="profiles" />
+            <Stack.Screen name="messages" />
+            <Stack.Screen name="media" />
+            <Stack.Screen name="activity" />
+            <Stack.Screen name="moderation" />
+            <Stack.Screen name="credentials" />
           </Stack>
         </View>
       </View>
@@ -32,5 +33,5 @@ export default function AdminLayout() {
 
 const styles = StyleSheet.create({
   shell: { flex: 1, backgroundColor: '#F7F3EE' },
-  content: { flex: 1 },
+  content: { flex: 1, minWidth: 0 },
 });
