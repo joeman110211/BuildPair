@@ -39,7 +39,7 @@ export function AdminNav() {
               {group.items.map((item) => {
                 const selected = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return <Link key={item.href} href={item.href as never} asChild>
-                  <Pressable onPress={() => setMenuOpen(false)} style={({ pressed }) => [styles.mobileLink, selected && styles.mobileLinkSelected, pressed && styles.pressed]}>
+                  <Pressable onPressIn={() => setMenuOpen(false)} style={({ pressed }) => [styles.mobileLink, selected && styles.mobileLinkSelected, pressed && styles.pressed]}>
                     <View style={styles.mobileLinkCopy}>
                       <Text style={[styles.mobileLinkLabel, selected && styles.mobileLinkLabelSelected]}>{item.label}</Text>
                       <Text style={styles.mobileLinkDescription}>{item.description}</Text>
