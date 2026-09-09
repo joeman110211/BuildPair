@@ -1,6 +1,7 @@
-import { Link } from 'expo-router';
+import { Link, usePathname } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
+import { FeaturedTraderSpotlight } from '@/components/FeaturedTraderSpotlight';
 import { colors, layout, radii, spacing } from '@/constants/theme';
 
 const linkGroups = [
@@ -47,26 +48,32 @@ const linkGroups = [
 ] as const;
 
 export function PublicFooter() {
-  return <View style={styles.footer}>
-    <View style={styles.accentLine} />
-    <View style={styles.inner}>
-      <View style={styles.brandBlock}>
-        <Text variant="headlineSmall" style={styles.brand}>BuildPair</Text>
-        <Text style={styles.tagline}>From “who do I need?” to “job complete”.</Text>
-        <Text style={styles.description}>A UK marketplace and project workflow connecting homeowners with local tradespeople, keeping search, quotes, messages, approved changes, payment stages and reputation in one place.</Text>
-        <Text style={styles.description}>Supported BuildPair payments are processed through Stripe. Users can also arrange payment privately, in which case BuildPair cannot process or manage that payment.</Text>
-        <View style={styles.contactPill}><Text style={styles.contactText}>info@buildpair.co.uk</Text></View>
+  const pathname = usePathname();
+  const isHome = pathname === '/' || pathname === '';
+
+  return <>
+    {isHome ? <FeaturedTraderSpotlight /> : null}
+    <View style={styles.footer}>
+      <View style={styles.accentLine} />
+      <View style={styles.inner}>
+        <View style={styles.brandBlock}>
+          <Text variant="headlineSmall" style={styles.brand}>BuildPair</Text>
+          <Text style={styles.tagline}>From “who do I need?” to “job complete”.</Text>
+          <Text style={styles.description}>A UK marketplace and project workflow connecting homeowners with local tradespeople, keeping search, quotes, messages, approved changes, payment stages and reputation in one place.</Text>
+          <Text style={styles.description}>Supported BuildPair payments are processed through Stripe. Users can also arrange payment privately, in which case BuildPair cannot process or manage that payment.</Text>
+          <View style={styles.contactPill}><Text style={styles.contactText}>info@buildpair.co.uk</Text></View>
+        </View>
+        {linkGroups.map((group) => <View key={group.title} style={styles.group}>
+          <Text style={styles.groupTitle}>{group.title}</Text>
+          {group.links.map(([label, href]) => <Link key={label} href={href} asChild><Pressable style={({ pressed }) => [styles.linkPress, pressed && styles.linkPressed]}><Text style={styles.link}>{label}</Text></Pressable></Link>)}
+        </View>)}
       </View>
-      {linkGroups.map((group) => <View key={group.title} style={styles.group}>
-        <Text style={styles.groupTitle}>{group.title}</Text>
-        {group.links.map(([label, href]) => <Link key={label} href={href} asChild><Pressable style={({ pressed }) => [styles.linkPress, pressed && styles.linkPressed]}><Text style={styles.link}>{label}</Text></Pressable></Link>)}
-      </View>)}
+      <View style={styles.bottom}>
+        <Text style={styles.small}>© {new Date().getFullYear()} BuildPair. All rights reserved.</Text>
+        <Text style={styles.small}>BuildPair provides marketplace, project-management and payment-workflow technology. It does not carry out building work, provide building-control approval, inspect or guarantee workmanship, or describe its payment service as escrow.</Text>
+      </View>
     </View>
-    <View style={styles.bottom}>
-      <Text style={styles.small}>© {new Date().getFullYear()} BuildPair. All rights reserved.</Text>
-      <Text style={styles.small}>BuildPair provides marketplace, project-management and payment-workflow technology. It does not carry out building work, provide building-control approval, inspect or guarantee workmanship, or describe its payment service as escrow.</Text>
-    </View>
-  </View>;
+  </>;
 }
 
 const styles = StyleSheet.create({
