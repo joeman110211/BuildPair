@@ -100,15 +100,16 @@ export default function TraderJobDetail() {
     </AppCard>
 
     {paymentMode === 'buildpair' ? <AppCard style={styles.protectionCard}>
-      <Text variant="titleLarge" style={styles.title}>How BuildPair payments work on this job</Text>
-      <Text style={styles.body}>BuildPair unlocks one agreed stage at a time. Materials are paid and released to you for the agreed materials. For deposits, progress stages and the final stage, the homeowner funds the stage through Stripe first. You then reach the agreed trigger and request release. The homeowner approves release or raises an issue before the money is transferred to your connected payout account.</Text>
-      <Text style={styles.muted}>Do not start a stage that the agreed plan says must be funded first. Extra work should be recorded as a variation before you do it.</Text>
-    </AppCard> : paymentMode === 'external' ? <AppCard style={styles.externalCard}><Text variant="titleLarge" style={styles.title}>Private payments selected</Text><Text style={styles.muted}>BuildPair keeps the quote, messages, variations and project record, but does not process or control payments on this job. BuildPair payment-stage controls do not apply to money exchanged privately.</Text></AppCard> : null}
+      <Text variant="titleLarge" style={styles.title}>BuildPair payment stages</Text>
+      <Text style={styles.body}>Materials payments and deposits are transferred to your connected Stripe account when the homeowner pays them. Progress and final stages are paid by the homeowner first and transferred only after you request release and the homeowner approves it.</Text>
+      <Text style={styles.muted}>Request release only after the recorded completion point has been reached. Record extra work as an agreed variation before charging for it.</Text>
+    </AppCard> : paymentMode === 'external' ? <AppCard style={styles.externalCard}><Text variant="titleLarge" style={styles.title}>Private payments selected</Text><Text style={styles.muted}>BuildPair keeps the quote, messages, variations and project record, but does not process payments on this job. BuildPair payment-stage controls do not apply to money exchanged privately.</Text></AppCard> : null}
 
     <Text variant="titleLarge" style={styles.title}>Payment stages</Text>
     {orderedStages.length ? orderedStages.map((stage) => {
       const isCurrent = currentStage?.id === stage.id;
-      const canRequestRelease = data.job.status === 'in_progress' && isCurrent && paymentMode === 'buildpair' && stage.status === 'funded' && stage.kind !== 'materials';
+      const immediateUpfront = stage.kind === 'materials' || stage.kind === 'deposit';
+      const canRequestRelease = data.job.status === 'in_progress' && isCurrent && paymentMode === 'buildpair' && stage.status === 'funded' && !immediateUpfront;
       const canMarkPrivateComplete = data.job.status === 'in_progress' && isCurrent && paymentMode === 'external' && stage.status === 'pending' && stage.kind !== 'materials';
       return <AppCard key={stage.id} style={isCurrent ? styles.currentStageCard : undefined}>
         <View style={styles.row}>
@@ -116,15 +117,15 @@ export default function TraderJobDetail() {
           <View style={styles.badges}>{isCurrent ? <Chip icon="arrow-right-circle-outline">Next</Chip> : null}<Chip>{stage.kind}</Chip><Chip>{stageLabel(stage.status)}</Chip></View>
         </View>
 
-        {paymentMode === 'buildpair' && stage.kind === 'materials' && stage.status === 'pending' ? <Text style={styles.muted}>Waiting for the homeowner to pay the agreed materials amount. When Stripe confirms it, the materials payment is released to your connected payout account.</Text> : null}
-        {paymentMode === 'buildpair' && stage.status === 'pending' && stage.kind !== 'materials' ? <Text style={styles.muted}>{isCurrent ? 'Waiting for the homeowner to fund this stage through BuildPair.' : 'This stage stays locked until the earlier stage is released.'}</Text> : null}
-        {paymentMode === 'buildpair' && stage.status === 'funded' ? <Text style={styles.notice}>Funded ✓ Stripe has confirmed the homeowner payment. It has not yet been transferred to you. Reach the agreed trigger, then request release.</Text> : null}
-        {paymentMode === 'buildpair' && stage.status === 'completed' ? <Text style={styles.notice}>Release requested. The homeowner is being asked to check the agreed trigger and approve release or raise an issue.</Text> : null}
-        {stage.status === 'paid' ? <Text style={styles.success}>Released ✓ This stage has been paid out or released according to the agreed payment route.</Text> : null}
+        {paymentMode === 'buildpair' && immediateUpfront && stage.status === 'pending' ? <Text style={styles.muted}>Waiting for the homeowner to pay this upfront {stage.kind === 'deposit' ? 'deposit' : 'materials payment'}. When Stripe confirms payment, the amount is transferred to your connected payout account without a later release request.</Text> : null}
+        {paymentMode === 'buildpair' && stage.status === 'pending' && !immediateUpfront ? <Text style={styles.muted}>{isCurrent ? 'Waiting for the homeowner to pay this stage through BuildPair.' : 'This stage stays locked until the earlier stage is released.'}</Text> : null}
+        {paymentMode === 'buildpair' && stage.status === 'funded' ? <Text style={styles.notice}>Payment received ✓ No transfer has been made to you for this stage. Reach the agreed completion point, then request release.</Text> : null}
+        {paymentMode === 'buildpair' && stage.status === 'completed' ? <Text style={styles.notice}>Release requested. The homeowner is being asked to check the agreed completion point and approve release or raise an issue.</Text> : null}
+        {stage.status === 'paid' ? <Text style={styles.success}>Paid ✓ This stage has been transferred or released according to the agreed payment route.</Text> : null}
         {stage.status === 'disputed' ? <Text style={styles.issue}>Release paused. {stage.disputeReason || 'The homeowner raised an issue before release. Keep the discussion and evidence in BuildPair while it is resolved.'}</Text> : null}
-        {canRequestRelease ? <Button mode="contained" icon="check" loading={stageBusy === stage.id} disabled={Boolean(stageBusy)} onPress={() => void requestRelease(stage.id)}>{stage.kind === 'deposit' ? 'Ready to start · request deposit release' : `Mark trigger complete · request ${formatMoney(stage.amount)}`}</Button> : null}
+        {canRequestRelease ? <Button mode="contained" icon="check" loading={stageBusy === stage.id} disabled={Boolean(stageBusy)} onPress={() => void requestRelease(stage.id)}>Request release of {formatMoney(stage.amount)}</Button> : null}
         {canMarkPrivateComplete ? <Button mode="outlined" icon="check" loading={stageBusy === stage.id} disabled={Boolean(stageBusy)} onPress={() => void requestRelease(stage.id)}>Mark {stage.title} complete</Button> : null}
-        {paymentMode === 'external' && stage.status !== 'paid' ? <Text style={styles.externalText}>Payment itself is arranged privately. BuildPair is only recording project progress.</Text> : null}
+        {paymentMode === 'external' && stage.status !== 'paid' ? <Text style={styles.externalText}>Payment is arranged privately. BuildPair is only recording project progress.</Text> : null}
       </AppCard>;
     }) : <EmptyState title="No payment stages" body="The accepted quote does not contain payment stages." />}
 
@@ -160,11 +161,11 @@ function nextTitle(status: Job['status'], paymentMode: Job['paymentMode'], curre
 
 function nextCopy(status: Job['status'], paymentMode: Job['paymentMode'], current: Milestone | undefined, allReleased: boolean) {
   if (status === 'completed') return 'The homeowner can review the completed work and the project history.';
-  if (paymentMode === 'undecided') return 'The quote is accepted. The homeowner now chooses BuildPair staged payments or a private payment arrangement.';
-  if (paymentMode === 'external') return 'BuildPair keeps the project record, messages and variations, but cannot process or protect money exchanged privately.';
+  if (paymentMode === 'undecided') return 'The quote is accepted. The homeowner now chooses BuildPair payments or a private payment arrangement.';
+  if (paymentMode === 'external') return 'BuildPair keeps the project record, messages and variations, but cannot process or verify payments made privately.';
   if (allReleased) return 'Every agreed BuildPair payment stage has been released. Resolve any variations, then mark the whole job complete.';
   if (!current) return 'Keep the job record up to date as work progresses.';
-  if (current.status === 'pending') return current.kind === 'materials' ? 'The homeowner needs to pay the agreed materials amount before materials are ordered.' : 'The homeowner needs to fund this stage through BuildPair before it progresses.';
+  if (current.status === 'pending') return current.kind === 'materials' || current.kind === 'deposit' ? 'Waiting for the homeowner to make this upfront payment.' : 'Waiting for the homeowner to pay this stage through BuildPair.';
   if (current.status === 'funded') return 'The homeowner payment is confirmed but has not been transferred to you. Reach the agreed completion point, then request release.';
   if (current.status === 'completed') return 'You requested release. The homeowner is reviewing the agreed completion point.';
   return 'The homeowner raised an issue before release. Keep communication and evidence inside the project until it is resolved.';
