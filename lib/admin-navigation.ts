@@ -24,7 +24,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     description: 'The safest place to begin when you are not sure where something lives.',
     items: [
       ADMIN_OVERVIEW_ITEM,
-      { href: '/admin/assistant', label: 'Admin Assistant', shortLabel: 'Assistant', description: 'Ask plain-English questions about the admin area, errors or a change you want to make.' },
+      { href: '/admin/assistant', label: 'Admin Assistant', shortLabel: 'Assistant', description: 'Ask plain-English questions about the whole BuildPair product, live marketplace context, errors or changes you want to make.' },
     ],
   },
   {

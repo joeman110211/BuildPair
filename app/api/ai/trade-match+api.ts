@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 import { TRADE_CATEGORIES } from '@/constants/options';
+import { assertAiDailyBudget, recordAiRequest } from '@/lib/ai-audit';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { jsonError } from '@/lib/server';
 
@@ -105,41 +106,89 @@ export async function POST(request: Request) {
   try {
     await assertRateLimit(request, 'ai-trade-match', 12, 600);
     const { problem, mode } = schema.parse(await request.json());
+    const auditRequest = { problem, mode };
     const key = process.env.GEMINI_API_KEY;
-    if (!key) return Response.json(fallback(problem, mode));
+    const startedAt = Date.now();
+    const ruleResult = fallback(problem, mode);
+
+    if (!key) {
+      await recordAiRequest({ endpoint: 'trade-match', request: auditRequest, response: ruleResult, status: 'fallback', providerCalled: false, latencyMs: Date.now() - startedAt });
+      return Response.json(ruleResult);
+    }
 
     const ai = new GoogleGenAI({ apiKey: key });
     let lastError: unknown = null;
+    let providerCalls = 0;
+    const attemptedModels: string[] = [];
     for (const model of modelCandidates()) {
       try {
-        const parsed = await generateTradeMatch(ai, model, problem, mode);
-        if (mode === 'search' && parsed.matched === false) {
-          return Response.json({
-            matched: false,
-            primaryTrade: null,
-            alternatives: [],
-            reason: parsed.reason?.slice(0, 500) || 'No confident trade match was found.',
-            questions: [],
-            source: 'ai',
-          });
-        }
-
-        const primaryTrade = parsed.primaryTrade as string;
-        const alternatives = (parsed.alternatives ?? []).filter((item) => categorySet.has(item) && item !== primaryTrade).slice(0, 2);
-        return Response.json({
-          matched: true,
-          primaryTrade,
-          alternatives,
-          reason: parsed.reason?.slice(0, 500) || 'Matched to the most relevant BuildPair trade category.',
-          questions: (parsed.questions ?? []).filter((item): item is string => typeof item === 'string').map((item) => item.slice(0, 250)).slice(0, 3),
-          source: 'ai',
+        await assertAiDailyBudget();
+      } catch (error) {
+        await recordAiRequest({
+          endpoint: 'trade-match',
+          request: auditRequest,
+          response: ruleResult,
+          status: 'blocked',
+          model: attemptedModels[attemptedModels.length - 1] ?? null,
+          providerCalled: providerCalls > 0,
+          latencyMs: Date.now() - startedAt,
+          metadata: {
+            attemptedModels,
+            providerCalls,
+            reason: error instanceof Error ? error.message : 'Global AI limit reached',
+          },
         });
+        return Response.json(ruleResult);
+      }
+
+      attemptedModels.push(model);
+      providerCalls += 1;
+      try {
+        const parsed = await generateTradeMatch(ai, model, problem, mode);
+        const result = mode === 'search' && parsed.matched === false
+          ? {
+              matched: false,
+              primaryTrade: null,
+              alternatives: [],
+              reason: parsed.reason?.slice(0, 500) || 'No confident trade match was found.',
+              questions: [],
+              source: 'ai' as const,
+            }
+          : {
+              matched: true,
+              primaryTrade: parsed.primaryTrade as string,
+              alternatives: (parsed.alternatives ?? []).filter((item) => categorySet.has(item) && item !== parsed.primaryTrade).slice(0, 2),
+              reason: parsed.reason?.slice(0, 500) || 'Matched to the most relevant BuildPair trade category.',
+              questions: (parsed.questions ?? []).filter((item): item is string => typeof item === 'string').map((item) => item.slice(0, 250)).slice(0, 3),
+              source: 'ai' as const,
+            };
+        await recordAiRequest({
+          endpoint: 'trade-match',
+          request: auditRequest,
+          response: result,
+          status: 'success',
+          model,
+          providerCalled: true,
+          latencyMs: Date.now() - startedAt,
+          metadata: { attemptedModels, providerCalls },
+        });
+        return Response.json(result);
       } catch (error) {
         lastError = error;
       }
     }
 
     console.warn('BuildPair trade-match AI unavailable after provider/model retries; using deterministic fallback', lastError instanceof Error ? lastError.message : 'unknown error');
-    return Response.json(fallback(problem, mode));
+    await recordAiRequest({
+      endpoint: 'trade-match',
+      request: auditRequest,
+      response: ruleResult,
+      status: 'error',
+      model: attemptedModels[attemptedModels.length - 1] ?? null,
+      providerCalled: providerCalls > 0,
+      latencyMs: Date.now() - startedAt,
+      metadata: { attemptedModels, providerCalls, reason: lastError instanceof Error ? lastError.message : 'All Gemini models failed' },
+    });
+    return Response.json(ruleResult);
   } catch (error) { return jsonError(error); }
 }
