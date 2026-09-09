@@ -27,7 +27,7 @@ AI FEATURES
 - Job Spec: homeowner answers -> structured job specification.
 - Quote Assistant: trader/job details -> professional scope/exclusions/payment wording; monetary totals are not delegated to AI.
 - Message Assistant: conversation/job context -> summary plus three reply suggestions.
-- Admin Assistant: owner-only whole-product explanation plus live read-only marketplace context.
+- Admin Assistant: owner/admin-only whole-product investigation with live marketplace context and confirmation-gated administrative actions. Elevated Admin Assistant tools are never exposed to homeowner, tradesperson, public or other AI features.
 - AI calls use the server-only GEMINI_API_KEY. Per-user/IP limits and an application-wide paid-AI daily ceiling protect usage. AI request/response audit records are available only to administrators.
 
 PLATFORM & SECURITY
@@ -42,7 +42,7 @@ PLATFORM & SECURITY
 
 ADMIN CONSOLE
 - Overview: headline numbers, attention items and shortcuts.
-- Admin Assistant: plain-English product, operational and system questions.
+- Admin Assistant: plain-English product, operational and system questions plus confirmation-gated supported admin actions.
 - Users & access: accounts, modes, subscriptions, suspensions and account history.
 - Live users: current/recent presence.
 - Trade profiles: business/profile data.
