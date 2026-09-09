@@ -17,9 +17,9 @@ describe('Stripe return URLs', () => {
     expect(appUrl()).toBe('https://buildpair.example');
   });
 
-  it('builds a real route for a completed subscription', () => {
+  it('returns completed subscriptions to the trader subscription screen', () => {
     process.env.APP_URL = 'https://buildpair.example';
-    expect(providerReturnUrl('subscription', 'complete')).toBe('https://buildpair.example/status?type=subscription&state=complete');
+    expect(providerReturnUrl('subscription', 'complete')).toBe('https://buildpair.example/trader/subscription?subscription=complete');
   });
 
   it('falls back to the public API origin', () => {
