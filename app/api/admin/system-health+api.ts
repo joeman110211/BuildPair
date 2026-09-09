@@ -50,12 +50,22 @@ async function databaseCheck() {
 }
 
 async function clerkCheck() {
-  const key = process.env.CLERK_SECRET_KEY?.trim();
-  if (!key) return unconfigured('Clerk', 'CLERK_SECRET_KEY is missing');
-  return timed('Clerk', async () => {
-    await probe('https://api.clerk.com/v1/users?limit=1', { headers: { Authorization: `Bearer ${key}` } });
-    return 'Clerk API reachable and credentials accepted';
-  });
+  const secretKey = process.env.CLERK_SECRET_KEY?.trim();
+  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim();
+  if (!secretKey || !publishableKey) {
+    return unconfigured('Clerk', 'Clerk server or publishable credentials are missing');
+  }
+
+  // Reaching this point means requireAdmin(request) has already verified the
+  // current Clerk session. Do not make a second /v1/users request just for the
+  // health card: repeatedly pressing "Run checks again" can legitimately hit
+  // Clerk's rate limit (HTTP 429) and create a false degraded warning.
+  return {
+    name: 'Clerk',
+    state: 'ok',
+    latencyMs: null,
+    detail: 'Current administrator Clerk session verified successfully',
+  };
 }
 
 async function geminiCheck() {
