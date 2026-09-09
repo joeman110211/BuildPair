@@ -14,9 +14,9 @@ const HERO_BENEFITS = ['Plan clearly', 'Compare properly', 'Hire confidently', '
 const FAQS = [
   ['What happens if a tradesperson cannot quote from photos?', 'They can arrange a site visit through the BuildPair job before quoting. After the visit, the formal quote and proposed payment stages are sent back through BuildPair so the project can continue in one place.'],
   ['Can I change the payment stages in a quote?', 'You can propose a different split or timing for the payment stages without changing the tradesperson’s total quote. If you edit the stages, the tradesperson must agree the revised plan before you can accept the quote.'],
-  ['How do BuildPair staged payments work?', 'After a quote is accepted, you can choose BuildPair staged payments. Materials payments are released for the agreed materials. Other agreed stages are funded through Stripe first, then released after the tradesperson reaches the agreed trigger and the homeowner approves release.'],
-  ['Can we just arrange payment ourselves?', 'Yes. Both sides can choose a private payment arrangement. BuildPair will keep the quote, messages and project record, but its payment-stage controls and Stripe payment evidence do not apply to money exchanged privately.'],
-  ['Does BuildPair hold money in legal escrow?', 'No. BuildPair does not describe its payment service as legal escrow. Payments are processed through Stripe and BuildPair controls the project workflow and transfer instructions for eligible stages. The platform does not guarantee workmanship.'],
+  ['How do BuildPair payments work?', 'After a quote is accepted, the homeowner can choose BuildPair payments. Upfront materials payments and deposits are transferred to the tradesperson when paid. Progress and final stages are paid through Stripe first, then transferred only after the tradesperson requests release and the homeowner approves it.'],
+  ['Can we arrange payment ourselves?', 'Yes. Users can arrange payment privately. BuildPair can keep the quote, messages and project record, but it cannot process, pause, refund or recover money paid outside BuildPair.'],
+  ['Does BuildPair hold money in escrow?', 'No. BuildPair is not described as an escrow service. Stripe processes supported payments and payouts, while BuildPair records the project stages and release instructions. BuildPair does not inspect or guarantee the work.'],
   ['What memberships are available to tradespeople?', 'Starter is £0/month, BuildPair Plus is £19.99/month and BuildPair Pro is £29.99/month. Paid plans add marketplace selling capacity and business tools. Project transaction fees are separate and shown in the applicable payment information.'],
 ] as const;
 
@@ -108,31 +108,32 @@ export default function LandingPage() {
 
     <View style={styles.paymentBand}>
       <View style={styles.section}>
-        <SectionHeading eyebrow="BuildPair staged payments" title="Agree the money before the work gets awkward." body="An accepted quote can become a staged project instead of a handshake followed by six weeks of trying to remember what somebody said in a kitchen." />
+        <SectionHeading eyebrow="BuildPair payments" title="Payment stages tied to the agreed project." body="The accepted quote keeps the payment schedule, completion points and release decisions in the same project record." />
         <View style={styles.paymentGrid}>
           <View style={[styles.paymentCard, styles.protectedCard]}>
-            <Chip icon="shield-check-outline" style={styles.cardChip}>BuildPair staged payments</Chip>
-            <Text variant="headlineSmall" style={styles.cardTitle}>Keep the payment stages inside the project.</Text>
-            <Text style={styles.cardText}>Materials can be paid and released for the agreed materials. Deposits, progress stages and the final stage can be funded through Stripe, then released after the agreed trigger is reached and the homeowner approves it.</Text>
+            <Chip icon="credit-card-check-outline" style={styles.cardChip}>BuildPair payments</Chip>
+            <Text variant="headlineSmall" style={styles.cardTitle}>Follow the agreed payment schedule.</Text>
+            <Text style={styles.cardText}>Upfront materials payments and deposits are transferred to the tradesperson when paid. Progress and final stages are paid first and transferred only after the tradesperson requests release and the homeowner approves it.</Text>
             <View style={styles.checkList}>
-              {['One agreed payment schedule attached to the quote', 'One stage unlocked at a time', 'Homeowner approval before controlled stage release', 'Unreleased stage can be paused if an issue is raised', 'Variations and payment history stay attached to the job'].map((item) => <View key={item} style={styles.checkRow}><Text style={styles.check}>✓</Text><Text style={styles.checkText}>{item}</Text></View>)}
+              {['One agreed payment schedule attached to the quote', 'Upfront payment treatment shown before payment', 'Homeowner approval before progress or final stage transfer', 'An unreleased progress or final stage can be paused when an issue is raised', 'Variations and payment history stay attached to the job'].map((item) => <View key={item} style={styles.checkRow}><Text style={styles.check}>✓</Text><Text style={styles.checkText}>{item}</Text></View>)}
             </View>
-            <Text style={styles.smallPrint}>Payments are processed by Stripe. BuildPair does not store raw card or bank details, does not describe the service as legal escrow and does not guarantee the quality of building work.</Text>
+            <Text style={styles.smallPrint}>Supported payments and payouts are processed through Stripe. BuildPair does not store raw card or bank details entered into Stripe, is not described as an escrow service and does not inspect or guarantee building work.</Text>
           </View>
           <View style={[styles.paymentCard, styles.privateCard]}>
             <Chip icon="account-arrow-right-outline" style={styles.cardChip}>Private payment arrangement</Chip>
-            <Text variant="headlineSmall" style={styles.cardTitle}>You can still deal directly.</Text>
-            <Text style={styles.cardText}>BuildPair does not trap users inside the platform. You can arrange payment privately after hiring, while keeping the quote, messages and project record in BuildPair.</Text>
-            <View style={styles.warningBox}><Text style={styles.warningTitle}>What changes if you pay privately</Text><Text style={styles.warningText}>BuildPair cannot process, control, release, refund or recover money exchanged outside its payment flow. BuildPair payment-stage controls and Stripe payment evidence do not apply to those transactions.</Text></View>
-            <Link href="/(public)/terms" asChild><Button mode="outlined">Read payment terms</Button></Link>
+            <Text variant="headlineSmall" style={styles.cardTitle}>Arrange payment privately if preferred.</Text>
+            <Text style={styles.cardText}>Users can arrange payment directly after hiring while keeping the quote, messages and project record in BuildPair.</Text>
+            <View style={styles.warningBox}><Text style={styles.warningTitle}>What changes if you pay privately</Text><Text style={styles.warningText}>BuildPair cannot process, pause, release, refund or recover money paid outside BuildPair. BuildPair payment-stage controls and Stripe transaction records do not apply to those private payments.</Text></View>
+            <Link href="/(public)/payments" asChild><Button mode="outlined">Read how BuildPair payments work</Button></Link>
           </View>
         </View>
+        <Text variant="titleMedium" style={styles.cardTitle}>Progress and final stage flow</Text>
         <View style={styles.paymentFlow}>
           {[
-            ['1', 'Stage funded', 'The homeowner pays the next agreed stage through Stripe.'],
-            ['2', 'Work reaches trigger', 'The tradesperson marks the agreed completion point reached.'],
-            ['3', 'Homeowner checks', 'Approve release or raise an issue before an unreleased controlled stage moves.'],
-            ['4', 'Stripe transfer', 'BuildPair instructs the approved payout to the connected tradesperson account.'],
+            ['1', 'Stage paid', 'The homeowner pays the next agreed progress or final stage through Stripe.'],
+            ['2', 'Completion point reached', 'The tradesperson reaches the completion point recorded for that stage.'],
+            ['3', 'Release requested', 'The tradesperson requests release of the funded stage.'],
+            ['4', 'Homeowner decision', 'The homeowner approves transfer or raises an issue before the unreleased stage is transferred.'],
           ].map(([number, title, copy]) => <View key={number} style={styles.paymentStep}><Text style={styles.paymentStepNumber}>{number}</Text><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
         </View>
       </View>

@@ -47,12 +47,12 @@ export async function POST(request: Request) {
     ` as unknown as PaymentRow[];
     const row = rows[0];
     if (!row || row.customerId !== customer.id) throw new HttpError(404, 'Payment stage not found');
-    if (row.paymentMode !== 'buildpair') throw new HttpError(409, 'Choose BuildPair staged payments on the job before paying through BuildPair');
+    if (row.paymentMode !== 'buildpair') throw new HttpError(409, 'Choose BuildPair payments on the job before paying this stage');
     if (row.milestoneStatus !== 'pending') {
       const label = row.milestoneStatus === 'paid' ? 'already released' : row.milestoneStatus === 'disputed' ? 'paused because an issue was raised' : 'already funded';
       throw new HttpError(409, `This payment stage is ${label}`);
     }
-    if (!row.stripeAccountId || (!row.stripePayoutsEnabled && !row.stripeChargesEnabled)) throw new HttpError(409, 'The tradesperson must complete Stripe payout onboarding before BuildPair can take this payment');
+    if (!row.stripeAccountId || (!row.stripePayoutsEnabled && !row.stripeChargesEnabled)) throw new HttpError(409, 'The tradesperson must complete Stripe payout setup before BuildPair can process this payment');
 
     const earlier = await getSql()`
       SELECT title, status FROM job_milestones
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       ORDER BY sort_order ASC
     ` as unknown as { title: string; status: string }[];
     const unfinished = earlier.find((stage) => stage.status !== 'paid');
-    if (unfinished) throw new HttpError(409, `${unfinished.title} must be completed and released before the next stage can be funded`);
+    if (unfinished) throw new HttpError(409, `${unfinished.title} must be completed before the next payment stage can be paid`);
 
     try { validateStripeStageAmount(row.milestoneAmount); }
     catch (error) { throw new HttpError(400, error instanceof Error ? error.message : 'Payment amount is below Stripe minimum'); }
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
     const stripe = getStripe();
     const fee = stagePlatformFee(row.milestoneKind, row.quoteTotal, depositTotal);
-    if (fee > row.milestoneAmount) throw new HttpError(409, 'The final payment is too small to cover the BuildPair transaction fee. The payment schedule must be revised.');
+    if (fee > row.milestoneAmount) throw new HttpError(409, 'The final payment is too small to cover the BuildPair service fee. The payment schedule must be revised.');
     const transferGroup = `buildpair_job_${row.jobId}`;
     const metadata = {
       buildpairJobId: row.jobId,

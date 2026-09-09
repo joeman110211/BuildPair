@@ -37,31 +37,31 @@ export default function ReviewPaymentPlanScreen() {
     finally { setBusy(false); }
   }
 
-  if (error && !quote) return <Screen><EmptyState title="Payment plan unavailable" body={error} /></Screen>;
+  if (error && !quote) return <Screen><EmptyState title="Payment schedule unavailable" body={error} /></Screen>;
   if (!quote) return <LoadingScreen />;
   const waiting = quote.paymentScheduleStatus === 'customer_edited';
-  return <Screen title="Review payment stages" subtitle={`Fixed quote total ${formatMoney(quote.totalAmount)}`}>
+  return <Screen title="Review payment schedule" subtitle={`Quote total ${formatMoney(quote.totalAmount)}`}>
     <AppCard>
-      <Chip icon={waiting ? 'account-edit-outline' : 'check-circle-outline'}>{waiting ? 'Homeowner proposed changes' : 'Payment stages agreed'}</Chip>
-      <Text variant="titleLarge">The quote price has not changed</Text>
-      <Text>The homeowner can propose a different split or timing for your payment stages, but cannot alter your labour, materials, VAT or total quote amount.</Text>
+      <Chip icon={waiting ? 'account-edit-outline' : 'check-circle-outline'}>{waiting ? 'Homeowner proposed changes' : 'Payment schedule agreed'}</Chip>
+      <Text variant="titleLarge">The quote total has not changed</Text>
+      <Text>The homeowner can propose changes to the split, timing or description of payment stages. They cannot change your labour, materials, VAT or total quoted price.</Text>
     </AppCard>
     <AppCard>
       <Text variant="titleLarge">Payment schedule</Text>
       {(quote.paymentSchedule ?? []).map((stage) => <AppCard key={stage.key} elevated={false}>
         <Text variant="titleMedium">{stage.title} · {formatMoney(stage.amount)}</Text>
         <Chip compact>{stage.kind}</Chip>
-        <Text>{stage.trigger || 'No completion condition specified.'}</Text>
+        <Text>{stage.trigger || 'No completion point specified.'}</Text>
       </AppCard>)}
       <Text variant="headlineSmall">Total: {formatMoney(quote.totalAmount)}</Text>
-      {waiting ? <Text>By agreeing these stages, you are confirming that this is a workable payment schedule for your quote. For any controlled progress or final stage, only mark the stage complete and request release when the recorded trigger has genuinely been reached.</Text> : null}
-      {waiting && !confirming ? <Button mode="contained" icon="check" disabled={busy} onPress={() => setConfirming(true)}>Review responsibility & accept</Button> : null}
+      {waiting ? <Text>Check that every amount, stage and completion point is workable before accepting the revised schedule. Materials payments and deposits are upfront payments when BuildPair payments are used. For progress and final stages, request release only after the recorded completion point has been reached.</Text> : null}
+      {waiting && !confirming ? <Button mode="contained" icon="check" disabled={busy} onPress={() => setConfirming(true)}>Review & accept changes</Button> : null}
       {waiting && confirming ? <AppCard elevated={false}>
-        <Text variant="titleMedium">Confirm revised payment stages</Text>
-        <Text>I have reviewed the amounts, order and triggers. I understand that requesting a controlled payment release is my statement that the agreed trigger for that stage has genuinely been reached.</Text>
-        <Text>This does not change the homeowner’s responsibility to check the stage before approving release, or either party’s statutory or contractual rights.</Text>
-        <Button mode="text" disabled={busy} onPress={() => setConfirming(false)}>Check again</Button>
-        <Button mode="contained" icon="check" loading={busy} disabled={busy} onPress={() => void acceptPlan()}>I confirm — accept stages</Button>
+        <Text variant="titleMedium">Confirm revised payment schedule</Text>
+        <Text>I have reviewed the amounts, order and completion points. I understand that requesting release of a progress or final stage confirms that the recorded completion point has been reached.</Text>
+        <Text>This does not remove the homeowner’s responsibility to check the stage before approving release or either party’s statutory or contractual rights.</Text>
+        <Button mode="text" disabled={busy} onPress={() => setConfirming(false)}>Review again</Button>
+        <Button mode="contained" icon="check" loading={busy} disabled={busy} onPress={() => void acceptPlan()}>Accept revised schedule</Button>
       </AppCard> : null}
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
       {!waiting ? <Button mode="contained" onPress={() => router.replace('/trader/messages')}>Back to messages</Button> : null}

@@ -54,7 +54,7 @@ export default function NewQuoteScreen() {
   const [deposit, setDeposit] = useState('');
   const [stages, setStages] = useState<DraftStage[]>([]);
   const [validDays, setValidDays] = useState('14');
-  const [terms, setTerms] = useState('Payments are due through the agreed BuildPair stages. Extra work must be agreed as a variation before it is charged.');
+  const [terms, setTerms] = useState('Payments follow the agreed payment schedule. Any additional chargeable work must be agreed as a variation before it is carried out.');
   const [scope, setScope] = useState('');
   const [exclusions, setExclusions] = useState('');
   const [notes, setNotes] = useState('');
@@ -90,8 +90,8 @@ export default function NewQuoteScreen() {
     if (totals.totalAmount <= 0) return [];
     if (planMode === 'single') return [{ key: 'final', title: 'Full payment', amount: totals.totalAmount, kind: 'final', trigger: 'Due after the agreed work is complete and approved by the homeowner.', sortOrder: 1 }];
     const result: PaymentStagePlan[] = [];
-    if (materialsUpfrontAmount > 0) result.push({ key: 'materials', title: 'Materials payment', amount: materialsUpfrontAmount, kind: 'materials', trigger: 'Due before materials are ordered. This payment is released to the tradesperson for the agreed materials.', sortOrder: result.length + 1 });
-    if (depositAmount > 0) result.push({ key: 'deposit', title: 'Project deposit', amount: depositAmount, kind: 'deposit', trigger: 'Due after the quote and payment plan are accepted, before the agreed start date.', sortOrder: result.length + 1 });
+    if (materialsUpfrontAmount > 0) result.push({ key: 'materials', title: 'Materials payment', amount: materialsUpfrontAmount, kind: 'materials', trigger: 'Due before materials are ordered. If paid through BuildPair, this upfront amount is transferred to the tradesperson when payment succeeds.', sortOrder: result.length + 1 });
+    if (depositAmount > 0) result.push({ key: 'deposit', title: 'Project deposit', amount: depositAmount, kind: 'deposit', trigger: 'Due before the agreed start date. If paid through BuildPair, this upfront deposit is transferred to the tradesperson when payment succeeds.', sortOrder: result.length + 1 });
     if (planMode === 'staged') {
       stages.forEach((stage, index) => {
         const amount = poundsToPence(stage.amount);
@@ -175,20 +175,21 @@ export default function NewQuoteScreen() {
     </AppCard>
 
     <AppCard>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}><Text variant="titleLarge">BuildPair payouts</Text><Chip icon={payoutReady ? 'check-circle-outline' : 'alert-circle-outline'}>{payoutReady ? 'Payouts ready' : 'Setup required'}</Chip></View>
-      <Text>To receive any materials payment, deposit, stage payment or final payment through BuildPair, you must complete BuildPair payouts through Stripe.</Text>
-      <Text variant="bodySmall">You can still send this quote before payout setup is complete, but the homeowner will not be able to choose BuildPair staged payments for the accepted job until your Stripe payout account is ready. BuildPair does not store your bank or card details.</Text>
-      {!payoutReady ? <Button mode="contained" icon="bank-outline" onPress={() => router.push('/trader/subscription')}>Set up BuildPair payouts</Button> : null}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}><Text variant="titleLarge">Payout setup</Text><Chip icon={payoutReady ? 'check-circle-outline' : 'alert-circle-outline'}>{payoutReady ? 'Ready' : 'Setup required'}</Chip></View>
+      <Text>BuildPair uses Stripe to process supported job payments and pay tradespeople. Complete Stripe onboarding before you can receive BuildPair payments.</Text>
+      <Text variant="bodySmall">You can send this quote before setup is complete. The homeowner cannot select BuildPair payments for the job until Stripe confirms that your account is ready for payouts. Bank and verification details entered into Stripe are handled by Stripe.</Text>
+      {!payoutReady ? <Button mode="contained" icon="bank-outline" onPress={() => router.push('/trader/subscription')}>Set up payouts with Stripe</Button> : null}
     </AppCard>
 
     <AppCard>
-      <Text variant="titleLarge">How should this job be paid?</Text>
-      <Text>Set the payment stages now. The homeowner can accept them or propose different stage splits, but cannot change your quote total.</Text>
+      <Text variant="titleLarge">Payment schedule</Text>
+      <Text>Set the amounts and timing proposed for this job. The homeowner can accept the schedule or propose a different split without changing your quote total.</Text>
       <SegmentedButtons value={planMode} onValueChange={(value) => setPlanMode(value as PlanMode)} buttons={[{ value: 'single', label: 'Full at end' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Staged' }]} />
       {planMode !== 'single' ? <>
         <TextInput label="Upfront materials payment (£, optional)" value={materialsUpfront} onChangeText={setMaterialsUpfront} keyboardType="decimal-pad" mode="outlined" />
-        <HelperText type="info">Use this only for money genuinely needed to order agreed materials. If the homeowner pays it through BuildPair, it is released to your connected Stripe payout account for those materials.</HelperText>
+        <HelperText type="info">If paid through BuildPair, an upfront materials payment is transferred to your connected Stripe account when payment succeeds. Use it only for the agreed materials stated in the quote.</HelperText>
         <TextInput label="Project deposit (£, optional)" value={deposit} onChangeText={setDeposit} keyboardType="decimal-pad" mode="outlined" />
+        <HelperText type="info">If paid through BuildPair, a deposit is also transferred to your connected Stripe account when payment succeeds. It is not held for a later completion approval.</HelperText>
       </> : null}
       {planMode === 'staged' ? <>
         <Text variant="titleMedium">Progress stages</Text>
@@ -200,7 +201,7 @@ export default function NewQuoteScreen() {
         </AppCard>)}
         <Button mode="outlined" icon="plus" disabled={stages.length >= 7} onPress={addStage}>Add payment stage</Button>
       </> : null}
-      <HelperText type="error" visible={planInvalid}>The upfront/deposit/stage amounts must leave a positive final payment.</HelperText>
+      <HelperText type="error" visible={planInvalid}>The upfront, deposit and progress-stage amounts must leave a positive final payment.</HelperText>
     </AppCard>
 
     <AppCard>
@@ -216,7 +217,7 @@ export default function NewQuoteScreen() {
       <TextInput label="Additional notes" value={notes} onChangeText={setNotes} mode="outlined" multiline />
     </AppCard>
 
-    <AppCard><Text>Net: {formatMoney(totals.net)}</Text><Text>VAT: {formatMoney(totals.vatAmount)}</Text><Text variant="headlineSmall">Total: {formatMoney(totals.totalAmount)}</Text><Text variant="bodySmall">Sending this quote also sends the proposed payment stages. A new open-marketplace job uses one monthly offer; direct homeowner requests do not.</Text></AppCard>
+    <AppCard><Text>Net: {formatMoney(totals.net)}</Text><Text>VAT: {formatMoney(totals.vatAmount)}</Text><Text variant="headlineSmall">Total: {formatMoney(totals.totalAmount)}</Text><Text variant="bodySmall">Sending this quote also sends the proposed payment schedule. A new open-marketplace job uses one monthly offer; direct homeowner requests do not.</Text></AppCard>
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
   </Screen>;
 }

@@ -2,11 +2,11 @@ import { useClerk } from '@clerk/expo';
 import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { CompactNavMenu, type CompactNavItem } from '@/components/CompactNavMenu';
-import { colors, controlHeights, radii, spacing } from '@/constants/theme';
+import { colors, controlHeights, spacing } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref } from '@/lib/account-mode';
 import { useAuthAvailable } from '@/lib/auth-availability';
@@ -19,13 +19,6 @@ const NAV_ITEMS: { label: string; href: Href }[] = [
   { label: 'Membership', href: '/(public)/pricing' as Href },
   { label: 'Advice Hub', href: '/(public)/advice' as Href },
   { label: 'For Trades', href: '/(public)/for-tradespeople' },
-];
-
-const QUICK_NAV: { label: string; href: Href }[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Find Trades', href: '/(public)/directory' },
-  { label: 'How It Works', href: '/(public)/how-it-works' },
-  { label: 'Membership', href: '/(public)/pricing' as Href },
 ];
 
 function HeaderBrand() {
@@ -66,14 +59,8 @@ function DesktopNav() {
   </View>;
 }
 
-function MobileQuickNav() {
-  return <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickNav} contentContainerStyle={styles.quickNavContent} accessibilityLabel="BuildPair quick navigation">
-    {QUICK_NAV.map((item) => <Link key={item.label} href={item.href} asChild><Button mode="text" textColor={colors.charcoalSoft} contentStyle={styles.quickButtonContent} style={styles.quickButton}>{item.label}</Button></Link>)}
-  </ScrollView>;
-}
-
 function CompactShell({ menu }: { menu: ReactNode }) {
-  return <View style={styles.shell}><View style={styles.compactHeader}><HeaderBrand />{menu}</View><MobileQuickNav /></View>;
+  return <View style={styles.shell}><View style={styles.compactHeader}><HeaderBrand />{menu}</View></View>;
 }
 
 function AuthenticatedHeader() {
@@ -126,8 +113,4 @@ const styles = StyleSheet.create({
   navButtonContent: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xxs },
   primaryAction: { minHeight: controlHeights.standard, paddingHorizontal: spacing.sm },
   preview: { opacity: 0.62, marginLeft: spacing.xxs },
-  quickNav: { maxHeight: 48, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5', zIndex: 1 },
-  quickNavContent: { paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, gap: spacing.xxs, alignItems: 'center' },
-  quickButton: { borderRadius: radii.pill },
-  quickButtonContent: { minHeight: 36, paddingHorizontal: spacing.xxs },
 });

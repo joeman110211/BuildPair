@@ -138,11 +138,12 @@ export default function SubscriptionScreen() {
 
     <AppCard>
       <View style={styles.currentRow}>
-        <Text variant="titleLarge" style={styles.title}>BuildPair payouts are required to receive job payments</Text>
-        {payoutsReady ? <Chip icon="check-circle">Payouts ready</Chip> : null}
+        <Text variant="titleLarge" style={styles.title}>Payout setup</Text>
+        {payoutsReady ? <Chip icon="check-circle">Ready</Chip> : <Chip icon="alert-circle-outline">Setup required</Chip>}
       </View>
-      <Text style={styles.muted}>To receive materials payments, deposits, progress-stage payments or final payments through BuildPair, you must complete BuildPair payout onboarding with Stripe. Stripe securely collects and stores the payout and bank details inside the BuildPair onboarding experience. BuildPair stores only the connected-account reference and payout readiness status.</Text>
-      <Text style={styles.muted}>You can build your profile and send eligible quotes before payout setup is complete, but a homeowner cannot select BuildPair staged payments for an accepted job until your payouts are ready.</Text>
+      <Text>BuildPair uses Stripe to process supported job payments and pay tradespeople. Complete Stripe onboarding to receive payments through BuildPair.</Text>
+      <Text style={styles.muted}>Stripe collects the identity, business and bank information it requires. BuildPair receives your Stripe connected-account reference, payout status and payment-related references needed to operate the service.</Text>
+      <Text style={styles.muted}>You can create your profile and send eligible quotes before setup is complete. Homeowners cannot select BuildPair payments for your jobs until Stripe confirms that your account is ready to receive payouts.</Text>
       {showPayoutOnboarding ? (
         <View style={styles.connectPanel}>
           <StripeConnectOnboarding
@@ -155,7 +156,7 @@ export default function SubscriptionScreen() {
         </View>
       ) : (
         <Button mode="contained" icon="bank" onPress={() => setShowPayoutOnboarding(true)}>
-          {payoutsReady ? 'Review BuildPair payouts' : 'Set up BuildPair payouts'}
+          {payoutsReady ? 'Review payout details' : 'Set up payouts with Stripe'}
         </Button>
       )}
     </AppCard>

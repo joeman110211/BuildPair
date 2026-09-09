@@ -11,7 +11,7 @@ export default function PricingPage() {
       <View style={styles.heroInner}>
         <Text style={styles.eyebrow}>Tradesperson membership</Text>
         <Text variant="displaySmall" style={styles.title}>Simple monthly plans, built around how much of the marketplace you actually use.</Text>
-        <Text variant="bodyLarge" style={styles.intro}>BuildPair keeps the free Starter plan useful while reserving marketplace selling tools, searchable visibility and higher lead capacity for Plus and Pro members.</Text>
+        <Text variant="bodyLarge" style={styles.intro}>BuildPair keeps the free Starter plan useful while reserving marketplace selling tools, searchable visibility and higher offer capacity for Plus and Pro members.</Text>
         <View style={styles.heroActions}>
           <Link href="/auth/account" asChild><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.primary}>Create trade account</Button></Link>
           <Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.outline}>See trade features</Button></Link>
@@ -29,7 +29,7 @@ export default function PricingPage() {
         </View>
         <View style={[styles.explainer, { backgroundColor: colors.accentSoft }]}>
           <Text variant="titleLarge" style={styles.explainerTitle}>Direct requests are separate</Text>
-          <Text style={styles.explainerText}>When a homeowner chooses a searchable Plus or Pro profile and requests a quote directly, that opportunity does not consume the trader’s open-marketplace offer allowance.</Text>
+          <Text style={styles.explainerText}>When a homeowner chooses a searchable Plus or Pro profile and requests a quote directly, that opportunity does not consume the tradesperson’s open-marketplace offer allowance.</Text>
         </View>
         <View style={[styles.explainer, { backgroundColor: colors.navySoft }]}>
           <Text variant="titleLarge" style={styles.explainerTitle}>Categories stay meaningful</Text>
@@ -38,13 +38,14 @@ export default function PricingPage() {
       </View>
 
       <View style={styles.notice}>
-        <Text variant="titleMedium" style={styles.noticeTitle}>BuildPair staged-payment fee</Text>
-        <Text style={styles.noticeText}>For jobs paid through BuildPair staged payments, BuildPair’s current service fee is 1% of the accepted quote total after agreed deposit stages are excluded. The actual Stripe processing fees recorded for that job are also recovered from the tradesperson. The current workflow retains those amounts from the final tradesperson payout, while earlier agreed progress stages can be released at their full stage amount.</Text>
+        <Text variant="titleMedium" style={styles.noticeTitle}>BuildPair job payment fee</Text>
+        <Text style={styles.noticeText}>For jobs using BuildPair payments, the current BuildPair service fee is 1% of the accepted quote total after agreed deposit stages are excluded. BuildPair also recovers the actual Stripe processing fees recorded for that job. Under the current payment workflow, these amounts are deducted from the final tradesperson payout. The final release record shows the gross stage amount, deductions and net transfer.</Text>
+        <Link href="/(public)/payments" asChild><Button mode="text">Read how BuildPair payments work</Button></Link>
       </View>
 
       <View style={styles.notice}>
-        <Text variant="titleMedium" style={styles.noticeTitle}>Commercial launch note</Text>
-        <Text style={styles.noticeText}>The agreed monthly prices are £19.99 for BuildPair Plus and £29.99 for BuildPair Pro. VAT presentation, annual billing and final subscription cancellation/refund wording are being completed before public paid launch, so BuildPair will not invent those terms on the website before they are decided.</Text>
+        <Text variant="titleMedium" style={styles.noticeTitle}>Membership billing</Text>
+        <Text style={styles.noticeText}>Starter is £0 per month. The current monthly membership prices are £19.99 for BuildPair Plus and £29.99 for BuildPair Pro. Subscription purchases, renewals, plan changes and cancellations are handled through the BuildPair billing flow and Stripe. The applicable amount is shown before a paid subscription is confirmed.</Text>
       </View>
     </View>
     <PublicFooter />

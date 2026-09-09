@@ -10,7 +10,10 @@ const registerServiceWorker = `
 `;
 
 const shellCss = `
-  html, body { background: #ECEFF1; }
+  html, body {
+    background: #ECEFF1;
+    overscroll-behavior-y: none;
+  }
   body { margin: 0; }
   * { box-sizing: border-box; }
 `;

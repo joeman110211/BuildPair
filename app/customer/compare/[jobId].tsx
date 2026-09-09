@@ -32,7 +32,7 @@ export default function CompareQuotesScreen() {
   }
 
   function accept(quote: Quote) {
-    const message = `You are accepting the ${formatMoney(quote.totalAmount)} quote and the payment schedule shown with it. Check the scope, exclusions, upfront amounts and every payment stage before continuing. If you later use BuildPair staged payments, approving a completed stage will be your instruction to release that funded stage to the tradesperson. This does not remove your statutory consumer rights.`;
+    const message = `You are accepting the ${formatMoney(quote.totalAmount)} quote and the payment schedule shown with it. Review the scope, exclusions, upfront materials payment or deposit, and each later stage before continuing. Accepting the quote does not itself make a payment. If you later choose BuildPair payments, upfront materials payments and deposits are transferred when paid; progress and final stages are transferred only after the tradesperson requests release and you approve it.`;
     if (typeof window !== 'undefined') {
       if (window.confirm(message)) void performAccept(quote);
       return;
