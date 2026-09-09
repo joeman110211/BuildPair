@@ -18,6 +18,10 @@ on:
         required: false
         default: false
         type: boolean
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/e2e.yml'
 
 permissions:
   contents: read
@@ -61,7 +65,6 @@ jobs:
             https://*) ;;
             *) echo "::error::base_url must start with https://"; exit 1 ;;
           esac
-
           host=$(printf '%s' "$E2E_BASE_URL" | sed -E 's#^https://([^/]+).*$#\1#' | tr '[:upper:]' '[:lower:]')
           case "$host" in
             buildpair.co.uk|www.buildpair.co.uk)
@@ -69,12 +72,10 @@ jobs:
               exit 1
               ;;
           esac
-
           if [ "$host" != "staging.buildpair.co.uk" ]; then
             echo "::error::Mutating BuildPair E2E tests may only target staging.buildpair.co.uk."
             exit 1
           fi
-
           if [ -z "$CLERK_SECRET_KEY" ]; then
             echo "::error::Add the Clerk secret key for the staging BuildPair Clerk instance as an Actions secret named CLERK_SECRET_KEY before running E2E."
             exit 1
