@@ -14,7 +14,7 @@ export function stagePlatformFee(kind: MilestonePaymentKind, quoteTotal: number,
 
 export function transferAmountForStage(kind: MilestonePaymentKind, milestoneAmount: number, quoteTotal: number, depositTotal = 0) {
   const fee = stagePlatformFee(kind, quoteTotal, depositTotal);
-  if (fee > milestoneAmount) throw new Error('The final payment must be large enough to cover the BuildPair transaction fee');
+  if (fee > milestoneAmount) throw new Error('The final payment must be large enough to cover the BuildPair service fee');
   return milestoneAmount - fee;
 }
 
