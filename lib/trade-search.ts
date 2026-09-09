@@ -134,16 +134,31 @@ function phraseIncludes(value: string, term: string) {
   return false;
 }
 
+function exactPhraseIncludes(value: string, term: string) {
+  const haystack = normalise(value);
+  const needle = normalise(term);
+  if (!needle) return false;
+  return haystack === needle
+    || haystack.startsWith(`${needle} `)
+    || haystack.endsWith(` ${needle}`)
+    || haystack.includes(` ${needle} `);
+}
+
 function matchedGroups(query: string) {
   const raw = normalise(query);
   if (!raw) return [];
   const rawWordCount = raw.split(' ').filter(Boolean).length;
 
-  return SEARCH_GROUPS.filter((group) => group.some((term) => {
+  return SEARCH_GROUPS.filter((group) => group.some((term, index) => {
     const candidate = normalise(term);
     if (candidate.length <= 1) return false;
     if (raw === candidate) return true;
     if (rawWordCount > 1 && GENERIC_TERMS.has(candidate)) return false;
+
+    if (index >= GROUP_ANCHOR_LIMIT) {
+      return exactPhraseIncludes(raw, candidate);
+    }
+
     return phraseIncludes(raw, candidate) || phraseIncludes(candidate, raw);
   }));
 }
