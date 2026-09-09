@@ -93,15 +93,15 @@ jobs:
           set -euo pipefail
           sed -i 's/^org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -Dfile.encoding=UTF-8/' gradle.properties
           if grep -q '^reactNativeArchitectures=' gradle.properties; then
-            sed -i 's/^reactNativeArchitectures=.*/reactNativeArchitectures=armeabi-v7a,arm64-v8a/' gradle.properties
+            sed -i 's/^reactNativeArchitectures=.*/reactNativeArchitectures=arm64-v8a/' gradle.properties
           else
-            echo 'reactNativeArchitectures=armeabi-v7a,arm64-v8a' >> gradle.properties
+            echo 'reactNativeArchitectures=arm64-v8a' >> gradle.properties
           fi
           echo 'org.gradle.workers.max=2' >> gradle.properties
 
       - name: Build installable release APK
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --max-workers=2 --stacktrace --info
+        run: ./gradlew assembleRelease --no-daemon --max-workers=2 --stacktrace --info -PreactNativeArchitectures=arm64-v8a
 
       - name: Verify release APK integrity and package
         shell: bash
