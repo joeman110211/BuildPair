@@ -1,10 +1,11 @@
-import { useSignIn } from '@clerk/expo';
+import { useClerk, useSignIn } from '@clerk/expo';
 import { SignIn } from '@clerk/expo/web';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { colors } from '@/constants/theme';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { modeSetupHref, parseAccountMode, signUpHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
 import { clerkWebAppearance } from '@/lib/clerk-web';
@@ -15,6 +16,8 @@ function scalar(value: string | string[] | undefined) {
 
 function AdminSignInForm() {
   const { signIn, fetchStatus } = useSignIn();
+  const { signOut } = useClerk();
+  const { user, loading: currentUserLoading, error: currentUserError, refresh, isSignedIn } = useCurrentUser();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -81,6 +84,62 @@ function AdminSignInForm() {
     } catch (e) {
       setError(errorMessage(e));
     }
+  }
+
+  if (currentUserLoading) {
+    return (
+      <View style={{ width: '100%', maxWidth: 480, alignSelf: 'center', paddingTop: 18, gap: 12 }}>
+        <Text variant="bodyLarge" style={{ textAlign: 'center', color: colors.charcoalSoft }}>
+          Checking your existing BuildPair session…
+        </Text>
+      </View>
+    );
+  }
+
+  if (isSignedIn) {
+    if (user?.isAdmin) {
+      return (
+        <View style={{ width: '100%', maxWidth: 480, alignSelf: 'center', paddingTop: 18, gap: 12 }}>
+          <Text variant="bodyLarge" style={{ textAlign: 'center', color: colors.charcoalSoft }}>
+            You are already signed in with an authorised administrator account.
+          </Text>
+          <Button mode="contained" onPress={() => router.replace('/admin')} contentStyle={{ minHeight: 48 }}>
+            Open administrator console
+          </Button>
+          <Button onPress={() => signOut(() => router.replace('/auth/sign-in?admin=1'))}>
+            Sign in with a different account
+          </Button>
+        </View>
+      );
+    }
+
+    if (!user) {
+      return (
+        <View style={{ width: '100%', maxWidth: 480, alignSelf: 'center', paddingTop: 18, gap: 12 }}>
+          <Text variant="bodyLarge" style={{ textAlign: 'center', color: colors.charcoalSoft }}>
+            BuildPair could not verify whether your current account has administrator access.
+          </Text>
+          <HelperText type="error" visible>{currentUserError || 'Unable to load the current account.'}</HelperText>
+          <Button mode="contained" onPress={() => void refresh()} contentStyle={{ minHeight: 48 }}>
+            Check again
+          </Button>
+          <Button onPress={() => signOut(() => router.replace('/auth/sign-in?admin=1'))}>
+            Sign out and sign in again
+          </Button>
+        </View>
+      );
+    }
+
+    return (
+      <View style={{ width: '100%', maxWidth: 480, alignSelf: 'center', paddingTop: 18, gap: 12 }}>
+        <Text variant="bodyLarge" style={{ textAlign: 'center', color: colors.charcoalSoft }}>
+          You are already signed in, but this account does not have BuildPair administrator access.
+        </Text>
+        <Button mode="contained" onPress={() => signOut(() => router.replace('/auth/sign-in?admin=1'))} contentStyle={{ minHeight: 48 }}>
+          Sign out and use administrator account
+        </Button>
+      </View>
+    );
   }
 
   if (verifying) {
