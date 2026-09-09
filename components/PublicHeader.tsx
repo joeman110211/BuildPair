@@ -26,6 +26,7 @@ const QUICK_NAV: { label: string; href: Href }[] = [
   { label: 'Find Trades', href: '/(public)/directory' },
   { label: 'How It Works', href: '/(public)/how-it-works' },
   { label: 'Membership', href: '/(public)/pricing' as Href },
+  { label: 'Advice Hub', href: '/(public)/advice' as Href },
 ];
 
 function HeaderBrand() {
@@ -69,7 +70,7 @@ function DesktopNav() {
 function MobileQuickNav() {
   return <View style={styles.quickNavShell}>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickNav} contentContainerStyle={styles.quickNavContent} accessibilityLabel="BuildPair quick navigation">
-      {QUICK_NAV.map((item) => <Link key={item.label} href={item.href} asChild><Button mode="text" textColor={colors.charcoalSoft} contentStyle={styles.quickButtonContent} style={styles.quickButton}>{item.label}</Button></Link>)}
+      {QUICK_NAV.map((item) => <Link key={item.label} href={item.href} asChild><Button compact mode="text" textColor={colors.charcoalSoft} labelStyle={styles.quickButtonLabel} contentStyle={styles.quickButtonContent} style={styles.quickButton}>{item.label}</Button></Link>)}
     </ScrollView>
   </View>;
 }
@@ -130,7 +131,8 @@ const styles = StyleSheet.create({
   preview: { opacity: 0.62, marginLeft: spacing.xxs },
   quickNavShell: { height: 48, minHeight: 48, flexShrink: 0, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5', overflow: 'hidden' },
   quickNav: { flexGrow: 0, height: 48 },
-  quickNavContent: { minHeight: 48, paddingHorizontal: spacing.sm, gap: spacing.xxs, alignItems: 'center' },
+  quickNavContent: { minHeight: 48, minWidth: '100%', paddingHorizontal: 4, gap: 0, alignItems: 'center', justifyContent: 'space-around' },
   quickButton: { borderRadius: radii.pill },
-  quickButtonContent: { minHeight: 36, paddingHorizontal: spacing.xxs },
+  quickButtonContent: { minHeight: 36, paddingHorizontal: 2 },
+  quickButtonLabel: { fontSize: 12, marginHorizontal: 0 },
 });
