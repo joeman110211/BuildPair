@@ -141,26 +141,20 @@ export default function SubscriptionScreen() {
         <Text variant="titleLarge" style={styles.title}>BuildPair payouts are required to receive job payments</Text>
         {payoutsReady ? <Chip icon="check-circle">Payouts ready</Chip> : null}
       </View>
-      <Text style={styles.muted}>To receive materials payments, deposits, progress-stage payments or final payments through BuildPair, you must complete BuildPair payout onboarding with Stripe. Stripe collects and stores the payout and bank details. BuildPair stores only the connected-account reference and payout readiness status.</Text>
+      <Text style={styles.muted}>To receive materials payments, deposits, progress-stage payments or final payments through BuildPair, you must complete BuildPair payout onboarding with Stripe. Stripe securely collects and stores the payout and bank details inside the BuildPair onboarding experience. BuildPair stores only the connected-account reference and payout readiness status.</Text>
       <Text style={styles.muted}>You can build your profile and send eligible quotes before payout setup is complete, but a homeowner cannot select BuildPair staged payments for an accepted job until your payouts are ready.</Text>
-      {isWeb ? (
-        showPayoutOnboarding ? (
-          <View style={styles.connectPanel}>
-            <StripeConnectOnboarding
-              getToken={getToken}
-              onExit={() => {
-                setShowPayoutOnboarding(false);
-                void load();
-              }}
-            />
-          </View>
-        ) : (
-          <Button mode="contained" icon="bank" onPress={() => setShowPayoutOnboarding(true)}>
-            {payoutsReady ? 'Review BuildPair payouts' : 'Set up BuildPair payouts'}
-          </Button>
-        )
+      {showPayoutOnboarding ? (
+        <View style={styles.connectPanel}>
+          <StripeConnectOnboarding
+            getToken={getToken}
+            onExit={() => {
+              setShowPayoutOnboarding(false);
+              void load();
+            }}
+          />
+        </View>
       ) : (
-        <Button mode="contained" icon="bank" onPress={() => openEndpoint('/api/stripe/connect')}>
+        <Button mode="contained" icon="bank" onPress={() => setShowPayoutOnboarding(true)}>
           {payoutsReady ? 'Review BuildPair payouts' : 'Set up BuildPair payouts'}
         </Button>
       )}
