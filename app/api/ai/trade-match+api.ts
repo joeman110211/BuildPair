@@ -116,26 +116,33 @@ export async function POST(request: Request) {
       return Response.json(ruleResult);
     }
 
-    try {
-      await assertAiDailyBudget();
-    } catch (error) {
-      await recordAiRequest({
-        endpoint: 'trade-match',
-        request: auditRequest,
-        response: ruleResult,
-        status: 'blocked',
-        providerCalled: false,
-        latencyMs: Date.now() - startedAt,
-        metadata: { reason: error instanceof Error ? error.message : 'Global AI limit reached' },
-      });
-      return Response.json(ruleResult);
-    }
-
     const ai = new GoogleGenAI({ apiKey: key });
     let lastError: unknown = null;
+    let providerCalls = 0;
     const attemptedModels: string[] = [];
     for (const model of modelCandidates()) {
+      try {
+        await assertAiDailyBudget();
+      } catch (error) {
+        await recordAiRequest({
+          endpoint: 'trade-match',
+          request: auditRequest,
+          response: ruleResult,
+          status: 'blocked',
+          model: attemptedModels[attemptedModels.length - 1] ?? null,
+          providerCalled: providerCalls > 0,
+          latencyMs: Date.now() - startedAt,
+          metadata: {
+            attemptedModels,
+            providerCalls,
+            reason: error instanceof Error ? error.message : 'Global AI limit reached',
+          },
+        });
+        return Response.json(ruleResult);
+      }
+
       attemptedModels.push(model);
+      providerCalls += 1;
       try {
         const parsed = await generateTradeMatch(ai, model, problem, mode);
         const result = mode === 'search' && parsed.matched === false
@@ -163,7 +170,7 @@ export async function POST(request: Request) {
           model,
           providerCalled: true,
           latencyMs: Date.now() - startedAt,
-          metadata: { attemptedModels },
+          metadata: { attemptedModels, providerCalls },
         });
         return Response.json(result);
       } catch (error) {
@@ -177,10 +184,10 @@ export async function POST(request: Request) {
       request: auditRequest,
       response: ruleResult,
       status: 'error',
-      model: attemptedModels.at(-1) ?? null,
-      providerCalled: true,
+      model: attemptedModels[attemptedModels.length - 1] ?? null,
+      providerCalled: providerCalls > 0,
       latencyMs: Date.now() - startedAt,
-      metadata: { attemptedModels, reason: lastError instanceof Error ? lastError.message : 'All Gemini models failed' },
+      metadata: { attemptedModels, providerCalls, reason: lastError instanceof Error ? lastError.message : 'All Gemini models failed' },
     });
     return Response.json(ruleResult);
   } catch (error) { return jsonError(error); }
