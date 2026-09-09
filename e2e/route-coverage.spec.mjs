@@ -21,6 +21,7 @@ const publicRoutes = [
   '/how-it-works',
   '/jobs',
   '/marketplace-standards',
+  '/payments',
   '/pricing',
   '/privacy',
   '/report',
@@ -41,6 +42,7 @@ const signedInPublicRoutes = [
   '/advice',
   '/directory',
   '/how-it-works',
+  '/payments',
   '/pricing',
   '/trust-safety',
 ];
@@ -88,6 +90,45 @@ async function signIn(page, email, role) {
   if (!response.ok) throw new Error(`Could not enable ${role}: HTTP ${response.status} ${await response.text()}`);
 }
 
+async function assertMobileLayout(page, label) {
+  const viewport = page.viewportSize();
+  if (!viewport || viewport.width > 600) return;
+
+  const layout = await page.evaluate(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    const viewportWidth = window.innerWidth;
+    const interactive = [...document.querySelectorAll('button, [role="button"], input, textarea, select')];
+    const protrudingControls = interactive.flatMap((element) => {
+      const style = window.getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      const hidden = style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity || 1) === 0 || rect.width === 0 || rect.height === 0;
+      if (hidden) return [];
+      if (rect.left < -2 || rect.right > viewportWidth + 2) {
+        return [{
+          tag: element.tagName,
+          text: (element.textContent || element.getAttribute('aria-label') || '').trim().slice(0, 80),
+          left: Math.round(rect.left),
+          right: Math.round(rect.right),
+          width: Math.round(rect.width),
+        }];
+      }
+      return [];
+    });
+
+    return {
+      viewportWidth,
+      documentWidth: root.scrollWidth,
+      bodyWidth: body.scrollWidth,
+      protrudingControls: protrudingControls.slice(0, 8),
+    };
+  });
+
+  expect(layout.documentWidth, `${label}: document overflows the mobile viewport`).toBeLessThanOrEqual(layout.viewportWidth + 2);
+  expect(layout.bodyWidth, `${label}: body overflows the mobile viewport`).toBeLessThanOrEqual(layout.viewportWidth + 2);
+  expect(layout.protrudingControls, `${label}: visible controls protrude beyond the mobile viewport`).toEqual([]);
+}
+
 async function assertHealthyRoute(page, route, label) {
   const apiFailures = [];
   const listener = (response) => {
@@ -110,6 +151,7 @@ async function assertHealthyRoute(page, route, label) {
     expect(body, `${label}: unmatched route`).not.toMatch(/Unmatched Route|Page could not be found/i);
     expect(body, `${label}: server error rendered to user`).not.toMatch(/Internal server error/i);
     expect(apiFailures, `${label}: same-origin API 5xx responses`).toEqual([]);
+    await assertMobileLayout(page, label);
   } finally {
     page.off('response', listener);
   }
