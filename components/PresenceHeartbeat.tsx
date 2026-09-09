@@ -33,5 +33,16 @@ export function PresenceHeartbeat() {
     };
   }, [getToken, isSignedIn, pathname]);
 
+  useEffect(() => {
+    if (!isSignedIn) return;
+    const path = pathname || '/';
+    void apiFetch('/api/product-events', {
+      method: 'POST',
+      body: JSON.stringify({ eventType: 'page_view', path }),
+    }, getToken).catch(() => {
+      // Product analytics must never interrupt a customer or tradesperson journey.
+    });
+  }, [getToken, isSignedIn, pathname]);
+
   return null;
 }
