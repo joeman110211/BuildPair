@@ -4,6 +4,9 @@ import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { Button, Chip, ProgressBar, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
+// Metro resolves the platform-specific implementation so browser-only Stripe Connect code is not bundled natively.
+// eslint-disable-next-line import/no-unresolved
+import { StripeConnectOnboarding } from '@/components/StripeConnectOnboarding';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
@@ -51,6 +54,7 @@ export default function SubscriptionScreen() {
   const isWeb = Platform.OS === 'web';
   const [profile, setProfile] = useState<TraderProfile>();
   const [error, setError] = useState('');
+  const [showPayoutOnboarding, setShowPayoutOnboarding] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -75,6 +79,7 @@ export default function SubscriptionScreen() {
   const activeTier: SubscriptionTier = profile?.subscriptionTier ?? 'free';
   const used = profile?.monthlyQuotesUsed ?? 0;
   const limit = profile?.monthlyQuoteLimit ?? PLAN_COPY[activeTier].monthlyMarketplaceQuotes;
+  const payoutsReady = Boolean(profile?.stripePayoutsEnabled);
   const resetLabel = profile?.monthlyQuoteResetAt
     ? new Date(profile.monthlyQuoteResetAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
     : 'next month';
@@ -132,10 +137,33 @@ export default function SubscriptionScreen() {
     </AppCard> : null}
 
     <AppCard>
-      <Text variant="titleLarge" style={styles.title}>BuildPair payouts are required to receive job payments</Text>
+      <View style={styles.currentRow}>
+        <Text variant="titleLarge" style={styles.title}>BuildPair payouts are required to receive job payments</Text>
+        {payoutsReady ? <Chip icon="check-circle">Payouts ready</Chip> : null}
+      </View>
       <Text style={styles.muted}>To receive materials payments, deposits, progress-stage payments or final payments through BuildPair, you must complete BuildPair payout onboarding with Stripe. Stripe collects and stores the payout and bank details. BuildPair stores only the connected-account reference and payout readiness status.</Text>
       <Text style={styles.muted}>You can build your profile and send eligible quotes before payout setup is complete, but a homeowner cannot select BuildPair staged payments for an accepted job until your payouts are ready.</Text>
-      <Button mode="contained" icon="bank" onPress={() => openEndpoint('/api/stripe/connect')}>Set up BuildPair payouts</Button>
+      {isWeb ? (
+        showPayoutOnboarding ? (
+          <View style={styles.connectPanel}>
+            <StripeConnectOnboarding
+              getToken={getToken}
+              onExit={() => {
+                setShowPayoutOnboarding(false);
+                void load();
+              }}
+            />
+          </View>
+        ) : (
+          <Button mode="contained" icon="bank" onPress={() => setShowPayoutOnboarding(true)}>
+            {payoutsReady ? 'Review BuildPair payouts' : 'Set up BuildPair payouts'}
+          </Button>
+        )
+      ) : (
+        <Button mode="contained" icon="bank" onPress={() => openEndpoint('/api/stripe/connect')}>
+          {payoutsReady ? 'Review BuildPair payouts' : 'Set up BuildPair payouts'}
+        </Button>
+      )}
     </AppCard>
     {isWeb ? <Button mode="outlined" onPress={() => openEndpoint('/api/stripe/billing-portal')}>Manage or cancel subscription</Button> : null}
     {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -156,5 +184,6 @@ const styles = StyleSheet.create({
   muted: { color: colors.muted, lineHeight: 22 },
   usage: { gap: 8, marginTop: 8 },
   progress: { height: 9, borderRadius: 8, backgroundColor: colors.surfaceStrong },
+  connectPanel: { minHeight: 420, marginTop: 8 },
   error: { color: colors.danger },
 });
