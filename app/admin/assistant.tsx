@@ -8,8 +8,22 @@ import { Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 
-type ChatTurn = { role: 'user' | 'assistant'; content: string };
-type AssistantResponse = { answer: string };
+type AdminActionProposal = {
+  action: Record<string, unknown>;
+  title: string;
+  summary: string;
+  impact: string[];
+  risk: 'medium' | 'high';
+  confirmLabel: string;
+};
+type ChatTurn = {
+  role: 'user' | 'assistant';
+  content: string;
+  actionProposal?: AdminActionProposal | null;
+  actionStatus?: 'pending' | 'completed' | 'cancelled' | 'failed';
+  actionMessage?: string;
+};
+type AssistantResponse = { answer: string; actionProposal: AdminActionProposal | null };
 type AiRequestRow = {
   id: number;
   userId: string | null;
@@ -32,10 +46,10 @@ type AiAuditResponse = {
 };
 
 const QUICK_PROMPTS = [
-  'Explain BuildPair from a homeowner’s first visit through to a completed review.',
-  'Explain the tradesperson journey from signup through quoting, getting paid and reviews.',
   'What is happening across BuildPair right now from the live data you can see?',
+  'Explain what admin actions you can prepare and which ones need confirmation.',
   'Explain every AI feature, what it sees and how usage is protected.',
+  'What should I investigate first if users are reporting account problems?',
 ] as const;
 
 function fmt(value: string) {
@@ -52,13 +66,14 @@ export default function AdminAssistant() {
   const [message, setMessage] = useState('');
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [sending, setSending] = useState(false);
+  const [executingIndex, setExecutingIndex] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [audit, setAudit] = useState<AiAuditResponse | null>(null);
   const [auditLoading, setAuditLoading] = useState(true);
   const [auditError, setAuditError] = useState('');
 
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
-  const history = useMemo(() => turns.slice(-8), [turns]);
+  const history = useMemo(() => turns.slice(-8).map(({ role, content }) => ({ role, content })), [turns]);
 
   const loadAudit = useCallback(async () => {
     try {
@@ -92,7 +107,12 @@ export default function AdminAssistant() {
         method: 'POST',
         body: JSON.stringify({ message: trimmed, history }),
       }, () => getTokenRef.current());
-      setTurns((current) => [...current, { role: 'assistant', content: response.answer }]);
+      setTurns((current) => [...current, {
+        role: 'assistant',
+        content: response.answer,
+        actionProposal: response.actionProposal,
+        actionStatus: response.actionProposal ? 'pending' : undefined,
+      }]);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -101,18 +121,50 @@ export default function AdminAssistant() {
     }
   };
 
-  return <Screen title="Admin Assistant" subtitle="Ask about the whole BuildPair product, current marketplace state, system behaviour or the admin console in plain English.">
+  const cancelAction = (index: number) => {
+    setTurns((current) => current.map((turn, turnIndex) => turnIndex === index
+      ? { ...turn, actionStatus: 'cancelled', actionMessage: 'Cancelled. No change was made.' }
+      : turn));
+  };
+
+  const executeAction = async (index: number, proposal: AdminActionProposal) => {
+    if (executingIndex != null) return;
+    setExecutingIndex(index);
+    setTurns((current) => current.map((turn, turnIndex) => turnIndex === index
+      ? { ...turn, actionMessage: '' }
+      : turn));
+
+    try {
+      await apiFetch('/api/admin/assistant-action', {
+        method: 'POST',
+        body: JSON.stringify({ confirmed: true, action: proposal.action }),
+      }, () => getTokenRef.current());
+      setTurns((current) => current.map((turn, turnIndex) => turnIndex === index
+        ? { ...turn, actionStatus: 'completed', actionMessage: 'Confirmed action completed successfully.' }
+        : turn));
+      void loadAudit();
+    } catch (e) {
+      const messageText = errorMessage(e);
+      setTurns((current) => current.map((turn, turnIndex) => turnIndex === index
+        ? { ...turn, actionStatus: 'failed', actionMessage: messageText }
+        : turn));
+    } finally {
+      setExecutingIndex(null);
+    }
+  };
+
+  return <Screen title="Admin Assistant" subtitle="Private BuildPair control assistant for the protected admin area only. It can investigate freely and prepare supported admin changes for your explicit approval.">
     <AppCard style={styles.introCard}>
       <View style={styles.introHeader}>
         <View style={styles.flex}>
-          <Text variant="titleLarge" style={styles.title}>Whole-app BuildPair assistant</Text>
-          <Text style={styles.body}>It knows the homeowner and tradesperson journeys, marketplace workflows, AI features, payments, subscriptions, messaging, safety controls and platform integrations. Each question also receives a current read-only snapshot of key BuildPair data.</Text>
+          <Text variant="titleLarge" style={styles.title}>Admin-only BuildPair control assistant</Text>
+          <Text style={styles.body}>It understands the homeowner and tradesperson journeys, marketplace workflows, AI features, payments, subscriptions, messaging, moderation, system integrations and live operational context.</Text>
         </View>
         <Chip>Admin-only</Chip>
       </View>
       <View style={styles.notice}>
-        <Text style={styles.noticeTitle}>Knowledge wide, permissions narrow</Text>
-        <Text style={styles.noticeText}>The assistant can understand and explain the whole app and use live operational context, but it remains read-only. It cannot suspend users, move money, expose secrets or push code to production.</Text>
+        <Text style={styles.noticeTitle}>Reads freely. Writes only after you confirm.</Text>
+        <Text style={styles.noticeText}>The assistant can investigate and prepare supported admin actions, but the chat request itself cannot execute them. Any state-changing action appears below as a separate confirmation card explaining what will happen before the protected admin backend is called. These elevated permissions exist only in the Admin Assistant and still require administrator authentication.</Text>
       </View>
       <View style={styles.shortcutRow}>
         <Link href="/admin/dashboard" asChild><Button mode="outlined">Overview</Button></Link>
@@ -132,18 +184,36 @@ export default function AdminAssistant() {
       <View style={styles.chatHeader}>
         <View style={styles.flex}>
           <Text variant="titleLarge" style={styles.title}>Conversation</Text>
-          <Text style={styles.muted}>Answers use BuildPair’s product map, the recent conversation and a fresh read-only operational snapshot. If an exact record is outside that snapshot, it should tell you where to inspect it rather than inventing one.</Text>
+          <Text style={styles.muted}>Ask it to investigate BuildPair or prepare an admin change. Supported write actions currently include account suspension/restoration, complimentary membership changes and moderation/account/conversation actions. Anything state-changing still stops for confirmation first.</Text>
         </View>
         {turns.length ? <Button compact mode="text" onPress={() => { setTurns([]); setError(''); }}>Clear</Button> : null}
       </View>
 
       <ScrollView style={styles.transcript} contentContainerStyle={styles.transcriptContent} nestedScrollEnabled>
         {!turns.length ? <View style={styles.emptyChat}>
-          <Text style={styles.emptyTitle}>Ask it about BuildPair as a product, not merely the admin menu.</Text>
-          <Text style={styles.muted}>For example: “How does a quote become a paid project?”, “What AI requests are failing?”, “How does trader onboarding work?” or “What should I improve in the homeowner journey?”</Text>
+          <Text style={styles.emptyTitle}>Ask it to investigate, explain or prepare an admin action.</Text>
+          <Text style={styles.muted}>For example: “What AI requests are failing?”, “Explain this account’s problem” or “Suspend this account for spam.” It must explain the proposed change and wait for your confirmation before anything is altered.</Text>
         </View> : turns.map((turn, index) => <View key={`${turn.role}-${index}`} style={[styles.bubble, turn.role === 'user' ? styles.userBubble : styles.assistantBubble]}>
           <Text style={styles.bubbleLabel}>{turn.role === 'user' ? 'You' : 'BuildPair Admin Assistant'}</Text>
           <Text selectable style={styles.bubbleText}>{turn.content}</Text>
+
+          {turn.role === 'assistant' && turn.actionProposal ? <View style={styles.actionCard}>
+            <View style={styles.actionHeader}>
+              <View style={styles.flex}>
+                <Text style={styles.actionTitle}>{turn.actionProposal.title}</Text>
+                <Text style={styles.actionSummary}>{turn.actionProposal.summary}</Text>
+              </View>
+              <Chip>{turn.actionProposal.risk === 'high' ? 'High impact' : 'Confirmation required'}</Chip>
+            </View>
+            <View style={styles.actionImpact}>
+              {turn.actionProposal.impact.map((item) => <Text key={item} style={styles.actionImpactText}>• {item}</Text>)}
+            </View>
+            {turn.actionStatus === 'pending' ? <View style={styles.actionButtons}>
+              <Button mode="outlined" disabled={executingIndex === index} onPress={() => cancelAction(index)}>Cancel</Button>
+              <Button mode="contained" loading={executingIndex === index} disabled={executingIndex != null && executingIndex !== index} onPress={() => void executeAction(index, turn.actionProposal!)}>{turn.actionProposal.confirmLabel}</Button>
+            </View> : null}
+            {turn.actionMessage ? <Text style={turn.actionStatus === 'failed' ? styles.actionError : styles.actionResult}>{turn.actionMessage}</Text> : null}
+          </View> : null}
         </View>)}
       </ScrollView>
 
@@ -154,12 +224,12 @@ export default function AdminAssistant() {
         multiline
         value={message}
         onChangeText={setMessage}
-        placeholder="Ask anything about BuildPair, its live state, an error or a change you want…"
+        placeholder="Ask about BuildPair or tell the Admin Assistant what you want changed…"
         outlineStyle={styles.inputOutline}
         disabled={sending}
       />
       <View style={styles.sendRow}>
-        <Text style={styles.mutedSmall}>Never paste API keys, passwords or private tokens here.</Text>
+        <Text style={styles.mutedSmall}>Raw API keys, passwords and private tokens remain deliberately hidden even from the assistant UI.</Text>
         <Button mode="contained" loading={sending} disabled={sending || !message.trim()} onPress={() => void send()}>Send</Button>
       </View>
     </AppCard>
@@ -168,7 +238,7 @@ export default function AdminAssistant() {
       <View style={styles.auditHeader}>
         <View style={styles.flex}>
           <Text variant="titleLarge" style={styles.title}>Latest 30 AI requests</Text>
-          <Text style={styles.muted}>Admin-only audit of what people asked BuildPair AI and what BuildPair returned, including this Admin Assistant. Common secret patterns are redacted before storage.</Text>
+          <Text style={styles.muted}>Admin-only audit of what people asked BuildPair AI and what BuildPair returned. Confirmed Admin Assistant actions are also recorded here as separate admin-assistant-action entries.</Text>
         </View>
         <Button icon="refresh" loading={auditLoading} onPress={() => void loadAudit()}>Refresh</Button>
       </View>
@@ -228,15 +298,24 @@ const styles = StyleSheet.create({
   quickButtonContent: { minHeight: 48 },
   chatCard: { gap: 12 },
   chatHeader: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
-  transcript: { maxHeight: 520, minHeight: 180 },
+  transcript: { maxHeight: 620, minHeight: 180 },
   transcriptContent: { gap: 10, paddingVertical: 4 },
   emptyChat: { minHeight: 150, alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 10 },
   emptyTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' },
-  bubble: { maxWidth: '94%', padding: 12, borderRadius: 16, gap: 4 },
+  bubble: { maxWidth: '94%', padding: 12, borderRadius: 16, gap: 8 },
   userBubble: { alignSelf: 'flex-end', backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: '#F2D7C3' },
   assistantBubble: { alignSelf: 'flex-start', backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border },
   bubbleLabel: { color: colors.muted, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.7 },
   bubbleText: { color: colors.charcoal, lineHeight: 21 },
+  actionCard: { gap: 10, padding: 12, borderRadius: 14, borderWidth: 1, borderColor: '#E6B98D', backgroundColor: '#FFF9F3' },
+  actionHeader: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'flex-start' },
+  actionTitle: { color: colors.charcoal, fontWeight: '900', fontSize: 16 },
+  actionSummary: { color: colors.charcoalSoft, lineHeight: 20 },
+  actionImpact: { gap: 4 },
+  actionImpactText: { color: colors.charcoalSoft, lineHeight: 19 },
+  actionButtons: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8 },
+  actionResult: { color: colors.charcoal, fontWeight: '800' },
+  actionError: { color: colors.error, fontWeight: '800' },
   inputOutline: { borderRadius: 14 },
   sendRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   auditCard: { gap: 12 },
