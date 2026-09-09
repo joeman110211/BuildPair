@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
@@ -27,19 +27,22 @@ function fmt(value: string) {
 
 export default function PresenceScreen() {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
   const [rows, setRows] = useState<PresenceRow[]>([]);
   const [search, setSearch] = useState('');
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
+
   const load = useCallback(async () => {
     try {
-      setRows(await apiFetch<PresenceRow[]>('/api/admin/presence', {}, getToken));
+      setRows(await apiFetch<PresenceRow[]>('/api/admin/presence', {}, () => getTokenRef.current()));
       setError('');
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
-  }, [getToken]);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => void load(), 0);

@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
@@ -18,19 +18,22 @@ function money(value: number | null) {
 
 export default function AdminActivityScreen() {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
   const [rows, setRows] = useState<ActivityRow[]>([]);
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
+
   const load = useCallback(async () => {
     try {
-      setRows(await apiFetch<ActivityRow[]>('/api/admin/activity?limit=1000', {}, getToken));
+      setRows(await apiFetch<ActivityRow[]>('/api/admin/activity?limit=1000', {}, () => getTokenRef.current()));
       setError('');
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
-  }, [getToken]);
+  }, []);
 
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
   const kinds = useMemo(() => ['all', ...Array.from(new Set(rows.map((row) => row.kind))).sort()], [rows]);

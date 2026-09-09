@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/expo';
 import { Link } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
@@ -98,18 +98,23 @@ function NavButton({ href, label, detail }: { href: string; label: string; detai
 
 export default function AdminDashboard() {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
   const [data, setData] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    getTokenRef.current = getToken;
+  }, [getToken]);
+
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      setData(await apiFetch<Overview>('/api/admin/overview', {}, getToken));
+      setData(await apiFetch<Overview>('/api/admin/overview', {}, () => getTokenRef.current()));
       setError('');
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
-  }, [getToken]);
+  }, []);
 
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
   if (!data && !error) return <LoadingScreen label="Loading owner console…" />;

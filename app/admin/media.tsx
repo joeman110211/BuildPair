@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Image, Linking, StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
@@ -15,18 +15,21 @@ function fmt(value: string) {
 
 export default function AdminMediaScreen() {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
   const [rows, setRows] = useState<MediaRow[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
+
   const load = useCallback(async () => {
     try {
-      setRows(await apiFetch<MediaRow[]>('/api/admin/media?limit=1000', {}, getToken));
+      setRows(await apiFetch<MediaRow[]>('/api/admin/media?limit=1000', {}, () => getTokenRef.current()));
       setError('');
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
-  }, [getToken]);
+  }, []);
 
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
