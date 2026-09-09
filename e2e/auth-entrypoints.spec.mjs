@@ -11,6 +11,13 @@ async function expectClerkEntryPoint(page, kind) {
   expect(body, `${kind} rendered an empty Clerk shell`).toMatch(/email|continue|sign|account/i);
 }
 
+test('Administrator web sign-in renders the real Clerk entrypoint and keeps admin context', async ({ page }) => {
+  await page.goto('/auth/sign-in?admin=1', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByText(/BuildPair Administrator Sign In$/)).toBeVisible();
+  await expectClerkEntryPoint(page, 'Administrator sign-in');
+  expect(new URL(page.url()).searchParams.get('admin')).toBe('1');
+});
+
 for (const [mode, label] of [['customer', 'Homeowner'], ['trader', 'Tradesperson']]) {
   test(`${label} web sign-in renders the real Clerk entrypoint and keeps mode context`, async ({ page }) => {
     await page.goto(`/auth/sign-in?mode=${mode}`, { waitUntil: 'domcontentloaded' });
