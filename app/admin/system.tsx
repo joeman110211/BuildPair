@@ -12,11 +12,15 @@ type Check = {
   state: 'ok' | 'degraded' | 'unconfigured';
   latencyMs: number | null;
   detail: string;
+  required: boolean;
+  capability: string;
+  envVars: string[];
 };
+
 type SystemHealth = {
-  status: 'ok' | 'degraded';
+  status: 'ok' | 'attention' | 'degraded';
   checks: Check[];
-  summary: { ok: number; degraded: number; unconfigured: number };
+  summary: { ok: number; degraded: number; unconfigured: number; requiredMissing: number };
   releaseSha: string | null;
   generatedAt: string;
 };
@@ -24,7 +28,19 @@ type SystemHealth = {
 function stateLabel(state: Check['state']) {
   if (state === 'ok') return 'Healthy';
   if (state === 'degraded') return 'Needs attention';
-  return 'Not configured';
+  return 'Setup required';
+}
+
+function headline(status: SystemHealth['status']) {
+  if (status === 'ok') return 'Launch services responding';
+  if (status === 'attention') return 'Configuration still required';
+  return 'One or more configured services are degraded';
+}
+
+function summaryText(status: SystemHealth['status']) {
+  if (status === 'ok') return 'All required BuildPair dependencies are configured and responding.';
+  if (status === 'attention') return 'The app can run, but one or more product capabilities are still disabled because their Render environment variables are missing.';
+  return 'At least one configured dependency failed its live check and needs investigation.';
 }
 
 export default function AdminSystemHealth() {
@@ -48,35 +64,51 @@ export default function AdminSystemHealth() {
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
   if (loading && !data && !error) return <LoadingScreen label="Testing BuildPair services…" />;
 
-  return <Screen title="System Health" subtitle="Live read-only checks against the services BuildPair actually depends on. Green means a real probe succeeded, not merely that somebody remembered to set an environment variable.">
+  return <Screen title="System Health" subtitle="Live checks plus the exact configuration BuildPair still needs before launch. Healthy means the service was genuinely verified, not that somebody crossed their fingers near a dashboard.">
     <View style={styles.actions}>
-      <Button mode="contained" icon="refresh" loading={loading} disabled={loading} onPress={() => void load()}>Run checks again</Button>
-      {data?.releaseSha ? <Chip icon="source-commit">Release {data.releaseSha.slice(0, 12)}</Chip> : null}
+      <Button mode="contained" loading={loading} disabled={loading} onPress={() => void load()}>Run checks again</Button>
+      {data?.releaseSha ? <Chip>Release {data.releaseSha.slice(0, 12)}</Chip> : null}
     </View>
     {error ? <HelperText type="error" visible>{error}</HelperText> : null}
     {data ? <>
-      <AppCard style={data.status === 'ok' ? styles.summaryOk : styles.summaryBad}>
+      <AppCard style={data.status === 'ok' ? styles.summaryOk : data.status === 'attention' ? styles.summaryAttention : styles.summaryBad}>
         <View style={styles.summaryRow}>
           <View style={styles.flex}>
-            <Text variant="headlineSmall" style={styles.title}>{data.status === 'ok' ? 'Core services responding' : 'One or more services are degraded'}</Text>
-            <Text style={styles.muted}>Checked {new Date(data.generatedAt).toLocaleString('en-GB')}</Text>
+            <Text variant="headlineSmall" style={styles.title}>{headline(data.status)}</Text>
+            <Text style={styles.muted}>{summaryText(data.status)}</Text>
+            <Text variant="bodySmall" style={styles.muted}>Checked {new Date(data.generatedAt).toLocaleString('en-GB')}</Text>
           </View>
-          <View style={styles.chips}><Chip>{data.summary.ok} healthy</Chip><Chip>{data.summary.degraded} degraded</Chip><Chip>{data.summary.unconfigured} optional/unconfigured</Chip></View>
+          <View style={styles.chips}>
+            <Chip>{data.summary.ok} healthy</Chip>
+            <Chip>{data.summary.requiredMissing} setup required</Chip>
+            <Chip>{data.summary.degraded} degraded</Chip>
+          </View>
         </View>
       </AppCard>
+
       <View style={styles.grid}>
         {data.checks.map((check) => <AppCard key={check.name} style={styles.card}>
           <View style={styles.checkHeader}>
-            <Text variant="titleLarge" style={styles.title}>{check.name}</Text>
-            <Chip icon={check.state === 'ok' ? 'check-circle-outline' : check.state === 'degraded' ? 'alert-circle-outline' : 'minus-circle-outline'}>{stateLabel(check.state)}</Chip>
+            <View style={styles.flex}>
+              <Text variant="titleLarge" style={styles.title}>{check.name}</Text>
+              <Text variant="labelMedium" style={styles.capability}>{check.capability}</Text>
+            </View>
+            <Chip>{stateLabel(check.state)}</Chip>
           </View>
           <Text style={styles.muted}>{check.detail}</Text>
-          <Text variant="bodySmall" style={styles.latency}>{check.latencyMs == null ? 'No live probe run' : `${check.latencyMs} ms`}</Text>
+          {check.state === 'unconfigured' ? <View style={styles.envBox}>
+            <Text variant="labelLarge" style={styles.envTitle}>Add to Render → buildpair → Environment</Text>
+            {check.envVars.map((name) => <Text key={name} selectable style={styles.envName}>{name}</Text>)}
+          </View> : null}
+          <Text variant="bodySmall" style={check.state === 'ok' ? styles.latency : styles.muted}>
+            {check.latencyMs == null ? (check.state === 'ok' ? 'Verified through the current authenticated request' : 'No live probe can run until configured') : `${check.latencyMs} ms`}
+          </Text>
         </AppCard>)}
       </View>
+
       <AppCard>
-        <Text variant="titleMedium" style={styles.title}>What this page does not pretend</Text>
-        <Text style={styles.muted}>A successful dependency probe proves the service answered this request. It does not replace the full BuildPair browser gauntlet, payment-webhook monitoring, backups, restore drills or end-to-end email delivery checks.</Text>
+        <Text variant="titleMedium" style={styles.title}>Launch-readiness rule</Text>
+        <Text style={styles.muted}>Database and Clerk keep the core account system alive. Gemini powers the AI assistants, Cloudinary powers user media, Resend handles transactional email, and Stripe powers paid memberships and payments. A missing integration is therefore shown as setup required rather than quietly pretending it is optional.</Text>
       </AppCard>
     </> : null}
   </Screen>;
@@ -86,13 +118,18 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   card: { minWidth: 260, flexGrow: 1, flexBasis: 320 },
-  checkHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  checkHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
   summaryOk: { borderColor: '#9FCBB6' },
-  summaryBad: { borderColor: '#E8B36B' },
+  summaryAttention: { borderColor: '#E8B36B' },
+  summaryBad: { borderColor: '#D98C8C' },
   flex: { flex: 1, minWidth: 220 },
   chips: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   title: { color: colors.charcoal, fontWeight: '900' },
+  capability: { color: colors.primary, fontWeight: '800', marginTop: 2 },
   muted: { color: colors.muted, lineHeight: 21 },
-  latency: { color: colors.primary, fontWeight: '800' },
+  latency: { color: '#287A52', fontWeight: '800' },
+  envBox: { borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 10, gap: 4, backgroundColor: colors.surfaceSoft },
+  envTitle: { color: colors.charcoal, fontWeight: '800' },
+  envName: { color: colors.primary, fontFamily: 'monospace', fontWeight: '700' },
 });
