@@ -10,7 +10,7 @@ const schema = z.object({
 });
 const categorySet = new Set<string>(TRADE_CATEGORIES);
 
-const FALLBACK_RULES: Array<[string[], string[]]> = [
+const FALLBACK_RULES: [string[], string[]][] = [
   [['leak', 'pipe', 'tap', 'toilet', 'water', 'drip'], ['Plumbing', 'Bathrooms']],
   [['boiler', 'radiator', 'heating', 'gas', 'hot water'], ['Heating & Gas', 'Plumbing']],
   [['socket', 'rewire', 'electrical', 'electric', 'fuse', 'power', 'light', 'lighting', 'flicker'], ['Electrical']],
