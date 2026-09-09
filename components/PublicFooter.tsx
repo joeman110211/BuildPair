@@ -52,8 +52,8 @@ export function PublicFooter() {
     <View style={styles.inner}>
       <View style={styles.brandBlock}>
         <Text variant="headlineSmall" style={styles.brand}>BuildPair</Text>
-        <Text style={styles.tagline}>From “who do I need?” to “job complete”.</Text>
-        <Text style={styles.description}>A UK marketplace and project workflow connecting homeowners with local tradespeople, keeping search, quotes, messages, approved changes, payment stages and reputation in one place.</Text>
+        <Text style={styles.tagline}>Find the trade. Manage the job. Keep the record.</Text>
+        <Text style={styles.description}>A UK marketplace and project platform connecting homeowners with local tradespeople. Search, quotes, messages, agreed changes, payment stages and project history stay connected.</Text>
         <Text style={styles.description}>Supported BuildPair payments are processed through Stripe. Users can also arrange payment privately, in which case BuildPair cannot process or manage that payment.</Text>
         <View style={styles.contactPill}><Text style={styles.contactText}>info@buildpair.co.uk</Text></View>
       </View>

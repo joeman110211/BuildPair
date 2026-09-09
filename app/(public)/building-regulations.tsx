@@ -68,15 +68,15 @@ export default function BuildingRegulationsHub() {
     <View style={styles.hero}>
       <View style={styles.heroInner}>
         <Chip style={styles.chip} textStyle={styles.chipText}>Free public reference</Chip>
-        <Text variant="displaySmall" style={styles.heroTitle}>UK building rules, without the scavenger hunt.</Text>
-        <Text variant="bodyLarge" style={styles.heroBody}>BuildPair keeps the official starting points for England, Wales, Scotland and Northern Ireland in one place. We link to the source rather than copying technical rules that can change underneath everybody’s feet.</Text>
+        <Text variant="displaySmall" style={styles.heroTitle}>Official UK building-rule starting points in one place.</Text>
+        <Text variant="bodyLarge" style={styles.heroBody}>BuildPair brings together the official sources for England, Wales, Scotland and Northern Ireland. We link to current source material rather than copying technical guidance that may change.</Text>
       </View>
     </View>
 
     <View style={styles.content}>
       <View style={styles.warning}>
         <Text variant="titleMedium" style={styles.title}>Use the right nation, edition and date</Text>
-        <Text style={styles.body}>Building standards are not one identical UK rulebook. The applicable guidance can depend on where the property is, the type of work, when an application or notice was made and transitional provisions. Approved Documents and Technical Handbooks are guidance on ways to comply; building control or a suitably competent professional should be used where the position is unclear.</Text>
+        <Text style={styles.body}>Building standards are not identical across the UK. The applicable guidance can depend on the property location, type of work, application or notice date and transitional provisions. Approved Documents and Technical Handbooks provide guidance on ways to comply; use building control or a suitably competent professional where the position is unclear.</Text>
       </View>
 
       <View style={styles.grid}>
@@ -92,8 +92,8 @@ export default function BuildingRegulationsHub() {
 
       <View style={styles.sectionHeader}>
         <Text style={styles.eyebrow}>Quick orientation</Text>
-        <Text variant="headlineMedium" style={styles.sectionTitle}>The bits people most commonly need to check.</Text>
-        <Text style={styles.body}>These labels are only a navigation aid. The official national sources above are the authority for the current guidance.</Text>
+        <Text variant="headlineMedium" style={styles.sectionTitle}>Common areas to check.</Text>
+        <Text style={styles.body}>These headings are a navigation aid only. Use the official national sources above for the current guidance that applies to the project.</Text>
       </View>
       <View style={styles.checkGrid}>{COMMON_CHECKS.map(([title, body]) => <View key={title} style={styles.checkCard}><Text variant="titleMedium" style={styles.title}>{title}</Text><Text style={styles.body}>{body}</Text></View>)}</View>
 
@@ -105,7 +105,7 @@ export default function BuildingRegulationsHub() {
         <Button mode="contained" buttonColor={colors.secondary} textColor={colors.charcoal} icon="open-in-new" onPress={() => Linking.openURL('https://www.gov.uk/building-regulations-approval/use-a-competent-person-scheme')}>Official scheme guidance</Button>
       </View>
 
-      <Text variant="bodySmall" style={styles.disclaimer}>BuildPair does not provide building-control approval, structural design, legal advice or a guarantee that a particular detail complies. Links are provided for convenience and should be checked at the time of the project because official guidance and transitional rules can change.</Text>
+      <Text variant="bodySmall" style={styles.disclaimer}>BuildPair does not provide building-control approval, structural design, legal advice or a guarantee that a particular detail complies. Check official guidance at the time of the project because requirements and transitional rules can change.</Text>
     </View>
     <PublicFooter />
   </ScrollView>;

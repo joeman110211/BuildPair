@@ -54,8 +54,8 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
       testID="home-hero-visual"
     >
       <View style={styles.fullShade} />
-      <View style={styles.fallbackTop}><Text style={styles.fallbackEyebrow}>AI WHERE IT REMOVES FRICTION</Text><Text style={styles.fallbackText}>Human decisions where judgement matters.</Text></View>
-      <View style={styles.fallbackBottom}><Text style={styles.fallbackEyebrow}>ONE CONNECTED PROJECT RECORD</Text><Text style={styles.fallbackTitle}>Request → Visit or quote → Agree → Fund → Build → Approve → Complete</Text></View>
+      <View style={styles.fallbackTop}><Text style={styles.fallbackEyebrow}>AI-ASSISTED PLANNING</Text><Text style={styles.fallbackText}>Useful support where it saves time. Human decisions where judgement matters.</Text></View>
+      <View style={styles.fallbackBottom}><Text style={styles.fallbackEyebrow}>ONE CONNECTED PROJECT</Text><Text style={styles.fallbackTitle}>Search → Visit or quote → Agree → Pay → Build → Complete</Text></View>
     </ImageBackground>;
   }
 
@@ -79,12 +79,12 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
     <View style={styles.fullShade} />
 
     <View style={styles.topRow}>
-      <View style={styles.featureBadge}><Text style={styles.featureBadgeText}>LIVE BUILDPAIR PROFILE</Text></View>
+      <View style={styles.featureBadge}><Text style={styles.featureBadgeText}>FEATURED TRADESPERSON</Text></View>
       <View style={styles.membershipBadge}><Text style={styles.membershipText}>{membership}</Text></View>
     </View>
 
     <View style={styles.bottomCard}>
-      <Text style={styles.featuredLabel}>FEATURED TRADESPERSON THIS WEEK</Text>
+      <Text style={styles.featuredLabel}>BUILDPAIR PROFILE SPOTLIGHT</Text>
       <Text style={styles.businessName}>{trader.businessName}</Text>
       <Text style={styles.tradeLine}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
       <Text style={styles.metaLine}>{reputation} · {activity}</Text>
@@ -100,7 +100,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
       >
         <Text style={styles.ctaText}>View featured profile →</Text>
       </Pressable>
-      <Text style={styles.rotationNote}>Featured weekly from current eligible BuildPair profiles. Review and completed-job counts appear only when that activity is recorded in BuildPair.</Text>
+      <Text style={styles.rotationNote}>Featured profiles rotate weekly from eligible BuildPair tradespeople.</Text>
     </View>
   </ImageBackground>;
 }

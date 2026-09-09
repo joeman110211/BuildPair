@@ -9,19 +9,19 @@ type Resource = { title: string; body: string; label: string; url: string };
 const HOMEOWNER_RESOURCES: Resource[] = [
   {
     title: 'Know your consumer rights',
-    body: 'Paid services should be carried out with reasonable care and skill. If work goes wrong, your exact remedies depend on the contract and circumstances, so use official consumer guidance before accepting a brush-off.',
+    body: 'Paid services should be carried out with reasonable care and skill. If work goes wrong, the available remedies depend on the contract and circumstances, so start with current official consumer guidance.',
     label: 'GOV.UK consumer rights',
     url: 'https://www.gov.uk/consumer-protection-rights',
   },
   {
     title: 'Problems with building or home-improvement work',
-    body: 'Citizens Advice recommends gathering contracts, receipts, photos and a dated record of what happened before raising the problem with the trader.',
+    body: 'Citizens Advice recommends keeping contracts, receipts, photos and a dated record of what happened before raising a problem with the trader.',
     label: 'Citizens Advice guidance',
     url: 'https://www.citizensadvice.org.uk/consumer/getting-home-improvements-done/problem-with-home-improvements/',
   },
   {
     title: 'Check registered work where it matters',
-    body: 'For work that relies on formal registration or self-certification, use the official register instead of trusting a badge copied onto a van or profile.',
+    body: 'For work that relies on formal registration or self-certification, use the relevant official register rather than relying on a badge or profile claim alone.',
     label: 'GOV.UK competent person schemes',
     url: 'https://www.gov.uk/building-regulations-approval/use-a-competent-person-scheme',
   },
@@ -33,19 +33,19 @@ const HOMEOWNER_RESOURCES: Resource[] = [
   },
   {
     title: 'Electrical work: minor, notifiable and competent (England)',
-    body: 'There is no blanket “handyman permission”. Some maintenance and alterations to existing circuits do not need formal Building Regulations approval, but safety standards still apply and the person doing the work must be competent. Consumer-unit replacement, a new circuit and certain work around baths or showers can require notification or an authorised self-certification route.',
+    body: 'Some maintenance and alterations to existing circuits may not need formal Building Regulations approval, but safety standards and competence still apply. Consumer-unit replacement, new circuits and certain work around baths or showers can require notification or an authorised self-certification route.',
     label: 'GOV.UK Approved Document P',
     url: 'https://www.gov.uk/government/publications/electrical-safety-approved-document-p',
   },
   {
     title: 'Rental electrical checks: the five-year rule (England)',
-    body: 'Landlords must have fixed electrical installations inspected and tested at least every five years by a properly qualified person and provide the required report to tenants. The current rules now cover private and social rented sectors in England.',
+    body: 'Landlords must have fixed electrical installations inspected and tested at least every five years by a properly qualified person and provide the required report to tenants. Check the current guidance for the property and tenancy involved.',
     label: 'GOV.UK rental electrical safety',
     url: 'https://www.gov.uk/government/publications/electrical-safety-standards-in-the-private-and-social-rented-sectors-guidance/electrical-safety-standards-in-the-private-and-social-rented-sectors-guidance',
   },
   {
     title: 'Check electrical competence',
-    body: 'The Registered Competent Person Electrical search lets householders find or check registered electrical businesses for relevant domestic work.',
+    body: 'The Registered Competent Person Electrical search allows householders to find or check registered electrical businesses for relevant domestic work.',
     label: 'Electrical Competent Person Register',
     url: 'https://www.electricalcompetentperson.co.uk/Search',
   },
@@ -54,19 +54,19 @@ const HOMEOWNER_RESOURCES: Resource[] = [
 const TRADE_RESOURCES: Resource[] = [
   {
     title: 'Consumer-law basics for supplying services',
-    body: 'Quotes, estimates, changes and service standards can create disputes when they are vague. Business Companion explains the rules and why agreed changes should be recorded in writing.',
+    body: 'Clear quotes, estimates, service standards and written changes reduce avoidable disputes. Business Companion explains the relevant consumer-law principles for service providers.',
     label: 'Business Companion: supplying services',
     url: 'https://www.businesscompanion.info/en/quick-guides/services/supplying-services-s',
   },
   {
     title: 'Contracts agreed away from business premises',
-    body: 'Home visits, distance contracts and cancellation rights have specific rules. Do not rely on pub-law folklore or a template you found in somebody else’s van.',
+    body: 'Home visits, distance contracts and cancellation rights can have specific legal requirements. Use current guidance rather than relying on generic templates or assumptions.',
     label: 'Business Companion: off-premises sales',
     url: 'https://www.businesscompanion.info/en/quick-guides/off-premises-sales/consumer-contracts-off-premises-sales',
   },
   {
-    title: 'Electrical certificates: know which record applies',
-    body: 'BS 7671 uses different records for different purposes, including Electrical Installation Certificates, Minor Electrical Installation Works Certificates and EICRs. The IET publishes the current model forms. A certificate does not replace Building Regulations notification where notification is required.',
+    title: 'Electrical certificates: use the right record',
+    body: 'BS 7671 uses different records for different purposes, including Electrical Installation Certificates, Minor Electrical Installation Works Certificates and EICRs. The IET publishes current model forms. Certification does not replace Building Regulations notification where notification is required.',
     label: 'IET current electrical model forms',
     url: 'https://electrical.theiet.org/bs-7671-18th-edition-wiring-regulations/model-forms/',
   },
@@ -78,18 +78,18 @@ const TRADE_RESOURCES: Resource[] = [
   },
   {
     title: 'Current building standards',
-    body: 'Use the correct rules for the nation where the work is taking place and the date the application or work falls under. BuildPair keeps the official starting points together in one free page.',
+    body: 'Use the rules for the UK nation where the work is taking place and check the edition and transitional provisions that apply. BuildPair keeps the official starting points together in one page.',
     label: 'Open BuildPair Building Rules',
     url: 'internal:building-regulations',
   },
 ];
 
 const SMART_HABITS = [
-  'Write down scope, exclusions, price or pricing method, timing and who supplies materials.',
-  'Record variations before the extra work starts wherever practical.',
+  'Write down the scope, exclusions, price or pricing method, timing and who supplies materials.',
+  'Record variations before extra work starts wherever practical.',
   'Keep photos, quotes, invoices, receipts and important messages attached to the job.',
-  'Do not treat a profile badge as proof of a regulated qualification unless the source is actually verified.',
-  'Do not move a dispute straight into threats. Preserve the evidence and use the proper complaint or reporting route.',
+  'Check regulated qualifications and registrations against the appropriate source.',
+  'If a dispute develops, preserve the evidence and use the appropriate complaint, reporting or legal route.',
 ] as const;
 
 function ResourceCard({ item }: { item: Resource }) {
@@ -108,8 +108,8 @@ export default function AdviceHub() {
     <View style={styles.hero}>
       <View style={styles.heroInner}>
         <Chip style={styles.heroChip} textStyle={styles.heroChipText}>Free BuildPair advice hub</Chip>
-        <Text variant="displaySmall" style={styles.heroTitle}>Useful advice before money, materials or tempers start disappearing.</Text>
-        <Text variant="bodyLarge" style={styles.heroBody}>Straightforward guidance for homeowners and tradespeople, plus direct links to official UK sources. BuildPair is not replacing legal, building-control or professional advice. It is making the proper starting points much harder to miss.</Text>
+        <Text variant="displaySmall" style={styles.heroTitle}>Practical guidance before, during and after a home-improvement job.</Text>
+        <Text variant="bodyLarge" style={styles.heroBody}>Straightforward guidance for homeowners and tradespeople, with direct links to official UK sources for consumer rights, regulated work, building standards and safety.</Text>
         <View style={styles.heroActions}>
           <Link href="/(public)/building-regulations" asChild><Button mode="contained" icon="book-open-page-variant-outline">Building rules by UK nation</Button></Link>
           <Link href="/(public)/report" asChild><Button mode="outlined" textColor="#FFFFFF" icon="alert-outline">Report a BuildPair user</Button></Link>
@@ -119,29 +119,29 @@ export default function AdviceHub() {
 
     <View style={styles.content}>
       <View style={styles.notice}>
-        <Text variant="titleMedium" style={styles.title}>The boring stuff that prevents expensive arguments</Text>
-        <Text style={styles.body}>A clear written scope, sensible evidence and verified credentials are considerably cheaper than trying to reconstruct an agreement from six voice notes, two cash payments and somebody’s memory of a conversation on a driveway.</Text>
+        <Text variant="titleMedium" style={styles.title}>A clear record prevents avoidable disputes</Text>
+        <Text style={styles.body}>Written scope, agreed changes, sensible evidence and verified credentials make a project easier to manage and much easier to understand later if something goes wrong.</Text>
         <View style={styles.habits}>{SMART_HABITS.map((item) => <Text key={item} style={styles.habit}>✓ {item}</Text>)}</View>
       </View>
 
       <View style={styles.sectionHeader}>
         <Text style={styles.eyebrow}>For homeowners</Text>
-        <Text variant="headlineMedium" style={styles.sectionTitle}>Protect the project without becoming your own solicitor.</Text>
-        <Text style={styles.body}>Use BuildPair records for clarity, then use the official services below when the issue needs consumer, safety or registration guidance. Electrical Building Regulations differ across the UK, so the Part P examples below are explicitly for England.</Text>
+        <Text variant="headlineMedium" style={styles.sectionTitle}>Know what to check and where to get authoritative guidance.</Text>
+        <Text style={styles.body}>Use BuildPair records for project clarity, then use the official services below when you need consumer, safety or registration guidance. Electrical Building Regulations differ across the UK, so the Part P examples below apply specifically to England.</Text>
       </View>
       <View style={styles.grid}>{HOMEOWNER_RESOURCES.map((item) => <ResourceCard key={item.title} item={item} />)}</View>
 
       <View style={styles.sectionHeader}>
         <Text style={styles.eyebrow}>For tradespeople</Text>
-        <Text variant="headlineMedium" style={styles.sectionTitle}>Protect your business from vague jobs, moving goalposts and avoidable disputes.</Text>
-        <Text style={styles.body}>Good paperwork protects the customer and the trade. It also makes it much easier to show what was actually agreed when everybody’s memory suddenly becomes extremely creative.</Text>
+        <Text variant="headlineMedium" style={styles.sectionTitle}>Protect your business with clear agreements and current guidance.</Text>
+        <Text style={styles.body}>Good records protect both the customer and the trade. Use the resources below for current guidance on consumer obligations, certificates, health and safety and building standards.</Text>
       </View>
       <View style={styles.grid}>{TRADE_RESOURCES.map((item) => <ResourceCard key={item.title} item={item} />)}</View>
 
       <View style={styles.safetyCard}>
         <View style={styles.flex}>
-          <Text variant="headlineSmall" style={styles.lightTitle}>Something happened on BuildPair?</Text>
-          <Text style={styles.lightBody}>Homeowners can report tradespeople and tradespeople can report homeowners. Reports go into the BuildPair moderation queue for review. A report is evidence to review, not an automatic guilty verdict.</Text>
+          <Text variant="headlineSmall" style={styles.lightTitle}>Need to report something on BuildPair?</Text>
+          <Text style={styles.lightBody}>Homeowners can report tradespeople and tradespeople can report homeowners. Reports are reviewed through the BuildPair moderation process and are not treated as an automatic finding against either side.</Text>
         </View>
         <Link href="/(public)/report" asChild><Button mode="contained" buttonColor={colors.secondary} textColor={colors.charcoal}>Open reporting form</Button></Link>
       </View>

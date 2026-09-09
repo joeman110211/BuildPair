@@ -4,17 +4,16 @@ import { PublicInfoPage, infoStyles } from '@/components/PublicInfoPage';
 export default function ForHomeownersPage() {
   return <PublicInfoPage
     eyebrow="For homeowners"
-    title="From “something’s wrong” to a properly managed job."
-    intro="BuildPair helps homeowners identify likely trades, compare local professionals with useful context and keep the project record together after somebody is hired."
+    title="Find the right trade, compare the job properly and keep the project organised."
+    intro="BuildPair helps homeowners move from an initial problem or idea to a clearer job, suitable local tradespeople and one connected project record."
     sections={[
-      { title: 'Describe the problem in normal English', body: 'You do not have to know whether a leak needs a plumber, bathroom fitter, roofer or another specialist before you search. BuildPair uses trade categories, services and related search terms to turn the problem you describe into more relevant results.' },
-      { title: 'Search or post a structured job', body: 'Search profiles directly or create a job with category, property type, description, photos, postcode, urgency, timing and budget information. Better initial detail gives tradespeople a better chance of deciding whether the work genuinely suits them.' },
-      { title: 'Compare more than the headline price', body: <View style={infoStyles.list}><Text style={infoStyles.item}>• Scope and what is actually included.</Text><Text style={infoStyles.item}>• Exclusions, deposit and payment stages.</Text><Text style={infoStyles.item}>• Proposed start date and expected duration.</Text><Text style={infoStyles.item}>• Warranty information where supplied.</Text><Text style={infoStyles.item}>• Profile history, services, work examples, availability and reviews.</Text></View> },
-      { title: 'Request a quote from a specific trade', body: 'When a suitable searchable profile is available, a homeowner can send a direct quote request rather than posting the job to everybody. BuildPair checks the relevant account, category and marketplace eligibility before creating the job-specific connection.' },
-      { title: 'Keep the project history together', body: 'Messages, quotes, agreed variations, job events and payment milestones can stay attached to the project. That matters when memories differ later about what was included, what changed and what was approved.' },
-      { title: 'Save trades and come back later', body: 'Homeowners can shortlist useful profiles instead of trying to remember who they saw during the first search. That gives repeat customers a simple way to build a trusted local network over time.' },
-      { title: 'Privacy where it matters', body: 'Public marketplace listings use outward postcode/location information rather than publishing the homeowner’s full matching coordinates. More precise matching information remains server-side.' },
-      { title: 'Make the final checks', body: 'BuildPair provides information and workflow tools, but the appointment decision remains yours. For regulated or specialist work, check registrations, qualifications, insurance, references and any permissions appropriate to the job before work starts.' },
+      { title: 'Start with the problem', body: 'You do not need to know the exact trade before you search. Describe what is happening in ordinary language and BuildPair can use trade categories, services and related terms to help narrow the right starting point.' },
+      { title: 'Search directly or post a job', body: 'Browse tradespeople by category and service, request a quote from a suitable profile or post the job to the marketplace. Clear details about the property, scope, location, timing, budget and useful photos help tradespeople decide whether the work is a good fit.' },
+      { title: 'Compare more than the total price', body: <View style={infoStyles.list}><Text style={infoStyles.item}>• Scope and what is included.</Text><Text style={infoStyles.item}>• Exclusions, deposit and payment stages.</Text><Text style={infoStyles.item}>• Proposed start date and expected duration.</Text><Text style={infoStyles.item}>• Warranty information where supplied.</Text><Text style={infoStyles.item}>• Profile history, services, work examples, availability and reviews.</Text></View> },
+      { title: 'Use a site visit when the job needs one', body: 'Not every job can be priced from photos or a description. A tradesperson can arrange a site visit through the BuildPair job and send the formal quote afterwards, keeping the process connected.' },
+      { title: 'Keep the project history together', body: 'Messages, quotes, agreed variations, project events and payment stages can remain attached to the same job. That makes it easier to see what was agreed, what changed and what happens next.' },
+      { title: 'Save trades for later', body: 'Shortlist useful profiles so you can return to them for future work instead of starting from scratch each time.' },
+      { title: 'Privacy and final checks', body: 'Public marketplace jobs use outward location information rather than exposing precise matching coordinates. Before appointing anyone, check the registrations, qualifications, insurance, references and permissions appropriate to regulated or specialist work.' },
     ]}
   />;
 }

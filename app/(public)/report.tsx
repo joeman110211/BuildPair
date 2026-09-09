@@ -81,14 +81,14 @@ function ReportForm() {
 
   if (!isSignedIn) return <View style={styles.formCard}>
     <Text variant="headlineSmall" style={styles.title}>Sign in to submit a marketplace report</Text>
-    <Text style={styles.body}>Reports are tied to a BuildPair account so the moderation queue has a real reporter, can investigate relevant platform context and can reduce anonymous abuse of the reporting system.</Text>
+    <Text style={styles.body}>Reports are tied to a BuildPair account so the moderation team can review relevant platform context and reduce anonymous misuse of the reporting system.</Text>
     <Link href="/auth/account" asChild><Button mode="contained">Sign in to BuildPair</Button></Link>
   </View>;
 
   if (sent) return <View style={styles.successCard}>
     <Chip icon="check-circle" style={styles.successChip}>Report received</Chip>
-    <Text variant="headlineSmall" style={styles.title}>It is in the moderation queue.</Text>
-    <Text style={styles.body}>BuildPair will review the report and available platform context. A report does not automatically mean the other account has done something wrong. Depending on the evidence, the report can be dismissed, the user can be warned, messaging can be restricted or closed, or the account can be suspended.</Text>
+    <Text variant="headlineSmall" style={styles.title}>Your report is in the moderation queue.</Text>
+    <Text style={styles.body}>BuildPair will review the report and relevant platform information. A report is not an automatic finding against another user. Depending on the evidence, it may be dismissed or lead to proportionate action such as a warning, messaging restriction or account suspension.</Text>
     <View style={styles.actions}><Link href="/(public)/trust-safety" asChild><Button mode="outlined">Trust & Safety</Button></Link><Link href="/" asChild><Button mode="contained">Back to BuildPair</Button></Link></View>
   </View>;
 
@@ -96,7 +96,7 @@ function ReportForm() {
     <View style={styles.formHeader}>
       <View style={styles.flex}>
         <Text variant="headlineSmall" style={styles.title}>Report {targetDescription}</Text>
-        <Text style={styles.body}>Use this for conduct, safety, payment, profile or workmanship concerns involving a BuildPair user. Give enough factual detail for the report to be reviewed properly.</Text>
+        <Text style={styles.body}>Use this form for conduct, safety, payment, profile or workmanship concerns involving a BuildPair user. Include enough factual detail for the issue to be reviewed properly.</Text>
       </View>
       <Chip icon="shield-alert-outline">Moderation review</Chip>
     </View>
@@ -111,7 +111,7 @@ function ReportForm() {
       disabled={Boolean(suppliedUserId)}
       accessibilityLabel="BuildPair profile link, account email or account ID"
     />
-    {suppliedUserId ? <HelperText type="info">The account was filled in from the BuildPair page you came from.</HelperText> : <HelperText type="info">You can paste a BuildPair tradesperson profile URL. If you know the account email or ID, that works too.</HelperText>}
+    {suppliedUserId ? <HelperText type="info">The account was filled in from the BuildPair page you came from.</HelperText> : <HelperText type="info">Paste a BuildPair tradesperson profile URL, or enter the account email or ID if you know it.</HelperText>}
 
     <FormSelect label="What is the main issue?" value={reason} options={REASON_LABELS} onChange={setReason} />
     <TextInput
@@ -122,14 +122,14 @@ function ReportForm() {
       multiline
       numberOfLines={7}
       maxLength={2000}
-      placeholder="Stick to what happened, when it happened and any useful job/message context."
+      placeholder="Describe what happened, when it happened and any useful job or message context."
       accessibilityLabel="What happened?"
     />
     <HelperText type="info">{details.length}/2000 characters · minimum 10</HelperText>
 
     <View style={styles.notice}>
       <Text variant="titleSmall" style={styles.title}>For immediate danger or crime</Text>
-      <Text style={styles.body}>BuildPair moderation is not an emergency service. Contact the police or emergency services where appropriate. For consumer-rights or rogue-trader issues, the BuildPair Advice Hub links to official consumer services as well.</Text>
+      <Text style={styles.body}>BuildPair moderation is not an emergency service. Contact the police or emergency services where appropriate. For consumer-rights or rogue-trader concerns, the Advice Hub also links to official services.</Text>
     </View>
 
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
@@ -143,14 +143,14 @@ export default function ReportPage() {
     <View style={styles.hero}>
       <View style={styles.heroInner}>
         <Text style={styles.eyebrow}>Marketplace reporting</Text>
-        <Text variant="displaySmall" style={styles.heroTitle}>Homeowners can report trades. Trades can report homeowners.</Text>
-        <Text variant="bodyLarge" style={styles.heroBody}>One standard applies both ways. BuildPair reviews reports rather than automatically siding with whichever person clicked the button first.</Text>
+        <Text variant="displaySmall" style={styles.heroTitle}>Report a marketplace concern.</Text>
+        <Text variant="bodyLarge" style={styles.heroBody}>The same reporting standard applies to homeowners and tradespeople. BuildPair reviews relevant information before deciding whether action is appropriate.</Text>
       </View>
     </View>
     <View style={styles.content}>
       {authAvailable ? <ReportForm /> : <View style={styles.formCard}>
         <Text variant="headlineSmall" style={styles.title}>Sign in to submit a marketplace report</Text>
-        <Text style={styles.body}>Reports are tied to a BuildPair account so the moderation queue has a real reporter and can reduce anonymous abuse of the system.</Text>
+        <Text style={styles.body}>Reports are tied to a BuildPair account so the moderation team can review relevant platform context and reduce anonymous misuse of the system.</Text>
         <Link href="/auth/account" asChild><Button mode="contained">Sign in to BuildPair</Button></Link>
       </View>}
       <View style={styles.actions}>
