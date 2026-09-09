@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
@@ -45,21 +45,26 @@ function summaryText(status: SystemHealth['status']) {
 
 export default function AdminSystemHealth() {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
   const [data, setData] = useState<SystemHealth | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    getTokenRef.current = getToken;
+  }, [getToken]);
+
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      setData(await apiFetch<SystemHealth>('/api/admin/system-health', {}, getToken));
+      setData(await apiFetch<SystemHealth>('/api/admin/system-health', {}, () => getTokenRef.current()));
       setError('');
     } catch (e) {
       setError(errorMessage(e));
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, []);
 
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
   if (loading && !data && !error) return <LoadingScreen label="Testing BuildPair services…" />;
