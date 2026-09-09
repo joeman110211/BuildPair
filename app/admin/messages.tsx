@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
@@ -21,20 +21,23 @@ function fmt(value: string) {
 
 export default function AdminMessagesScreen() {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
   const [rows, setRows] = useState<MessageRow[]>([]);
   const [search, setSearch] = useState('');
   const [risk, setRisk] = useState<(typeof risks)[number]>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
+
   const load = useCallback(async () => {
     try {
       const params = new URLSearchParams({ q: search.trim(), risk, limit: '500' });
-      setRows(await apiFetch<MessageRow[]>(`/api/admin/messages?${params.toString()}`, {}, getToken));
+      setRows(await apiFetch<MessageRow[]>(`/api/admin/messages?${params.toString()}`, {}, () => getTokenRef.current()));
       setError('');
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
-  }, [getToken, risk, search]);
+  }, [risk, search]);
 
   useEffect(() => { const timer = setTimeout(() => void load(), 250); return () => clearTimeout(timer); }, [load]);
   const flagged = useMemo(() => rows.filter((row) => ['medium', 'high', 'severe'].includes(row.riskLevel)).length, [rows]);
