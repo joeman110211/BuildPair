@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   outline: { borderColor: 'rgba(255,255,255,0.7)' },
   content: { width: '100%', maxWidth: 1180, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 42, gap: 28 },
   explainerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  explainer: { flexGrow: 1, flexBasis: 300, borderRadius: 26, padding: 22, gap: 9 },
+  explainer: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 0, maxWidth: '100%', borderRadius: 26, padding: 22, gap: 9 },
   explainerTitle: { color: colors.charcoal, fontWeight: '900' },
   explainerText: { color: colors.charcoalSoft, lineHeight: 23 },
   notice: { borderRadius: 24, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, padding: 22, gap: 8 },
