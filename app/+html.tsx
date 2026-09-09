@@ -17,6 +17,11 @@ const shellCss = `
   body { margin: 0; }
   * { box-sizing: border-box; }
 
+  [data-testid="analytics-choice-panel"],
+  [data-testid="analytics-choice-open"] {
+    display: none !important;
+  }
+
   @media (max-width: 520px) {
     [data-testid="home-hero-actions"] {
       flex-wrap: nowrap !important;
