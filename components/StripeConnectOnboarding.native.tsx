@@ -51,7 +51,7 @@ export function StripeConnectOnboarding({ getToken, onExit }: Props) {
           setError('');
           onExit?.();
         }}
-        onLoadError={(loadError: Error) => {
+        onLoadError={({ error: loadError }) => {
           setError(errorMessage(loadError));
         }}
       />
