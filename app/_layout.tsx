@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AppStripeProvider } from '@/components/AppStripeProvider';
 import { PaperIcon } from '@/components/PaperIcon';
 import { PresenceHeartbeat } from '@/components/PresenceHeartbeat';
+import { VisitorAnalytics } from '@/components/VisitorAnalytics';
 import { colors, paperTheme } from '@/constants/theme';
 import { AuthAvailabilityProvider } from '@/lib/auth-availability';
 import { tokenCache } from '@/lib/token-cache';
@@ -20,7 +21,7 @@ function AppShell({ trackPresence = false }: { trackPresence?: boolean }) {
       <PaperProvider theme={paperTheme} settings={{ icon: PaperIcon }}>
         <AppStripeProvider>
           <StatusBar style="dark" />
-          {trackPresence ? <PresenceHeartbeat /> : null}
+          {trackPresence ? <><PresenceHeartbeat /><VisitorAnalytics /></> : null}
           <Stack screenOptions={{ headerTintColor: colors.primary, headerShadowVisible: false, contentStyle: { backgroundColor: colors.background } }}>
             <Stack.Screen name="(public)" options={{ headerShown: false }} />
             <Stack.Screen name="auth" options={{ headerShown: false }} />
