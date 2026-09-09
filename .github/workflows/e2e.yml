@@ -8,15 +8,16 @@ on:
         required: false
         default: 'https://staging.buildpair.co.uk'
         type: string
+      confirm_mutating:
+        description: 'I understand this run creates disposable staging accounts and data'
+        required: true
+        default: false
+        type: boolean
       external_integrations:
         description: 'Also exercise Gemini and Cloudinary integration checks'
         required: false
         default: false
         type: boolean
-  push:
-    branches: [main]
-  schedule:
-    - cron: '30 3 * * *'
 
 permissions:
   contents: read
@@ -32,7 +33,7 @@ jobs:
     env:
       E2E_BASE_URL: ${{ inputs.base_url || 'https://staging.buildpair.co.uk' }}
       CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-      E2E_EXTERNAL: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || inputs.external_integrations) && '1' || '0' }}
+      E2E_EXTERNAL: ${{ inputs.external_integrations && '1' || '0' }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -42,6 +43,15 @@ jobs:
 
       - name: Match repository npm version
         run: npm install --global npm@11.19.0
+
+      - name: Require explicit mutating-test approval
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.confirm_mutating }}" != "true" ]; then
+            echo "::error::Mutating E2E is disabled by default. Re-run manually with confirm_mutating enabled only when a full staging journey test is actually needed."
+            exit 1
+          fi
 
       - name: Validate staging target and Clerk test access
         shell: bash
@@ -72,37 +82,21 @@ jobs:
 
       - run: npm ci --no-audit --no-fund --prefer-offline
 
-      - name: Wait for exact deployed revision and readiness
+      - name: Wait for staging readiness
         shell: bash
         run: |
           set -euo pipefail
-          expected_sha=""
-          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
-            expected_sha="$GITHUB_SHA"
-          fi
-
           for attempt in $(seq 1 120); do
-            health=$(curl --fail --silent --show-error --connect-timeout 3 --max-time 8 "$E2E_BASE_URL/api/health" 2>/dev/null || true)
             readiness=$(curl --fail --silent --show-error --connect-timeout 3 --max-time 8 "$E2E_BASE_URL/api/readiness" 2>/dev/null || true)
-            deployed_sha=$(printf '%s' "$health" | jq -r '.releaseSha // empty' 2>/dev/null || true)
             ready=$(printf '%s' "$readiness" | jq -r '.ready // false' 2>/dev/null || true)
-
             if [ "$ready" = "true" ]; then
-              if [ -z "$expected_sha" ] || [ "$deployed_sha" = "$expected_sha" ]; then
-                echo "BuildPair staging target is ready at ${deployed_sha:-current deployed revision}."
-                exit 0
-              fi
+              echo "BuildPair staging target is ready."
+              exit 0
             fi
-
-            if [ -n "$expected_sha" ]; then
-              echo "Waiting for deployed ${expected_sha:0:12}; currently ${deployed_sha:0:12} ($attempt/120)..."
-            else
-              echo "Waiting for target readiness ($attempt/120)..."
-            fi
+            echo "Waiting for target readiness ($attempt/120)..."
             sleep 5
           done
-
-          echo "::error::BuildPair staging target did not reach the required ready revision in time"
+          echo "::error::BuildPair staging target did not become ready in time"
           exit 1
 
       - name: Load target Clerk publishable key
