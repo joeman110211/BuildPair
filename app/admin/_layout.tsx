@@ -13,6 +13,7 @@ export default function AdminLayout() {
             <Stack.Screen name="dashboard" options={{ title: 'Owner Console' }} />
             <Stack.Screen name="users" options={{ title: 'User Control Centre' }} />
             <Stack.Screen name="insights" options={{ title: 'User & Product Insights' }} />
+            <Stack.Screen name="visitors" options={{ title: 'Visitor Analytics' }} />
             <Stack.Screen name="system" options={{ title: 'System Health' }} />
             <Stack.Screen name="presence" options={{ title: 'Live Users' }} />
             <Stack.Screen name="jobs" options={{ title: 'Jobs' }} />
