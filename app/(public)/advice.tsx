@@ -170,9 +170,9 @@ const styles = StyleSheet.create({
   title: { color: colors.charcoal, fontWeight: '900' },
   body: { color: colors.muted, lineHeight: 23 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
-  card: { flexGrow: 1, flexBasis: 310, backgroundColor: colors.surfaceRaised, borderRadius: 24, padding: 20, borderWidth: 1, borderColor: colors.border, gap: 10 },
+  card: { flexGrow: 1, flexShrink: 1, flexBasis: 310, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: 24, padding: 20, borderWidth: 1, borderColor: colors.border, gap: 10 },
   safetyCard: { backgroundColor: colors.charcoal, borderRadius: 28, padding: 24, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 18 },
-  flex: { flex: 1, minWidth: 260, gap: 6 },
+  flex: { flex: 1, minWidth: 0, maxWidth: '100%', gap: 6 },
   lightTitle: { color: '#FFFFFF', fontWeight: '900' },
   lightBody: { color: '#DDE1E3', lineHeight: 23 },
 });
