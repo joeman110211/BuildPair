@@ -126,7 +126,10 @@ export default function AdminInsights() {
     }
   }, [getToken]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const timer = setTimeout(() => { void load(); }, 0);
+    return () => clearTimeout(timer);
+  }, [load]);
 
   const chooseUser = useCallback(async (userId: string) => {
     setSelectedId(userId);
