@@ -4,6 +4,7 @@ import { getSql } from '@/lib/sql';
 export type AiAuditStatus = 'success' | 'fallback' | 'error' | 'blocked';
 
 const DEFAULT_DAILY_AI_LIMIT = 200;
+const AI_AUDIT_RETENTION_DAYS = 90;
 
 function configuredDailyLimit() {
   const raw = Number(process.env.AI_GLOBAL_DAILY_LIMIT ?? DEFAULT_DAILY_AI_LIMIT);
@@ -67,9 +68,12 @@ export async function recordAiRequest(input: {
         ${JSON.stringify(input.metadata ?? {})}::jsonb
       )
     `;
+    await sql`DELETE FROM ai_request_logs WHERE created_at < now() - interval '90 days'`;
   } catch (error) {
     // Audit logging must never take the product down if its table/service has a
     // temporary problem. The request still succeeds and Render logs the failure.
     console.warn('BuildPair AI audit write failed', error instanceof Error ? error.message : 'unknown error');
   }
 }
+
+export const AI_AUDIT_RETENTION_DAYS_FOR_INFO = AI_AUDIT_RETENTION_DAYS;
