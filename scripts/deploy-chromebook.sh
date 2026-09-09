@@ -4,7 +4,7 @@ set -Eeuo pipefail
 # BuildPair deploy runner for the existing Chromebook PM2 + named Cloudflare tunnel setup.
 REPO_DIR="${BUILDPAIR_REPO_DIR:-/home/jloveridge1102/BuildPair}"
 BRANCH="${BUILDPAIR_DEPLOY_BRANCH:-main}"
-PUBLIC_ORIGIN="${BUILDPAIR_PUBLIC_ORIGIN:-https://staging.buildpair.co.uk}"
+PUBLIC_ORIGIN="${BUILDPAIR_PUBLIC_ORIGIN:-https://www.buildpair.co.uk}"
 HEALTH_URL="${BUILDPAIR_HEALTH_URL:-$PUBLIC_ORIGIN/api/health}"
 READINESS_URL="${BUILDPAIR_READINESS_URL:-$PUBLIC_ORIGIN/api/readiness}"
 if [[ -n "${BUILDPAIR_ENV_FILE:-}" ]]; then
@@ -266,10 +266,10 @@ wait_for_readiness "http://localhost:3000/api/readiness" "Local API"
 # trap BuildPair on an old commit. Keep the healthy revision deployed and report
 # public reachability separately so the tunnel can recover without losing code.
 log "Checking public Cloudflare health..."
-if wait_for_health "$HEALTH_URL" "Public staging"; then
+if wait_for_health "$HEALTH_URL" "Public production"; then
   log "Checking public Cloudflare readiness..."
-  if ! wait_for_readiness "$READINESS_URL" "Public staging"; then
-    log "WARNING: BuildPair is healthy locally, but public staging readiness is unavailable. Leaving the healthy revision deployed."
+  if ! wait_for_readiness "$READINESS_URL" "Public production"; then
+    log "WARNING: BuildPair is healthy locally, but public production readiness is unavailable. Leaving the healthy revision deployed."
   fi
 else
   log "WARNING: BuildPair is healthy locally, but the Cloudflare tunnel is currently unreachable. Leaving the healthy revision deployed."
