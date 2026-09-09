@@ -11,12 +11,19 @@ export type AdminNavGroup = {
   items: AdminNavItem[];
 };
 
+export const ADMIN_OVERVIEW_ITEM: AdminNavItem = {
+  href: '/admin/dashboard',
+  label: 'Overview',
+  shortLabel: 'Overview',
+  description: 'Headline numbers, items needing attention and shortcuts into the rest of the console.',
+};
+
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     title: 'Start here',
     description: 'The safest place to begin when you are not sure where something lives.',
     items: [
-      { href: '/admin/dashboard', label: 'Overview', shortLabel: 'Overview', description: 'Headline numbers, items needing attention and shortcuts into the rest of the console.' },
+      ADMIN_OVERVIEW_ITEM,
       { href: '/admin/assistant', label: 'Admin Assistant', shortLabel: 'Assistant', description: 'Ask plain-English questions about the admin area, errors or a change you want to make.' },
     ],
   },
@@ -66,6 +73,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
 
 export const ADMIN_NAV_ITEMS = ADMIN_NAV_GROUPS.flatMap((group) => group.items);
 
-export function adminNavItemForPath(pathname: string) {
-  return ADMIN_NAV_ITEMS.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`)) ?? ADMIN_NAV_ITEMS[0];
+export function adminNavItemForPath(pathname: string): AdminNavItem {
+  return ADMIN_NAV_ITEMS.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`)) ?? ADMIN_OVERVIEW_ITEM;
 }
