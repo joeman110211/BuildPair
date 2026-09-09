@@ -3,29 +3,43 @@ function isTruthy(value: string | undefined) {
   return normalised === 'true' || normalised === '1' || normalised === 'yes';
 }
 
-function stagingHostFromRequest(request?: Request | string) {
-  if (!request) return false;
+const PUBLIC_PRODUCTION_HOSTS = new Set([
+  'buildpair.co.uk',
+  'www.buildpair.co.uk',
+  'admin.buildpair.co.uk',
+]);
+
+function hostnamesFromRequest(request?: Request | string) {
+  if (!request) return [] as string[];
 
   try {
-    if (typeof request === 'string') {
-      return new URL(request).hostname === 'staging.buildpair.co.uk';
-    }
+    if (typeof request === 'string') return [new URL(request).hostname.toLowerCase()];
 
-    const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim().split(':')[0];
-    const host = request.headers.get('host')?.trim().split(':')[0];
-    const urlHost = new URL(request.url).hostname;
+    const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim().split(':')[0]?.toLowerCase();
+    const host = request.headers.get('host')?.trim().split(':')[0]?.toLowerCase();
+    const urlHost = new URL(request.url).hostname.toLowerCase();
 
-    return [forwardedHost, host, urlHost].some((value) => value === 'staging.buildpair.co.uk');
+    return [forwardedHost, host, urlHost].filter((value): value is string => Boolean(value));
   } catch {
-    return false;
+    return [] as string[];
   }
 }
 
+function stagingHostFromRequest(request?: Request | string) {
+  return hostnamesFromRequest(request).some((value) => value === 'staging.buildpair.co.uk');
+}
+
+function publicProductionHostFromRequest(request?: Request | string) {
+  return hostnamesFromRequest(request).some((value) => PUBLIC_PRODUCTION_HOSTS.has(value));
+}
+
 export function previewDataEnabled(request?: Request | string) {
+  // Production hosts must never serve preview fixtures even if a stale deployment
+  // flag is accidentally enabled. Staging remains the only public preview host.
+  if (publicProductionHostFromRequest(request)) return false;
+
   if (isTruthy(process.env.BUILDPAIR_PREVIEW_DATA_ENABLED)) return true;
 
-  // Staging should always show realistic preview marketplace data. Detect it from
-  // the actual request first so stale local environment values cannot disable it.
   if (stagingHostFromRequest(request)) return true;
 
   // Environment fallback for server-side contexts where no Request is available.
