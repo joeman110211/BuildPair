@@ -7,8 +7,6 @@ import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { clientPreviewDataEnabled } from '@/lib/client-preview';
-import { demoJobs } from '@/lib/demo-data';
 import type { Job } from '@/types';
 
 function jobDetailsHref(job: Job): Href {
@@ -18,10 +16,6 @@ function jobDetailsHref(job: Job): Href {
 function joinJobHref(job: Job): Href {
   const location = job.locationLabel ?? job.postcode ?? '';
   return `/auth/sign-up?mode=trader&jobId=${encodeURIComponent(job.id)}&jobTitle=${encodeURIComponent(job.title)}&jobCategory=${encodeURIComponent(job.category)}&jobLocation=${encodeURIComponent(location)}` as Href;
-}
-
-function seededJobs(): Job[] {
-  return demoJobs.map((job) => ({ ...job, isPreview: true }));
 }
 
 export default function PublicJobsScreen() {
@@ -35,12 +29,7 @@ export default function PublicJobsScreen() {
       setError('');
       setJobs(await apiFetch('/api/public/jobs'));
     } catch (e) {
-      if (clientPreviewDataEnabled()) {
-        setJobs(seededJobs());
-        setError('');
-      } else {
-        setError(errorMessage(e));
-      }
+      setError(errorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -49,7 +38,7 @@ export default function PublicJobsScreen() {
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, []);
 
   if (loading) return <LoadingScreen label="Loading local job requests..." />;
-  return <Screen title="Latest job requests" subtitle="Open jobs customers are posting through BuildPair, plus clearly labelled beta examples while the marketplace grows.">
+  return <Screen title="Latest job requests" subtitle="Open jobs customers are posting through BuildPair.">
     {error ? <EmptyState title="Jobs unavailable" body={error} action={<Button onPress={load}>Try again</Button>} /> : null}
     {!error && !jobs.length ? <EmptyState title="No job requests yet" body="New customer requests will appear here." /> : null}
     {!error ? jobs.map((job) => <AppCard key={job.id}>
@@ -60,16 +49,14 @@ export default function PublicJobsScreen() {
           </Link>
           <Text style={styles.muted}>{job.category} · {job.propertyType} · {job.locationLabel ?? job.postcode} · {job.budgetRange}</Text>
         </View>
-        <Chip icon={job.isPreview ? 'flask-outline' : undefined}>{job.isPreview ? 'Preview job' : job.status.replace('_', ' ')}</Chip>
+        <Chip>{job.status.replace('_', ' ')}</Chip>
       </View>
       <Text numberOfLines={4} style={styles.description}>{job.description}</Text>
       <View style={styles.row}>
         <Chip icon="calendar-clock">{job.urgency}</Chip>
         <View style={styles.actions}>
           <Link href={jobDetailsHref(job)} asChild><Button mode="outlined">View job</Button></Link>
-          {job.isPreview
-            ? <Button mode="outlined" disabled>Example only</Button>
-            : <Link href={joinJobHref(job)} asChild><Button mode="contained">Join to quote</Button></Link>}
+          <Link href={joinJobHref(job)} asChild><Button mode="contained">Join to quote</Button></Link>
         </View>
       </View>
     </AppCard>) : null}

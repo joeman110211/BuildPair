@@ -2,8 +2,6 @@ import { and, eq, sql } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { reviews, traderProfiles, users } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
-import { demoTraders } from '@/lib/demo-data';
-import { previewDataEnabled } from '@/lib/preview';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
@@ -20,40 +18,8 @@ const defaultShowcase = {
 };
 const PUBLIC_REFERENCE_TYPES = ['gas_safe', 'niceic', 'napit', 'trustmark'] as const;
 
-function previewProfile(id: string) {
-  if (!previewDataEnabled()) return null;
-  const demoProfile = demoTraders.find((trader) => trader.id === id);
-  if (!demoProfile) return null;
-  return {
-    ...demoProfile,
-    tradeCategories: [demoProfile.tradeCategory],
-    serviceSelections: { [demoProfile.tradeCategory]: demoProfile.subSkills },
-    averageRating: 0,
-    reviewCount: 0,
-    verifiedCredentialCount: 0,
-    credentials: [],
-    availability: [],
-    stories: [],
-    savedByViewer: false,
-    isPreview: true,
-    shareOnly: false,
-    canRequestQuote: false,
-    ...defaultShowcase,
-    yearsExperience: 12,
-    serviceAreas: demoProfile.locationLabel ? [demoProfile.locationLabel] : [],
-    createdAt: '2026-08-01T10:00:00.000Z',
-    qualifications: ['Preview profile for BuildPair beta demonstration'],
-    reviews: [],
-    contact: null,
-    contactLocked: true,
-  };
-}
-
 export async function GET(request: Request, { id }: { id: string }) {
   try {
-    const preview = previewProfile(id);
-    if (preview) return Response.json(preview);
-
     const db = getDb();
     const [profile] = await db.select({
       id: traderProfiles.id,

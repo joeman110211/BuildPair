@@ -29,6 +29,7 @@ const traders = [
   trader({ id: 'heating', businessName: 'Warm Home Heating', tradeCategory: 'Heating & Gas', subSkills: ['Boilers', 'Central heating', 'Radiators'] }),
   trader({ id: 'roofer', businessName: 'Dry Roofs', tradeCategory: 'Roofing', subSkills: ['Roof repairs', 'Roof leaks', 'Flat roofs'] }),
   trader({ id: 'electrician', businessName: 'Bright Spark', tradeCategory: 'Electrical', subSkills: ['Sockets', 'Lighting', 'Rewires'] }),
+  trader({ id: 'carpenter', businessName: 'NJL Carpentry', tradeCategory: 'Carpentry & Joinery', subSkills: ['Internal doors', 'Skirting & architraves', 'Built-in storage', 'Timber framing'] }),
 ];
 
 describe('related trade search', () => {
@@ -63,7 +64,28 @@ describe('related trade search', () => {
     expect(searchTraders(traders, 'roof leak')[0]?.id).toBe('roofer');
   });
 
-  it('does not return unrelated traders for nonsense', () => {
+  it('understands wood as carpentry and joinery work', () => {
+    expect(searchTraders(traders, 'wood')[0]?.id).toBe('carpenter');
+  });
+
+  it('understands plain-language water searches as plumbing', () => {
+    expect(searchTraders(traders, 'water')[0]?.id).toBe('plumber');
+  });
+
+  it('understands wooden shelves as carpentry work', () => {
+    expect(searchTraders(traders, 'wooden shelves')[0]?.id).toBe('carpenter');
+  });
+
+  it('tolerates common misspellings of trade names', () => {
+    expect(searchTraders(traders, 'plumer')[0]?.id).toBe('plumber');
+    expect(searchTraders(traders, 'carpinter')[0]?.id).toBe('carpenter');
+  });
+
+  it('can rank by an AI-inferred category when the words themselves do not match', () => {
+    expect(searchTraders(traders, 'mystery buzzing thing', ['Electrical'])[0]?.id).toBe('electrician');
+  });
+
+  it('does not return unrelated traders for nonsense without an inferred category', () => {
     expect(searchTraders(traders, 'spaceship engine repair')).toEqual([]);
   });
 });

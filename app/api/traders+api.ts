@@ -1,63 +1,5 @@
-import { demoTraders } from '@/lib/demo-data';
-import { previewDataEnabled } from '@/lib/preview';
 import { jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
-
-const LEGACY_CATEGORY_MAP: Record<string, string> = {
-  'Bathroom Fitting': 'Bathrooms',
-  'Kitchen Fitting': 'Kitchens',
-  'EV Chargers': 'Renewables & EV',
-  'Solar & Renewables': 'Renewables & EV',
-  'General Building': 'Building & Extensions',
-  Extensions: 'Building & Extensions',
-  'Loft Conversions': 'Conversions',
-  'Loft Boarding & Storage': 'Conversions',
-  'Garage Conversions': 'Conversions',
-  'Basement & Cellar Conversions': 'Conversions',
-  Bricklaying: 'Brickwork & Masonry',
-  'Stone Masonry': 'Brickwork & Masonry',
-  'Plastering & Rendering': 'Plastering, Rendering & Dry Lining',
-  'Dry Lining & Partitioning': 'Plastering, Rendering & Dry Lining',
-  Roofing: 'Roofing & Roofline',
-  'Guttering, Fascias & Soffits': 'Roofing & Roofline',
-  'Windows & Doors': 'Windows, Doors & Glazing',
-  Glazing: 'Windows, Doors & Glazing',
-  'Garage Doors & Automated Gates': 'Windows, Doors & Glazing',
-  Flooring: 'Flooring & Screeding',
-  'Carpet Fitting': 'Flooring & Screeding',
-  'Screeding & Floor Preparation': 'Flooring & Screeding',
-  'Driveways & Paving': 'Driveways, Paving & Groundworks',
-  Groundworks: 'Driveways, Paving & Groundworks',
-  'Concrete & Formwork': 'Driveways, Paving & Groundworks',
-  'Piling & Foundations': 'Driveways, Paving & Groundworks',
-  Drainage: 'Drainage & Sewage',
-  'Septic Tanks & Sewage Treatment': 'Drainage & Sewage',
-  'Damp Proofing': 'Damp Proofing & Insulation',
-  Insulation: 'Damp Proofing & Insulation',
-  Cladding: 'Cladding & Exterior Finishes',
-  'Smart Home, CCTV & Alarms': 'Security, Smart Home & Locksmiths',
-  Locksmith: 'Security, Smart Home & Locksmiths',
-  Handyman: 'Handyman & Property Maintenance',
-  'Property Maintenance': 'Handyman & Property Maintenance',
-  'Shopfitting & Commercial Fit-Out': 'Commercial Fit-Out & Access',
-  Scaffolding: 'Commercial Fit-Out & Access',
-  Demolition: 'Demolition, Asbestos & Waste',
-  'Asbestos Survey & Removal': 'Demolition, Asbestos & Waste',
-  'Waste Removal': 'Demolition, Asbestos & Waste',
-  'Pressure Washing': 'Cleaning, Exterior Care & Pest Control',
-  Cleaning: 'Cleaning, Exterior Care & Pest Control',
-  'Pest Control': 'Cleaning, Exterior Care & Pest Control',
-  'Garden Rooms & Outbuildings': 'Garden Buildings & Leisure',
-  Conservatories: 'Garden Buildings & Leisure',
-  'Swimming Pools & Hot Tubs': 'Garden Buildings & Leisure',
-  'Architectural & Planning Services': 'Professional Building Services',
-  'Structural Engineering': 'Professional Building Services',
-  'Building Surveying': 'Professional Building Services',
-};
-
-function canonicalTradeCategory(category: string) {
-  return LEGACY_CATEGORY_MAP[category] ?? category;
-}
 
 type DirectoryTrader = {
   id: string;
@@ -81,30 +23,9 @@ type DirectoryTrader = {
   rankingScore: number;
 };
 
-function previewTradersFor(trade: string | null) {
-  return demoTraders
-    .map((trader) => {
-      const category = canonicalTradeCategory(trader.tradeCategory);
-      return {
-        ...trader,
-        tradeCategory: category,
-        tradeCategories: [category],
-        serviceSelections: { [category]: trader.subSkills },
-        averageRating: trader.averageRating ?? 0,
-        reviewCount: trader.reviewCount ?? 0,
-        verifiedCredentialCount: 0,
-        availabilitySummary: null,
-        rankingScore: 0,
-        isPreview: true,
-      };
-    })
-    .filter((trader) => !trade || trader.tradeCategories.includes(trade));
-}
-
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const trade = url.searchParams.get('trade');
-  const previewEnabled = previewDataEnabled(request);
 
   try {
     const sql = getSql();
@@ -177,19 +98,8 @@ export async function GET(request: Request) {
       LIMIT 100
     ` as unknown as DirectoryTrader[];
 
-    const previews = previewEnabled ? previewTradersFor(trade) : [];
-    return Response.json([
-      ...rows.map((trader) => ({ ...trader, isPreview: false })),
-      ...previews,
-    ].slice(0, 100));
+    return Response.json(rows.map((trader) => ({ ...trader, isPreview: false })));
   } catch (error) {
-    // Staging is deliberately useful even when the live marketplace database is
-    // temporarily unavailable. Preview profiles are local fixtures, so return
-    // them instead of turning every public page into a generic "failed to fetch".
-    if (previewEnabled) {
-      console.error('Trader directory database query failed; serving staging previews instead.', error);
-      return Response.json(previewTradersFor(trade));
-    }
     return jsonError(error);
   }
 }

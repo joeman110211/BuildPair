@@ -1,10 +1,8 @@
 import { and, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { jobs, traderProfiles } from '@/db/schema';
-import { demoJobs } from '@/lib/demo-data';
 import { addJobEvent, createNotification } from '@/lib/notifications';
 import { InvalidPostcodeError, lookupPostcode, outwardCode } from '@/lib/postcode';
-import { previewDataEnabled } from '@/lib/preview';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
@@ -65,12 +63,7 @@ export async function GET(request: Request) {
 
       const access = or(acceptedWork, directWork, openMarketplace)!;
       const databaseRows = await db.select().from(jobs).where(access).orderBy(desc(jobs.isEmergency), desc(jobs.createdAt)).limit(100);
-      const previewRows = previewDataEnabled(request)
-        ? demoJobs
-            .filter((job) => acceptedCategories.includes(job.category))
-            .map((job) => ({ ...job, isPreview: true, isEmergency: false }))
-        : [];
-      rows = [...databaseRows.map((job) => ({ ...job, isPreview: false })), ...previewRows].slice(0, 100);
+      rows = databaseRows.map((job) => ({ ...job, isPreview: false }));
       rows = rows.map((job) => {
         const openMarketplaceJob = job.targetTraderId == null && ['open', 'quoted'].includes(job.status);
         return openMarketplaceJob
@@ -120,7 +113,7 @@ export async function POST(request: Request) {
           AND coalesce(u.is_suspended, false) = false
           AND coalesce(u.is_deleted, false) = false
         LIMIT 1
-      ` as unknown as Array<{
+      ` as unknown as {
         tradeCategory: string;
         tradeCategories: string[];
         subscriptionTier: string;
@@ -128,7 +121,7 @@ export async function POST(request: Request) {
         latitude: number | null;
         longitude: number | null;
         radiusMiles: number;
-      }>;
+      }[];
       const target = targets[0];
       if (!target || !target.isSubscriptionActive || target.subscriptionTier === 'free') throw new HttpError(409, 'This tradesperson is not currently accepting direct BuildPair leads');
       if (!target.tradeCategories.includes(payload.category)) throw new HttpError(400, `This direct request must use one of the tradesperson's listed trade categories.`);
