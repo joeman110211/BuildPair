@@ -119,17 +119,18 @@ function handleAdminHostRouting(req, res) {
   const host = requestHostname(req);
   const pathName = requestPathname(req);
   const onAdminHost = host === ADMIN_HOST;
+  const onAdminSurface = isAdminSurfacePath(pathName);
 
-  // The owner console is deliberately absent from the customer-facing website,
-  // even though both hostnames are served by the same PM2 process.
-  if (!onAdminHost && isAdminSurfacePath(pathName)) {
-    sendNotFound(res);
-    return true;
-  }
+  // Admin pages and APIs remain protected by AdminGate and requireAdmin. Do not
+  // use hostname hiding as an authorization boundary: doing so made a valid
+  // signed-in owner session on the primary BuildPair host render the console but
+  // receive 404s for every /api/admin request. Keep admin surfaces out of search
+  // indexes while allowing the server-side authorization checks to do their job.
+  if (onAdminSurface) res.setHeader('X-Robots-Tag', 'noindex, nofollow');
 
   if (!onAdminHost) return false;
 
-  // Admin pages should never be indexed, independently of the public site's SEO setting.
+  // The dedicated admin hostname, when configured, remains a restricted surface.
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
 
   if (pathName === '/') {
@@ -139,7 +140,7 @@ function handleAdminHostRouting(req, res) {
     return true;
   }
 
-  const allowed = isAdminSurfacePath(pathName)
+  const allowed = onAdminSurface
     || pathName.startsWith('/auth/')
     || pathName === '/api/me'
     || pathName === '/api/client-config'
