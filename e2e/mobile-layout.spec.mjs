@@ -61,6 +61,22 @@ async function api(token, pathName, options = {}) {
 }
 
 test('small Android public and auth surfaces fit without furniture-removal chaos', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+  await expect(page.getByLabel('BuildPair quick navigation')).toBeVisible();
+  const heroCopy = page.getByTestId('home-hero-copy');
+  const heroActions = page.getByTestId('home-hero-actions');
+  const heroVisual = page.getByTestId('home-hero-visual');
+  await expect(heroCopy).toBeVisible();
+  await expect(heroActions).toBeVisible();
+  await expect(heroVisual).toBeVisible();
+  const actionsBox = await heroActions.boundingBox();
+  const visualBox = await heroVisual.boundingBox();
+  expect(actionsBox, 'homepage hero actions have no layout box').not.toBeNull();
+  expect(visualBox, 'homepage hero visual has no layout box').not.toBeNull();
+  expect((actionsBox?.y ?? 0) + (actionsBox?.height ?? 0), 'homepage image overlaps the hero action buttons').toBeLessThanOrEqual((visualBox?.y ?? 0) + 1);
+  await expectNoHorizontalOverflow(page, 'homepage');
+
   await page.goto('/auth/account');
   const heading = page.getByText('One login. Two ways to use BuildPair.');
   await expect(heading).toBeVisible();
