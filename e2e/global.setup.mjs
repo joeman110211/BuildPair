@@ -6,6 +6,11 @@ import { clerk, clerkSetup, setupClerkTestingToken } from '@clerk/testing/playwr
 import { test as setup } from '@playwright/test';
 
 const baseURL = process.env.E2E_BASE_URL || 'https://staging.buildpair.co.uk';
+const target = new URL(baseURL);
+if (target.hostname !== 'staging.buildpair.co.uk') {
+  throw new Error(`Mutating BuildPair E2E tests may only run against staging.buildpair.co.uk. Refusing target: ${target.hostname}`);
+}
+
 const runId = (process.env.GITHUB_RUN_ID || Date.now().toString()).replace(/[^a-zA-Z0-9-]/g, '');
 const customerEmail = process.env.E2E_CUSTOMER_EMAIL || `buildpair-fixture-customer+clerk_test_${runId}@example.com`;
 const traderEmail = process.env.E2E_TRADER_EMAIL || `buildpair-fixture-trader+clerk_test_${runId}@example.com`;
