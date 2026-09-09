@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   actionImpactText: { color: colors.charcoalSoft, lineHeight: 19 },
   actionButtons: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8 },
   actionResult: { color: colors.charcoal, fontWeight: '800' },
-  actionError: { color: colors.error, fontWeight: '800' },
+  actionError: { color: colors.danger, fontWeight: '800' },
   inputOutline: { borderRadius: 14 },
   sendRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   auditCard: { gap: 12 },
