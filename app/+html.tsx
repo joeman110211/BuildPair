@@ -16,6 +16,39 @@ const shellCss = `
   }
   body { margin: 0; }
   * { box-sizing: border-box; }
+
+  @media (max-width: 520px) {
+    [data-testid="home-hero-actions"] {
+      flex-wrap: nowrap !important;
+      gap: 6px !important;
+    }
+
+    [data-testid="home-hero-actions"] > * {
+      flex: 1 1 0 !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+
+    [data-testid="home-hero-actions"] [role="button"] {
+      width: 100% !important;
+      min-width: 0 !important;
+      min-height: 40px !important;
+    }
+
+    [data-testid="home-hero-actions"] [role="button"] > * {
+      min-height: 40px !important;
+      padding-left: 3px !important;
+      padding-right: 3px !important;
+    }
+
+    [data-testid="home-hero-actions"] [role="button"] [dir="auto"] {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      font-size: 11px !important;
+      line-height: 14px !important;
+      white-space: nowrap !important;
+    }
+  }
 `;
 
 export default function Root({ children }: PropsWithChildren) {
