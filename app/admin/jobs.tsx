@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
@@ -22,20 +22,23 @@ function fmt(value: string) {
 
 export default function AdminJobsScreen() {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
   const [rows, setRows] = useState<Job[]>([]);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<(typeof statuses)[number]>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
+
   const load = useCallback(async () => {
     try {
       const params = new URLSearchParams({ q: search.trim(), status, limit: '300' });
-      setRows(await apiFetch<Job[]>(`/api/admin/jobs?${params.toString()}`, {}, getToken));
+      setRows(await apiFetch<Job[]>(`/api/admin/jobs?${params.toString()}`, {}, () => getTokenRef.current()));
       setError('');
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
-  }, [getToken, search, status]);
+  }, [search, status]);
 
   useEffect(() => { const timer = setTimeout(() => void load(), 250); return () => clearTimeout(timer); }, [load]);
   const photoCount = useMemo(() => rows.reduce((sum, row) => sum + (row.photos?.length ?? 0), 0), [rows]);
