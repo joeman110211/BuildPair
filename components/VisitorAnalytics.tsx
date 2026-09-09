@@ -1,28 +1,14 @@
 import { useAuth } from '@clerk/expo';
 import { usePathname } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { Button, Portal, Surface, Text } from 'react-native-paper';
 import { colors } from '@/constants/theme';
 
 type AnalyticsChoice = 'basic' | 'detailed' | 'off';
 type StoredChoice = { choice: AnalyticsChoice; updatedAt: string };
-
-type AnalyticsPayload = {
-  action: 'event';
-  mode: 'aggregate' | 'detailed';
-  eventType: 'page_view' | 'click' | 'scroll' | 'page_time' | 'form_interaction' | 'form_submit';
-  path: string;
-  target?: string;
-  targetPath?: string;
-  value?: number;
-  device: Record<string, string | boolean>;
-  acquisition: Record<string, string>;
-  sessionId?: string;
-  visitorId?: string;
-  consentedAt?: string;
-  details?: Record<string, string | number | boolean | null>;
-};
+type EventType = 'page_view' | 'click' | 'scroll' | 'page_time' | 'form_interaction' | 'form_submit';
+type EventDetails = Record<string, string | number | boolean | null>;
 
 const CHOICE_KEY = 'buildpair_analytics_choice_v1';
 const VISITOR_KEY = 'buildpair_analytics_visitor_v1';
@@ -30,23 +16,23 @@ const SESSION_KEY = 'buildpair_analytics_session_v1';
 const SIGNUP_INTENT_KEY = 'buildpair_analytics_signup_intent_v1';
 const VISITOR_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
-function storageAvailable() {
+function onWeb() {
   return Platform.OS === 'web' && typeof window !== 'undefined';
 }
 
 function readChoice(): AnalyticsChoice | null {
-  if (!storageAvailable()) return null;
+  if (!onWeb()) return null;
   try {
     const raw = window.localStorage.getItem(CHOICE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StoredChoice;
-    return parsed.choice === 'basic' || parsed.choice === 'detailed' || parsed.choice === 'off' ? parsed.choice : null;
+    return ['basic', 'detailed', 'off'].includes(parsed.choice) ? parsed.choice : null;
   } catch { return null; }
 }
 
-function writeChoice(choice: AnalyticsChoice) {
-  if (!storageAvailable()) return;
-  try { window.localStorage.setItem(CHOICE_KEY, JSON.stringify({ choice, updatedAt: new Date().toISOString() } satisfies StoredChoice)); } catch { /* preference storage is best effort */ }
+function saveChoice(choice: AnalyticsChoice) {
+  if (!onWeb()) return;
+  try { window.localStorage.setItem(CHOICE_KEY, JSON.stringify({ choice, updatedAt: new Date().toISOString() } satisfies StoredChoice)); } catch { /* best effort */ }
 }
 
 function randomId() {
@@ -58,16 +44,16 @@ function randomId() {
 }
 
 function detailedIdentity() {
-  if (!storageAvailable()) return null;
-  const now = Date.now();
-  let visitorId = '';
-  let consentedAt = new Date().toISOString();
+  if (!onWeb()) return null;
   try {
+    const now = Date.now();
+    let visitorId = '';
+    let consentedAt = new Date().toISOString();
     const raw = window.localStorage.getItem(VISITOR_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as { id?: string; createdAt?: string; consentedAt?: string };
-      const created = new Date(parsed.createdAt ?? 0).getTime();
-      if (parsed.id && Number.isFinite(created) && now - created < VISITOR_TTL_MS) {
+      const createdAt = new Date(parsed.createdAt ?? 0).getTime();
+      if (parsed.id && Number.isFinite(createdAt) && now - createdAt < VISITOR_TTL_MS) {
         visitorId = parsed.id;
         consentedAt = parsed.consentedAt || consentedAt;
       }
@@ -85,20 +71,19 @@ function detailedIdentity() {
   } catch { return null; }
 }
 
-function existingDetailedIdentity() {
-  if (!storageAvailable()) return null;
+function existingIdentity() {
+  if (!onWeb()) return null;
   try {
     const raw = window.localStorage.getItem(VISITOR_KEY);
     const sessionId = window.sessionStorage.getItem(SESSION_KEY);
     if (!raw || !sessionId) return null;
     const parsed = JSON.parse(raw) as { id?: string; consentedAt?: string };
-    if (!parsed.id) return null;
-    return { visitorId: parsed.id, sessionId, consentedAt: parsed.consentedAt || new Date().toISOString() };
+    return parsed.id ? { visitorId: parsed.id, sessionId, consentedAt: parsed.consentedAt || new Date().toISOString() } : null;
   } catch { return null; }
 }
 
-function clearDetailedIdentity() {
-  if (!storageAvailable()) return;
+function clearIdentity() {
+  if (!onWeb()) return;
   try {
     window.localStorage.removeItem(VISITOR_KEY);
     window.sessionStorage.removeItem(SESSION_KEY);
@@ -106,17 +91,17 @@ function clearDetailedIdentity() {
   } catch { /* best effort */ }
 }
 
-function broadBrowser(userAgent: string) {
+function browserName(userAgent: string) {
   if (/Edg\//i.test(userAgent)) return 'Edge';
   if (/SamsungBrowser/i.test(userAgent)) return 'Samsung Internet';
   if (/OPR\//i.test(userAgent)) return 'Opera';
   if (/Firefox\//i.test(userAgent)) return 'Firefox';
-  if (/Chrome\//i.test(userAgent) && !/Chromium/i.test(userAgent)) return 'Chrome';
+  if (/Chrome\//i.test(userAgent)) return 'Chrome';
   if (/Safari\//i.test(userAgent) && !/Chrome|Chromium|Android/i.test(userAgent)) return 'Safari';
   return 'Other';
 }
 
-function broadOs(userAgent: string) {
+function osName(userAgent: string) {
   if (/CrOS/i.test(userAgent)) return 'ChromeOS';
   if (/Android/i.test(userAgent)) return 'Android';
   if (/iPhone|iPad|iPod/i.test(userAgent)) return 'iOS/iPadOS';
@@ -126,35 +111,33 @@ function broadOs(userAgent: string) {
   return 'Other';
 }
 
-function dimensionBucket(value: number) {
+function bucket(value: number) {
   if (!Number.isFinite(value) || value <= 0) return '';
-  return `${Math.max(100, Math.round(value / 100) * 100)}`;
+  return String(Math.max(100, Math.round(value / 100) * 100));
 }
 
 function deviceInfo() {
-  if (!storageAvailable()) return {};
-  const width = window.innerWidth || 0;
+  if (!onWeb()) return {};
   const nav = navigator as Navigator & { connection?: { effectiveType?: string; saveData?: boolean } };
-  const deviceType = width <= 760 ? 'mobile' : width <= 1100 ? 'tablet' : 'desktop';
+  const width = window.innerWidth || 0;
   let timezone = '';
   try { timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch { /* optional */ }
-  const connection = [nav.connection?.effectiveType, nav.connection?.saveData ? 'data-saver' : ''].filter(Boolean).join(' / ');
   return {
-    deviceType,
-    browser: broadBrowser(navigator.userAgent || ''),
-    os: broadOs(navigator.userAgent || ''),
+    deviceType: width <= 760 ? 'mobile' : width <= 1100 ? 'tablet' : 'desktop',
+    browser: browserName(navigator.userAgent || ''),
+    os: osName(navigator.userAgent || ''),
     platform: String(navigator.platform || '').slice(0, 80),
     language: String(navigator.language || '').slice(0, 40),
     timezone: timezone.slice(0, 100),
-    viewport: `${dimensionBucket(window.innerWidth)}x${dimensionBucket(window.innerHeight)}`,
-    screen: `${dimensionBucket(window.screen?.width || 0)}x${dimensionBucket(window.screen?.height || 0)}`,
-    connection: connection.slice(0, 40),
+    viewport: `${bucket(window.innerWidth)}x${bucket(window.innerHeight)}`,
+    screen: `${bucket(window.screen?.width || 0)}x${bucket(window.screen?.height || 0)}`,
+    connection: [nav.connection?.effectiveType, nav.connection?.saveData ? 'data-saver' : ''].filter(Boolean).join(' / ').slice(0, 40),
     touch: (navigator.maxTouchPoints || 0) > 0,
   };
 }
 
 function acquisitionInfo() {
-  if (!storageAvailable()) return {};
+  if (!onWeb()) return {};
   const params = new URLSearchParams(window.location.search);
   let referrerHost = '';
   try { referrerHost = document.referrer ? new URL(document.referrer).host : ''; } catch { /* malformed referrer */ }
@@ -179,14 +162,14 @@ function cleanLabel(value: string) {
 }
 
 function post(payload: object) {
-  if (!storageAvailable()) return;
+  if (!onWeb()) return;
   const body = JSON.stringify(payload);
   try {
     if (navigator.sendBeacon && body.length < 60_000) {
       const sent = navigator.sendBeacon('/api/visitor-analytics', new Blob([body], { type: 'application/json' }));
       if (sent) return;
     }
-  } catch { /* fall through to fetch */ }
+  } catch { /* fall through */ }
   void fetch('/api/visitor-analytics', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => undefined);
 }
 
@@ -196,14 +179,12 @@ export function VisitorAnalytics() {
   const [choice, setChoice] = useState<AnalyticsChoice | null>(() => readChoice());
   const [showChoices, setShowChoices] = useState(() => readChoice() === null);
   const previousPath = useRef<string | null>(null);
-  const pageStartedAt = useRef(Date.now());
+  const pageStartedAt = useRef(0);
   const conversionSent = useRef(false);
   const effectiveChoice: AnalyticsChoice = choice ?? 'basic';
-  const acquisition = useMemo(() => acquisitionInfo(), [pathname]);
 
-  const sendEventRef = useRef<(eventType: AnalyticsPayload['eventType'], path: string, target?: string, targetPath?: string, value?: number, details?: AnalyticsPayload['details']) => void>(() => undefined);
-  sendEventRef.current = (eventType, path, target, targetPath, value, details) => {
-    if (Platform.OS !== 'web' || isSignedIn || effectiveChoice === 'off') return;
+  const sendEvent = useCallback((eventType: EventType, path: string, target?: string, targetPath?: string, value?: number, details?: EventDetails) => {
+    if (!onWeb() || isSignedIn || effectiveChoice === 'off') return;
     const identity = effectiveChoice === 'detailed' ? detailedIdentity() : null;
     post({
       action: 'event',
@@ -214,59 +195,53 @@ export function VisitorAnalytics() {
       targetPath,
       value,
       device: deviceInfo(),
-      acquisition,
+      acquisition: acquisitionInfo(),
       ...(identity ?? {}),
       details,
-    } satisfies AnalyticsPayload);
-  };
+    });
+  }, [effectiveChoice, isSignedIn]);
 
   useEffect(() => {
-    if (Platform.OS !== 'web' || isSignedIn || effectiveChoice === 'off') return;
+    if (!onWeb() || isSignedIn || effectiveChoice === 'off') return;
     const now = Date.now();
-    if (previousPath.current && previousPath.current !== pathname) {
-      const seconds = Math.max(0, Math.min(86400, (now - pageStartedAt.current) / 1000));
-      sendEventRef.current('page_time', previousPath.current, undefined, undefined, seconds);
+    if (previousPath.current && previousPath.current !== pathname && pageStartedAt.current > 0) {
+      sendEvent('page_time', previousPath.current, undefined, undefined, Math.max(0, Math.min(86400, (now - pageStartedAt.current) / 1000)));
     }
     previousPath.current = pathname;
     pageStartedAt.current = now;
     if (pathname.includes('sign-up')) {
       try { window.sessionStorage.setItem(SIGNUP_INTENT_KEY, '1'); } catch { /* best effort */ }
     }
-    sendEventRef.current('page_view', pathname);
-  }, [effectiveChoice, isSignedIn, pathname]);
+    sendEvent('page_view', pathname);
+  }, [effectiveChoice, isSignedIn, pathname, sendEvent]);
 
   useEffect(() => {
-    if (Platform.OS !== 'web' || isSignedIn || effectiveChoice === 'off') return;
-
+    if (!onWeb() || isSignedIn || effectiveChoice === 'off') return;
     const onClick = (event: MouseEvent) => {
       const node = event.target instanceof Element ? event.target : null;
       const element = node?.closest('a,button,[role="button"],input[type="submit"],input[type="button"]') as HTMLElement | null;
       if (!element || element.closest('[data-testid^="analytics-choice"]')) return;
-      const label = cleanLabel(element.getAttribute('aria-label') || element.textContent || element.getAttribute('value') || element.tagName.toLowerCase());
+      const target = cleanLabel(element.getAttribute('aria-label') || element.textContent || element.getAttribute('value') || element.tagName.toLowerCase());
       let targetPath = '';
       const href = element.getAttribute('href');
       if (href) {
         try {
           const url = new URL(href, window.location.origin);
           targetPath = url.origin === window.location.origin ? `${url.pathname}${url.search}`.slice(0, 500) : url.host.slice(0, 200);
-        } catch { targetPath = ''; }
+        } catch { /* ignore */ }
       }
-      sendEventRef.current('click', pathname, label, targetPath);
+      sendEvent('click', pathname, target, targetPath);
     };
-
     const onFocus = (event: FocusEvent) => {
       const element = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement ? event.target : null;
-      if (!element || element instanceof HTMLInputElement && ['password', 'hidden'].includes(element.type)) return;
+      if (!element || (element instanceof HTMLInputElement && ['password', 'hidden'].includes(element.type))) return;
       const field = cleanLabel(element.getAttribute('aria-label') || element.getAttribute('name') || element.getAttribute('autocomplete') || element.getAttribute('type') || element.tagName.toLowerCase());
-      sendEventRef.current('form_interaction', pathname, field, undefined, undefined, { interaction: 'focus' });
+      sendEvent('form_interaction', pathname, field, undefined, undefined, { interaction: 'focus' });
     };
-
     const onSubmit = (event: SubmitEvent) => {
       const form = event.target instanceof HTMLFormElement ? event.target : null;
-      const label = cleanLabel(form?.getAttribute('aria-label') || form?.getAttribute('name') || form?.id || 'form');
-      sendEventRef.current('form_submit', pathname, label);
+      sendEvent('form_submit', pathname, cleanLabel(form?.getAttribute('aria-label') || form?.getAttribute('name') || form?.id || 'form'));
     };
-
     document.addEventListener('click', onClick, true);
     document.addEventListener('focusin', onFocus, true);
     document.addEventListener('submit', onSubmit, true);
@@ -275,41 +250,40 @@ export function VisitorAnalytics() {
       document.removeEventListener('focusin', onFocus, true);
       document.removeEventListener('submit', onSubmit, true);
     };
-  }, [effectiveChoice, isSignedIn, pathname]);
+  }, [effectiveChoice, isSignedIn, pathname, sendEvent]);
 
   useEffect(() => {
-    if (Platform.OS !== 'web' || isSignedIn || effectiveChoice === 'off') return;
+    if (!onWeb() || isSignedIn || effectiveChoice === 'off') return;
     const reached = new Set<number>();
     const onScroll = () => {
-      const body = document.documentElement;
-      const denominator = Math.max(1, body.scrollHeight - window.innerHeight);
+      const denominator = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       const percent = Math.max(0, Math.min(100, Math.round((window.scrollY / denominator) * 100)));
       for (const milestone of [25, 50, 75, 100]) {
         if (percent >= milestone && !reached.has(milestone)) {
           reached.add(milestone);
-          sendEventRef.current('scroll', pathname, `${milestone}%`, undefined, milestone);
+          sendEvent('scroll', pathname, `${milestone}%`, undefined, milestone);
         }
       }
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, [effectiveChoice, isSignedIn, pathname]);
+  }, [effectiveChoice, isSignedIn, pathname, sendEvent]);
 
   useEffect(() => {
-    if (Platform.OS !== 'web') return;
+    if (!onWeb() || isSignedIn || effectiveChoice === 'off') return;
     const onPageHide = () => {
-      if (isSignedIn || effectiveChoice === 'off' || !previousPath.current) return;
+      if (!previousPath.current || pageStartedAt.current <= 0) return;
       const seconds = Math.max(0, Math.min(86400, (Date.now() - pageStartedAt.current) / 1000));
-      sendEventRef.current('page_time', previousPath.current, undefined, undefined, seconds);
+      sendEvent('page_time', previousPath.current, undefined, undefined, seconds);
       pageStartedAt.current = Date.now();
     };
     window.addEventListener('pagehide', onPageHide);
     return () => window.removeEventListener('pagehide', onPageHide);
-  }, [effectiveChoice, isSignedIn]);
+  }, [effectiveChoice, isSignedIn, sendEvent]);
 
   useEffect(() => {
-    if (Platform.OS !== 'web' || !isSignedIn || conversionSent.current) return;
-    const identity = existingDetailedIdentity();
+    if (!onWeb() || !isSignedIn || conversionSent.current) return;
+    const identity = existingIdentity();
     if (!identity) return;
     conversionSent.current = true;
     let conversionType: 'signup' | 'signin' = 'signin';
@@ -321,18 +295,18 @@ export function VisitorAnalytics() {
     } catch { /* best effort */ }
   }, [isSignedIn]);
 
-  if (Platform.OS !== 'web' || isSignedIn) return null;
+  if (!onWeb() || isSignedIn) return null;
 
   const choose = (next: AnalyticsChoice) => {
-    const existing = existingDetailedIdentity();
-    writeChoice(next);
+    const existing = existingIdentity();
+    saveChoice(next);
     setChoice(next);
     setShowChoices(false);
-    if (next !== 'detailed') {
-      if (existing?.visitorId) post({ action: 'withdraw', visitorId: existing.visitorId });
-      clearDetailedIdentity();
-    } else {
+    if (next === 'detailed') {
       detailedIdentity();
+    } else {
+      if (existing?.visitorId) post({ action: 'withdraw', visitorId: existing.visitorId });
+      clearIdentity();
     }
   };
 
@@ -341,9 +315,7 @@ export function VisitorAnalytics() {
       {showChoices ? (
         <Surface style={styles.panel} elevation={4} testID="analytics-choice-panel">
           <Text variant="titleMedium" style={styles.title}>BuildPair analytics choices</Text>
-          <Text style={styles.copy}>
-            Basic analytics counts pages, clicks, scroll depth, devices, referrers and coarse location signals in aggregate so BuildPair can improve the site. Detailed analytics is optional and records an anonymous visit journey so we can see where people get stuck. We do not record passwords, form contents, raw IP addresses or precise GPS location.
-          </Text>
+          <Text style={styles.copy}>Basic analytics counts pages, clicks, scroll depth, devices, referrers and coarse location signals in aggregate so BuildPair can improve the site. Detailed analytics is optional and records an anonymous visit journey so we can see where people get stuck. We do not record passwords, form contents, raw IP addresses or precise GPS location.</Text>
           <View style={styles.actions}>
             <Button testID="analytics-choice-detailed" mode="contained" onPress={() => choose('detailed')}>Allow detailed</Button>
             <Button testID="analytics-choice-basic" mode="outlined" onPress={() => choose('basic')}>Basic only</Button>
@@ -358,21 +330,7 @@ export function VisitorAnalytics() {
 }
 
 const styles = StyleSheet.create({
-  panel: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-    bottom: 12,
-    alignSelf: 'center',
-    width: 'auto',
-    maxWidth: 760,
-    borderRadius: 18,
-    padding: 16,
-    gap: 10,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
+  panel: { position: 'absolute', left: 12, right: 12, bottom: 12, alignSelf: 'center', width: 'auto', maxWidth: 760, borderRadius: 18, padding: 16, gap: 10, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: colors.border },
   title: { fontWeight: '900', color: colors.text },
   copy: { color: colors.muted, lineHeight: 21 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
