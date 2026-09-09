@@ -55,9 +55,9 @@ export default function LandingPage() {
           <Button mode="contained" contentStyle={styles.searchButton} onPress={() => goSearch(search)}>Find a trade</Button>
         </View>
         <View style={styles.heroActions} testID="home-hero-actions">
-          <Link href="/auth/account" asChild><Button mode="contained-tonal">Post a job</Button></Link>
-          <Link href="/(public)/for-tradespeople" asChild><Button mode="outlined">I’m a tradesperson</Button></Link>
-          <Link href="/(public)/how-it-works" asChild><Button mode="text">How it works</Button></Link>
+          <Link href="/auth/account" asChild><Button mode="outlined" style={styles.heroActionButton} contentStyle={styles.heroActionButtonContent}>Post a job</Button></Link>
+          <Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" style={styles.heroActionButton} contentStyle={styles.heroActionButtonContent}>I’m a tradesperson</Button></Link>
+          <Link href="/(public)/how-it-works" asChild><Button mode="outlined" style={styles.heroActionButton} contentStyle={styles.heroActionButtonContent}>How it works</Button></Link>
         </View>
       </View>
       <ImageBackground source={{ uri: 'https://images.unsplash.com/photo-1625577816360-32388b70471c?auto=format&fit=crop&w=1600&q=84' }} style={[styles.heroVisual, wide && styles.heroVisualWide]} imageStyle={styles.heroImage} accessibilityLabel="Home renovation project" testID="home-hero-visual">
@@ -239,6 +239,8 @@ const styles = StyleSheet.create({
   inputOutline: { borderRadius: 16 },
   searchButton: { minHeight: 50 },
   heroActions: { width: '100%', minHeight: 44, flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', alignItems: 'center', paddingBottom: 2 },
+  heroActionButton: { borderRadius: 999 },
+  heroActionButtonContent: { minHeight: 44, paddingHorizontal: 12 },
   heroVisual: { width: '100%', flexShrink: 0, minHeight: 380, justifyContent: 'space-between', padding: 22, overflow: 'hidden', borderRadius: 30 },
   heroVisualWide: { flex: 0.9, width: 'auto', flexShrink: 1 },
   heroImage: { borderRadius: 30 },
