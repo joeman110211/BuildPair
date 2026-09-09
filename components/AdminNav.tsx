@@ -1,5 +1,5 @@
 import { Link, usePathname } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { colors } from '@/constants/theme';
@@ -11,8 +11,6 @@ export function AdminNav() {
   const compact = width < 760;
   const [menuOpen, setMenuOpen] = useState(false);
   const current = useMemo(() => adminNavItemForPath(pathname), [pathname]);
-
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   return (
     <View style={styles.shell}>
@@ -41,7 +39,7 @@ export function AdminNav() {
               {group.items.map((item) => {
                 const selected = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return <Link key={item.href} href={item.href as never} asChild>
-                  <Pressable style={({ pressed }) => [styles.mobileLink, selected && styles.mobileLinkSelected, pressed && styles.pressed]}>
+                  <Pressable onPress={() => setMenuOpen(false)} style={({ pressed }) => [styles.mobileLink, selected && styles.mobileLinkSelected, pressed && styles.pressed]}>
                     <View style={styles.mobileLinkCopy}>
                       <Text style={[styles.mobileLinkLabel, selected && styles.mobileLinkLabelSelected]}>{item.label}</Text>
                       <Text style={styles.mobileLinkDescription}>{item.description}</Text>
