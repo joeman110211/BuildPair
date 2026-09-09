@@ -30,7 +30,7 @@ const QUICK_NAV: { label: string; href: Href }[] = [
 ];
 
 function HeaderBrand() {
-  return <Link href="/" asChild><Pressable style={styles.brandPressable} accessibilityLabel="BuildPair home"><BuildPairLogo compact /></Pressable></Link>;
+  return <Link href="/" asChild><Pressable style={styles.brandPressable} accessibilityLabel="BuildPair home"><BuildPairLogo /></Pressable></Link>;
 }
 
 function NavMenu({ dashboard, signedIn, onSignOut, preview = false }: { dashboard?: Href; signedIn?: boolean; onSignOut?: () => void; preview?: boolean }) {
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   shell: { backgroundColor: 'rgba(255,255,255,0.985)', borderBottomWidth: 1, borderColor: colors.border, zIndex: 200, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4, overflow: 'visible', flexShrink: 0 },
   compactHeader: { ...baseHeader, paddingHorizontal: spacing.md, zIndex: 200, overflow: 'visible', flexShrink: 0 },
   header: { ...baseHeader, borderBottomWidth: 1, borderColor: colors.border, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1, zIndex: 20 },
-  brandPressable: { minHeight: 56, justifyContent: 'center', paddingHorizontal: spacing.xxs },
+  brandPressable: { minHeight: 64, justifyContent: 'center', paddingHorizontal: spacing.xxs },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs, justifyContent: 'flex-end' },
   desktopNav: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
   navButtonContent: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xxs },
