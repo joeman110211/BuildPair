@@ -4,19 +4,19 @@ const SEARCH_GROUPS = [
   ['tile', 'tiles', 'tiler', 'tilers', 'tiling', 'grout', 'grouting', 'ceramic', 'porcelain', 'splashback', 'wetroom', 'wet room', 'bathroom', 'kitchen', 'mosaic', 'large format'],
   ['bath', 'bathroom', 'bathrooms', 'shower', 'showers', 'wetroom', 'wet room', 'ensuite', 'toilet', 'wc', 'basin', 'sink', 'vanity', 'plumber', 'plumbing', 'tiler', 'tiling', 'bathroom fitting'],
   ['kitchen', 'kitchens', 'sink', 'worktop', 'worktops', 'cabinet', 'cabinets', 'units', 'splashback', 'joiner', 'carpenter', 'tiler', 'tiling', 'plumber', 'kitchen fitting'],
-  ['plumber', 'plumbing', 'pipe', 'pipes', 'tap', 'taps', 'leak', 'leaks', 'sink', 'toilet', 'radiator', 'shower', 'bath', 'drain', 'water'],
+  ['plumber', 'plumbing', 'water', 'pipe', 'pipes', 'tap', 'taps', 'leak', 'leaks', 'drip', 'dripping', 'sink', 'toilet', 'radiator', 'shower', 'bath', 'drain', 'burst pipe', 'no water'],
   ['boiler', 'boilers', 'heating', 'gas', 'radiator', 'radiators', 'central heating', 'heat pump', 'underfloor heating', 'hot water'],
-  ['electric', 'electrics', 'electrician', 'electrical', 'rewire', 'rewiring', 'socket', 'sockets', 'lighting', 'consumer unit', 'fuse box', 'ev charger'],
+  ['electric', 'electrics', 'electrician', 'electrical', 'power', 'lighting', 'light', 'lights', 'rewire', 'rewiring', 'socket', 'sockets', 'consumer unit', 'fuse box', 'ev charger', 'flicker', 'flickering', 'no power'],
   ['builder', 'builders', 'building', 'renovation', 'renovations', 'refurbishment', 'extension', 'extensions', 'conversion', 'structural', 'open plan'],
   ['brick', 'bricks', 'bricklayer', 'bricklaying', 'blockwork', 'repointing', 'wall', 'walls', 'masonry'],
   ['plaster', 'plasterer', 'plastering', 'skim', 'skimming', 'render', 'rendering', 'dry lining'],
   ['paint', 'painter', 'painting', 'decorator', 'decorating', 'decoration', 'wallpaper', 'wallpapering'],
-  ['carpenter', 'carpentry', 'joiner', 'joinery', 'woodwork', 'doors', 'stairs', 'skirting', 'cabinet', 'cabinetry'],
-  ['roof', 'roofer', 'roofing', 'slate', 'slates', 'roof tile', 'roof tiles', 'flat roof', 'gutter', 'guttering', 'fascia', 'soffit', 'roof leak'],
-  ['floor', 'floors', 'flooring', 'laminate', 'vinyl', 'lvt', 'wood floor', 'carpet', 'carpet fitting', 'floor tiles'],
+  ['carpenter', 'carpentry', 'joiner', 'joinery', 'wood', 'timber', 'woodwork', 'wooden', 'doors', 'stairs', 'skirting', 'architrave', 'cabinet', 'cabinetry', 'wardrobe', 'wardrobes', 'shelf', 'shelves', 'shelving', 'bespoke furniture'],
+  ['roof', 'roofer', 'roofing', 'roof leak', 'slate', 'slates', 'roof tile', 'roof tiles', 'flat roof', 'gutter', 'guttering', 'fascia', 'soffit', 'leaking roof'],
+  ['floor', 'floors', 'flooring', 'laminate', 'vinyl', 'lvt', 'wood floor', 'wooden floor', 'timber floor', 'carpet', 'carpet fitting', 'floor tiles'],
   ['garden', 'gardener', 'gardening', 'landscape', 'landscaper', 'landscaping', 'lawn', 'patio', 'planting', 'artificial grass'],
   ['tree', 'trees', 'tree surgeon', 'tree surgery', 'stump', 'pruning', 'hedge'],
-  ['fence', 'fencing', 'gate', 'gates', 'deck', 'decking', 'garden fence'],
+  ['fence', 'fencing', 'gate', 'gates', 'deck', 'decking', 'garden fence', 'timber fence', 'wooden fence'],
   ['drive', 'driveway', 'driveways', 'paving', 'paver', 'patio', 'block paving', 'resin', 'tarmac', 'path'],
   ['groundwork', 'groundworks', 'foundation', 'foundations', 'excavation', 'concrete', 'footings', 'trench'],
   ['drain', 'drains', 'drainage', 'blocked drain', 'sewer', 'soakaway', 'cctv drain survey'],
@@ -57,7 +57,7 @@ const SEARCH_GROUPS = [
 ];
 
 const GROUP_ANCHOR_LIMIT = 6;
-const GENERIC_ANCHORS = new Set(['repair', 'repairs', 'maintenance']);
+const GENERIC_TERMS = new Set(['repair', 'repairs', 'maintenance', 'work', 'job', 'problem']);
 
 function normalise(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -86,9 +86,36 @@ function wordStems(word: string) {
   return stems;
 }
 
+function editDistance(left: string, right: string) {
+  if (left === right) return 0;
+  const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+
+  for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+    let diagonal = previous[0];
+    previous[0] = leftIndex;
+    for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+      const above = previous[rightIndex];
+      const cost = left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1;
+      previous[rightIndex] = Math.min(previous[rightIndex] + 1, previous[rightIndex - 1] + 1, diagonal + cost);
+      diagonal = above;
+    }
+  }
+
+  return previous[right.length];
+}
+
+function fuzzyWordsRelated(left: string, right: string) {
+  if (left.length < 4 || right.length < 4) return false;
+  const longest = Math.max(left.length, right.length);
+  const maxDistance = longest >= 8 ? 2 : 1;
+  if (Math.abs(left.length - right.length) > maxDistance) return false;
+  return editDistance(left, right) <= maxDistance;
+}
+
 function wordsRelated(left: string, right: string) {
   const leftStems = wordStems(left);
-  return [...wordStems(right)].some((stem) => leftStems.has(stem));
+  if ([...wordStems(right)].some((stem) => leftStems.has(stem))) return true;
+  return fuzzyWordsRelated(left, right);
 }
 
 function phraseIncludes(value: string, term: string) {
@@ -111,12 +138,12 @@ function matchedGroups(query: string) {
   if (!raw) return [];
   const rawWordCount = raw.split(' ').filter(Boolean).length;
 
-  return SEARCH_GROUPS.filter((group) => group.slice(0, GROUP_ANCHOR_LIMIT).some((term) => {
-    const anchor = normalise(term);
-    if (anchor.length <= 1) return false;
-    if (raw === anchor) return true;
-    if (rawWordCount > 1 && GENERIC_ANCHORS.has(anchor)) return false;
-    return phraseIncludes(raw, anchor) || phraseIncludes(anchor, raw);
+  return SEARCH_GROUPS.filter((group) => group.some((term) => {
+    const candidate = normalise(term);
+    if (candidate.length <= 1) return false;
+    if (raw === candidate) return true;
+    if (rawWordCount > 1 && GENERIC_TERMS.has(candidate)) return false;
+    return phraseIncludes(raw, candidate) || phraseIncludes(candidate, raw);
   }));
 }
 
@@ -124,9 +151,19 @@ function bestFieldMatch(value: string, terms: string[], score: number) {
   return terms.some((term) => phraseIncludes(value, term)) ? score : 0;
 }
 
-export function scoreTraderSearch(trader: TraderProfile, query: string) {
+function inferredCategoryScore(categoryValues: string[], inferredCategories: string[]) {
+  const normalisedCategories = categoryValues.map(normalise);
+  return inferredCategories.reduce((score, inferred, index) => {
+    const normalisedInferred = normalise(inferred);
+    const matches = normalisedCategories.some((category) => category === normalisedInferred || phraseIncludes(category, normalisedInferred) || phraseIncludes(normalisedInferred, category));
+    if (!matches) return score;
+    return score + Math.max(58, 125 - index * 25);
+  }, 0);
+}
+
+export function scoreTraderSearch(trader: TraderProfile, query: string, inferredCategories: string[] = []) {
   const raw = normalise(query);
-  if (!raw) return 1;
+  if (!raw && !inferredCategories.length) return 1;
 
   const categoryValues = [...new Set([trader.tradeCategory, ...(trader.tradeCategories ?? [])].filter(Boolean))];
   const categories = normalise(categoryValues.join(' '));
@@ -135,36 +172,38 @@ export function scoreTraderSearch(trader: TraderProfile, query: string) {
   const skills = normalise([...new Set([...(trader.subSkills ?? []), ...selectedServices])].join(' '));
   const bio = normalise(trader.bio || '');
 
-  let score = 0;
+  let score = inferredCategoryScore(categoryValues, inferredCategories);
 
-  if (phraseIncludes(business, raw)) score += 150;
-  if (categoryValues.some((category) => normalise(category) === raw)) score += 145;
-  else if (phraseIncludes(categories, raw) || phraseIncludes(raw, categories)) score += 115;
-  if (phraseIncludes(skills, raw)) score += 95;
-  if (phraseIncludes(bio, raw)) score += 18;
+  if (raw) {
+    if (phraseIncludes(business, raw)) score += 150;
+    if (categoryValues.some((category) => normalise(category) === raw)) score += 145;
+    else if (phraseIncludes(categories, raw) || phraseIncludes(raw, categories)) score += 115;
+    if (phraseIncludes(skills, raw)) score += 95;
+    if (phraseIncludes(bio, raw)) score += 18;
 
-  for (const group of matchedGroups(query)) {
-    const primaryTerms = group.slice(0, GROUP_ANCHOR_LIMIT).map(normalise);
-    const relatedTerms = group.slice(GROUP_ANCHOR_LIMIT).map(normalise);
+    for (const group of matchedGroups(query)) {
+      const primaryTerms = group.slice(0, GROUP_ANCHOR_LIMIT).map(normalise);
+      const relatedTerms = group.slice(GROUP_ANCHOR_LIMIT).map(normalise);
 
-    score += bestFieldMatch(categories, primaryTerms, 95);
-    score += bestFieldMatch(skills, primaryTerms, 62);
-    score += bestFieldMatch(business, primaryTerms, 38);
-    score += bestFieldMatch(bio, primaryTerms, 8);
+      score += bestFieldMatch(categories, primaryTerms, 95);
+      score += bestFieldMatch(skills, primaryTerms, 62);
+      score += bestFieldMatch(business, primaryTerms, 38);
+      score += bestFieldMatch(bio, primaryTerms, 8);
 
-    score += bestFieldMatch(categories, relatedTerms, 28);
-    score += bestFieldMatch(skills, relatedTerms, 24);
-    score += bestFieldMatch(business, relatedTerms, 12);
-    score += bestFieldMatch(bio, relatedTerms, 3);
+      score += bestFieldMatch(categories, relatedTerms, 28);
+      score += bestFieldMatch(skills, relatedTerms, 24);
+      score += bestFieldMatch(business, relatedTerms, 12);
+      score += bestFieldMatch(bio, relatedTerms, 3);
+    }
   }
 
   return score;
 }
 
-export function searchTraders(traders: TraderProfile[], query: string) {
-  if (!query.trim()) return traders;
+export function searchTraders(traders: TraderProfile[], query: string, inferredCategories: string[] = []) {
+  if (!query.trim() && !inferredCategories.length) return traders;
   return traders
-    .map((trader) => ({ trader, score: scoreTraderSearch(trader, query) }))
+    .map((trader) => ({ trader, score: scoreTraderSearch(trader, query, inferredCategories) }))
     .filter((result) => result.score > 0)
     .sort((a, b) => b.score - a.score
       || (b.trader.rankingScore ?? 0) - (a.trader.rankingScore ?? 0)
