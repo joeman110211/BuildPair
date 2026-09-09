@@ -124,12 +124,22 @@ async function resendCheck() {
 }
 
 async function stripeCheck() {
-  const envVars = ['STRIPE_SECRET_KEY', 'EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY', 'STRIPE_BASIC_PRICE_ID', 'STRIPE_FEATURED_PRICE_ID'];
+  const envVars = [
+    'STRIPE_SECRET_KEY',
+    'EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY',
+    'STRIPE_BASIC_PRICE_ID',
+    'STRIPE_FEATURED_PRICE_ID',
+    'STRIPE_WEBHOOK_SECRET',
+    'STRIPE_CONNECT_WEBHOOK_SECRET',
+  ];
+  const missing = envVars.filter((name) => !configured(name));
   const key = process.env.STRIPE_SECRET_KEY?.trim();
-  if (!key) return unconfigured('Stripe', 'STRIPE_SECRET_KEY is missing', 'Memberships, payments and trader payouts', envVars);
+  if (missing.length || !key) {
+    return unconfigured('Stripe', `Missing ${missing.join(', ') || 'Stripe configuration'}`, 'Memberships, payments and trader payouts', envVars);
+  }
   return timed('Stripe', 'Memberships, payments and trader payouts', envVars, async () => {
     await probe('https://api.stripe.com/v1/balance', { headers: { Authorization: `Bearer ${key}` } });
-    return 'Stripe API reachable and credentials accepted';
+    return 'Stripe API reachable and complete launch configuration is present';
   });
 }
 
