@@ -8,8 +8,6 @@ import { TraderCard } from '@/components/TraderCard';
 import { TRADE_CATEGORIES } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { clientPreviewDataEnabled } from '@/lib/client-preview';
-import { demoTraders } from '@/lib/demo-data';
 import { searchTraders } from '@/lib/trade-search';
 import type { TraderProfile } from '@/types';
 
@@ -23,12 +21,13 @@ type TradeSearchIntent = {
   source?: 'ai' | 'rules';
 };
 
+type StoredIntent = {
+  query: string;
+  intent: TradeSearchIntent;
+};
+
 function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
-}
-
-function previewTraders(selected?: string) {
-  return demoTraders.filter((trader) => !selected || trader.tradeCategory === selected);
 }
 
 export default function DirectoryScreen() {
@@ -40,8 +39,8 @@ export default function DirectoryScreen() {
   const [query, setQuery] = useState(initialQuery);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [aiIntent, setAiIntent] = useState<TradeSearchIntent | null>(null);
-  const [aiChecking, setAiChecking] = useState(false);
+  const [storedIntent, setStoredIntent] = useState<StoredIntent | null>(null);
+  const [aiCheckingQuery, setAiCheckingQuery] = useState('');
 
   async function load(selected?: string) {
     try {
@@ -49,12 +48,7 @@ export default function DirectoryScreen() {
       setError('');
       setTraders(await apiFetch(`/api/traders${selected ? `?trade=${encodeURIComponent(selected)}` : ''}`));
     } catch (e) {
-      if (clientPreviewDataEnabled()) {
-        setTraders(previewTraders(selected));
-        setError('');
-      } else {
-        setError(errorMessage(e));
-      }
+      setError(errorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -65,34 +59,37 @@ export default function DirectoryScreen() {
     return () => clearTimeout(timer);
   }, [initialTrade]);
 
+  const trimmedQuery = query.trim();
   const localFiltered = useMemo(() => searchTraders(traders, query), [traders, query]);
+  const activeIntent = !trade && localFiltered.length === 0 && storedIntent?.query === trimmedQuery
+    ? storedIntent.intent
+    : null;
   const inferredCategories = useMemo(() => {
-    if (!aiIntent?.matched || !aiIntent.primaryTrade) return [];
-    return [aiIntent.primaryTrade, ...(aiIntent.alternatives ?? [])];
-  }, [aiIntent]);
+    if (!activeIntent?.matched || !activeIntent.primaryTrade) return [];
+    return [activeIntent.primaryTrade, ...(activeIntent.alternatives ?? [])];
+  }, [activeIntent]);
   const filtered = useMemo(() => searchTraders(traders, query, inferredCategories), [traders, query, inferredCategories]);
+  const aiChecking = !trade && localFiltered.length === 0 && aiCheckingQuery === trimmedQuery;
 
   useEffect(() => {
-    const trimmed = query.trim();
-    if (trade || trimmed.length < 2 || localFiltered.length > 0) {
-      setAiIntent(null);
-      setAiChecking(false);
-      return undefined;
-    }
+    if (trade || trimmedQuery.length < 2 || localFiltered.length > 0) return undefined;
 
     let cancelled = false;
+    const requestedQuery = trimmedQuery;
     const timer = setTimeout(async () => {
       try {
-        setAiChecking(true);
+        setAiCheckingQuery(requestedQuery);
         const intent = await apiFetch<TradeSearchIntent>('/api/ai/trade-match', {
           method: 'POST',
-          body: JSON.stringify({ problem: trimmed, mode: 'search' }),
+          body: JSON.stringify({ problem: requestedQuery, mode: 'search' }),
         });
-        if (!cancelled) setAiIntent(intent);
+        if (!cancelled) setStoredIntent({ query: requestedQuery, intent });
       } catch {
-        if (!cancelled) setAiIntent(null);
+        if (!cancelled) setStoredIntent({ query: requestedQuery, intent: { matched: false } });
       } finally {
-        if (!cancelled) setAiChecking(false);
+        if (!cancelled) {
+          setAiCheckingQuery((current) => current === requestedQuery ? '' : current);
+        }
       }
     }, 450);
 
@@ -100,7 +97,7 @@ export default function DirectoryScreen() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query, trade, localFiltered.length]);
+  }, [trade, trimmedQuery, localFiltered.length]);
 
   if (loading) return <LoadingScreen label="Finding local trades…" />;
 
@@ -121,11 +118,11 @@ export default function DirectoryScreen() {
           label="Trade category"
           value={trade}
           options={TRADE_CATEGORIES}
-          onChange={(value) => { setTrade(value); setAiIntent(null); void load(value); }}
+          onChange={(value) => { setTrade(value); void load(value); }}
           placeholder="All trades"
         />
       </View>
-      {trade || query ? <Button mode="text" onPress={() => { setQuery(''); setTrade(undefined); setAiIntent(null); void load(); }}>Clear</Button> : null}
+      {trade || query ? <Button mode="text" onPress={() => { setQuery(''); setTrade(undefined); void load(); }}>Clear</Button> : null}
     </View>
 
     <View style={styles.examples}>
@@ -148,8 +145,8 @@ export default function DirectoryScreen() {
         <Text variant="titleLarge" style={styles.title}>{filtered.length} trade{filtered.length === 1 ? '' : 's'} found</Text>
         {query ? <Text style={styles.muted}>Best matches for “{query}” are shown first.</Text> : null}
         {aiChecking ? <Text style={styles.muted}>Checking the likely trade behind your search…</Text> : null}
-        {!aiChecking && aiIntent?.matched && aiIntent.primaryTrade && filtered.length > 0
-          ? <Text style={styles.intentText}>BuildPair matched this to {aiIntent.primaryTrade}{aiIntent.source === 'ai' ? ' using AI intent matching' : ''}.</Text>
+        {!aiChecking && activeIntent?.matched && activeIntent.primaryTrade && filtered.length > 0
+          ? <Text style={styles.intentText}>BuildPair matched this to {activeIntent.primaryTrade}{activeIntent.source === 'ai' ? ' using AI intent matching' : ''}.</Text>
           : null}
       </View>
       {trade ? <Chip>{trade}</Chip> : null}
