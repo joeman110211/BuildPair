@@ -43,7 +43,7 @@ export default function LandingPage() {
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.pageContent}>
     <View style={[styles.hero, wide && styles.heroWide]}>
-      <View style={styles.heroCopy}>
+      <View style={[styles.heroCopy, wide && styles.heroCopyWide]} testID="home-hero-copy">
         <View style={styles.heroBadge}><View style={styles.liveDot} /><Text style={styles.heroBadgeText}>Built for UK homeowners and tradespeople</Text></View>
         <Text style={[styles.heroTitle, !wide && styles.heroTitleCompact]}>Find the right trade. Compare properly. Keep the whole job together.</Text>
         <Text variant="titleMedium" style={styles.heroSubtitle}>More than a trades directory. BuildPair connects local trade discovery with AI-assisted job planning, structured quotes, job-linked messaging, agreed changes, staged payments and reputation tools in one project record.</Text>
@@ -54,13 +54,13 @@ export default function LandingPage() {
           <TextInput mode="outlined" value={search} onChangeText={setSearch} onSubmitEditing={() => goSearch(search)} placeholder="What do you need done? e.g. bathroom tiling" outlineStyle={styles.inputOutline} />
           <Button mode="contained" contentStyle={styles.searchButton} onPress={() => goSearch(search)}>Find a trade</Button>
         </View>
-        <View style={styles.heroActions}>
+        <View style={styles.heroActions} testID="home-hero-actions">
           <Link href="/auth/account" asChild><Button mode="contained-tonal">Post a job</Button></Link>
           <Link href="/(public)/for-tradespeople" asChild><Button mode="outlined">I’m a tradesperson</Button></Link>
           <Link href="/(public)/how-it-works" asChild><Button mode="text">How it works</Button></Link>
         </View>
       </View>
-      <ImageBackground source={{ uri: 'https://images.unsplash.com/photo-1625577816360-32388b70471c?auto=format&fit=crop&w=1600&q=84' }} style={styles.heroVisual} imageStyle={styles.heroImage} accessibilityLabel="Home renovation project">
+      <ImageBackground source={{ uri: 'https://images.unsplash.com/photo-1625577816360-32388b70471c?auto=format&fit=crop&w=1600&q=84' }} style={[styles.heroVisual, wide && styles.heroVisualWide]} imageStyle={styles.heroImage} accessibilityLabel="Home renovation project" testID="home-hero-visual">
         <View style={styles.heroShade} />
         <View style={styles.heroAi}><Text style={styles.heroAiTitle}>AI WHERE IT REMOVES FRICTION</Text><Text style={styles.heroAiText}>Human decisions where judgement matters.</Text></View>
         <View style={styles.heroCaption}><Text style={styles.heroCaptionSmall}>ONE CONNECTED PROJECT RECORD</Text><Text style={styles.heroCaptionBig}>Request → Visit or quote → Agree → Fund → Build → Approve → Complete</Text></View>
@@ -223,7 +223,8 @@ const styles = StyleSheet.create({
   pageContent: { flexGrow: 1 },
   hero: { width: '100%', maxWidth: 1240, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 32, gap: 24 },
   heroWide: { flexDirection: 'row', alignItems: 'stretch', paddingVertical: 42, gap: 30 },
-  heroCopy: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 15 },
+  heroCopy: { flexShrink: 0, justifyContent: 'center', alignItems: 'center', gap: 15 },
+  heroCopyWide: { flex: 1, flexShrink: 1 },
   heroBadge: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: colors.primarySoft, borderRadius: 999, borderWidth: 1, borderColor: '#F2D7C3' },
   liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
   heroBadgeText: { color: colors.primaryDark, fontWeight: '800', fontSize: 12, textAlign: 'center' },
@@ -237,8 +238,9 @@ const styles = StyleSheet.create({
   heroSearch: { gap: 9, width: '100%', maxWidth: 700 },
   inputOutline: { borderRadius: 16 },
   searchButton: { minHeight: 50 },
-  heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
-  heroVisual: { flex: 0.9, minHeight: 380, justifyContent: 'space-between', padding: 22, overflow: 'hidden', borderRadius: 30 },
+  heroActions: { width: '100%', minHeight: 44, flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', alignItems: 'center', paddingBottom: 2 },
+  heroVisual: { width: '100%', flexShrink: 0, minHeight: 380, justifyContent: 'space-between', padding: 22, overflow: 'hidden', borderRadius: 30 },
+  heroVisualWide: { flex: 0.9, width: 'auto', flexShrink: 1 },
   heroImage: { borderRadius: 30 },
   heroShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(14,30,43,0.38)', borderRadius: 30 },
   heroAi: { alignSelf: 'flex-start', maxWidth: 330, gap: 2, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, backgroundColor: 'rgba(14,30,43,0.76)' },
