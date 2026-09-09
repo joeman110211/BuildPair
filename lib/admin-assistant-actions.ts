@@ -139,9 +139,11 @@ Rules:
 export function extractAdminAssistantAction(answer: string) {
   const match = answer.match(/\[\[ADMIN_ACTION\]\]([\s\S]*?)\[\[\/ADMIN_ACTION\]\]\s*$/);
   if (!match) return { cleanAnswer: answer.trim(), action: null as AdminAssistantAction | null };
-  const cleanAnswer = answer.slice(0, match.index).trim();
+  const rawAction = match[1];
+  if (!rawAction) return { cleanAnswer: answer.trim(), action: null as AdminAssistantAction | null };
+  const cleanAnswer = answer.slice(0, match.index ?? answer.length).trim();
   try {
-    return { cleanAnswer, action: adminAssistantActionSchema.parse(JSON.parse(match[1].trim())) };
+    return { cleanAnswer, action: adminAssistantActionSchema.parse(JSON.parse(rawAction.trim())) };
   } catch {
     return { cleanAnswer: `${cleanAnswer}\n\nI could not safely prepare that action because the proposed action data was invalid. No change was made.`.trim(), action: null as AdminAssistantAction | null };
   }
