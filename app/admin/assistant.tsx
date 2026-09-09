@@ -112,7 +112,7 @@ export default function AdminAssistant() {
       </View>
       <View style={styles.notice}>
         <Text style={styles.noticeTitle}>Knowledge wide, permissions narrow</Text>
-        <Text style={styles.noticeText}>The assistant can understand and explain the whole app and use live operational context, but it remains read-only. It cannot silently suspend users, move money, expose secrets or push code to production. Humanity has invented enough buttons with irreversible consequences already.</Text>
+        <Text style={styles.noticeText}>The assistant can understand and explain the whole app and use live operational context, but it remains read-only. It cannot suspend users, move money, expose secrets or push code to production.</Text>
       </View>
       <View style={styles.shortcutRow}>
         <Link href="/admin/dashboard" asChild><Button mode="outlined">Overview</Button></Link>
