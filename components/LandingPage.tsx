@@ -1,8 +1,9 @@
 import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ImageBackground, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Text, TextInput } from 'react-native-paper';
+import { FeaturedTraderHero } from '@/components/FeaturedTraderHero';
 import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
 import { TRADE_CATEGORIES } from '@/constants/options';
@@ -60,11 +61,7 @@ export default function LandingPage() {
           <Link href="/(public)/how-it-works" asChild><Button mode="outlined" style={styles.heroActionButton} contentStyle={styles.heroActionButtonContent}>How it works</Button></Link>
         </View>
       </View>
-      <ImageBackground source={{ uri: 'https://images.unsplash.com/photo-1625577816360-32388b70471c?auto=format&fit=crop&w=1600&q=84' }} style={[styles.heroVisual, wide && styles.heroVisualWide]} imageStyle={styles.heroImage} accessibilityLabel="Home renovation project" testID="home-hero-visual">
-        <View style={styles.heroShade} />
-        <View style={styles.heroAi}><Text style={styles.heroAiTitle}>AI WHERE IT REMOVES FRICTION</Text><Text style={styles.heroAiText}>Human decisions where judgement matters.</Text></View>
-        <View style={styles.heroCaption}><Text style={styles.heroCaptionSmall}>ONE CONNECTED PROJECT RECORD</Text><Text style={styles.heroCaptionBig}>Request → Visit or quote → Agree → Fund → Build → Approve → Complete</Text></View>
-      </ImageBackground>
+      <FeaturedTraderHero wide={wide} />
     </View>
 
     <View style={styles.credibilityBand}>
