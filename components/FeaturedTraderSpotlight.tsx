@@ -58,7 +58,7 @@ export function FeaturedTraderSpotlight() {
   return <View style={styles.band} testID="featured-trader-spotlight">
     <View style={styles.section}>
       <View style={styles.heading}>
-        <Text style={styles.eyebrow}>THIS WEEK'S FEATURED TRADESPERSON</Text>
+        <Text style={styles.eyebrow}>{"THIS WEEK'S FEATURED TRADESPERSON"}</Text>
         <Text variant="headlineMedium" style={styles.headingTitle}>A closer look at one BuildPair trade.</Text>
         <Text style={styles.headingBody}>The spotlight changes every Monday, giving active tradespeople a regular chance to be discovered without turning the homepage into a permanent popularity contest.</Text>
       </View>
