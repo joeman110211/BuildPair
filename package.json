@@ -26,6 +26,8 @@
     "@clerk/expo": "^4.6.4",
     "@google/genai": "^1.32.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@stripe/connect-js": "^3.4.6",
+    "@stripe/react-connect-js": "^3.4.4",
     "@stripe/stripe-react-native": "0.64.0",
     "drizzle-orm": "^0.45.2",
     "expo": "~57.0.19",
