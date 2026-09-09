@@ -64,10 +64,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
         const featured = plan.tone === 'plus';
         const pro = plan.tone === 'pro';
         return <View key={plan.name} style={[styles.card, compact && styles.cardCompact, featured && styles.cardFeatured, pro && styles.cardPro]}>
-          <View style={styles.topRow}>
-            <Text style={[styles.eyebrow, featured && styles.eyebrowFeatured, pro && styles.eyebrowPro]}>{plan.eyebrow}</Text>
-            {featured ? <View style={styles.badge}><Text style={styles.badgeText}>Most popular</Text></View> : null}
-          </View>
+          <Text style={[styles.eyebrow, featured && styles.eyebrowFeatured, pro && styles.eyebrowPro]}>{plan.eyebrow}</Text>
           <Text variant="titleLarge" style={styles.name}>{plan.name}</Text>
           <View style={styles.priceRow}><Text style={styles.price}>{plan.price}</Text><Text style={styles.suffix}>{plan.suffix}</Text></View>
           <Text style={styles.summary}>{plan.summary}</Text>
@@ -95,12 +92,9 @@ const styles = StyleSheet.create({
   cardCompact: { flexBasis: 280 },
   cardFeatured: { borderColor: colors.primary, borderWidth: 2, backgroundColor: '#FFFCF9' },
   cardPro: { borderColor: '#CAD6E0', backgroundColor: '#FAFCFE' },
-  topRow: { minHeight: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap' },
   eyebrow: { color: colors.muted, fontSize: 11, lineHeight: 16, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1 },
   eyebrowFeatured: { color: colors.primary },
   eyebrowPro: { color: colors.navy },
-  badge: { backgroundColor: colors.primarySoft, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
-  badgeText: { color: colors.primaryDark, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.6 },
   name: { color: colors.charcoal, fontWeight: '900' },
   priceRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.xs, flexWrap: 'wrap' },
   price: { color: colors.charcoal, fontSize: 34, lineHeight: 39, fontWeight: '900', letterSpacing: -1 },
