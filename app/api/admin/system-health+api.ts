@@ -118,8 +118,24 @@ async function resendCheck() {
   const key = process.env.RESEND_API_KEY?.trim();
   if (!key) return unconfigured('Resend', 'RESEND_API_KEY is missing', 'Transactional emails and notifications', envVars);
   return timed('Resend', 'Transactional emails and notifications', envVars, async () => {
-    await probe('https://api.resend.com/domains', { headers: { Authorization: `Bearer ${key}` } });
-    return 'Resend API reachable and credentials accepted';
+    // Sending-only keys are the right privilege level for the production app.
+    // Probe the send endpoint with an intentionally incomplete payload: a valid
+    // key returns a validation error before an email can be created, while an
+    // invalid key is rejected as unauthorised. This verifies the credential
+    // without requiring full account access or generating a test email.
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+      body: '{}',
+    });
+    if (response.status === 400 || response.status === 422) return 'Resend sending credentials accepted';
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    throw new Error('Resend returned an unexpected response to the credential probe');
   });
 }
 
