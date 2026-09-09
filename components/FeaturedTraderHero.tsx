@@ -79,12 +79,12 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
     <View style={styles.fullShade} />
 
     <View style={styles.topRow}>
-      <View style={styles.featureBadge}><Text style={styles.featureBadgeText}>FEATURED THIS WEEK</Text></View>
+      <View style={styles.featureBadge}><Text style={styles.featureBadgeText}>LIVE BUILDPAIR PROFILE</Text></View>
       <View style={styles.membershipBadge}><Text style={styles.membershipText}>{membership}</Text></View>
     </View>
 
     <View style={styles.bottomCard}>
-      <Text style={styles.featuredLabel}>BUILDPAIR TRADESPERSON SPOTLIGHT</Text>
+      <Text style={styles.featuredLabel}>FEATURED TRADESPERSON THIS WEEK</Text>
       <Text style={styles.businessName}>{trader.businessName}</Text>
       <Text style={styles.tradeLine}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
       <Text style={styles.metaLine}>{reputation} · {activity}</Text>
@@ -100,7 +100,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
       >
         <Text style={styles.ctaText}>View featured profile →</Text>
       </Pressable>
-      <Text style={styles.rotationNote}>A different eligible BuildPair trade is featured every Monday.</Text>
+      <Text style={styles.rotationNote}>Featured weekly from current eligible BuildPair profiles. Review and completed-job counts appear only when that activity is recorded in BuildPair.</Text>
     </View>
   </ImageBackground>;
 }
