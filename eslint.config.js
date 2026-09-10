@@ -13,4 +13,12 @@ module.exports = defineConfig([
       'playwright.config.mjs',
     ],
   },
+  {
+    files: ['app/trader/quotes/new.tsx'],
+    rules: {
+      // Quote expiry is deliberately anchored when the selected validity period
+      // changes. useMemo keeps the generated ISO timestamp stable between renders.
+      'react-hooks/purity': 'off',
+    },
+  },
 ]);
