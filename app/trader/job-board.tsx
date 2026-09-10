@@ -10,18 +10,20 @@ import { apiFetch, errorMessage } from '@/lib/api';
 import type { Job, Quote, TraderProfile } from '@/types';
 
 type Conversation = { id: string; jobId: string; traderId: string; customerId: string };
+type JobWithDistance = Job & { distanceMiles?: number | null };
 
 export default function TraderJobBoard() {
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   const router = useRouter();
   const [profile, setProfile] = useState<TraderProfile>();
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<JobWithDistance[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [search, setSearch] = useState('');
   const [directOnly, setDirectOnly] = useState(false);
   const [urgentOnly, setUrgentOnly] = useState(false);
+  const [radiusFilter, setRadiusFilter] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [openingJobId, setOpeningJobId] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -33,11 +35,17 @@ export default function TraderJobBoard() {
       const tokenGetter = () => getTokenRef.current();
       const [ownProfile, jobRows, quoteRows, conversationRows] = await Promise.all([
         apiFetch<TraderProfile>('/api/me/profile', {}, tokenGetter),
-        apiFetch<Job[]>('/api/jobs', {}, tokenGetter),
+        apiFetch<JobWithDistance[]>('/api/jobs', {}, tokenGetter),
         apiFetch<Quote[]>('/api/quotes', {}, tokenGetter),
         apiFetch<Conversation[]>('/api/conversations', {}, tokenGetter),
       ]);
-      setProfile(ownProfile); setJobs(jobRows); setQuotes(quoteRows); setConversations(conversationRows);
+      setProfile(ownProfile);
+      setRadiusFilter((current) => {
+        const maximum = ownProfile.radiusMiles ?? 0;
+        if (!maximum) return null;
+        return current == null ? maximum : Math.min(current, maximum);
+      });
+      setJobs(jobRows); setQuotes(quoteRows); setConversations(conversationRows);
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
   }, []);
@@ -46,16 +54,24 @@ export default function TraderJobBoard() {
     return () => clearTimeout(timer);
   }, [load]);
 
+  const radiusOptions = useMemo(() => {
+    const maximum = profile?.radiusMiles ?? 0;
+    if (maximum <= 0) return [];
+    return Array.from(new Set([5, 10, 15, 25, 50, maximum].filter((value) => value <= maximum))).sort((a, b) => a - b);
+  }, [profile?.radiusMiles]);
+
   const opportunities = useMemo(() => jobs.filter((job) => {
     const belongsToActiveJob = ['open', 'quoted'].includes(job.status) || Boolean(job.acceptedQuoteId);
     if (!belongsToActiveJob) return false;
     if (directOnly && job.targetTraderId !== profile?.userId) return false;
     if (urgentOnly && !job.urgency.toLowerCase().includes('urgent') && !job.urgency.toLowerCase().includes('asap') && !job.isEmergency) return false;
+    const openMarketplaceJob = job.targetTraderId == null && ['open', 'quoted'].includes(job.status) && !job.acceptedQuoteId;
+    if (openMarketplaceJob && radiusFilter != null && job.distanceMiles != null && job.distanceMiles > radiusFilter) return false;
     const haystack = `${job.title} ${job.category} ${job.description} ${job.postcode ?? ''} ${job.locationLabel ?? ''}`.toLowerCase();
     return haystack.includes(search.trim().toLowerCase());
-  }), [directOnly, jobs, profile?.userId, search, urgentOnly]);
+  }), [directOnly, jobs, profile?.userId, radiusFilter, search, urgentOnly]);
 
-  async function openOffer(job: Job) {
+  async function openOffer(job: JobWithDistance) {
     if (job.isPreview) return;
     const existing = conversations.find((conversation) => conversation.jobId === job.id);
     if (existing) {
@@ -104,11 +120,22 @@ export default function TraderJobBoard() {
       <Chip selected={directOnly} showSelectedCheck onPress={() => setDirectOnly((value) => !value)}>Direct Requests</Chip>
       <Chip selected={urgentOnly} showSelectedCheck onPress={() => setUrgentOnly((value) => !value)}>Urgent</Chip>
       {(profile?.tradeCategories?.length ? profile.tradeCategories : profile?.tradeCategory ? [profile.tradeCategory] : []).slice(0, 3).map((category) => <Chip key={category} icon="tools">{category}</Chip>)}
-      {profile?.radiusMiles ? <Chip icon="map-marker-radius">Within {profile.radiusMiles} miles</Chip> : null}
     </View>
 
+    {radiusOptions.length ? <View style={styles.radiusRow}>
+      <Text variant="labelLarge" style={styles.radiusLabel}>Search radius</Text>
+      {radiusOptions.map((radius) => <Chip
+        key={radius}
+        selected={radiusFilter === radius}
+        showSelectedCheck
+        icon="map-marker-radius"
+        onPress={() => setRadiusFilter(radius)}
+      >Within {radius} miles</Chip>)}
+      <Text variant="bodySmall" style={styles.muted}>Your profile service area remains the maximum.</Text>
+    </View> : null}
+
     {error ? <Text style={styles.error}>{error}</Text> : null}
-    {!opportunities.length ? <EmptyState title="No matching jobs right now" body="Try clearing the filters. New jobs matching your selected trades and area will appear here automatically." /> : opportunities.map((job) => {
+    {!opportunities.length ? <EmptyState title="No matching jobs right now" body="Try clearing the filters or widening the search radius up to your profile service area. New jobs matching your selected trades and area will appear here automatically." /> : opportunities.map((job) => {
       const direct = job.targetTraderId === profile?.userId;
       const ownQuote = job.isPreview ? undefined : quotes.find((quote) => quote.jobId === job.id && quote.status === 'pending');
       const conversation = job.isPreview ? undefined : conversations.find((item) => item.jobId === job.id);
@@ -116,11 +143,12 @@ export default function TraderJobBoard() {
       const blockedByPlan = !paid && !conversation && !ownQuote;
       const blockedByAllowance = paid && firstMarketplaceOffer && allowanceUsed;
       const canOpen = !job.isPreview && !blockedByPlan && !blockedByAllowance;
+      const distanceLabel = job.distanceMiles == null ? null : job.distanceMiles < 1 ? '<1 mile away' : `${Math.round(job.distanceMiles)} miles away`;
 
       return <AppCard key={job.id}>
         <View style={styles.cardTop}><View style={styles.titleBlock}><Text variant="titleLarge" style={styles.title}>{job.title}</Text><Text style={styles.muted}>📍 {job.postcode || job.locationLabel || 'Location available'} · {job.budgetRange}</Text></View><View style={styles.badges}>{job.isPreview ? <Chip compact icon="flask-outline">Preview job</Chip> : null}{direct ? <Chip compact icon="account-arrow-left">Direct request</Chip> : null}{conversation ? <Chip compact icon="message-check-outline">Conversation open</Chip> : ownQuote ? <Chip compact icon="check">Quoted</Chip> : !job.isPreview ? <Chip compact>New</Chip> : null}</View></View>
         {job.photos?.[0] ? <Image source={{ uri: job.photos[0] }} style={styles.photo} /> : null}
-        <View style={styles.meta}><Chip compact icon="home-outline">{job.propertyType}</Chip><Chip compact icon="clock-outline">{job.urgency}</Chip><Chip compact>{job.category}</Chip></View>
+        <View style={styles.meta}><Chip compact icon="home-outline">{job.propertyType}</Chip><Chip compact icon="clock-outline">{job.urgency}</Chip><Chip compact>{job.category}</Chip>{distanceLabel && !direct ? <Chip compact icon="map-marker-distance">{distanceLabel}</Chip> : null}</View>
         <Text numberOfLines={4} style={styles.description}>{job.description}</Text>
         {direct && !ownQuote ? <Text variant="bodySmall" style={styles.nextHint}>Next step: quote now if you have enough information, or arrange a site visit before quoting if you need to inspect the job.</Text> : null}
         <View style={styles.actions}>
@@ -146,6 +174,8 @@ export default function TraderJobBoard() {
 const styles = StyleSheet.create({
   search: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  radiusRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  radiusLabel: { color: colors.charcoal, fontWeight: '800' },
   usageTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' },
   progress: { height: 9, borderRadius: 8, backgroundColor: colors.surfaceStrong },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' },
