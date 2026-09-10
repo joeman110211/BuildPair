@@ -43,4 +43,6 @@ COPY db/migrations ./db/migrations
 USER node
 EXPOSE 3000
 
-CMD ["node", "server.mjs"]
+# Keep the database schema in lock-step with the deployed application. The
+# migration runner records completed files, so this is safe on every restart.
+CMD ["sh", "-c", "npm run db:migrate && node server.mjs"]
