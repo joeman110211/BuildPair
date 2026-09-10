@@ -63,12 +63,15 @@ export async function GET(request: Request) {
 
       const access = or(acceptedWork, directWork, openMarketplace)!;
       const databaseRows = await db.select().from(jobs).where(access).orderBy(desc(jobs.isEmergency), desc(jobs.createdAt)).limit(100);
-      rows = databaseRows.map((job) => ({ ...job, isPreview: false }));
-      rows = rows.map((job) => {
+      rows = databaseRows.map((job) => {
         const openMarketplaceJob = job.targetTraderId == null && ['open', 'quoted'].includes(job.status);
+        const approximateDistanceMiles = profile.latitude != null && profile.longitude != null && job.latitude != null && job.longitude != null
+          ? Math.round(distanceMiles(profile.latitude, profile.longitude, job.latitude, job.longitude) * 10) / 10
+          : null;
+        const withDistance = { ...job, isPreview: false, distanceMiles: approximateDistanceMiles };
         return openMarketplaceJob
-          ? { ...job, postcode: outwardCode(job.postcode), latitude: null, longitude: null }
-          : job;
+          ? { ...withDistance, postcode: outwardCode(job.postcode), latitude: null, longitude: null }
+          : withDistance;
       });
     } else {
       throw new HttpError(403, 'Choose an account mode first');
