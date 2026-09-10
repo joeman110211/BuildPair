@@ -70,7 +70,10 @@ export default function TraderQuotesScreen() {
     }
   }, [getToken]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const timer = setTimeout(() => void load(), 0);
+    return () => clearTimeout(timer);
+  }, [load]);
 
   async function shareQuote(quote: BusinessQuote) {
     const text = `Quote ${quote.quoteNumber} for ${quote.jobTitle}: ${quote.shareUrl}`;
