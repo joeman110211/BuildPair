@@ -34,23 +34,29 @@ jobs:
       EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME: qrrcn7ma
 
     steps:
-      - name: Check OTA service configuration
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 2
+
+      - name: Resolve OTA service configuration
         id: ota-config
         shell: bash
         run: |
           set -euo pipefail
-          if [ -z "$EXPO_TOKEN" ] || [ -z "$EXPO_EAS_PROJECT_ID" ]; then
+          project_id="$EXPO_EAS_PROJECT_ID"
+          if [ -z "$project_id" ]; then
+            project_id=$(node -e "console.log(require('./app.json').expo.extra?.eas?.projectId || '')")
+          fi
+          if [ -n "$project_id" ]; then
+            echo "EXPO_EAS_PROJECT_ID=$project_id" >> "$GITHUB_ENV"
+          fi
+          if [ -z "$EXPO_TOKEN" ] || [ -z "$project_id" ]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "Expo OTA publishing is waiting for EXPO_TOKEN and EXPO_EAS_PROJECT_ID."
+            echo "Expo OTA publishing is waiting for an Expo project link and EXPO_TOKEN."
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
-
-      - uses: actions/checkout@v5
-        if: steps.ota-config.outputs.configured == 'true'
-        with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
-          fetch-depth: 2
 
       - name: Decide whether this commit is OTA-safe
         if: steps.ota-config.outputs.configured == 'true'
