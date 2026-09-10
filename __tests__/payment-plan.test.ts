@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { paymentScheduleSchema, validatePaymentSchedule } from '@/lib/payment-plan';
+import { fullFundingSchedule, paymentScheduleSchema, validatePaymentSchedule } from '@/lib/payment-plan';
 
 describe('payment plan validation', () => {
   it('accepts materials, deposit, progress and final stages that exactly match the quote total', () => {
@@ -9,7 +9,22 @@ describe('payment plan validation', () => {
       { key: 'stage-1', title: 'First fix', amount: 15000, kind: 'stage', trigger: 'First fix complete', sortOrder: 3 },
       { key: 'final', title: 'Final payment', amount: 20000, kind: 'final', trigger: 'Job complete', sortOrder: 4 },
     ]);
-    expect(validatePaymentSchedule(schedule, 50000)).toHaveLength(4);
+    expect(validatePaymentSchedule(schedule, 50000, 10000)).toHaveLength(4);
+  });
+
+  it('rejects a materials stage that differs from the quoted materials amount', () => {
+    const schedule = paymentScheduleSchema.parse([
+      { key: 'materials', title: 'Materials payment', amount: 9000, kind: 'materials', trigger: 'Materials', sortOrder: 1 },
+      { key: 'final', title: 'Final payment', amount: 41000, kind: 'final', trigger: 'Job complete', sortOrder: 2 },
+    ]);
+    expect(() => validatePaymentSchedule(schedule, 50000, 10000)).toThrow(/materials stages must equal/i);
+  });
+
+  it('builds full funding as exact materials plus one protected service balance', () => {
+    expect(fullFundingSchedule(50000, 12000)).toEqual([
+      { key: 'materials', title: 'Materials payment', amount: 12000, kind: 'materials', trigger: 'Paid when the quote is accepted so materials can be ordered.', sortOrder: 1 },
+      { key: 'final', title: 'Protected service balance', amount: 38000, kind: 'final', trigger: 'Funded after materials and released only after final completion is approved.', sortOrder: 2 },
+    ]);
   });
 
   it('rejects a stage split that changes the tradesperson quote total', () => {
