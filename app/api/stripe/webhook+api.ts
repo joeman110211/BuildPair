@@ -1,7 +1,4 @@
 import type Stripe from 'stripe';
-import { eq } from 'drizzle-orm';
-import { getDb } from '@/db/client';
-import { traderProfiles } from '@/db/schema';
 import { addJobEvent, createNotification } from '@/lib/notifications';
 import { isImmediatelyReleasedStage } from '@/lib/payment-protection';
 import { getSql } from '@/lib/sql';
@@ -141,7 +138,6 @@ async function handlePaymentSucceeded(intent: Stripe.PaymentIntent) {
 }
 
 async function handleEvent(event: Stripe.Event) {
-  const db = getDb();
   if (event.type === 'account.updated') {
     const account = event.data.object;
     await getSql()`UPDATE trader_profiles SET stripe_charges_enabled = ${Boolean(account.charges_enabled)}, stripe_payouts_enabled = ${Boolean(account.payouts_enabled)}, updated_at = now() WHERE stripe_account_id = ${account.id}`;
@@ -189,6 +185,4 @@ async function handleEvent(event: Stripe.Event) {
     await getSql()`UPDATE payments SET status = 'refunded', refunded_at = COALESCE(refunded_at, now()) WHERE stripe_payment_intent_id = ${paymentIntentId}`;
     if (rows[0]?.milestoneId) await getSql()`UPDATE job_milestones SET status = 'pending', funded_at = NULL, release_requested_at = NULL, release_approved_at = NULL, release_approved_by = NULL WHERE id = ${rows[0].milestoneId} AND status <> 'paid'`;
   }
-
-  void db;
 }
