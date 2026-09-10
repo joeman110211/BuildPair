@@ -43,6 +43,58 @@ export function fullFundingSchedule(totalAmount: number, materialsAmount: number
   return stages;
 }
 
+/**
+ * Older BuildPair quote screens built a payment schedule against the whole job
+ * and did not automatically split materials out first. This compatibility
+ * normalizer converts those schedules without changing the quote total.
+ *
+ * If the trader explicitly supplied a materials stage, it must already equal
+ * the exact quoted materials amount. We never silently rewrite an explicit
+ * materials figure.
+ */
+export function normalizeMaterialsFirstSchedule(schedule: PaymentStagePlan[], totalAmount: number, materialsAmount: number) {
+  const sorted = [...schedule].sort((a, b) => a.sortOrder - b.sortOrder).map((stage, index) => ({ ...stage, sortOrder: index + 1 }));
+  const expectedMaterials = Math.max(0, materialsAmount);
+  const materialStages = sorted.filter((stage) => stage.kind === 'materials');
+  const explicitMaterials = materialStages.reduce((sum, stage) => sum + stage.amount, 0);
+
+  if (materialStages.length) {
+    if (explicitMaterials !== expectedMaterials) {
+      throw new Error(`Materials stages must equal the quoted materials total exactly (£${(expectedMaterials / 100).toFixed(2)}).`);
+    }
+    return validatePaymentSchedule(sorted, totalAmount, expectedMaterials);
+  }
+
+  if (expectedMaterials === 0) return validatePaymentSchedule(sorted, totalAmount, 0);
+
+  const adjusted = sorted.map((stage) => ({ ...stage }));
+  let toCarveOut = expectedMaterials;
+  for (let index = adjusted.length - 1; index >= 0 && toCarveOut > 0; index -= 1) {
+    const stage = adjusted[index];
+    if (!stage || stage.kind === 'materials') continue;
+    const reducible = Math.max(0, stage.amount - STRIPE_GBP_MINIMUM);
+    const reduction = Math.min(reducible, toCarveOut);
+    stage.amount -= reduction;
+    toCarveOut -= reduction;
+  }
+  if (toCarveOut > 0) {
+    throw new Error('The proposed payment stages do not leave enough room to split out the exact materials payment. Increase the later service balance or revise the stages.');
+  }
+
+  const result: PaymentStagePlan[] = [
+    {
+      key: 'materials',
+      title: 'Materials payment',
+      amount: expectedMaterials,
+      kind: 'materials',
+      trigger: 'Paid first so the quoted materials can be ordered.',
+      sortOrder: 1,
+    },
+    ...adjusted.map((stage, index) => ({ ...stage, sortOrder: index + 2 })),
+  ];
+  return validatePaymentSchedule(result, totalAmount, expectedMaterials);
+}
+
 export function validatePaymentSchedule(schedule: PaymentStagePlan[], totalAmount: number, materialsAmount?: number) {
   const sorted = [...schedule].sort((a, b) => a.sortOrder - b.sortOrder).map((stage, index) => ({ ...stage, sortOrder: index + 1 }));
   const sum = sorted.reduce((total, stage) => total + stage.amount, 0);
