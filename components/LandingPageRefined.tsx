@@ -10,11 +10,12 @@ import { TRADE_CATEGORIES } from '@/constants/options';
 import { colors } from '@/constants/theme';
 
 const POPULAR_TRADES = ['Tiling', 'Plumbing', 'Electrical', 'Building & Extensions', 'Roofing & Roofline', 'Painting & Decorating', 'Kitchens', 'Bathrooms'] as const;
-const HERO_BENEFITS = ['Find the right trade', 'Compare clear quotes', 'Keep decisions recorded', 'Manage the whole project'] as const;
+const HERO_BENEFITS = ['Genuinely local trade matching', 'Compare clear quotes', 'Keep decisions recorded', 'Manage the whole project'] as const;
 
 const FAQS = [
   ['What if a tradesperson needs to visit before quoting?', 'They can arrange a site visit through the BuildPair job. The formal quote and proposed payment stages can then be sent through the same project record.'],
   ['How do BuildPair payments work?', 'After a quote is accepted, the homeowner can choose BuildPair payments. Upfront materials payments and deposits transfer when paid. Progress and final stages transfer only after the tradesperson requests release and the homeowner approves it.'],
+  ['How does BuildPair keep jobs local?', 'Tradespeople set a genuine service base and working radius. Open marketplace jobs are matched inside that area, so homeowners are not inviting quotes from businesses claiming to be local from hundreds of miles away.'],
   ['Can we arrange payment privately?', 'Yes. The quote, messages and project record can stay in BuildPair, but BuildPair cannot process, pause, refund or recover money paid outside its payment flow.'],
   ['What memberships are available to tradespeople?', 'Starter is £0/month, BuildPair Plus is £19.99/month and BuildPair Pro is £29.99/month. Paid plans add searchable marketplace access, more quoting capacity and additional business tools.'],
 ] as const;
@@ -87,7 +88,7 @@ export default function LandingPageRefined() {
       <View style={styles.routeGrid}>
         {[
           ['01', 'Describe the job', 'Search directly or explain the problem in ordinary language. Add useful details and photos where they help.'],
-          ['02', 'Find and compare', 'Browse suitable tradespeople, request quotes directly or post the job to the marketplace.'],
+          ['02', 'Find and compare', 'Browse suitable local tradespeople, request quotes directly or post the job to the marketplace.'],
           ['03', 'Visit, quote and agree', 'The tradesperson can quote from the information supplied or arrange a visit first. Scope, exclusions, timing and payment stages are recorded clearly.'],
           ['04', 'Run the project', 'Messages, agreed changes, payment stages, timeline events and completion stay attached to the same job.'],
         ].map(([number, title, copy]) => <View key={number} style={styles.routeCard}><Text style={styles.routeNumber}>{number}</Text><Text variant="titleLarge" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
@@ -141,6 +142,7 @@ export default function LandingPageRefined() {
         <SectionHeading eyebrow="Trust & safety" title="Clearer evidence, records and reporting." body="BuildPair can organise useful trust signals and project history while keeping the limits clear. Users should still make the checks appropriate to the work being commissioned." />
         <View style={styles.trustGrid}>
           {[
+            ['Local by design', 'Marketplace jobs are matched to a tradesperson’s genuine service base and working radius, helping homeowners hear from people who actually work in their area.'],
             ['Credential status', 'Submitted credentials can show a clear BuildPair review status without replacing the issuing register or authority.'],
             ['Project-linked reviews', 'Reviews can be connected to completed BuildPair activity where applicable, giving useful context behind the rating.'],
             ['Two-way reporting', 'Homeowners and tradespeople can report concerns for human review and proportionate moderation.'],
