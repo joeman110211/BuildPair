@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { NativeBottomNav } from '@/components/NativeBottomNav';
 import { RoleGate } from '@/components/RoleGate';
 
 export default function CustomerLayout() {
@@ -16,5 +17,5 @@ export default function CustomerLayout() {
     <Stack.Screen name="compare/[jobId]" options={{ title: 'Compare quotes' }} />
     <Stack.Screen name="messages" options={{ headerShown: false }} />
     <Stack.Screen name="messages/[id]" options={{ title: 'Conversation' }} />
-  </Stack></View></RoleGate>;
+  </Stack>{Platform.OS === 'web' ? null : <NativeBottomNav variant="customer" />}</View></RoleGate>;
 }

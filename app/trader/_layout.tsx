@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { NativeBottomNav } from '@/components/NativeBottomNav';
 import { RoleGate } from '@/components/RoleGate';
 
 export default function TraderLayout() {
@@ -23,5 +24,5 @@ export default function TraderLayout() {
     <Stack.Screen name="invoices/new" options={{ title: 'Create invoice' }} />
     <Stack.Screen name="messages" options={{ headerShown: false }} />
     <Stack.Screen name="messages/[id]" options={{ title: 'Conversation' }} />
-  </Stack></View></RoleGate>;
+  </Stack>{Platform.OS === 'web' ? null : <NativeBottomNav variant="trader" />}</View></RoleGate>;
 }
