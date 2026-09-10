@@ -1,7 +1,5 @@
-import { loadConnectAndInitialize } from '@stripe/connect-js';
-import { ConnectAccountOnboarding, ConnectComponentsProvider } from '@stripe/react-connect-js';
-import { useCallback, useMemo } from 'react';
-import { Text } from 'react-native-paper';
+import { useCallback, useEffect, useState } from 'react';
+import { Button, Text } from 'react-native-paper';
 import { apiFetch, errorMessage } from '@/lib/api';
 
 type Props = {
@@ -10,50 +8,42 @@ type Props = {
 };
 
 export function StripeConnectOnboarding({ getToken, onExit }: Props) {
-  const publishableKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const fetchClientSecret = useCallback(async () => {
-    const response = await apiFetch<{ clientSecret: string }>(
-      '/api/stripe/connect-session',
-      { method: 'POST', body: JSON.stringify({}) },
-      getToken,
-    );
+  const startHostedOnboarding = useCallback(async () => {
+    try {
+      setError('');
+      setLoading(true);
+      const response = await apiFetch<{ url: string }>(
+        '/api/stripe/connect',
+        { method: 'POST', body: JSON.stringify({}) },
+        getToken,
+      );
 
-    if (!response.clientSecret) throw new Error('Stripe did not return an onboarding session.');
-    return response.clientSecret;
+      if (!response.url) throw new Error('Stripe did not return an onboarding URL.');
+      window.location.assign(response.url);
+    } catch (e) {
+      setError(errorMessage(e));
+      setLoading(false);
+    }
   }, [getToken]);
 
-  const connectInstance = useMemo(() => {
-    if (!publishableKey) return null;
-    return loadConnectAndInitialize({
-      publishableKey,
-      fetchClientSecret,
-      appearance: {
-        overlays: 'dialog',
-        variables: {
-          colorPrimary: '#D35400',
-          colorText: '#172033',
-          borderRadius: '10px',
-        },
-      },
-    });
-  }, [fetchClientSecret, publishableKey]);
+  useEffect(() => {
+    void startHostedOnboarding();
+  }, [startHostedOnboarding]);
 
-  if (!publishableKey || !connectInstance) {
-    return <Text>Stripe payout setup is not configured on this BuildPair deployment.</Text>;
+  if (error) {
+    return (
+      <>
+        <Text>{error}</Text>
+        <Button mode="contained" onPress={() => void startHostedOnboarding()}>
+          Try Stripe payout setup again
+        </Button>
+        <Button mode="text" onPress={onExit}>Back</Button>
+      </>
+    );
   }
 
-  return (
-    <ConnectComponentsProvider connectInstance={connectInstance}>
-      <ConnectAccountOnboarding
-        onExit={() => {
-          try {
-            onExit?.();
-          } catch (error) {
-            console.error('[stripe-connect] onboarding exit handler failed', errorMessage(error));
-          }
-        }}
-      />
-    </ConnectComponentsProvider>
-  );
+  return <Text>{loading ? 'Opening Stripe secure payout setup…' : 'Opening Stripe…'}</Text>;
 }
