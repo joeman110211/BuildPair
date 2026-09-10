@@ -29,6 +29,10 @@ export function providerReturnUrl(
     return url.toString();
   }
 
+  if (type === 'connect' && state === 'complete') {
+    return new URL('/api/stripe/connect-return', `${appUrl()}/`).toString();
+  }
+
   if (type === 'subscription' || type === 'connect') {
     const url = new URL('/trader/subscription', `${appUrl()}/`);
     url.searchParams.set(type === 'subscription' ? 'subscription' : 'payouts', state);
