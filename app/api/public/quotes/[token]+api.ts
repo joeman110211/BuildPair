@@ -90,9 +90,8 @@ async function loadQuote(token: string) {
   return rows[0];
 }
 
-export async function GET(_request: Request, context: { params: Promise<{ token: string }> }) {
+export async function GET(_request: Request, { token }: { token: string }) {
   try {
-    const { token } = await context.params;
     if (!token || token.length < 32) throw new HttpError(404, 'Quote not found.');
     const quote = await loadQuote(token);
     if (!quote || quote.status === 'draft' || quote.status === 'withdrawn') throw new HttpError(404, 'Quote not found.');
@@ -116,9 +115,8 @@ export async function GET(_request: Request, context: { params: Promise<{ token:
   }
 }
 
-export async function POST(request: Request, context: { params: Promise<{ token: string }> }) {
+export async function POST(request: Request, { token }: { token: string }) {
   try {
-    const { token } = await context.params;
     const { action } = actionSchema.parse(await request.json());
     const quote = await loadQuote(token);
     if (!quote || quote.status === 'draft' || quote.status === 'withdrawn') throw new HttpError(404, 'Quote not found.');
