@@ -23,7 +23,7 @@ module.exports = defineConfig([
   },
   {
     files: [
-      'app/customer/jobs/[id].tsx',
+      'app/customer/jobs/**/*.tsx',
       'app/trader/quotes/new.tsx',
       'components/QuoteComparison.tsx',
     ],
