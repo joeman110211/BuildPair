@@ -19,7 +19,7 @@
     "db:migrate": "node --env-file-if-exists=.env scripts/migrate.mjs",
     "db:studio": "drizzle-kit studio",
     "build:web": "expo export --platform web",
-    "serve:production": "node --env-file-if-exists=.env server.mjs"
+    "serve:production": "npm run db:migrate && node --env-file-if-exists=.env server.mjs"
   },
   "dependencies": {
     "@clerk/backend": "^2.0.0",
