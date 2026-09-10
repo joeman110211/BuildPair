@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 type TokenGetter = () => Promise<string | null>;
 
 const DEFAULT_API_TIMEOUT_MS = 12000;
+const DEFAULT_AUTH_TIMEOUT_MS = 8000;
 
 function baseUrl() {
   // Web is served by the same BuildPair Node server as the API. Always use
@@ -21,12 +22,26 @@ export class ApiError extends Error {
   }
 }
 
+async function tokenWithTimeout(getToken: TokenGetter) {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      getToken(),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => reject(new ApiError(408, 'BuildPair could not authenticate your session. Please refresh and try again.')), DEFAULT_AUTH_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
 export async function apiFetch<T>(path: string, options: RequestInit = {}, getToken?: TokenGetter): Promise<T> {
+  const token = getToken ? await tokenWithTimeout(getToken) : null;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), DEFAULT_API_TIMEOUT_MS);
 
   try {
-    const token = getToken ? await getToken() : null;
     const response = await fetch(`${baseUrl()}${path}`, {
       ...options,
       signal: options.signal ?? controller.signal,
