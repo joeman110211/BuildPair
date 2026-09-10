@@ -69,7 +69,17 @@ export default function SubscriptionScreen() {
 
   async function openEndpoint(path: string, body = {}) {
     try {
+      setError('');
       const { url } = await apiFetch<{ url: string }>(path, { method: 'POST', body: JSON.stringify(body) }, getToken);
+      if (!url) throw new Error('Payment provider did not return a checkout URL');
+
+      // Browser popup blockers can reject Linking.openURL after the async API call.
+      // Use same-tab navigation on web so Stripe Checkout reliably opens for real users and browser agents.
+      if (isWeb && typeof window !== 'undefined') {
+        window.location.assign(url);
+        return;
+      }
+
       await Linking.openURL(url);
     } catch (e) {
       setError(errorMessage(e));
