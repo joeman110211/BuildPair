@@ -7,6 +7,7 @@ export type TraderProfileColour = 'burnt_orange' | 'navy' | 'forest' | 'charcoal
 export type PaymentMode = 'undecided' | 'buildpair' | 'external';
 export type PaymentStageKind = 'materials' | 'deposit' | 'stage' | 'final';
 export type PaymentStageStatus = 'pending' | 'funded' | 'completed' | 'paid' | 'disputed';
+export type QuoteCostCategory = 'labour' | 'materials' | 'overhead';
 
 export interface PaymentStagePlan {
   key: string;
@@ -15,6 +16,14 @@ export interface PaymentStagePlan {
   kind: PaymentStageKind;
   trigger: string;
   sortOrder: number;
+}
+
+export interface QuoteCostItem {
+  description: string;
+  category: QuoteCostCategory;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
 }
 
 export interface CurrentUser {
@@ -124,8 +133,11 @@ export interface Quote {
   jobId: string;
   traderId: string;
   businessName?: string;
+  /** Feeable labour/service subtotal. Includes quote rows categorised as site overhead/service. */
   laborCost: number;
+  /** Exact materials subtotal. BuildPair's 1% platform fee never applies to this amount. */
   materialsCost: number;
+  costItems?: QuoteCostItem[];
   vatAmount: number;
   depositAmount: number;
   totalAmount: number;
