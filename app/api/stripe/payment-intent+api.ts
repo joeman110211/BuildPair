@@ -93,6 +93,7 @@ export async function POST(request: Request) {
     if (input.platform === 'web') {
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
+        payment_method_types: ['card'],
         customer_email: customer.email ?? undefined,
         line_items: [{ price_data: { currency: 'gbp', product_data: { name: `${row.milestoneTitle}: ${row.jobTitle}` }, unit_amount: row.milestoneAmount }, quantity: 1 }],
         payment_intent_data: { metadata, transfer_group: transferGroup },
@@ -106,7 +107,7 @@ export async function POST(request: Request) {
     const intent = await stripe.paymentIntents.create({
       amount: row.milestoneAmount,
       currency: 'gbp',
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ['card'],
       transfer_group: transferGroup,
       metadata,
     });
