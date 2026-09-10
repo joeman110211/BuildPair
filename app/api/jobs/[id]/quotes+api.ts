@@ -14,6 +14,7 @@ export async function GET(request: Request, { id }: { id: string }) {
       SELECT q.id, q.job_id AS "jobId", q.trader_id AS "traderId",
              q.labor_cost AS "laborCost", q.materials_cost AS "materialsCost", q.vat_amount AS "vatAmount",
              q.deposit_amount AS "depositAmount", q.total_amount AS "totalAmount", q.payment_terms AS "paymentTerms",
+             q.cost_items AS "costItems",
              q.payment_schedule AS "paymentSchedule", q.payment_schedule_status AS "paymentScheduleStatus",
              q.payment_schedule_revision AS "paymentScheduleRevision",
              q.scope, q.exclusions, q.notes, q.duration_days AS "durationDays", q.warranty_months AS "warrantyMonths",

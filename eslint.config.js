@@ -21,4 +21,16 @@ module.exports = defineConfig([
       'react-hooks/purity': 'off',
     },
   },
+  {
+    files: [
+      'app/customer/jobs/**/*.tsx',
+      'app/trader/quotes/new.tsx',
+      'components/QuoteComparison.tsx',
+    ],
+    rules: {
+      // These React Native Text nodes render ordinary product copy on native and web.
+      // Apostrophes are safe text here and escaping them would make the shared copy harder to read.
+      'react/no-unescaped-entities': 'off',
+    },
+  },
 ]);

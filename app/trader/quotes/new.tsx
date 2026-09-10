@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Menu, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
+import { MilestoneTimeline } from '@/components/MilestoneTimeline';
 import { QuoteDocument, type QuoteDocumentData } from '@/components/QuoteDocument';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
@@ -180,31 +181,71 @@ export default function NewQuoteScreen() {
   const subtotal = useMemo(() => pricedItems.reduce((sum, item) => sum + itemLineTotal(item), 0), [pricedItems]);
   const vatAmount = Math.round(subtotal * Number(vatRate || 0) / 100);
   const totalAmount = subtotal + vatAmount;
-  const labourCost = pricedItems.filter((item) => item.category === 'labour').reduce((sum, item) => sum + itemLineTotal(item), 0);
-  const materialsAndOtherCost = subtotal - labourCost;
+  const labourOnlyCost = pricedItems.filter((item) => item.category === 'labour').reduce((sum, item) => sum + itemLineTotal(item), 0);
+  const materialsCost = pricedItems.filter((item) => item.category === 'materials').reduce((sum, item) => sum + itemLineTotal(item), 0);
+  const overheadCost = pricedItems.filter((item) => item.category === 'other').reduce((sum, item) => sum + itemLineTotal(item), 0);
+  const serviceCost = labourOnlyCost + overheadCost;
+  const serviceFundingBalance = totalAmount - materialsCost;
   const payoutReady = Boolean(profile?.stripeAccountId && (profile.stripePayoutsEnabled || profile.stripeChargesEnabled));
 
   const depositAmount = useMemo(() => {
     if (planMode === 'single') return 0;
-    if (depositUnit === 'percent') return Math.round(totalAmount * Math.max(0, Number(depositValue || 0)) / 100);
+    const base = external ? totalAmount : serviceFundingBalance;
+    if (depositUnit === 'percent') return Math.round(base * Math.max(0, Number(depositValue || 0)) / 100);
     return poundsToPence(depositValue);
-  }, [depositUnit, depositValue, planMode, totalAmount]);
-  const progressTotal = planMode === 'staged' ? stages.reduce((sum, stage) => sum + poundsToPence(stage.amount), 0) : 0;
-  const finalAmount = totalAmount - depositAmount - progressTotal;
+  }, [depositUnit, depositValue, external, planMode, serviceFundingBalance, totalAmount]);
+
+  const progressTotal = planMode === 'staged'
+    ? stages.reduce((sum, stage) => sum + poundsToPence(stage.amount), 0)
+    : 0;
+  const finalAmount = external
+    ? totalAmount - depositAmount - progressTotal
+    : serviceFundingBalance - depositAmount - progressTotal;
 
   const paymentSchedule = useMemo<PaymentStagePlan[]>(() => {
     if (totalAmount <= 0 || finalAmount <= 0) return [];
     const result: PaymentStagePlan[] = [];
-    if (depositAmount > 0) result.push({ key: 'deposit', title: 'Deposit', amount: depositAmount, kind: 'deposit', trigger: 'Due when the quote is accepted and before work starts.', sortOrder: result.length + 1 });
+
+    if (!external && materialsCost > 0) {
+      result.push({
+        key: 'materials',
+        title: 'Materials payment',
+        amount: materialsCost,
+        kind: 'materials',
+        trigger: 'Paid first so the exact quoted materials can be ordered.',
+        sortOrder: result.length + 1,
+      });
+    }
+
+    if (depositAmount > 0) {
+      result.push({
+        key: 'deposit',
+        title: external ? 'Deposit' : 'Protected start deposit',
+        amount: depositAmount,
+        kind: 'deposit',
+        trigger: external ? 'Due when the quote is accepted and before work starts.' : 'Released after the agreed start/material-arrival point is confirmed.',
+        sortOrder: result.length + 1,
+      });
+    }
+
     if (planMode === 'staged') {
       stages.forEach((stage, index) => {
+        if (!external && stage.kind === 'materials') return;
         const amount = poundsToPence(stage.amount);
         if (amount > 0) result.push({ key: stage.key, title: stage.title.trim() || `Stage ${index + 1}`, amount, kind: stage.kind, trigger: stage.trigger.trim(), sortOrder: result.length + 1 });
       });
     }
-    result.push({ key: 'final', title: 'Final balance', amount: finalAmount, kind: 'final', trigger: 'Due when the agreed work is complete.', sortOrder: result.length + 1 });
+
+    result.push({
+      key: 'final',
+      title: external ? 'Final balance' : 'Final protected payment',
+      amount: finalAmount,
+      kind: 'final',
+      trigger: external ? 'Due when the agreed work is complete.' : 'Released after final completion is approved by the homeowner.',
+      sortOrder: result.length + 1,
+    });
     return result;
-  }, [depositAmount, finalAmount, planMode, stages, totalAmount]);
+  }, [depositAmount, external, finalAmount, materialsCost, planMode, stages, totalAmount]);
 
   const validUntil = useMemo(() => new Date(Date.now() + Number(validDays) * 24 * 60 * 60 * 1000).toISOString(), [validDays]);
   const previewQuote = useMemo<QuoteDocumentData>(() => ({
@@ -238,7 +279,7 @@ export default function NewQuoteScreen() {
   }
 
   function addItem(category: ItemCategory) {
-    const defaults: Record<ItemCategory, string> = { labour: 'Labour', materials: 'Materials', other: '' };
+    const defaults: Record<ItemCategory, string> = { labour: 'Labour', materials: 'Materials', other: 'Site / overhead' };
     setItems((current) => [...current, { key: `item-${Date.now()}-${current.length}`, description: defaults[category], category, quantity: '1', unitPrice: '' }]);
   }
 
@@ -298,7 +339,9 @@ export default function NewQuoteScreen() {
     if ((jobTitle || job?.title || '').trim().length < 2) return 'Add a job title.';
     if (workIncluded.trim().length < QUOTE_SCOPE_MIN_LENGTH) return `Explain the work included in at least ${QUOTE_SCOPE_MIN_LENGTH} characters so the customer knows exactly what the price covers.`;
     if (!pricedItems.length || totalAmount <= 0) return 'Add at least one priced item.';
-    if (planMode !== 'single' && (depositAmount < 0 || depositAmount >= totalAmount)) return 'The deposit must be less than the full quote total.';
+    if (!external && serviceFundingBalance <= 0) return 'A BuildPair trade quote needs a labour/service amount as well as any materials. Materials-only sales are not supported as protected jobs.';
+    const depositLimit = external ? totalAmount : serviceFundingBalance;
+    if (planMode !== 'single' && (depositAmount < 0 || depositAmount >= depositLimit)) return `The deposit must be less than the ${external ? 'full quote total' : 'protected service balance after materials'}.`;
     if (depositUnit === 'percent' && (Number(depositValue || 0) < 0 || Number(depositValue || 0) >= 100)) return 'Deposit percentage must be less than 100%.';
     if (planMode === 'staged') {
       if (!stages.length) return 'Add at least one stage payment or choose a simpler payment option.';
@@ -378,10 +421,17 @@ export default function NewQuoteScreen() {
         method: 'POST',
         body: JSON.stringify({
           jobId,
-          laborCost: labourCost,
-          materialsCost: materialsAndOtherCost,
+          laborCost: serviceCost,
+          materialsCost,
           vatAmount,
           depositAmount,
+          costItems: pricedItems.map((item) => ({
+            description: item.description.trim(),
+            category: item.category === 'other' ? 'overhead' : item.category,
+            quantity: Number(item.quantity || 0),
+            unitPrice: poundsToPence(item.unitPrice),
+            lineTotal: itemLineTotal(item),
+          })),
           paymentTerms: paymentTerms.trim(),
           paymentSchedule,
           scope: workIncluded.trim(),
@@ -414,6 +464,12 @@ export default function NewQuoteScreen() {
   if (preview) {
     return <Screen title="Preview quote" subtitle="This is what the customer will read. Check it before you send it." backHref="/trader/quotes" footer={footer}>
       <QuoteDocument quote={previewQuote} />
+      {!external ? <AppCard style={styles.protectionCard}>
+        <Chip icon="shield-lock-outline">BuildPair Protected Payments</Chip>
+        <Text variant="titleMedium" style={styles.title}>Customer payment timeline</Text>
+        <MilestoneTimeline items={paymentSchedule.map((stage) => ({ id: stage.key, title: stage.title, amount: stage.amount, kind: stage.kind, trigger: stage.trigger }))} />
+        <Text style={styles.muted}>Materials are the exact materials subtotal and carry no BuildPair platform fee. BuildPair's 1% applies to labour/service, including site overhead. Stripe processing is recovered at actual cost from controlled service payouts if the homeowner chooses BuildPair Protected Payments.</Text>
+      </AppCard> : null}
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
     </Screen>;
   }
@@ -440,20 +496,24 @@ export default function NewQuoteScreen() {
     </AppCard>
 
     <AppCard>
-      <Text variant="titleLarge" style={styles.title}>Price</Text>
-      <Text style={styles.muted}>Add the parts of the price you actually use. Keep it as simple or detailed as the job needs.</Text>
+      <Text variant="titleLarge" style={styles.title}>Itemised price</Text>
+      <Text style={styles.muted}>Use Materials only for things being bought for the job. Put labour, plant, access, waste, supervision and site overhead in Labour or Site / overhead. That keeps the materials payout and BuildPair fee calculation honest.</Text>
       {items.map((item, index) => <View key={item.key} style={styles.itemCard}>
-        <TextInput label="Description" value={item.description} onChangeText={(value) => updateItem(index, { description: value })} mode="outlined" placeholder="e.g. Labour, tiles, skip" />
-        <SegmentedButtons value={item.category} onValueChange={(value) => updateItem(index, { category: value as ItemCategory })} buttons={[{ value: 'labour', label: 'Labour' }, { value: 'materials', label: 'Materials' }, { value: 'other', label: 'Other' }]} />
+        <TextInput label="Description / specification" value={item.description} onChangeText={(value) => updateItem(index, { description: value })} mode="outlined" placeholder="e.g. C2-S1 flexible tile adhesive, 6 bags" />
+        <SegmentedButtons value={item.category} onValueChange={(value) => updateItem(index, { category: value as ItemCategory })} buttons={[{ value: 'labour', label: 'Labour' }, { value: 'materials', label: 'Materials' }, { value: 'other', label: 'Site / overhead' }]} />
         <View style={styles.row}><TextInput style={styles.flexField} label="Qty" value={item.quantity} onChangeText={(value) => updateItem(index, { quantity: value })} keyboardType="decimal-pad" mode="outlined" /><TextInput style={styles.flexField} label="Price each (£)" value={item.unitPrice} onChangeText={(value) => updateItem(index, { unitPrice: value })} keyboardType="decimal-pad" mode="outlined" /></View>
         <View style={styles.row}><Text style={styles.strong}>Line total</Text><Text style={styles.strong}>{formatMoney(itemLineTotal(item))}</Text></View>
         <Button mode="text" textColor={colors.danger} onPress={() => removeItem(index)}>Remove</Button>
       </View>)}
-      <View style={styles.actions}><Button mode="outlined" icon="plus" onPress={() => addItem('labour')}>Labour</Button><Button mode="outlined" icon="plus" onPress={() => addItem('materials')}>Materials</Button><Button mode="outlined" icon="plus" onPress={() => addItem('other')}>Other cost</Button></View>
+      <View style={styles.actions}><Button mode="outlined" icon="plus" onPress={() => addItem('labour')}>Labour</Button><Button mode="outlined" icon="plus" onPress={() => addItem('materials')}>Materials</Button><Button mode="outlined" icon="plus" onPress={() => addItem('other')}>Site / overhead</Button></View>
       <Text variant="labelLarge" style={styles.label}>VAT</Text>
       <SegmentedButtons value={vatRate} onValueChange={setVatRate} buttons={[{ value: '0', label: 'No VAT' }, { value: '20', label: 'Add 20%' }]} />
       {external ? <View style={styles.switchRow}><View style={styles.flex}><Text style={styles.strong}>Show item breakdown to customer</Text><Text style={styles.muted}>Turn this off if you want the customer to see only the total price.</Text></View><Switch value={showBreakdown} onValueChange={setShowBreakdown} /></View> : null}
-      <View style={styles.totalBox}><View style={styles.row}><Text>Subtotal</Text><Text>{formatMoney(subtotal)}</Text></View>{vatAmount ? <View style={styles.row}><Text>VAT</Text><Text>{formatMoney(vatAmount)}</Text></View> : null}<View style={styles.row}><Text variant="titleLarge" style={styles.title}>Total</Text><Text variant="headlineSmall" style={styles.total}>{formatMoney(totalAmount)}</Text></View></View>
+      <View style={styles.totalBox}>
+        {!external ? <><View style={styles.row}><Text>Materials</Text><Text>{formatMoney(materialsCost)}</Text></View><View style={styles.row}><Text>Labour</Text><Text>{formatMoney(labourOnlyCost)}</Text></View>{overheadCost > 0 ? <View style={styles.row}><Text>Site / overhead</Text><Text>{formatMoney(overheadCost)}</Text></View> : null}</> : null}
+        <View style={styles.row}><Text>Subtotal</Text><Text>{formatMoney(subtotal)}</Text></View>{vatAmount ? <View style={styles.row}><Text>VAT</Text><Text>{formatMoney(vatAmount)}</Text></View> : null}<View style={styles.row}><Text variant="titleLarge" style={styles.title}>Total</Text><Text variant="headlineSmall" style={styles.total}>{formatMoney(totalAmount)}</Text></View>
+      </View>
+      {!external ? <AppCard elevated={false} style={styles.feeCard}><Text variant="titleSmall" style={styles.title}>BuildPair payment economics</Text><Text style={styles.muted}>Materials: 0% BuildPair fee. Labour + site/overhead: 1% BuildPair fee if protected payments are used. Stripe's actual processing cost is also recovered from controlled service payouts, so your materials purchasing money is not shaved down by card fees.</Text></AppCard> : null}
     </AppCard>
 
     <AppCard>
@@ -468,27 +528,32 @@ export default function NewQuoteScreen() {
     </AppCard>
 
     <AppCard>
-      <Text variant="titleLarge" style={styles.title}>How do you want to be paid?</Text>
-      <SegmentedButtons value={planMode} onValueChange={(value) => setPlanMode(value as PlanMode)} buttons={[{ value: 'single', label: 'Full at end' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Stage payments' }]} />
+      <Text variant="titleLarge" style={styles.title}>Payment stages</Text>
+      <Text style={styles.muted}>{external ? 'Choose how you want this customer to pay.' : 'Materials are split out automatically. Then choose whether the service balance is paid at final completion, with a protected start deposit, or across progress milestones.'}</Text>
+      <SegmentedButtons value={planMode} onValueChange={(value) => setPlanMode(value as PlanMode)} buttons={external ? [{ value: 'single', label: 'Full at end' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Stage payments' }] : [{ value: 'single', label: 'Materials + final' }, { value: 'deposit', label: 'Materials + deposit' }, { value: 'staged', label: 'Materials + stages' }]} />
       {planMode !== 'single' ? <View style={styles.depositBlock}>
-        <Text variant="labelLarge" style={styles.label}>Deposit</Text>
+        <Text variant="labelLarge" style={styles.label}>{external ? 'Deposit' : 'Protected start deposit'}</Text>
+        {!external ? <Text style={styles.muted}>This deposit is part of the service balance, not the materials payment. It is released only after its agreed start/material-arrival trigger is confirmed.</Text> : null}
         <SegmentedButtons value={depositUnit} onValueChange={(value) => setDepositUnit(value as DepositUnit)} buttons={[{ value: 'amount', label: '£ amount' }, { value: 'percent', label: '%' }]} />
         <TextInput label={depositUnit === 'percent' ? 'Deposit (%)' : 'Deposit (£)'} value={depositValue} onChangeText={setDepositValue} keyboardType="decimal-pad" mode="outlined" />
         {depositAmount > 0 ? <Text style={styles.muted}>Deposit: {formatMoney(depositAmount)}</Text> : null}
       </View> : null}
       {planMode === 'staged' ? <>
-        <Text variant="titleMedium" style={styles.title}>Stage payments</Text>
-        <Text style={styles.muted}>Use normal site language. The customer should immediately understand what has to be done before each payment is due.</Text>
-        {stages.map((stage, index) => <View key={stage.key} style={styles.itemCard}>
-          <TextInput label="Stage name" value={stage.title} onChangeText={(value) => updateStage(index, { title: value })} mode="outlined" />
-          <TextInput label="Amount (£)" value={stage.amount} onChangeText={(value) => updateStage(index, { amount: value })} keyboardType="decimal-pad" mode="outlined" />
-          <TextInput label={stage.kind === 'materials' ? 'When is this due?' : 'What must be finished before this is due?'} value={stage.trigger} onChangeText={(value) => updateStage(index, { trigger: value })} mode="outlined" multiline />
-          <Button mode="text" textColor={colors.danger} onPress={() => removeStage(index)}>Remove stage</Button>
-        </View>)}
-        <View style={styles.actions}><Button mode="outlined" icon="plus" onPress={() => addStage('materials', 'Materials payment', 'Due before materials are ordered.')}>Materials</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', 'First fix', 'Due when first fix work is complete.')}>First fix</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', 'Second fix', 'Due when second fix work is complete.')}>Second fix</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', `Stage ${stages.length + 1}`, '')}>Custom</Button></View>
+        <Text variant="titleMedium" style={styles.title}>Progress stages</Text>
+        <Text style={styles.muted}>Use normal site language. The homeowner should immediately understand what must be finished before they can approve release.</Text>
+        {stages.filter((stage) => external || stage.kind !== 'materials').map((stage) => {
+          const sourceIndex = stages.findIndex((candidate) => candidate.key === stage.key);
+          return <View key={stage.key} style={styles.itemCard}>
+            <TextInput label="Stage name" value={stage.title} onChangeText={(value) => updateStage(sourceIndex, { title: value })} mode="outlined" />
+            <TextInput label="Amount (£)" value={stage.amount} onChangeText={(value) => updateStage(sourceIndex, { amount: value })} keyboardType="decimal-pad" mode="outlined" />
+            <TextInput label={stage.kind === 'materials' ? 'When is this due?' : 'What must be finished before release?'} value={stage.trigger} onChangeText={(value) => updateStage(sourceIndex, { trigger: value })} mode="outlined" multiline />
+            <Button mode="text" textColor={colors.danger} onPress={() => removeStage(sourceIndex)}>Remove stage</Button>
+          </View>;
+        })}
+        <View style={styles.actions}>{external ? <Button mode="outlined" icon="plus" onPress={() => addStage('materials', 'Materials payment', 'Due before materials are ordered.')}>Materials</Button> : null}<Button mode="outlined" icon="plus" onPress={() => addStage('stage', 'First fix', 'Released when first fix work is complete.')}>First fix</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', 'Second fix', 'Released when second fix work is complete.')}>Second fix</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', `Stage ${stages.length + 1}`, '')}>Custom</Button></View>
       </> : null}
-      {totalAmount > 0 ? <View style={styles.totalBox}>
-        {paymentSchedule.map((stage) => <View key={stage.key} style={styles.stageSummary}><View style={styles.row}><Text style={styles.strong}>{stage.title}</Text><Text style={styles.strong}>{formatMoney(stage.amount)}</Text></View>{stage.trigger ? <Text style={styles.muted}>{stage.trigger}</Text> : null}</View>)}
+      {totalAmount > 0 && paymentSchedule.length ? <View style={styles.timelineBox}>
+        {!external ? <MilestoneTimeline items={paymentSchedule.map((stage) => ({ id: stage.key, title: stage.title, amount: stage.amount, kind: stage.kind, trigger: stage.trigger }))} compact /> : paymentSchedule.map((stage) => <View key={stage.key} style={styles.stageSummary}><View style={styles.row}><Text style={styles.strong}>{stage.title}</Text><Text style={styles.strong}>{formatMoney(stage.amount)}</Text></View>{stage.trigger ? <Text style={styles.muted}>{stage.trigger}</Text> : null}</View>)}
       </View> : null}
       {external ? <>
         <Text variant="labelLarge" style={styles.label}>Payment method</Text>
@@ -524,6 +589,9 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' },
   itemCard: { gap: spacing.sm, padding: spacing.md, backgroundColor: colors.surfaceSoft, borderRadius: 14, borderWidth: 1, borderColor: colors.border },
   totalBox: { gap: spacing.sm, padding: spacing.md, backgroundColor: colors.surfaceSoft, borderRadius: 14 },
+  timelineBox: { gap: spacing.sm, padding: spacing.md, backgroundColor: colors.surfaceSoft, borderRadius: 14 },
+  feeCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  protectionCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
   total: { color: colors.primary, fontWeight: '900' },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
   depositBlock: { gap: spacing.sm },

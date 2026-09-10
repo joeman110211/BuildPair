@@ -1,7 +1,4 @@
 import type Stripe from 'stripe';
-import { eq } from 'drizzle-orm';
-import { getDb } from '@/db/client';
-import { traderProfiles } from '@/db/schema';
 import { addJobEvent, createNotification } from '@/lib/notifications';
 import { isImmediatelyReleasedStage } from '@/lib/payment-protection';
 import { getSql } from '@/lib/sql';
@@ -9,10 +6,7 @@ import { getStripe } from '@/lib/stripe';
 
 export async function POST(request: Request) {
   const signature = request.headers.get('stripe-signature');
-  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_CONNECT_WEBHOOK_SECRET]
-    .map((value) => value?.trim())
-    .filter((value): value is string => Boolean(value));
-
+  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_CONNECT_WEBHOOK_SECRET].map((value) => value?.trim()).filter((value): value is string => Boolean(value));
   if (!signature || secrets.length === 0) return new Response('Webhook not configured', { status: 400 });
 
   try {
@@ -67,27 +61,26 @@ async function resolveChargeId(intent: Stripe.PaymentIntent) {
   return chargeIdFromIntent(expanded);
 }
 
-async function releaseImmediatePayment(args: {
+async function releaseMaterialsPayment(args: {
   paymentIntentId: string;
   chargeId: string;
   jobId: string;
   milestoneId: string;
   traderId: string;
   stripeAccountId: string;
-  amount: number;
+  contractAmount: number;
   transferGroup: string;
-  kind: 'materials' | 'deposit';
 }) {
   const existing = await getSql()`SELECT stripe_transfer_id AS "transferId" FROM payments WHERE stripe_payment_intent_id = ${args.paymentIntentId} LIMIT 1` as unknown as { transferId: string | null }[];
   if (existing[0]?.transferId) return existing[0].transferId;
   const transfer = await getStripe().transfers.create({
-    amount: args.amount,
+    amount: args.contractAmount,
     currency: 'gbp',
     destination: args.stripeAccountId,
     source_transaction: args.chargeId,
     transfer_group: args.transferGroup,
-    metadata: { buildpairJobId: args.jobId, milestoneId: args.milestoneId, traderId: args.traderId, releaseReason: args.kind },
-  }, { idempotencyKey: `buildpair-upfront-${args.milestoneId}-${args.paymentIntentId}` });
+    metadata: { buildpairJobId: args.jobId, milestoneId: args.milestoneId, traderId: args.traderId, releaseReason: 'materials', contractAmount: String(args.contractAmount) },
+  }, { idempotencyKey: `buildpair-materials-v3-${args.milestoneId}-${args.paymentIntentId}` });
   return transfer.id;
 }
 
@@ -97,15 +90,14 @@ async function handlePaymentSucceeded(intent: Stripe.PaymentIntent) {
   if (!jobId || !milestoneId || !customerId || !traderId) return;
 
   const rows = await getSql()`
-    SELECT m.title, m.kind, m.status, j.title AS "jobTitle", q.total_amount AS "quoteTotal",
-           tp.stripe_account_id AS "stripeAccountId"
+    SELECT m.title, m.kind, m.status, m.amount, j.title AS "jobTitle", tp.stripe_account_id AS "stripeAccountId"
     FROM job_milestones m
     JOIN jobs j ON j.id = m.job_id
     JOIN quotes q ON q.id = m.quote_id
     JOIN trader_profiles tp ON tp.user_id = q.trader_id
     WHERE m.id = ${milestoneId} AND m.job_id = ${jobId}
     LIMIT 1
-  ` as unknown as { title: string; kind: 'materials' | 'deposit' | 'stage' | 'final'; status: string; jobTitle: string; quoteTotal: number; stripeAccountId: string | null }[];
+  ` as unknown as { title: string; kind: 'materials' | 'deposit' | 'stage' | 'final'; status: string; amount: number; jobTitle: string; stripeAccountId: string | null }[];
   const milestone = rows[0];
   if (!milestone) return;
 
@@ -125,59 +117,27 @@ async function handlePaymentSucceeded(intent: Stripe.PaymentIntent) {
   `;
 
   if (isImmediatelyReleasedStage(milestone.kind)) {
-    if (milestone.kind !== 'materials' && milestone.kind !== 'deposit') return;
-    if (!milestone.stripeAccountId || !chargeId) throw new Error('Upfront payment cannot be released because payout details are incomplete');
-    const transferId = await releaseImmediatePayment({
-      paymentIntentId: intent.id,
-      chargeId,
-      jobId,
-      milestoneId,
-      traderId,
-      stripeAccountId: milestone.stripeAccountId,
-      amount: chargeAmount,
-      transferGroup: intent.metadata.transferGroup || `buildpair_job_${jobId}`,
-      kind: milestone.kind,
-    });
-    await getSql()`UPDATE payments SET status = 'released', stripe_transfer_id = ${transferId}, released_at = COALESCE(released_at, now()) WHERE stripe_payment_intent_id = ${intent.id}`;
+    if (!milestone.stripeAccountId || !chargeId) throw new Error('Materials payment cannot be released because payout details are incomplete');
+    const transferId = await releaseMaterialsPayment({ paymentIntentId: intent.id, chargeId, jobId, milestoneId, traderId, stripeAccountId: milestone.stripeAccountId, contractAmount: milestone.amount, transferGroup: intent.metadata.transferGroup || `buildpair_job_${jobId}` });
+    await getSql()`UPDATE payments SET status = 'released', stripe_transfer_id = ${transferId}, stripe_processing_fee_recovered = 0, trader_transfer_amount = ${milestone.amount}, released_at = COALESCE(released_at, now()) WHERE stripe_payment_intent_id = ${intent.id}`;
     await getSql()`UPDATE job_milestones SET status = 'paid', funded_at = COALESCE(funded_at, now()), paid_at = COALESCE(paid_at, now()), payment_method = 'stripe', payment_confirmed_by = NULL WHERE id = ${milestoneId}`;
-    const isDeposit = milestone.kind === 'deposit';
-    const paymentLabel = isDeposit ? 'deposit' : 'materials payment';
-    await addJobEvent(
-      jobId,
-      customerId,
-      isDeposit ? 'deposit_payment_released' : 'materials_payment_released',
-      `${milestone.title} paid`,
-      `Stripe confirmed £${(chargeAmount / 100).toFixed(2)} and the agreed ${paymentLabel} was released to the tradesperson.`,
-      { milestoneId, stripePaymentIntentId: intent.id, stripeTransferId: transferId, milestoneKind: milestone.kind },
-    );
+    await addJobEvent(jobId, customerId, 'materials_payment_released', `${milestone.title} paid`, `Stripe confirmed £${(chargeAmount / 100).toFixed(2)} and BuildPair instructed an exact £${(milestone.amount / 100).toFixed(2)} materials transfer to the tradesperson. Stripe processing costs remain recorded for recovery from later service payouts.`, { milestoneId, stripePaymentIntentId: intent.id, stripeTransferId: transferId, milestoneKind: milestone.kind, contractMaterialsAmount: milestone.amount });
     await Promise.allSettled([
-      createNotification(traderId, {
-        type: isDeposit ? 'deposit_payment_received' : 'materials_payment_received',
-        title: `${milestone.title} received`,
-        body: `${milestone.jobTitle}: £${(chargeAmount / 100).toFixed(2)} was released for the agreed ${paymentLabel}.`,
-        href: `/trader/jobs/${jobId}`,
-        email: true,
-      }),
-      createNotification(customerId, {
-        type: isDeposit ? 'deposit_payment_confirmed' : 'materials_payment_confirmed',
-        title: isDeposit ? 'Deposit released' : 'Materials payment released',
-        body: `${milestone.jobTitle}: your ${paymentLabel} was processed and released to the tradesperson.`,
-        href: `/customer/jobs/${jobId}`,
-      }),
+      createNotification(traderId, { type: 'materials_payment_received', title: `${milestone.title} received`, body: `${milestone.jobTitle}: the agreed £${(milestone.amount / 100).toFixed(2)} materials amount was released for procurement.`, href: `/trader/jobs/${jobId}`, email: true }),
+      createNotification(customerId, { type: 'materials_payment_confirmed', title: 'Materials payment released', body: `${milestone.jobTitle}: your agreed materials payment was processed and released to the tradesperson.`, href: `/customer/jobs/${jobId}` }),
     ]);
     return;
   }
 
   await getSql()`UPDATE job_milestones SET status = 'funded', funded_at = COALESCE(funded_at, now()), payment_method = 'stripe', payment_confirmed_by = NULL WHERE id = ${milestoneId} AND status = 'pending'`;
-  await addJobEvent(jobId, customerId, 'payment_stage_funded', `${milestone.title} funded`, `Stripe confirmed £${(chargeAmount / 100).toFixed(2)} for this stage. It has not yet been transferred to the tradesperson.`, { milestoneId, stripePaymentIntentId: intent.id, platformFee });
+  await addJobEvent(jobId, customerId, 'payment_stage_funded', `${milestone.title} funded`, `Stripe confirmed £${(chargeAmount / 100).toFixed(2)} for this protected stage. It has not been transferred to the tradesperson.`, { milestoneId, stripePaymentIntentId: intent.id, platformFee });
   await Promise.allSettled([
     createNotification(traderId, { type: 'payment_stage_funded', title: `${milestone.title} is funded`, body: `${milestone.jobTitle}: the homeowner funded £${(chargeAmount / 100).toFixed(2)}. Complete the agreed trigger before requesting release.`, href: `/trader/jobs/${jobId}`, email: true }),
-    createNotification(customerId, { type: 'payment_stage_funded', title: `${milestone.title} funded`, body: `${milestone.jobTitle}: Stripe confirmed your payment. It has not yet been transferred to the tradesperson.`, href: `/customer/jobs/${jobId}` }),
+    createNotification(customerId, { type: 'payment_stage_funded', title: `${milestone.title} funded`, body: `${milestone.jobTitle}: Stripe confirmed your payment. It remains protected until the agreed release step is approved.`, href: `/customer/jobs/${jobId}` }),
   ]);
 }
 
 async function handleEvent(event: Stripe.Event) {
-  const db = getDb();
   if (event.type === 'account.updated') {
     const account = event.data.object;
     await getSql()`UPDATE trader_profiles SET stripe_charges_enabled = ${Boolean(account.charges_enabled)}, stripe_payouts_enabled = ${Boolean(account.payouts_enabled)}, updated_at = now() WHERE stripe_account_id = ${account.id}`;
@@ -191,7 +151,6 @@ async function handleEvent(event: Stripe.Event) {
     return;
   }
   if (event.type === 'customer.subscription.deleted') { await clearPaidSubscription(event.data.object.id); return; }
-
   if (event.type === 'payment_intent.succeeded') { await handlePaymentSucceeded(event.data.object); return; }
 
   if (event.type === 'payment_intent.payment_failed') {
@@ -204,11 +163,7 @@ async function handleEvent(event: Stripe.Event) {
     const charge = event.data.object;
     const paymentIntentId = typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
     if (!paymentIntentId) return;
-    const rows = await getSql()`
-      SELECT p.milestone_id AS "milestoneId", p.job_id AS "jobId", p.customer_id AS "customerId", p.trader_id AS "traderId", j.title AS "jobTitle"
-      FROM payments p JOIN jobs j ON j.id = p.job_id
-      WHERE p.stripe_payment_intent_id = ${paymentIntentId} LIMIT 1
-    ` as unknown as { milestoneId: string; jobId: string; customerId: string; traderId: string; jobTitle: string }[];
+    const rows = await getSql()`SELECT p.milestone_id AS "milestoneId", p.job_id AS "jobId", p.customer_id AS "customerId", p.trader_id AS "traderId", j.title AS "jobTitle" FROM payments p JOIN jobs j ON j.id = p.job_id WHERE p.stripe_payment_intent_id = ${paymentIntentId} LIMIT 1` as unknown as { milestoneId: string; jobId: string; customerId: string; traderId: string; jobTitle: string }[];
     const payment = rows[0];
     if (!payment) return;
     await getSql()`UPDATE payments SET status = 'disputed', disputed_at = COALESCE(disputed_at, now()) WHERE stripe_payment_intent_id = ${paymentIntentId}`;
@@ -230,6 +185,4 @@ async function handleEvent(event: Stripe.Event) {
     await getSql()`UPDATE payments SET status = 'refunded', refunded_at = COALESCE(refunded_at, now()) WHERE stripe_payment_intent_id = ${paymentIntentId}`;
     if (rows[0]?.milestoneId) await getSql()`UPDATE job_milestones SET status = 'pending', funded_at = NULL, release_requested_at = NULL, release_approved_at = NULL, release_approved_by = NULL WHERE id = ${rows[0].milestoneId} AND status <> 'paid'`;
   }
-
-  void db;
 }

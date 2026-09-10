@@ -2,7 +2,7 @@ import { desc, eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { jobs, quotes, traderProfiles } from '@/db/schema';
 import { addJobEvent, createNotification } from '@/lib/notifications';
-import { paymentScheduleSchema, type PaymentStagePlan, validatePaymentSchedule } from '@/lib/payment-plan';
+import { normalizeMaterialsFirstSchedule, paymentScheduleSchema, type PaymentStagePlan, validatePaymentSchedule } from '@/lib/payment-plan';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
@@ -14,8 +14,7 @@ function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
   const earthRadiusMiles = 3959;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) ** 2
-    + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(toRad(lon2 - lon1) / 2) ** 2;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   return earthRadiusMiles * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
@@ -23,46 +22,40 @@ async function ensureMarketplaceOfferAllowance(traderId: string, jobId: string, 
   const sql = getSql();
   const existing = await sql`SELECT id FROM trader_job_offers WHERE job_id = ${jobId} AND trader_id = ${traderId} LIMIT 1`;
   if (existing.length) return;
-
   const limit = traderMonthlyQuoteLimit(profile);
   const usage = await sql`
-    SELECT count(*)::int AS count
-    FROM trader_job_offers
+    SELECT count(*)::int AS count FROM trader_job_offers
     WHERE trader_id = ${traderId}
       AND created_at >= date_trunc('month', now())
       AND created_at < date_trunc('month', now()) + interval '1 month'
   ` as unknown as { count: number }[];
-  if ((usage[0]?.count ?? 0) >= limit) {
-    throw new HttpError(402, `You have used all ${limit} open-marketplace offers for this month. Your allowance resets next month.`);
-  }
-
-  await sql`
-    INSERT INTO trader_job_offers(job_id, trader_id)
-    VALUES (${jobId}, ${traderId})
-    ON CONFLICT (job_id, trader_id)
-    DO NOTHING
-  `;
+  if ((usage[0]?.count ?? 0) >= limit) throw new HttpError(402, `You have used all ${limit} open-marketplace offers for this month. Your allowance resets next month.`);
+  await sql`INSERT INTO trader_job_offers(job_id, trader_id) VALUES (${jobId}, ${traderId}) ON CONFLICT (job_id, trader_id) DO NOTHING`;
 }
 
-function fallbackSchedule(totalAmount: number, depositAmount: number): PaymentStagePlan[] {
-  if (depositAmount > 0 && depositAmount < totalAmount) {
-    return [
-      { key: 'deposit', title: 'Deposit', amount: depositAmount, kind: 'deposit', trigger: 'Due after the quote and payment plan are accepted.', sortOrder: 1 },
-      { key: 'final', title: 'Final payment', amount: totalAmount - depositAmount, kind: 'final', trigger: 'Due after the agreed work is complete and approved.', sortOrder: 2 },
-    ];
+function fallbackSchedule(totalAmount: number, materialsAmount: number, depositAmount: number): PaymentStagePlan[] {
+  const stages: PaymentStagePlan[] = [];
+  const materials = Math.max(0, Math.min(totalAmount, materialsAmount));
+  const serviceBalance = Math.max(0, totalAmount - materials);
+  if (materials > 0) {
+    stages.push({ key: 'materials', title: 'Materials payment', amount: materials, kind: 'materials', trigger: 'Due after quote acceptance so agreed materials can be ordered.', sortOrder: stages.length + 1 });
   }
-  return [{ key: 'final', title: 'Full payment', amount: totalAmount, kind: 'final', trigger: 'Due after the agreed work is complete and approved.', sortOrder: 1 }];
+  const deposit = Math.max(0, Math.min(serviceBalance, depositAmount));
+  if (deposit > 0 && deposit < serviceBalance) {
+    stages.push({ key: 'deposit', title: 'Protected start deposit', amount: deposit, kind: 'deposit', trigger: 'Released after the agreed start/material-arrival point is confirmed.', sortOrder: stages.length + 1 });
+  }
+  const finalAmount = serviceBalance - (deposit > 0 && deposit < serviceBalance ? deposit : 0);
+  if (finalAmount > 0) {
+    stages.push({ key: 'final', title: 'Final payment', amount: finalAmount, kind: 'final', trigger: 'Released after the agreed work is complete and approved.', sortOrder: stages.length + 1 });
+  }
+  return stages;
 }
 
 export async function GET(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
     const rows = await getDb().select().from(quotes).where(eq(quotes.traderId, trader.id)).orderBy(desc(quotes.updatedAt));
-    const plans = await getSql()`
-      SELECT id, payment_schedule AS "paymentSchedule", payment_schedule_status AS "paymentScheduleStatus",
-             payment_schedule_revision AS "paymentScheduleRevision"
-      FROM quotes WHERE trader_id = ${trader.id}
-    ` as unknown as { id: string; paymentSchedule: PaymentStagePlan[]; paymentScheduleStatus: string; paymentScheduleRevision: number }[];
+    const plans = await getSql()`SELECT id, cost_items AS "costItems", payment_schedule AS "paymentSchedule", payment_schedule_status AS "paymentScheduleStatus", payment_schedule_revision AS "paymentScheduleRevision" FROM quotes WHERE trader_id = ${trader.id}` as unknown as { id: string; costItems: unknown[]; paymentSchedule: PaymentStagePlan[]; paymentScheduleStatus: string; paymentScheduleRevision: number }[];
     const byId = new Map(plans.map((plan) => [plan.id, plan]));
     return Response.json(rows.map((row) => ({ ...row, ...(byId.get(row.id) ?? {}) })));
   } catch (error) { return jsonError(error); }
@@ -86,78 +79,39 @@ export async function POST(request: Request) {
     if (!job.targetTraderId) {
       const listedCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
       if (!listedCategories.includes(job.category)) throw new HttpError(403, 'This marketplace job does not match one of your selected trade categories');
-      if (profile.latitude == null || profile.longitude == null || job.latitude == null || job.longitude == null) {
-        throw new HttpError(403, 'Location matching is required to quote this marketplace job');
-      }
+      if (profile.latitude == null || profile.longitude == null || job.latitude == null || job.longitude == null) throw new HttpError(403, 'Location matching is required to quote this marketplace job');
       const miles = distanceMiles(profile.latitude, profile.longitude, job.latitude, job.longitude);
       if (miles > profile.radiusMiles) throw new HttpError(403, 'This marketplace job is outside your service radius');
       await ensureMarketplaceOfferAllowance(trader.id, job.id, profile);
     }
 
     const totalAmount = payload.laborCost + payload.materialsCost + payload.vatAmount;
-    const suppliedSchedule = raw.paymentSchedule == null ? fallbackSchedule(totalAmount, payload.depositAmount) : paymentScheduleSchema.parse(raw.paymentSchedule);
+    const suppliedSchedule = raw.paymentSchedule == null ? fallbackSchedule(totalAmount, payload.materialsCost, payload.depositAmount) : paymentScheduleSchema.parse(raw.paymentSchedule);
     let paymentSchedule: PaymentStagePlan[];
     try {
-      paymentSchedule = validatePaymentSchedule(suppliedSchedule, totalAmount);
-    } catch (error) {
-      throw new HttpError(400, error instanceof Error ? error.message : 'Invalid payment plan');
-    }
+      paymentSchedule = raw.paymentSchedule == null
+        ? validatePaymentSchedule(suppliedSchedule, totalAmount, payload.materialsCost)
+        : normalizeMaterialsFirstSchedule(suppliedSchedule, totalAmount, payload.materialsCost);
+    } catch (error) { throw new HttpError(400, error instanceof Error ? error.message : 'Invalid payment plan'); }
 
     const validUntil = payload.validUntil ? new Date(payload.validUntil) : null;
     const proposedStartAt = payload.proposedStartAt ? new Date(payload.proposedStartAt) : null;
     const quoteValues = {
-      jobId: payload.jobId,
-      traderId: trader.id,
-      laborCost: payload.laborCost,
-      materialsCost: payload.materialsCost,
-      vatAmount: payload.vatAmount,
-      depositAmount: payload.depositAmount,
-      totalAmount,
-      paymentTerms: payload.paymentTerms,
-      scope: payload.scope ?? null,
-      exclusions: payload.exclusions ?? null,
-      notes: payload.notes ?? null,
-      durationDays: payload.durationDays ?? null,
-      warrantyMonths: payload.warrantyMonths ?? null,
-      proposedStartAt,
-      validUntil,
+      jobId: payload.jobId, traderId: trader.id, laborCost: payload.laborCost, materialsCost: payload.materialsCost,
+      vatAmount: payload.vatAmount, depositAmount: payload.depositAmount, totalAmount, paymentTerms: payload.paymentTerms,
+      scope: payload.scope ?? null, exclusions: payload.exclusions ?? null, notes: payload.notes ?? null,
+      durationDays: payload.durationDays ?? null, warrantyMonths: payload.warrantyMonths ?? null, proposedStartAt, validUntil,
     };
-    const [quote] = await db.insert(quotes).values(quoteValues)
-      .onConflictDoUpdate({
-        target: [quotes.jobId, quotes.traderId],
-        set: { ...quoteValues, status: 'pending', updatedAt: new Date() },
-      }).returning();
+    const [quote] = await db.insert(quotes).values(quoteValues).onConflictDoUpdate({ target: [quotes.jobId, quotes.traderId], set: { ...quoteValues, status: 'pending', updatedAt: new Date() } }).returning();
     if (!quote) throw new Error('Quote could not be saved');
 
-    await getSql()`
-      UPDATE quotes
-      SET payment_schedule = ${JSON.stringify(paymentSchedule)}::jsonb,
-          payment_schedule_status = 'proposed',
-          payment_schedule_revision = payment_schedule_revision + 1,
-          payment_schedule_updated_by = ${trader.id},
-          updated_at = now()
-      WHERE id = ${quote.id}
-    `;
-
+    const costItems = Array.isArray(raw.costItems) ? raw.costItems : [];
+    await getSql()`UPDATE quotes SET cost_items = ${JSON.stringify(costItems)}::jsonb, payment_schedule = ${JSON.stringify(paymentSchedule)}::jsonb, payment_schedule_status = 'proposed', payment_schedule_revision = payment_schedule_revision + 1, payment_schedule_updated_by = ${trader.id}, updated_at = now() WHERE id = ${quote.id}`;
     await db.update(jobs).set({ status: 'quoted', updatedAt: new Date() }).where(eq(jobs.id, payload.jobId));
+    const conversations = await getSql()`INSERT INTO conversations(job_id, customer_id, trader_id) VALUES (${payload.jobId}, ${job.customerId}, ${trader.id}) ON CONFLICT (job_id, customer_id, trader_id) DO UPDATE SET updated_at = now() RETURNING id` as unknown as { id: string }[];
 
-    const conversations = await getSql()`
-      INSERT INTO conversations(job_id, customer_id, trader_id)
-      VALUES (${payload.jobId}, ${job.customerId}, ${trader.id})
-      ON CONFLICT (job_id, customer_id, trader_id)
-      DO UPDATE SET updated_at = now()
-      RETURNING id
-    ` as unknown as { id: string }[];
-
-    await addJobEvent(payload.jobId, trader.id, 'quote_received', 'Quote received', `${profile.businessName} submitted a quote with ${paymentSchedule.length} payment stage${paymentSchedule.length === 1 ? '' : 's'}.`, { quoteId: quote.id, totalAmount });
-    await createNotification(job.customerId, {
-      type: 'quote_received',
-      title: `New quote from ${profile.businessName}`,
-      body: `A quote for ${job.title} is ready to compare, including the proposed payment stages.`,
-      href: `/customer/compare/${job.id}`,
-      email: true,
-    });
-
-    return Response.json({ ...quote, paymentSchedule, paymentScheduleStatus: 'proposed', conversationId: conversations[0]?.id ?? null }, { status: 201 });
+    await addJobEvent(payload.jobId, trader.id, 'quote_received', 'Quote received', `${profile.businessName} submitted a quote with ${paymentSchedule.length} payment stage${paymentSchedule.length === 1 ? '' : 's'}.`, { quoteId: quote.id, totalAmount, materialsAmount: payload.materialsCost, laborServiceAmount: payload.laborCost });
+    await createNotification(job.customerId, { type: 'quote_received', title: `New quote from ${profile.businessName}`, body: `A quote for ${job.title} is ready to review, including protected payment options.`, href: `/customer/compare/${job.id}`, email: true });
+    return Response.json({ ...quote, costItems, paymentSchedule, paymentScheduleStatus: 'proposed', conversationId: conversations[0]?.id ?? null }, { status: 201 });
   } catch (error) { return jsonError(error); }
 }
