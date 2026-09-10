@@ -1,0 +1,140 @@
+name: Publish Preview OTA Update
+
+on:
+  workflow_run:
+    workflows: [Quality]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: buildpair-preview-ota
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: '1'
+      EXPO_NO_TELEMETRY: '1'
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EXPO_EAS_PROJECT_ID: ${{ vars.EXPO_EAS_PROJECT_ID }}
+      EXPO_UPDATES_CHANNEL: preview
+      EXPO_PUBLIC_API_URL: https://www.buildpair.co.uk
+      EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+      EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME: qrrcn7ma
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 2
+
+      - name: Resolve OTA service configuration
+        id: ota-config
+        shell: bash
+        run: |
+          set -euo pipefail
+          project_id="$EXPO_EAS_PROJECT_ID"
+          if [ -z "$project_id" ]; then
+            project_id=$(node -e "console.log(require('./app.json').expo.extra?.eas?.projectId || '')")
+          fi
+          if [ -n "$project_id" ]; then
+            echo "EXPO_EAS_PROJECT_ID=$project_id" >> "$GITHUB_ENV"
+          fi
+          if [ -z "$EXPO_TOKEN" ] || [ -z "$project_id" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Expo OTA publishing is waiting for an Expo project link and EXPO_TOKEN."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Decide whether this commit is OTA-safe
+        if: steps.ota-config.outputs.configured == 'true'
+        id: ota-safe
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed=$(git diff --name-only HEAD^ HEAD || true)
+          printf 'Changed files:\n%s\n' "$changed"
+
+          unsafe=0
+          app_change=0
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            case "$file" in
+              package.json|package-lock.json|app.json|app.config.js|eas.json|metro.config.*|babel.config.*|tsconfig.json|android/*|ios/*|plugins/*|.github/*|assets/icon.png|assets/adaptive-icon.png|assets/splash-icon.png)
+                unsafe=1
+                ;;
+            esac
+            case "$file" in
+              app/*|components/*|constants/*|hooks/*|lib/*|types/*|assets/*)
+                app_change=1
+                ;;
+            esac
+          done <<< "$changed"
+
+          if [ "$unsafe" -eq 1 ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "Commit changes native/build configuration; a new binary is required instead of OTA."
+          elif [ "$app_change" -eq 0 ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "No app-runtime files changed; no OTA publication needed."
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v5
+        if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'
+        with:
+          node-version: 22.23.1
+          cache: npm
+
+      - name: Match repository npm version
+        if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'
+        run: npm install --global npm@11.19.0
+
+      - name: Install dependencies
+        if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'
+        run: npm ci --include=dev --no-audit --no-fund --prefer-offline
+
+      - name: Resolve client-safe configuration
+        if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" ] || [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ]; then
+            config=$(curl --fail --show-error --silent --retry 8 --retry-delay 3 "$EXPO_PUBLIC_API_URL/api/client-config")
+            clerk=$(printf '%s' "$config" | jq -r '.clerkPublishableKey // empty')
+            stripe=$(printf '%s' "$config" | jq -r '.stripePublishableKey // empty')
+            if [ -z "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" ] && [ -n "$clerk" ]; then
+              echo "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=$clerk" >> "$GITHUB_ENV"
+            fi
+            if [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ] && [ -n "$stripe" ]; then
+              echo "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=$stripe" >> "$GITHUB_ENV"
+            fi
+          fi
+          test -n "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" || { echo "::error::Missing Clerk publishable key"; exit 1; }
+
+      - name: Verify update project and channel
+        if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          config=$(npx expo config --type public --json)
+          printf '%s' "$config" | jq -e '.updates.enabled == true' >/dev/null
+          printf '%s' "$config" | jq -e --arg id "$EXPO_EAS_PROJECT_ID" '.extra.eas.projectId == $id and .updates.url == ("https://u.expo.dev/" + $id)' >/dev/null
+          printf '%s' "$config" | jq -e '.updates.requestHeaders["expo-channel-name"] == "preview"' >/dev/null
+
+      - name: Publish preview OTA update
+        if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'
+        run: npx eas-cli@latest update --channel preview --platform all --non-interactive --message "BuildPair ${GITHUB_SHA::12}"

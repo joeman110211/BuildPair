@@ -6,6 +6,8 @@ import { StatusBar } from 'expo-status-bar';
 // Metro and TypeScript resolve the .native/.web implementation; ESLint's generic resolver does not.
 // eslint-disable-next-line import/no-unresolved
 import { AppStripeProvider } from '@/components/AppStripeProvider';
+// eslint-disable-next-line import/no-unresolved
+import { OtaUpdateManager } from '@/components/OtaUpdateManager';
 import { PaperIcon } from '@/components/PaperIcon';
 import { PresenceHeartbeat } from '@/components/PresenceHeartbeat';
 import { VisitorAnalytics } from '@/components/VisitorAnalytics';
@@ -21,6 +23,7 @@ function AppShell({ trackPresence = false }: { trackPresence?: boolean }) {
       <PaperProvider theme={paperTheme} settings={{ icon: PaperIcon }}>
         <AppStripeProvider>
           <StatusBar style="dark" />
+          <OtaUpdateManager />
           {trackPresence ? <><PresenceHeartbeat /><VisitorAnalytics /></> : null}
           <Stack screenOptions={{ headerTintColor: colors.primary, headerShadowVisible: false, contentStyle: { backgroundColor: colors.background } }}>
             <Stack.Screen name="(public)" options={{ headerShown: false }} />

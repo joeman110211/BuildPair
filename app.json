@@ -2,17 +2,19 @@
   "expo": {
     "name": "BuildPair",
     "slug": "buildpair",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "icon": "./assets/icon.png",
     "orientation": "portrait",
     "scheme": "buildpair",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "uk.co.buildpair.app"
+      "bundleIdentifier": "uk.co.buildpair.app",
+      "buildNumber": "2"
     },
     "android": {
       "package": "uk.co.buildpair.app",
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#252A31"

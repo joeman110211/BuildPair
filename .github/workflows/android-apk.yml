@@ -29,6 +29,8 @@ jobs:
       EXPO_PUBLIC_API_URL: ${{ inputs.api_url || 'https://www.buildpair.co.uk' }}
       EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
       EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME: qrrcn7ma
+      EXPO_EAS_PROJECT_ID: ${{ vars.EXPO_EAS_PROJECT_ID }}
+      EXPO_UPDATES_CHANNEL: preview
 
     steps:
       - uses: actions/checkout@v5
@@ -70,6 +72,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [ -z "$EXPO_EAS_PROJECT_ID" ]; then
+            project_id=$(node -e "console.log(require('./app.json').expo.extra?.eas?.projectId || '')")
+            if [ -n "$project_id" ]; then
+              echo "EXPO_EAS_PROJECT_ID=$project_id" >> "$GITHUB_ENV"
+            fi
+          fi
           if [ -z "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" ] || [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ]; then
             config=$(curl --fail --show-error --silent --retry 8 --retry-delay 3 "$EXPO_PUBLIC_API_URL/api/client-config")
             clerk=$(printf '%s' "$config" | jq -r '.clerkPublishableKey // empty')
@@ -88,6 +96,7 @@ jobs:
           set -euo pipefail
           test -n "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" || { echo "::error::Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in GitHub Actions and target client config"; exit 1; }
           test -n "$EXPO_PUBLIC_API_URL" || { echo "::error::Missing EXPO_PUBLIC_API_URL"; exit 1; }
+          test -n "$EXPO_EAS_PROJECT_ID" || { echo "::error::BuildPair is not linked to an Expo/EAS project. Link it before producing the OTA-enabled test APK."; exit 1; }
           if [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ]; then
             echo "::warning::Stripe publishable key is not set; Android payments will remain disabled until production client config or GitHub Actions is populated."
           fi
@@ -98,6 +107,16 @@ jobs:
       - name: Typecheck shared web/native app
         run: npm run typecheck
 
+      - name: Verify OTA configuration resolves
+        shell: bash
+        run: |
+          set -euo pipefail
+          config=$(npx expo config --type public --json)
+          printf '%s' "$config" | jq -e '.updates.enabled == true' >/dev/null
+          printf '%s' "$config" | jq -e --arg id "$EXPO_EAS_PROJECT_ID" '.extra.eas.projectId == $id and .updates.url == ("https://u.expo.dev/" + $id)' >/dev/null
+          printf '%s' "$config" | jq -e '.updates.requestHeaders["expo-channel-name"] == "preview"' >/dev/null
+          echo "BuildPair preview OTA configuration verified."
+
       - name: Generate native Android project
         run: npx expo prebuild --platform android --clean
 
@@ -107,9 +126,6 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x ./gradlew
-          # Expo can emit gradle.properties without a trailing newline. Always add one
-          # before appending BuildPair runner properties so Expo's final JSON value
-          # cannot be corrupted by the next property.
           printf '\n' >> gradle.properties
           sed -i 's/^org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -Dfile.encoding=UTF-8/' gradle.properties
           if grep -q '^reactNativeArchitectures=' gradle.properties; then
