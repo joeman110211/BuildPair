@@ -1,0 +1,76 @@
+name: Resolve linked Expo project ID
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/link-expo-project.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  link:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: '1'
+      EXPO_NO_TELEMETRY: '1'
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.23.1
+          cache: npm
+
+      - name: Match repository npm version
+        run: npm install --global npm@11.19.0
+
+      - name: Install dependencies
+        run: npm ci --include=dev --no-audit --no-fund --prefer-offline
+
+      - name: Resolve BuildPair EAS project
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$EXPO_TOKEN" || { echo "::error::EXPO_TOKEN is not available to GitHub Actions"; exit 1; }
+
+          account=$(npx eas-cli@latest whoami | tail -n 1 | tr -d '\r')
+          test -n "$account" || { echo "::error::Could not identify Expo account from EXPO_TOKEN"; exit 1; }
+          echo "Authenticated to Expo account: $account"
+
+          npx eas-cli@latest project:init --account "$account" --json --non-interactive > /tmp/eas-project.json
+          cat /tmp/eas-project.json
+
+          project_id=$(jq -r '.id // .projectId // .project.id // .project.projectId // empty' /tmp/eas-project.json)
+          test -n "$project_id" || { echo "::error::Expo did not return an EAS project ID"; exit 1; }
+          echo "Resolved EAS project ID: $project_id"
+
+          PROJECT_ID="$project_id" node <<'NODE'
+          const fs = require('fs');
+          const path = 'app.json';
+          const app = JSON.parse(fs.readFileSync(path, 'utf8'));
+          app.expo.extra = app.expo.extra || {};
+          app.expo.extra.eas = app.expo.extra.eas || {};
+          app.expo.extra.eas.projectId = process.env.PROJECT_ID;
+          fs.writeFileSync(path, JSON.stringify(app, null, 2) + '\n');
+          NODE
+
+      - name: Commit Expo project identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.json
+          if git diff --cached --quiet; then
+            echo "BuildPair EAS project ID already committed"
+            exit 0
+          fi
+          git commit -m "Link BuildPair to Expo EAS project"
+          git push origin HEAD:main
