@@ -1,6 +1,7 @@
 const appJson = require('./app.json');
 
-const projectId = (process.env.EXPO_EAS_PROJECT_ID || '').trim();
+const committedProjectId = appJson.expo.extra?.eas?.projectId || '';
+const projectId = (process.env.EXPO_EAS_PROJECT_ID || committedProjectId).trim();
 const updateChannel = (process.env.EXPO_UPDATES_CHANNEL || 'preview').trim();
 
 const expo = {
