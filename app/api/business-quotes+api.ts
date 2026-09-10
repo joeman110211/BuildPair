@@ -13,6 +13,7 @@ const itemSchema = z.object({
 });
 
 const businessQuoteSchema = z.object({
+  quoteId: z.string().uuid().optional(),
   customerName: z.string().trim().min(2).max(120),
   customerEmail: z.string().trim().email().or(z.literal('')).optional(),
   customerPhone: z.string().trim().max(40).optional(),
@@ -150,26 +151,66 @@ export async function POST(request: Request) {
     const vatAmount = Math.round(subtotal * payload.vatRate / 100);
     const totalAmount = subtotal + vatAmount;
     const paymentSchedule = validatePaymentSchedule(payload.paymentSchedule, totalAmount);
-    const id = randomUUID();
-    const token = randomUUID().replace(/-/g, '') + randomUUID().replace(/-/g, '');
-    const number = quoteNumber();
     const sentAt = payload.status === 'sent' ? new Date().toISOString() : null;
 
-    await getSql()`
-      INSERT INTO business_quotes(
-        id, trader_id, quote_number, customer_name, customer_email, customer_phone,
-        job_title, job_address, work_included, not_included, expected_start, duration_text,
-        warranty_text, subtotal, vat_rate, vat_amount, total_amount, payment_method,
-        payment_terms, payment_schedule, notes, show_breakdown, valid_until, status,
-        share_token, sent_at, updated_at
-      ) VALUES (
-        ${id}, ${trader.id}, ${number}, ${payload.customerName}, ${payload.customerEmail || null}, ${payload.customerPhone || null},
-        ${payload.jobTitle}, ${payload.jobAddress || null}, ${payload.workIncluded}, ${payload.notIncluded || null}, ${payload.expectedStart || null}, ${payload.durationText || null},
-        ${payload.warrantyText || null}, ${subtotal}, ${payload.vatRate}, ${vatAmount}, ${totalAmount}, ${payload.paymentMethod},
-        ${payload.paymentTerms}, ${JSON.stringify(paymentSchedule)}::jsonb, ${payload.notes || null}, ${payload.showBreakdown}, ${payload.validUntil ? new Date(payload.validUntil).toISOString() : null}, ${payload.status},
-        ${token}, ${sentAt}, now()
-      )
-    `;
+    let id = payload.quoteId;
+    if (id) {
+      const existing = await getSql()`
+        SELECT id, status FROM business_quotes
+        WHERE id = ${id} AND trader_id = ${trader.id}
+        LIMIT 1
+      ` as unknown as { id: string; status: string }[];
+      if (!existing.length) throw new HttpError(404, 'Quote draft not found.');
+      if (existing[0]!.status !== 'draft') throw new HttpError(409, 'Only draft quotes can be edited. Duplicate a sent quote instead.');
+
+      await getSql()`
+        UPDATE business_quotes
+        SET customer_name = ${payload.customerName},
+            customer_email = ${payload.customerEmail || null},
+            customer_phone = ${payload.customerPhone || null},
+            job_title = ${payload.jobTitle},
+            job_address = ${payload.jobAddress || null},
+            work_included = ${payload.workIncluded},
+            not_included = ${payload.notIncluded || null},
+            expected_start = ${payload.expectedStart || null},
+            duration_text = ${payload.durationText || null},
+            warranty_text = ${payload.warrantyText || null},
+            subtotal = ${subtotal},
+            vat_rate = ${payload.vatRate},
+            vat_amount = ${vatAmount},
+            total_amount = ${totalAmount},
+            payment_method = ${payload.paymentMethod},
+            payment_terms = ${payload.paymentTerms},
+            payment_schedule = ${JSON.stringify(paymentSchedule)}::jsonb,
+            notes = ${payload.notes || null},
+            show_breakdown = ${payload.showBreakdown},
+            valid_until = ${payload.validUntil ? new Date(payload.validUntil).toISOString() : null},
+            status = ${payload.status},
+            sent_at = ${sentAt},
+            updated_at = now()
+        WHERE id = ${id} AND trader_id = ${trader.id}
+      `;
+      await getSql()`DELETE FROM business_quote_items WHERE quote_id = ${id}`;
+    } else {
+      id = randomUUID();
+      const token = randomUUID().replace(/-/g, '') + randomUUID().replace(/-/g, '');
+      const number = quoteNumber();
+      await getSql()`
+        INSERT INTO business_quotes(
+          id, trader_id, quote_number, customer_name, customer_email, customer_phone,
+          job_title, job_address, work_included, not_included, expected_start, duration_text,
+          warranty_text, subtotal, vat_rate, vat_amount, total_amount, payment_method,
+          payment_terms, payment_schedule, notes, show_breakdown, valid_until, status,
+          share_token, sent_at, updated_at
+        ) VALUES (
+          ${id}, ${trader.id}, ${number}, ${payload.customerName}, ${payload.customerEmail || null}, ${payload.customerPhone || null},
+          ${payload.jobTitle}, ${payload.jobAddress || null}, ${payload.workIncluded}, ${payload.notIncluded || null}, ${payload.expectedStart || null}, ${payload.durationText || null},
+          ${payload.warrantyText || null}, ${subtotal}, ${payload.vatRate}, ${vatAmount}, ${totalAmount}, ${payload.paymentMethod},
+          ${payload.paymentTerms}, ${JSON.stringify(paymentSchedule)}::jsonb, ${payload.notes || null}, ${payload.showBreakdown}, ${payload.validUntil ? new Date(payload.validUntil).toISOString() : null}, ${payload.status},
+          ${token}, ${sentAt}, now()
+        )
+      `;
+    }
 
     for (let index = 0; index < payload.items.length; index += 1) {
       const item = payload.items[index]!;
@@ -180,9 +221,9 @@ export async function POST(request: Request) {
       `;
     }
 
-    const created = (await listQuotes(trader.id)).find((quote) => quote.id === id);
-    if (!created) throw new HttpError(500, 'Quote was saved but could not be reloaded.');
-    return Response.json(created, { status: 201 });
+    const saved = (await listQuotes(trader.id)).find((quote) => quote.id === id);
+    if (!saved) throw new HttpError(500, 'Quote was saved but could not be reloaded.');
+    return Response.json(saved, { status: payload.quoteId ? 200 : 201 });
   } catch (error) {
     return jsonError(error);
   }
