@@ -72,6 +72,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [ -z "$EXPO_EAS_PROJECT_ID" ]; then
+            project_id=$(node -e "console.log(require('./app.json').expo.extra?.eas?.projectId || '')")
+            if [ -n "$project_id" ]; then
+              echo "EXPO_EAS_PROJECT_ID=$project_id" >> "$GITHUB_ENV"
+            fi
+          fi
           if [ -z "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" ] || [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ]; then
             config=$(curl --fail --show-error --silent --retry 8 --retry-delay 3 "$EXPO_PUBLIC_API_URL/api/client-config")
             clerk=$(printf '%s' "$config" | jq -r '.clerkPublishableKey // empty')
@@ -90,7 +96,7 @@ jobs:
           set -euo pipefail
           test -n "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" || { echo "::error::Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in GitHub Actions and target client config"; exit 1; }
           test -n "$EXPO_PUBLIC_API_URL" || { echo "::error::Missing EXPO_PUBLIC_API_URL"; exit 1; }
-          test -n "$EXPO_EAS_PROJECT_ID" || { echo "::error::Missing repository variable EXPO_EAS_PROJECT_ID. Link BuildPair to an Expo/EAS project before producing the OTA-enabled test APK."; exit 1; }
+          test -n "$EXPO_EAS_PROJECT_ID" || { echo "::error::BuildPair is not linked to an Expo/EAS project. Link it before producing the OTA-enabled test APK."; exit 1; }
           if [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ]; then
             echo "::warning::Stripe publishable key is not set; Android payments will remain disabled until production client config or GitHub Actions is populated."
           fi
