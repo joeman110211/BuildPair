@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Linking, StyleSheet, View } from 'react-native';
+import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { QuoteDocument, type QuoteDocumentData, type QuoteDocumentItem } from '@/components/QuoteDocument';
@@ -32,6 +32,7 @@ export default function PublicQuoteScreen() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [renderedAt] = useState(() => Date.now());
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -47,7 +48,10 @@ export default function PublicQuoteScreen() {
     }
   }, [token]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const timer = setTimeout(() => void load(), 0);
+    return () => clearTimeout(timer);
+  }, [load]);
 
   async function respond(action: 'accept' | 'decline') {
     if (!token) return;
@@ -67,9 +71,13 @@ export default function PublicQuoteScreen() {
   if (loading) return <LoadingScreen />;
   if (!quote) return <Screen title="Quote unavailable"><EmptyState title="This quote is not available" body={error || 'Ask the tradesperson to send you a fresh quote link.'} action={<Button mode="outlined" onPress={() => router.replace('/')}>Go to BuildPair</Button>} /></Screen>;
 
-  const expired = Boolean(quote.validUntil && new Date(quote.validUntil).getTime() < Date.now());
+  const expired = Boolean(quote.validUntil && new Date(quote.validUntil).getTime() < renderedAt);
   const finished = quote.status === 'accepted' || quote.status === 'declined';
-  const printUrl = `/api/public/quotes/${encodeURIComponent(token)}/print`;
+  const webOrigin = Platform.OS === 'web'
+    ? ((globalThis as unknown as { location?: { origin?: string } }).location?.origin ?? '')
+    : '';
+  const apiOrigin = webOrigin || process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '') || 'https://www.buildpair.co.uk';
+  const printUrl = `${apiOrigin}/api/public/quotes/${encodeURIComponent(token)}/print?download=1`;
 
   return <Screen title={`Quote from ${quote.businessName}`} subtitle={`${quote.quoteNumber} · ${quote.jobTitle}`}>
     <View style={styles.statusRow}>
