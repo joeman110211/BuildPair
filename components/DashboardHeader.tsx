@@ -28,6 +28,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
   const findHref = (currentMode === 'customer' ? '/(public)/directory' : '/trader/job-board') as Href;
   const findLabel = currentMode === 'customer' ? 'Find trades' : 'Find work';
   const jobsHref = (currentMode === 'customer' ? '/customer/jobs' : '/trader/my-jobs') as Href;
+  const quotesHref = '/trader/quotes' as Href;
   const profileHref = (currentMode === 'customer' ? '/customer/profile' : '/trader/profile') as Href;
   const messagesHref = (currentMode === 'customer' ? '/customer/messages' : '/trader/messages') as Href;
   const notificationsHref = (currentMode === 'customer' ? '/customer/notifications' : '/trader/notifications') as Href;
@@ -60,6 +61,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
     { label: 'Dashboard', onPress: () => go(home) },
     { label: findLabel, onPress: () => go(findHref) },
     { label: 'Jobs', onPress: () => go(jobsHref) },
+    ...(currentMode === 'trader' ? [{ label: 'Quotes', onPress: () => go(quotesHref) } satisfies CompactNavItem] : []),
     { label: messageLabel, onPress: () => go(messagesHref) },
     { label: notificationLabel, onPress: () => go(notificationsHref) },
     { label: 'Profile', sectionLabel: 'Your account', dividerBefore: true, onPress: () => go(profileHref) },
@@ -82,6 +84,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
       <Link href={home} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Dashboard</Button></Link>
       <Link href={findHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{findLabel}</Button></Link>
       <Link href={jobsHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Jobs</Button></Link>
+      {currentMode === 'trader' ? <Link href={quotesHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Quotes</Button></Link> : null}
       <Link href={messagesHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{messageLabel}</Button></Link>
       <Button mode="text" contentStyle={styles.navButtonContent} textColor={unreadNotifications ? colors.primary : colors.charcoalSoft} onPress={() => router.push(notificationsHref)}>{notificationLabel}</Button>
       <Button mode="outlined" contentStyle={styles.navButtonContent} onPress={() => router.push(settingsHref)}>Account</Button>
