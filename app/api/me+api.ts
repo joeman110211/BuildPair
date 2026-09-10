@@ -111,9 +111,14 @@ export async function PUT(request: Request) {
         subscriptionTier: true,
         isSubscriptionActive: true,
         stripeSubscriptionId: true,
+        postcode: true,
         createdAt: true,
       },
     });
+
+    if (existingProfile?.postcode && existingProfile.postcode !== location.postcode) {
+      throw new HttpError(403, 'Your published service base is locked to keep BuildPair jobs genuinely local. If your home or business base has moved, contact info@buildpair.co.uk to request an update. We may ask for reasonable evidence of the new location.');
+    }
 
     const categoryLimit = traderWorkTypeLimit(existingProfile);
     if (tradeCategories.length > categoryLimit) {
