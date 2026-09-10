@@ -40,9 +40,8 @@ jobs:
           set -euo pipefail
           test -n "$EXPO_TOKEN" || { echo "::error::EXPO_TOKEN is not available to GitHub Actions"; exit 1; }
 
-          account=$(npx eas-cli@latest whoami | tail -n 1 | tr -d '\r')
-          test -n "$account" || { echo "::error::Could not identify Expo account from EXPO_TOKEN"; exit 1; }
-          echo "Authenticated to Expo account: $account"
+          account=buildpair
+          echo "Linking BuildPair to Expo account: $account"
 
           npx eas-cli@latest project:init --account "$account" --json --non-interactive > /tmp/eas-project.json
           cat /tmp/eas-project.json
