@@ -10,6 +10,8 @@ import { apiFetch, errorMessage } from '@/lib/api';
 import { formatMoney } from '@/lib/money';
 import type { Job, PaymentStagePlan, Quote } from '@/types';
 
+type PaymentChoice = 'full' | 'milestones';
+
 export default function CompareQuotesScreen() {
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
   const { getToken } = useAuth();
@@ -22,24 +24,27 @@ export default function CompareQuotesScreen() {
   const load = useCallback(async () => { try { setData(await apiFetch(`/api/jobs/${jobId}/quotes`, {}, getToken)); setError(''); } catch (e) { setError(errorMessage(e)); } }, [getToken, jobId]);
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
-  async function performAccept(quote: Quote) {
+  async function performAccept(quote: Quote, paymentPlanChoice: PaymentChoice) {
     try {
       setAccepting(quote.id); setError('');
-      await apiFetch(`/api/quotes/${quote.id}`, { method: 'PATCH', body: JSON.stringify({ action: 'accept', acknowledgedPaymentSchedule: true }) }, getToken);
+      await apiFetch(`/api/quotes/${quote.id}`, { method: 'PATCH', body: JSON.stringify({ action: 'accept', paymentPlanChoice, acknowledgedPaymentSchedule: true }) }, getToken);
       router.replace(`/customer/jobs/${jobId}`);
     } catch (e) { setError(errorMessage(e)); }
     finally { setAccepting(undefined); }
   }
 
-  function accept(quote: Quote) {
-    const message = `You are accepting the ${formatMoney(quote.totalAmount)} quote and the payment schedule shown with it. Review the scope, exclusions, upfront materials payment or deposit, and each later stage before continuing. Accepting the quote does not itself make a payment. If you later choose BuildPair payments, upfront materials payments and deposits are transferred when paid; progress and final stages are transferred only after the tradesperson requests release and you approve it.`;
+  function accept(quote: Quote, paymentPlanChoice: PaymentChoice) {
+    const paymentText = paymentPlanChoice === 'full'
+      ? 'Materials are paid first, then the remaining service balance is funded as one protected payment and released after final approval.'
+      : 'Payments follow the milestone timeline shown. Each next stage stays locked until the previous protected stage is completed and approved.';
+    const message = `You are accepting the ${formatMoney(quote.totalAmount)} quote from ${quote.businessName ?? 'this tradesperson'}. ${paymentText} Accepting the quote does not itself charge your card.`;
     if (typeof window !== 'undefined') {
-      if (window.confirm(message)) void performAccept(quote);
+      if (window.confirm(message)) void performAccept(quote, paymentPlanChoice);
       return;
     }
-    Alert.alert('Accept quote and payment schedule?', message, [
+    Alert.alert('Accept this quote?', message, [
       { text: 'Review again', style: 'cancel' },
-      { text: 'Accept quote', onPress: () => void performAccept(quote) },
+      { text: 'Accept quote', onPress: () => void performAccept(quote, paymentPlanChoice) },
     ]);
   }
 
