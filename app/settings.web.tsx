@@ -20,7 +20,9 @@ export default function SettingsScreen() {
           <Button icon="arrow-left" onPress={() => router.back()}>Back to BuildPair</Button>
           <Text variant="titleLarge" style={styles.title}>Account & security</Text>
         </View>
-        <View style={styles.profile}><UserProfile /></View>
+        <View style={styles.profile}>
+          <UserProfile appearance={{ elements: { footer: { display: 'none' } } }} />
+        </View>
       </ScrollView>
     </>
   );
