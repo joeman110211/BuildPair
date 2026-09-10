@@ -136,6 +136,7 @@ export default function TraderOnboarding() {
   const [categoryLimit, setCategoryLimit] = useState(2);
   const [categoryChangeAvailableAt, setCategoryChangeAvailableAt] = useState<string | null>(null);
   const [postcode, setPostcode] = useState('');
+  const [baseLocationLocked, setBaseLocationLocked] = useState(false);
   const [radius, setRadius] = useState('15');
   const [serviceAreasText, setServiceAreasText] = useState('');
   const [yearsExperience, setYearsExperience] = useState('');
@@ -206,6 +207,7 @@ export default function TraderOnboarding() {
       setCategoryLimit(profile.categoryLimit ?? 2);
       setCategoryChangeAvailableAt(profile.categoryChangeAvailableAt ?? null);
       setPostcode(profile.postcode ?? '');
+      setBaseLocationLocked(Boolean(profile.postcode));
       setRadius(String(profile.radiusMiles ?? 15));
       setServiceAreasText((profile.serviceAreas ?? []).join(', '));
       setYearsExperience(profile.yearsExperience ? String(profile.yearsExperience) : '');
@@ -383,9 +385,14 @@ export default function TraderOnboarding() {
         <TextInput style={styles.flex} label="Years of experience" accessibilityLabel="Years of experience" value={yearsExperience} onChangeText={setYearsExperience} mode="outlined" keyboardType="number-pad" />
         <TextInput style={styles.flex} label="Year established" accessibilityLabel="Year established" value={yearEstablished} onChangeText={setYearEstablished} mode="outlined" keyboardType="number-pad" />
       </View>
-      <TextInput label="Base postcode" accessibilityLabel="Base postcode" value={postcode} onChangeText={setPostcode} mode="outlined" autoCapitalize="characters" placeholder="e.g. SW1A 1AA" />
-      <HelperText type="info">Used for local job matching. Your full postcode is never displayed publicly.</HelperText>
+      <Text variant="titleMedium" style={styles.title}>Your local service area</Text>
+      <Text style={styles.muted}>BuildPair keeps marketplace work local by matching jobs to your real service base and working radius.</Text>
+      <TextInput label="Base postcode" accessibilityLabel="Base postcode" value={postcode} onChangeText={setPostcode} editable={!baseLocationLocked} mode="outlined" autoCapitalize="characters" placeholder="e.g. SW1A 1AA" />
+      <HelperText type="info">{baseLocationLocked
+        ? 'Your published base postcode is locked. If you genuinely move home or relocate your business, contact info@buildpair.co.uk to request an update.'
+        : 'Your full postcode is never displayed publicly. Once you publish your profile, this base location is locked so marketplace jobs stay genuinely local. If you later relocate, BuildPair support can update it and may ask for reasonable evidence.'}</HelperText>
       <FormSelect label="Working radius (miles)" value={radius} options={RADIUS_OPTIONS} onChange={setRadius} />
+      <HelperText type="info">You can adjust your working radius later. It controls the maximum distance for ordinary marketplace job matching.</HelperText>
       <TextInput label="Other areas you cover" accessibilityLabel="Other areas you cover" value={serviceAreasText} onChangeText={setServiceAreasText} mode="outlined" multiline placeholder="Staines, Egham, Chertsey, Windsor…" />
     </AppCard> : null}
 
@@ -444,7 +451,7 @@ export default function TraderOnboarding() {
           <View style={styles.previewMark}><Text style={styles.previewMarkText}>{businessName.slice(0, 1).toUpperCase() || 'B'}</Text></View>
           <View style={styles.flex}>
             <Text variant="headlineSmall" style={styles.title}>{businessName || 'Your business'}</Text>
-            <Text style={styles.muted}>{tradeCategory || 'Primary trade'} · {postcode || 'Service area'}</Text>
+            <Text style={styles.muted}>{tradeCategory || 'Primary trade'} · {postcode || 'Service area'} · within {radius} miles</Text>
           </View>
         </View>
         <View style={styles.previewChips}>{tradeCategories.map((category) => <Chip key={category} compact>{category} · {serviceSelections[category]?.length ?? 0} services</Chip>)}</View>
@@ -454,6 +461,7 @@ export default function TraderOnboarding() {
       <AppCard>
         <Text variant="titleLarge" style={styles.title}>Confirm & publish</Text>
         <Text style={styles.muted}>Starter Free lets you complete and externally share this profile and browse BuildPair jobs. Starter profiles are hidden from BuildPair search and cannot offer on jobs until you choose Plus or Pro. There is no trial during beta testing.</Text>
+        {!baseLocationLocked ? <Text style={styles.muted}>Your base postcode will be locked when this profile is first published. This helps keep BuildPair’s marketplace genuinely local. If you later move or relocate the business, contact BuildPair support to request a change.</Text> : null}
         <Pressable accessibilityRole="checkbox" accessibilityLabel="Confirm profile information is accurate" accessibilityState={{ checked: certified }} onPress={() => setCertified((value) => !value)} style={styles.check}>
           <View style={[styles.checkBox, certified && styles.checkBoxSelected]}>{certified ? <Text style={styles.checkMark}>✓</Text> : null}</View>
           <Text style={styles.checkText}>I confirm that the information I have provided is accurate and that I hold any insurance or trade accreditation required for the work I offer.</Text>
