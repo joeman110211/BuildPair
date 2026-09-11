@@ -2,6 +2,10 @@
 
 -- A single Stripe charge can now fund more than one milestone (for example
 -- materials + the first labour stage). Keep one ledger row per milestone.
+-- The original SQL migration declared stripe_payment_intent_id UNIQUE inline,
+-- which PostgreSQL names payments_stripe_payment_intent_id_key. Some newer
+-- databases may also have the Drizzle-named index, so remove both safely.
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_stripe_payment_intent_id_key;
 DROP INDEX IF EXISTS payments_intent_unique;
 CREATE UNIQUE INDEX IF NOT EXISTS payments_intent_milestone_unique
   ON payments(stripe_payment_intent_id, milestone_id);
