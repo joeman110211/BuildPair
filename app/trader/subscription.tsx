@@ -10,6 +10,7 @@ import { StripeConnectOnboarding } from '@/components/StripeConnectOnboarding';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import type { PayoutStatus } from '@/lib/payout-status';
 import type { SubscriptionTier, TraderProfile } from '@/types';
 
 const PLAN_COPY = {
@@ -53,8 +54,23 @@ export default function SubscriptionScreen() {
   const { getToken } = useAuth();
   const isWeb = Platform.OS === 'web';
   const [profile, setProfile] = useState<TraderProfile>();
+  const [payoutStatus, setPayoutStatus] = useState<PayoutStatus>();
+  const [checkingPayouts, setCheckingPayouts] = useState(false);
   const [error, setError] = useState('');
+  const [payoutError, setPayoutError] = useState('');
   const [showPayoutOnboarding, setShowPayoutOnboarding] = useState(false);
+
+  const refreshPayoutStatus = useCallback(async () => {
+    try {
+      setCheckingPayouts(true);
+      setPayoutError('');
+      setPayoutStatus(await apiFetch<PayoutStatus>('/api/stripe/connect-status', {}, getToken));
+    } catch (e) {
+      setPayoutError(`We could not confirm the latest Stripe payout status. ${errorMessage(e)}`);
+    } finally {
+      setCheckingPayouts(false);
+    }
+  }, [getToken]);
 
   const load = useCallback(async () => {
     try {
@@ -63,7 +79,8 @@ export default function SubscriptionScreen() {
     } catch (e) {
       setError(errorMessage(e));
     }
-  }, [getToken]);
+    await refreshPayoutStatus();
+  }, [getToken, refreshPayoutStatus]);
 
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
@@ -89,29 +106,30 @@ export default function SubscriptionScreen() {
   const activeTier: SubscriptionTier = profile?.subscriptionTier ?? 'free';
   const used = profile?.monthlyQuotesUsed ?? 0;
   const limit = profile?.monthlyQuoteLimit ?? PLAN_COPY[activeTier].monthlyMarketplaceQuotes;
-  const payoutsReady = Boolean(profile?.stripePayoutsEnabled);
+  const payoutsReady = payoutStatus?.ready ?? Boolean(profile?.stripePayoutsEnabled);
   const resetLabel = profile?.monthlyQuoteResetAt
     ? new Date(profile.monthlyQuoteResetAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
     : 'next month';
   const usageProgress = limit > 0 ? Math.min(1, used / limit) : 0;
   const screenSubtitle = isWeb
-    ? 'Start free, upgrade when you want BuildPair to bring your profile into search and let you actively pursue work.'
-    : 'See your current BuildPair plan and the features included with each tier.';
+    ? 'Membership controls marketplace access. Stripe payout readiness is a separate account status.'
+    : 'See your current BuildPair plan, entitlements and payout readiness.';
+  const payoutLabel = checkingPayouts && !payoutStatus ? 'Checking…' : payoutStatus?.label ?? (payoutsReady ? 'Ready' : 'Not confirmed');
 
   return <Screen title="BuildPair plans" subtitle={screenSubtitle}>
     <AppCard>
       <View style={styles.currentRow}>
         <View style={styles.flex}>
-          <Text variant="titleLarge" style={styles.title}>Current plan: {PLAN_COPY[activeTier].name}</Text>
-          <Text style={styles.muted}>BuildPair currently has no free trial. Starter, Plus and Pro entitlements remain separate and persist across your BuildPair devices.</Text>
+          <Text variant="titleLarge" style={styles.title}>Membership: {PLAN_COPY[activeTier].name}</Text>
+          <Text style={styles.muted}>Membership controls search visibility, marketplace offers and paid-plan features. It does not mean your Stripe payout account is ready.</Text>
         </View>
         <Chip icon={activeTier === 'free' ? 'account-outline' : activeTier === 'basic' ? 'check-decagram-outline' : 'star-circle-outline'}>{isWeb ? PLAN_COPY[activeTier].price : PLAN_COPY[activeTier].shortName}</Chip>
       </View>
       {limit > 0 ? <View style={styles.usage}>
         <View style={styles.currentRow}><Text variant="labelLarge">Marketplace offers</Text><Text variant="labelLarge">{used} / {limit}</Text></View>
         <ProgressBar progress={usageProgress} color={colors.primary} style={styles.progress} />
-        <Text style={styles.muted}>Allowance resets {resetLabel}. Direct homeowner requests do not count toward this total.</Text>
-      </View> : <Text style={styles.muted}>Starter traders can browse jobs without consuming anything, but offering on an open marketplace job requires an active paid plan.</Text>}
+        <Text style={styles.muted}>Allowance resets {resetLabel}. An offer is counted when you submit an open-marketplace quote. Opening a job or preparing a draft does not use the allowance. Direct homeowner requests do not count.</Text>
+      </View> : <Text style={styles.muted}>Starter tradespeople can browse jobs without consuming anything, but submitting an open-marketplace offer requires an active paid plan.</Text>}
     </AppCard>
 
     {!isWeb ? <AppCard>
@@ -146,14 +164,29 @@ export default function SubscriptionScreen() {
       <Text style={styles.muted}>Pro is not simply “20 more clicks”. It raises the monthly open-job allowance to 35, supports 6 main categories, adds advanced analytics and gets a measured discovery and alert advantage. Relevance, reviews, verified credentials and profile quality still matter more than simply paying for Pro.</Text>
     </AppCard> : null}
 
-    <AppCard>
+    <AppCard style={payoutsReady ? styles.payoutReady : undefined}>
       <View style={styles.currentRow}>
-        <Text variant="titleLarge" style={styles.title}>Payout setup</Text>
-        {payoutsReady ? <Chip icon="check-circle">Ready</Chip> : <Chip icon="alert-circle-outline">Setup required</Chip>}
+        <View style={styles.flex}>
+          <Text variant="titleLarge" style={styles.title}>Stripe payouts</Text>
+          <Text style={styles.muted}>This status is checked against Stripe and is separate from your BuildPair membership.</Text>
+        </View>
+        <Chip icon={payoutsReady ? 'check-circle' : payoutStatus?.key === 'pending_verification' ? 'clock-outline' : 'alert-circle-outline'}>{payoutLabel}</Chip>
       </View>
-      <Text>BuildPair uses Stripe to process supported job payments and pay tradespeople. Complete Stripe onboarding to receive payments through BuildPair.</Text>
-      <Text style={styles.muted}>Stripe collects the identity, business and bank information it requires. BuildPair receives your Stripe connected-account reference, payout status and payment-related references needed to operate the service.</Text>
-      <Text style={styles.muted}>You can create your profile and send eligible quotes before setup is complete. Homeowners cannot select BuildPair payments for your jobs until Stripe confirms that your account is ready to receive payouts.</Text>
+
+      {payoutStatus ? <>
+        <Text>{payoutStatus.detail}</Text>
+        <Text style={styles.nextAction}><Text style={styles.nextActionStrong}>Next action: </Text>{payoutStatus.nextAction}</Text>
+        {payoutStatus.requirements.length ? <View style={styles.requirements}>
+          <Text variant="labelLarge" style={styles.title}>Stripe still needs</Text>
+          {payoutStatus.requirements.map((requirement) => <Text key={requirement} style={styles.muted}>• {requirement}</Text>)}
+        </View> : null}
+        {payoutStatus.lastCheckedAt ? <Text variant="bodySmall" style={styles.muted}>Stripe status checked {new Date(payoutStatus.lastCheckedAt).toLocaleString('en-GB')}.</Text> : null}
+      </> : <Text>{payoutsReady ? 'BuildPair has a stored payout-ready status. Refresh to confirm the latest status with Stripe.' : 'Checking whether Stripe needs information, is reviewing the account, or has enabled payouts.'}</Text>}
+
+      {payoutError ? <Text style={styles.error}>{payoutError}</Text> : null}
+      <Text style={styles.muted}>BuildPair receives the connected-account status and payment references needed to operate protected payments. Stripe collects the identity, business and bank information used for payout onboarding.</Text>
+      <Text style={styles.muted}>You can create your profile and send eligible quotes before setup is complete. Homeowners cannot select BuildPair protected payments for your jobs until Stripe confirms that payouts are ready.</Text>
+
       {showPayoutOnboarding ? (
         <View style={styles.connectPanel}>
           <StripeConnectOnboarding
@@ -165,9 +198,12 @@ export default function SubscriptionScreen() {
           />
         </View>
       ) : (
-        <Button mode="contained" icon="bank" onPress={() => setShowPayoutOnboarding(true)}>
-          {payoutsReady ? 'Review payout details' : 'Set up payouts with Stripe'}
-        </Button>
+        <View style={styles.actions}>
+          <Button mode="contained" icon="bank" onPress={() => setShowPayoutOnboarding(true)}>
+            {payoutsReady ? 'Review payout details' : payoutStatus?.key === 'not_started' ? 'Set up payouts with Stripe' : 'Continue in Stripe'}
+          </Button>
+          <Button mode="outlined" icon="refresh" loading={checkingPayouts} disabled={checkingPayouts} onPress={() => void refreshPayoutStatus()}>Refresh Stripe status</Button>
+        </View>
       )}
     </AppCard>
     {isWeb ? <Button mode="outlined" onPress={() => openEndpoint('/api/stripe/billing-portal')}>Manage or cancel subscription</Button> : null}
@@ -187,6 +223,11 @@ const styles = StyleSheet.create({
   categoryLine: { color: colors.charcoal, fontWeight: '800' },
   feature: { color: colors.text, lineHeight: 22 },
   muted: { color: colors.muted, lineHeight: 22 },
+  nextAction: { color: colors.text, lineHeight: 22 },
+  nextActionStrong: { color: colors.charcoal, fontWeight: '900' },
+  requirements: { gap: 2 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  payoutReady: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
   usage: { gap: 8, marginTop: 8 },
   progress: { height: 9, borderRadius: 8, backgroundColor: colors.surfaceStrong },
   connectPanel: { minHeight: 420, marginTop: 8 },
