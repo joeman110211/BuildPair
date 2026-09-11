@@ -32,15 +32,19 @@ CREATE TABLE IF NOT EXISTS payment_disputes (
   reason text NOT NULL,
   trader_response text,
   escalation_note text,
+  admin_note text,
+  reviewed_by text REFERENCES users(id) ON DELETE SET NULL,
   resolution_note text,
   created_at timestamptz NOT NULL DEFAULT now(),
   responded_at timestamptz,
   escalated_at timestamptz,
+  reviewed_at timestamptz,
   resolved_at timestamptz
 );
 
 CREATE INDEX IF NOT EXISTS payment_disputes_job_idx ON payment_disputes(job_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS payment_disputes_milestone_idx ON payment_disputes(milestone_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS payment_disputes_status_idx ON payment_disputes(status, created_at DESC);
 CREATE UNIQUE INDEX IF NOT EXISTS payment_disputes_one_active_per_milestone
   ON payment_disputes(milestone_id)
   WHERE status IN ('open', 'responded', 'escalated');
@@ -48,3 +52,4 @@ CREATE UNIQUE INDEX IF NOT EXISTS payment_disputes_one_active_per_milestone
 COMMENT ON COLUMN jobs.site_address_line1 IS 'Private worksite address shared only with the awarded tradesperson after quote acceptance.';
 COMMENT ON COLUMN jobs.site_phone IS 'Private homeowner contact number for the awarded BuildPair job.';
 COMMENT ON TABLE payment_disputes IS 'BuildPair stage-release issues. Opening a dispute pauses transfer; resolution never moves money without a subsequent homeowner release approval.';
+COMMENT ON COLUMN payment_disputes.admin_note IS 'Administrator review note for escalated payment disputes. This is not public marketplace copy.';
