@@ -131,9 +131,10 @@ jobs:
         run: |
           set -euo pipefail
           config=$(npx expo config --type public --json)
-          printf '%s' "$config" | jq -e '.updates.enabled == true' >/dev/null
+          printf '%s' "$config" | jq -e '.updates.enabled != false' >/dev/null
           printf '%s' "$config" | jq -e --arg id "$EXPO_EAS_PROJECT_ID" '.extra.eas.projectId == $id and .updates.url == ("https://u.expo.dev/" + $id)' >/dev/null
-          printf '%s' "$config" | jq -e '.updates.requestHeaders["expo-channel-name"] == "preview"' >/dev/null
+          printf '%s' "$config" | jq -e '.runtimeVersion != null' >/dev/null
+          jq -e --arg channel "$EXPO_UPDATES_CHANNEL" '.build.preview.channel == $channel' eas.json >/dev/null
 
       - name: Publish preview OTA update
         if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'
