@@ -16,6 +16,7 @@ const NAV_ITEMS: { label: string; href: Href }[] = [
   { label: 'Home', href: '/' },
   { label: 'Find Trades', href: '/(public)/directory' },
   { label: 'How It Works', href: '/(public)/how-it-works' },
+  { label: 'BuildPay', href: '/(public)/payments' as Href },
   { label: 'Membership', href: '/(public)/pricing' as Href },
   { label: 'Advice Hub', href: '/(public)/advice' as Href },
   { label: 'For Trades', href: '/(public)/for-tradespeople' },
@@ -25,8 +26,8 @@ const QUICK_NAV: { label: string; href: Href }[] = [
   { label: 'Home', href: '/' },
   { label: 'Find Trades', href: '/(public)/directory' },
   { label: 'How It Works', href: '/(public)/how-it-works' },
+  { label: 'BuildPay', href: '/(public)/payments' as Href },
   { label: 'Membership', href: '/(public)/pricing' as Href },
-  { label: 'Advice Hub', href: '/(public)/advice' as Href },
 ];
 
 function HeaderBrand() {
@@ -40,6 +41,7 @@ function NavMenu({ dashboard, signedIn, onSignOut, preview = false }: { dashboar
     { label: 'Home', sectionLabel: 'Explore', onPress: () => go('/') },
     { label: 'Find Trades', onPress: () => go('/(public)/directory') },
     { label: 'How It Works', onPress: () => go('/(public)/how-it-works') },
+    { label: 'BuildPay', onPress: () => go('/(public)/payments') },
     { label: 'Membership', onPress: () => go('/(public)/pricing') },
     { label: 'For Homeowners', sectionLabel: 'Guides', dividerBefore: true, onPress: () => go('/(public)/for-homeowners') },
     { label: 'For Tradespeople', onPress: () => go('/(public)/for-tradespeople') },
