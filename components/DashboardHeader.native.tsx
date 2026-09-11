@@ -18,7 +18,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
   const { signOut } = useClerk();
   const router = useRouter();
   const { user, getToken } = useCurrentUser();
-  const { unreadMessages, unreadNotifications } = useActivityCounts(10000);
+  const { unreadMessages, unreadNotifications } = useActivityCounts();
   const [switchingMode, setSwitchingMode] = useState(false);
   const currentMode: UserRole = home.startsWith('/customer') ? 'customer' : 'trader';
   const otherMode: UserRole = currentMode === 'customer' ? 'trader' : 'customer';
