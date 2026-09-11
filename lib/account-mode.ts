@@ -1,5 +1,6 @@
 import type { Href } from 'expo-router';
 import type { UserRole } from '@/types';
+import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 export function parseAccountMode(value: string | string[] | undefined): UserRole | null {
   const candidate = Array.isArray(value) ? value[0] : value;
@@ -15,6 +16,7 @@ export function signInHref(mode: UserRole): Href {
 }
 
 export function signUpHref(mode: UserRole): Href {
+  if (!REGISTRATION_OPEN) return waitlistHref(mode, 'signup-click');
   return `/auth/sign-up?mode=${mode}` as Href;
 }
 
