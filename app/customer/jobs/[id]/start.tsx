@@ -55,7 +55,7 @@ export default function StartAwardedJobScreen() {
       setError('');
     } catch (e) { setError(errorMessage(e)); }
   }, [getToken, id]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   async function saveAddress() {
     try {
