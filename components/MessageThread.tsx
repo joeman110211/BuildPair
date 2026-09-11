@@ -141,6 +141,14 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
     if (!conversation) return;
     router.push({ pathname: '/trader/visits/new', params: { jobId: conversation.jobId, conversationId: conversation.id, title: conversation.jobTitle } });
   };
+  const confirmVisitDetails = () => {
+    if (!conversation?.siteVisitId) return;
+    router.push({ pathname: '/customer/jobs/[id]/visit', params: { id: conversation.jobId, visitId: conversation.siteVisitId } });
+  };
+  const openVisit = () => {
+    if (!conversation?.siteVisitId) return;
+    router.push(`/trader/visits/${conversation.siteVisitId}` as Href);
+  };
   const openJob = () => {
     if (!conversation) return;
     router.push((isTrader ? `/trader/jobs/${conversation.jobId}` : `/customer/jobs/${conversation.jobId}`) as Href);
@@ -156,6 +164,8 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
       busy={actionBusy}
       onQuoteNow={quoteNow}
       onArrangeVisit={arrangeVisit}
+      onConfirmVisitDetails={confirmVisitDetails}
+      onOpenVisit={openVisit}
       onVisitAction={visitAction}
       onOpenJob={openJob}
       onCompareQuote={compareQuote}
@@ -212,6 +222,8 @@ function NextStepCard({
   busy,
   onQuoteNow,
   onArrangeVisit,
+  onConfirmVisitDetails,
+  onOpenVisit,
   onVisitAction,
   onOpenJob,
   onCompareQuote,
@@ -221,6 +233,8 @@ function NextStepCard({
   busy: boolean;
   onQuoteNow: () => void;
   onArrangeVisit: () => void;
+  onConfirmVisitDetails: () => void;
+  onOpenVisit: () => void;
   onVisitAction: (action: 'accept' | 'decline' | 'cancel' | 'complete') => Promise<void>;
   onOpenJob: () => void;
   onCompareQuote: () => void;
@@ -238,9 +252,9 @@ function NextStepCard({
     <Chip icon="check-decagram-outline">Quote accepted</Chip>
     <Text variant="titleLarge" style={styles.title}>{isTrader ? 'You have the job. Keep the project here.' : 'The job is now active in BuildPair'}</Text>
     <Text style={styles.muted}>{isTrader
-      ? 'Use the job record for the agreed quote, payment stages, timeline and any variations. If the scope changes, propose it in BuildPair before doing the extra work.'
-      : 'The accepted quote is the agreed baseline. Deposits/payment stages, project progress and any scope changes can stay attached to the same job record.'}</Text>
-    <View style={styles.nextActions}><Button mode="contained" icon="briefcase-check-outline" onPress={onOpenJob}>{isTrader ? 'Manage active job' : 'View job & payment stages'}</Button></View>
+      ? 'Use the job record for the private job address, agreed quote, BuildPay or direct-payment route, stage progress and variations. If scope changes, record it before doing the extra work.'
+      : 'Finish the private job address and payment setup, then keep the accepted quote, stage progress and any scope changes attached to the same project.'}</Text>
+    <View style={styles.nextActions}><Button mode="contained" icon="briefcase-check-outline" onPress={onOpenJob}>{isTrader ? 'Manage active job' : 'Open active job'}</Button></View>
   </AppCard>;
 
   if (conversation.jobStatus === 'completed') return <AppCard style={styles.nextStepCard}>
@@ -248,7 +262,7 @@ function NextStepCard({
     <Text variant="titleLarge" style={styles.title}>{isTrader ? 'Work is marked complete' : 'Review the completed job'}</Text>
     <Text style={styles.muted}>{isTrader
       ? 'The project record remains available for final payment status, history and the verified review path.'
-      : 'Check the final payment stage and project history. Once the qualifying payment is recorded, BuildPair can unlock the verified review.'}</Text>
+      : 'Check the project payment record and history. Once the qualifying payment record is complete, BuildPair can unlock the verified review.'}</Text>
     <View style={styles.nextActions}><Button mode="contained" onPress={onOpenJob}>Open completed job</Button></View>
   </AppCard>;
 
@@ -256,8 +270,8 @@ function NextStepCard({
     <Chip icon="file-document-check-outline">Quote ready</Chip>
     <Text variant="titleLarge" style={styles.title}>{isTrader ? 'Quote sent. Waiting for the homeowner.' : 'A structured quote is ready to review'}</Text>
     <Text style={styles.muted}>{isTrader
-      ? 'The homeowner can compare the price, scope, exclusions, timing, warranty, deposit and payment terms before accepting.'
-      : 'Review the full quote before accepting. Acceptance moves the job into the project stage rather than ending the BuildPair process.'}</Text>
+      ? 'The homeowner can compare the price, scope, exclusions, timing, warranty and stage schedule before accepting.'
+      : 'Review the full quote before accepting. Acceptance moves the job into private address and payment setup, where you choose BuildPay or direct payment.'}</Text>
     <View style={styles.nextActions}>{isTrader
       ? <Button mode="outlined" icon="file-document-edit-outline" onPress={onQuoteNow}>Update quote</Button>
       : <Button mode="contained" icon="compare" onPress={onCompareQuote}>Review & compare quote</Button>}
@@ -270,15 +284,15 @@ function NextStepCard({
     <Text style={styles.visitMeta}>{visitWhen}</Text>
     {visitNote ? <Text style={styles.muted}>{visitNote}</Text> : null}
     <Text style={styles.muted}>{isTrader
-      ? 'You can still quote immediately if enough information becomes available, or change/cancel the proposed visit.'
-      : 'This is normal for work that cannot be priced properly from a description and a couple of photos. Confirm the time, or decline it and agree another time in the chat.'}</Text>
+      ? 'The homeowner must confirm the visit before their private street address is shared with you. You can still quote immediately if the existing information is enough.'
+      : 'Confirming the visit privately shares this job address with this tradesperson only. The address stays off the public listing. The visit does not award the work.'}</Text>
     <View style={styles.nextActions}>{isTrader ? <>
       <Button mode="contained" icon="calendar-edit" onPress={onArrangeVisit}>Change time</Button>
       <Button mode="outlined" icon="file-document-edit-outline" onPress={onQuoteNow}>Quote now instead</Button>
       <Button mode="text" disabled={busy} onPress={() => void onVisitAction('cancel')}>Cancel visit</Button>
     </> : <>
       <Button mode="outlined" disabled={busy} onPress={() => void onVisitAction('decline')}>Decline</Button>
-      <Button mode="contained" icon="calendar-check" loading={busy} disabled={busy} onPress={() => void onVisitAction('accept')}>Confirm visit</Button>
+      <Button mode="contained" icon="home-map-marker" disabled={busy} onPress={onConfirmVisitDetails}>Add address & confirm visit</Button>
     </>}</View>
   </AppCard>;
 
@@ -287,10 +301,10 @@ function NextStepCard({
     <Text variant="titleLarge" style={styles.title}>{visitWhen}</Text>
     {visitNote ? <Text style={styles.muted}>{visitNote}</Text> : null}
     <Text style={styles.muted}>{isTrader
-      ? 'Inspect the job, clarify the scope, then create the formal BuildPair quote. The visit itself does not award the work.'
-      : 'After the visit, the tradesperson can put the formal quote into BuildPair. You can then review and accept it here.'}</Text>
+      ? 'The private visit address is available in the visit record. Inspect the job, clarify scope, then come back and create the formal BuildPair quote. The visit itself does not award the work.'
+      : 'Your address is shared with this tradesperson for the confirmed visit. After the visit, ask them to put the formal quote into BuildPair so the scope and payment choices stay clear.'}</Text>
     <View style={styles.nextActions}>{isTrader ? <>
-      <Button mode="contained" icon="check" loading={busy} disabled={busy} onPress={() => void onVisitAction('complete')}>Mark visit complete</Button>
+      <Button mode="contained" icon="home-map-marker" onPress={onOpenVisit}>Open visit & address</Button>
       <Button mode="outlined" icon="file-document-edit-outline" onPress={onQuoteNow}>Create quote now</Button>
     </> : null}</View>
   </AppCard>;
@@ -299,17 +313,17 @@ function NextStepCard({
     <Chip icon="home-check-outline">Site visit complete</Chip>
     <Text variant="titleLarge" style={styles.title}>{isTrader ? 'Now turn the visit into the formal quote' : 'The visit is done. The quote is the next step.'}</Text>
     <Text style={styles.muted}>{isTrader
-      ? 'Enter the agreed scope, labour, materials, VAT, deposit, programme, exclusions and terms. Do not leave the actual commercial agreement buried in chat.'
+      ? 'Enter the agreed scope, labour, materials, VAT, stage schedule, programme, exclusions and terms. This is the bit that gets the job back into BuildPair rather than leaving the commercial agreement buried in chat.'
       : 'The tradesperson can now prepare the structured BuildPair quote. Nothing is awarded until you review and accept it.'}</Text>
-    <View style={styles.nextActions}>{isTrader ? <Button mode="contained" icon="file-document-edit-outline" onPress={onQuoteNow}>Create quote</Button> : null}</View>
+    <View style={styles.nextActions}>{isTrader ? <Button mode="contained" icon="file-document-edit-outline" onPress={onQuoteNow}>Create BuildPair quote</Button> : null}</View>
   </AppCard>;
 
   return <AppCard style={styles.nextStepCard}>
     <Chip icon="arrow-decision-outline">Next step</Chip>
     <Text variant="titleLarge" style={styles.title}>{isTrader ? 'Can you price it now, or do you need to see it?' : 'Your request is live. This is not where the process ends.'}</Text>
     <Text style={styles.muted}>{isTrader
-      ? 'If the description and photos are enough, send the structured quote now. If you need to inspect access, condition, measurements or scope first, arrange a site visit. Use chat for questions, not as a substitute for the quote.'
-      : 'The tradesperson can ask questions, send a quote immediately, or request a site visit before quoting. If you hire them, the accepted quote, payment stages, changes, completion and review can all continue through BuildPair.'}</Text>
+      ? 'If the description and photos are enough, send the structured quote now. If you need to inspect access, condition, measurements or scope first, arrange a site visit. The full address is shared only after the homeowner confirms that visit.'
+      : 'The tradesperson can ask questions, send a quote immediately, or request a site visit before quoting. Your exact address is not public and is shared only when you confirm a visit or award the job.'}</Text>
     <View style={styles.nextActions}>{isTrader ? <>
       <Button mode="contained" icon="file-document-edit-outline" onPress={onQuoteNow}>Quote now</Button>
       <Button mode="outlined" icon="calendar-account-outline" onPress={onArrangeVisit}>Arrange site visit</Button>
