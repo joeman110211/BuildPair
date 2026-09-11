@@ -1,0 +1,42 @@
+name: Verify Pre Header Array Build
+
+on:
+  push:
+    branches:
+      - diagnostic-pre-header-array
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.1'
+          cache: npm
+      - name: Install and build
+        run: |
+          npm install --global npm@11.19.0
+          npm ci --no-audit --no-fund
+          npm run build:web
+      - name: Start production server
+        run: |
+          NODE_ENV=production PORT=3000 npm run serve:production > /tmp/server.log 2>&1 &
+          for i in $(seq 1 40); do
+            curl -fsS http://127.0.0.1:3000/api/health >/tmp/health.json 2>/dev/null && { cat /tmp/health.json; exit 0; }
+            sleep 1
+          done
+          cat /tmp/server.log
+          exit 1
+      - name: Chrome runtime check
+        run: |
+          set +e
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=12000 --enable-logging=stderr --v=0 --dump-dom 'http://127.0.0.1:3000/' >/tmp/dom.html 2>/tmp/chrome.err
+          echo '===== markers ====='
+          grep -Eo 'BuildPair|Find Trades|How It Works|Join Waitlist|Public preview' /tmp/dom.html | sort | uniq -c || true
+          echo '===== runtime errors ====='
+          grep -Ei 'Uncaught|TypeError|ReferenceError|SyntaxError|CSSStyleDeclaration|failed to set an indexed property' /tmp/chrome.err || true
+          if grep -Eqi 'Uncaught|TypeError|ReferenceError|SyntaxError|CSSStyleDeclaration|failed to set an indexed property' /tmp/chrome.err; then exit 1; fi
+          test -s /tmp/dom.html
