@@ -6,10 +6,10 @@ type Props = {
   style?: StyleProp<ImageStyle>;
 };
 
-const mainLogo = require('@/assets/brand/buildpair-logo-main.svg');
-const standardLogo = require('@/assets/brand/buildpair-logo-standard.svg');
+const mainLogo = require('@/assets/brand/buildpair-logo-main.jpg');
+const standardLogo = require('@/assets/brand/buildpair-logo-standard.jpg');
 
-/** Official BuildPair artwork. Do not recreate the mark from UI primitives. */
+/** Official BuildPair artwork supplied by Joe. Do not redraw or approximate it. */
 export function BuildPairLogo({ compact = false, tagline = true, style }: Props) {
   const useMain = !compact && tagline;
   return (
