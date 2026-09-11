@@ -6,6 +6,7 @@ import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { dashboardHref, signInHref, signUpHref } from '@/lib/account-mode';
+import { LAUNCH_DATE_LABEL } from '@/lib/launch';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export default function AccountEntryScreen() {
@@ -18,8 +19,9 @@ export default function AccountEntryScreen() {
   return <Screen>
     <View style={styles.hero}>
       <BuildPairLogo tagline />
-      <Text variant="headlineSmall" style={styles.heading}>One login. Two ways to use BuildPair.</Text>
-      <Text style={styles.subheading}>Choose the profile you need today. You can add the other later without creating another login.</Text>
+      <Chip icon="rocket-launch-outline">Launching {LAUNCH_DATE_LABEL}</Chip>
+      <Text variant="headlineSmall" style={styles.heading}>New account registration is paused until launch.</Text>
+      <Text style={styles.subheading}>Existing members can still sign in normally. If you’re new to BuildPair, join the launch waiting list and we’ll let you know as soon as registration opens.</Text>
     </View>
 
     <View style={styles.cards}>
@@ -31,9 +33,9 @@ export default function AccountEntryScreen() {
             <Text variant="bodySmall" style={styles.kicker}>POST • COMPARE • HIRE</Text>
           </View>
         </View>
-        <Text style={styles.body}>Find trusted trades, post jobs, compare quotes and keep everything organised in one place.</Text>
-        <Link href={signUpHref('customer')} asChild><Button mode="contained" contentStyle={styles.primaryButton} style={styles.primaryAction}>Create Homeowner Account</Button></Link>
-        <Link href={signInHref('customer')} asChild><Button mode="text">Homeowner Sign In</Button></Link>
+        <Text style={styles.body}>Find trades, compare quotes and keep the whole job together when BuildPair opens.</Text>
+        <Link href={signUpHref('customer')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Join Homeowner Waitlist</Button></Link>
+        <Link href={signInHref('customer')} asChild><Button mode="text">Existing Homeowner Sign In</Button></Link>
       </AppCard>
 
       <AppCard style={styles.roleCard}>
@@ -41,19 +43,19 @@ export default function AccountEntryScreen() {
           <View style={styles.roleIcon}><Text style={styles.emoji}>🔨</Text></View>
           <View style={styles.roleHeading}>
             <Text variant="headlineSmall" style={styles.title}>I’m a Tradesperson</Text>
-            <Chip compact style={styles.trialChip} textStyle={styles.trialChipText}>14 days free</Chip>
+            <Chip compact style={styles.trialChip} textStyle={styles.trialChipText}>Founding offer</Chip>
           </View>
         </View>
-        <Text style={styles.body}>Find local work, build a trusted profile, quote customers and manage your jobs.</Text>
-        <Link href={signUpHref('trader')} asChild><Button mode="contained" contentStyle={styles.primaryButton} style={styles.primaryAction}>Create Tradesperson Account</Button></Link>
-        <Link href={signInHref('trader')} asChild><Button mode="text">Tradesperson Sign In</Button></Link>
+        <Text style={styles.body}>Join the waiting list for launch. The first 50 eligible waiting-list trades who complete registration within 24 hours of launch get 3 months of Pro free.</Text>
+        <Link href={signUpHref('trader')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Join Tradesperson Waitlist</Button></Link>
+        <Link href={signInHref('trader')} asChild><Button mode="text">Existing Tradesperson Sign In</Button></Link>
       </AppCard>
     </View>
 
     <AppCard elevated={false} style={styles.browseCard}>
       <View style={styles.browseCopy}>
-        <Text variant="titleMedium" style={styles.title}>Just looking?</Text>
-        <Text style={styles.browseText}>Browse local trade profiles or open job requests before creating an account.</Text>
+        <Text variant="titleMedium" style={styles.title}>Explore BuildPair now</Text>
+        <Text style={styles.browseText}>The public site stays open while we finish release work. Browse trade profiles, jobs, pricing, guides and how BuildPay works without creating an account.</Text>
       </View>
       <View style={styles.browseActions}>
         <Link href="/(public)/directory" asChild><Button mode="outlined" contentStyle={styles.browseButton}>Browse trades</Button></Link>
@@ -76,8 +78,8 @@ const styles = StyleSheet.create({
   title: { fontWeight: '900', color: colors.charcoal },
   kicker: { color: colors.muted, fontWeight: '800', letterSpacing: 1.1 },
   body: { color: colors.muted, lineHeight: 23, fontSize: 16 },
-  trialChip: { alignSelf: 'flex-start', backgroundColor: '#E8F4EA' },
-  trialChipText: { color: colors.success, fontWeight: '800' },
+  trialChip: { alignSelf: 'flex-start', backgroundColor: '#FFF0DB' },
+  trialChipText: { color: colors.primaryDark, fontWeight: '800' },
   primaryButton: { minHeight: 52 },
   primaryAction: { borderRadius: 16 },
   browseCard: { width: '100%', maxWidth: 820, alignSelf: 'center', backgroundColor: colors.surfaceSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 },
