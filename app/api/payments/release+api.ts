@@ -3,7 +3,7 @@ import { addJobEvent, createNotification } from '@/lib/notifications';
 import { processingRecoveryForRelease } from '@/lib/payment-protection';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
-import { getStripe } from '@/lib/stripe';
+import { getStripe, stripeMetadata } from '@/lib/stripe';
 
 const schema = z.discriminatedUnion('action', [
   z.object({ milestoneId: z.uuid(), action: z.literal('release'), acknowledgedReleaseResponsibility: z.literal(true) }),
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
       destination: row.stripeAccountId,
       source_transaction: row.stripeChargeId,
       transfer_group: `buildpair_job_${row.jobId}`,
-      metadata: {
+      metadata: stripeMetadata({
         jobId: row.jobId,
         milestoneId: row.milestoneId,
         traderId: row.traderId,
@@ -139,7 +139,7 @@ export async function POST(request: Request) {
         stripeFeesRecovered: String(processing.recovered),
         stripeFeesRemaining: String(processing.remaining),
         netTraderTransfer: String(transferAmount),
-      },
+      }),
     }, { idempotencyKey: `buildpair-release-v4-${row.milestoneId}-${row.stripePaymentIntentId}` });
 
     await getSql()`UPDATE payments SET status = 'released', stripe_transfer_id = ${transfer.id}, stripe_processing_fee_recovered = ${processing.recovered}, trader_transfer_amount = ${transferAmount}, released_at = now(), paid_at = COALESCE(paid_at, now()) WHERE id = ${row.paymentId} AND status = 'funded'`;
