@@ -31,7 +31,9 @@ jobs:
           exit 1
       - name: Chrome runtime check
         run: |
-          cat > /tmp/check.mjs <<'EOF'
+          npm install --no-save playwright@1.55.0
+          npx playwright install chromium
+          cat > check-hotfix.mjs <<'EOF'
           import { chromium } from 'playwright';
           const browser = await chromium.launch({headless:true});
           const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -47,5 +49,4 @@ jobs:
           if (errors.some(e => e.includes('CSSStyleDeclaration') || e.includes('indexed property'))) throw new Error('CSSStyleDeclaration regression still present');
           await browser.close();
           EOF
-          npx --yes playwright@1.55.0 install chromium
-          node /tmp/check.mjs
+          node check-hotfix.mjs
