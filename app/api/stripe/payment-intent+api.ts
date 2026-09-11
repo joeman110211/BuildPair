@@ -1,15 +1,17 @@
 import { z } from 'zod';
-import { getDb } from '@/db/client';
-import { payments } from '@/db/schema';
 import { stagePlatformFee, validateStripeStageAmount, type FeeStage } from '@/lib/payment-protection';
 import { platformFeePercent } from '@/lib/platform-fee';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { getStripe, providerReturnUrl } from '@/lib/stripe';
 
-const schema = z.object({ milestoneId: z.uuid(), platform: z.enum(['native', 'web']).default('native') });
+const schema = z.object({
+  milestoneId: z.uuid().optional(),
+  milestoneIds: z.array(z.uuid()).min(1).max(2).optional(),
+  platform: z.enum(['native', 'web']).default('native'),
+}).refine((value) => Boolean(value.milestoneId || value.milestoneIds?.length), { message: 'At least one payment stage is required' });
 
-type PaymentRow = {
+type StageRow = {
   milestoneId: string;
   milestoneTitle: string;
   milestoneAmount: number;
@@ -20,6 +22,7 @@ type PaymentRow = {
   jobTitle: string;
   customerId: string;
   paymentMode: 'undecided' | 'buildpair' | 'external';
+  startAgreedAt: string | null;
   traderId: string;
   quoteId: string;
   quoteTotal: number;
@@ -30,96 +33,138 @@ type PaymentRow = {
   stripePayoutsEnabled: boolean;
 };
 
+type BatchRow = { id: string };
+
 export async function POST(request: Request) {
   try {
     const customer = await requireRole(request, 'customer');
     const input = schema.parse(await request.json());
-    const rows = await getSql()`
+    const requestedIds = [...new Set(input.milestoneIds?.length ? input.milestoneIds : [input.milestoneId!])];
+    const firstId = requestedIds[0]!;
+
+    const firstRows = await getSql()`
       SELECT m.id AS "milestoneId", m.title AS "milestoneTitle", m.amount AS "milestoneAmount", m.status AS "milestoneStatus", m.kind AS "milestoneKind", m.sort_order AS "sortOrder",
-             j.id AS "jobId", j.title AS "jobTitle", j.customer_id AS "customerId", j.payment_mode AS "paymentMode",
+             j.id AS "jobId", j.title AS "jobTitle", j.customer_id AS "customerId", j.payment_mode AS "paymentMode", j.start_agreed_at AS "startAgreedAt",
              q.trader_id AS "traderId", q.id AS "quoteId", q.total_amount AS "quoteTotal", q.labor_cost AS "laborCost", q.materials_cost AS "materialsCost",
              tp.stripe_account_id AS "stripeAccountId", tp.stripe_charges_enabled AS "stripeChargesEnabled", tp.stripe_payouts_enabled AS "stripePayoutsEnabled"
       FROM job_milestones m
       JOIN jobs j ON j.id = m.job_id
       JOIN quotes q ON q.id = m.quote_id
       JOIN trader_profiles tp ON tp.user_id = q.trader_id
-      WHERE m.id = ${input.milestoneId}
+      WHERE m.id = ${firstId}
       LIMIT 1
-    ` as unknown as PaymentRow[];
-    const row = rows[0];
-    if (!row || row.customerId !== customer.id) throw new HttpError(404, 'Payment stage not found');
-    if (row.paymentMode !== 'buildpair') throw new HttpError(409, 'Choose BuildPair Protected Payments on the job before paying this stage');
-    if (row.milestoneStatus !== 'pending') {
-      const label = row.milestoneStatus === 'paid' ? 'already released' : row.milestoneStatus === 'disputed' ? 'paused because an issue was raised' : 'already funded';
-      throw new HttpError(409, `This payment stage is ${label}`);
+    ` as unknown as StageRow[];
+    const first = firstRows[0];
+    if (!first || first.customerId !== customer.id) throw new HttpError(404, 'Payment stage not found');
+    if (first.paymentMode !== 'buildpair') throw new HttpError(409, 'Choose BuildPay on the job before making this payment');
+    if (!first.startAgreedAt) throw new HttpError(409, 'Confirm the agreed job start date and time before making the first BuildPay payment');
+    if (!first.stripeAccountId || (!first.stripePayoutsEnabled && !first.stripeChargesEnabled)) throw new HttpError(409, 'The tradesperson must complete Stripe payout setup before BuildPay can take this payment');
+
+    const allRows = await getSql()`
+      SELECT m.id AS "milestoneId", m.title AS "milestoneTitle", m.amount AS "milestoneAmount", m.status AS "milestoneStatus", m.kind AS "milestoneKind", m.sort_order AS "sortOrder",
+             j.id AS "jobId", j.title AS "jobTitle", j.customer_id AS "customerId", j.payment_mode AS "paymentMode", j.start_agreed_at AS "startAgreedAt",
+             q.trader_id AS "traderId", q.id AS "quoteId", q.total_amount AS "quoteTotal", q.labor_cost AS "laborCost", q.materials_cost AS "materialsCost",
+             tp.stripe_account_id AS "stripeAccountId", tp.stripe_charges_enabled AS "stripeChargesEnabled", tp.stripe_payouts_enabled AS "stripePayoutsEnabled"
+      FROM job_milestones m
+      JOIN jobs j ON j.id = m.job_id
+      JOIN quotes q ON q.id = m.quote_id
+      JOIN trader_profiles tp ON tp.user_id = q.trader_id
+      WHERE m.job_id = ${first.jobId}
+      ORDER BY m.sort_order ASC
+    ` as unknown as StageRow[];
+
+    const requested = allRows.filter((stage) => requestedIds.includes(stage.milestoneId));
+    if (requested.length !== requestedIds.length) throw new HttpError(400, 'All BuildPay stages in one payment must belong to the same job');
+    const orderedRequested = requested.sort((a, b) => a.sortOrder - b.sortOrder);
+    if (orderedRequested.some((stage) => stage.milestoneStatus !== 'pending')) throw new HttpError(409, 'One of these BuildPay stages has already been funded or completed');
+
+    const firstOutstanding = allRows.find((stage) => stage.milestoneStatus !== 'paid');
+    if (!firstOutstanding || firstOutstanding.milestoneId !== orderedRequested[0]?.milestoneId) {
+      throw new HttpError(409, `${firstOutstanding?.milestoneTitle ?? 'The next agreed stage'} must be dealt with before another BuildPay payment can be taken`);
     }
-    if (!row.stripeAccountId || (!row.stripePayoutsEnabled && !row.stripeChargesEnabled)) throw new HttpError(409, 'The tradesperson must complete Stripe payout setup before BuildPair can process this payment');
-
-    const milestoneRows = await getSql()`
-      SELECT id, amount, kind, sort_order AS "sortOrder"
-      FROM job_milestones WHERE job_id = ${row.jobId}
-      ORDER BY sort_order ASC
-    ` as unknown as FeeStage[];
-    const earlier = milestoneRows.filter((stage) => stage.sortOrder < row.sortOrder);
-    if (earlier.length) {
-      const statuses = await getSql()`SELECT id, title, status FROM job_milestones WHERE job_id = ${row.jobId} AND sort_order < ${row.sortOrder} ORDER BY sort_order ASC` as unknown as { id: string; title: string; status: string }[];
-      const unfinished = statuses.find((stage) => stage.status !== 'paid');
-      if (unfinished) throw new HttpError(409, `${unfinished.title} must be completed and approved before the next payment stage can be charged`);
+    for (let index = 1; index < orderedRequested.length; index += 1) {
+      if (orderedRequested[index]!.sortOrder !== orderedRequested[index - 1]!.sortOrder + 1) throw new HttpError(409, 'BuildPay can only fund consecutive agreed stages together');
+    }
+    if (orderedRequested.length > 1 && orderedRequested[0]?.milestoneKind !== 'materials') {
+      throw new HttpError(409, 'Only the opening materials payment can be combined with the first protected work stage');
     }
 
-    try { validateStripeStageAmount(row.milestoneAmount); }
-    catch (error) { throw new HttpError(400, error instanceof Error ? error.message : 'Payment amount is below Stripe minimum'); }
+    const milestoneRows: FeeStage[] = allRows.map((stage) => ({ id: stage.milestoneId, amount: stage.milestoneAmount, kind: stage.milestoneKind, sortOrder: stage.sortOrder }));
+    const allocations = orderedRequested.map((stage) => ({
+      stage,
+      fee: stagePlatformFee(stage.milestoneId, milestoneRows, first.laborCost),
+    }));
+    const totalAmount = allocations.reduce((sum, item) => sum + item.stage.milestoneAmount, 0);
+    const totalPlatformFee = allocations.reduce((sum, item) => sum + item.fee, 0);
+    validateStripeStageAmount(totalAmount);
+    if (allocations.some((item) => item.stage.milestoneKind !== 'materials' && item.fee >= item.stage.milestoneAmount)) {
+      throw new HttpError(409, 'One of the work stages is too small to cover its allocated BuildPair fee. Revise the payment schedule.');
+    }
 
-    const fee = stagePlatformFee(row.milestoneId, milestoneRows, row.laborCost);
-    if (fee >= row.milestoneAmount && row.milestoneKind !== 'materials') throw new HttpError(409, 'This service stage is too small to cover its allocated BuildPair fee. Revise the payment schedule.');
+    // A cancelled/unpaid checkout must not permanently lock the same milestones.
+    await getSql()`
+      DELETE FROM buildpay_funding_batches b
+      WHERE b.job_id = ${first.jobId} AND b.status = 'requires_payment'
+        AND EXISTS (
+          SELECT 1 FROM buildpay_funding_allocations a
+          WHERE a.batch_id = b.id AND a.milestone_id = ANY(${requestedIds}::uuid[])
+        )
+    `;
 
-    const stripe = getStripe();
-    const transferGroup = `buildpair_job_${row.jobId}`;
+    const batches = await getSql()`
+      INSERT INTO buildpay_funding_batches(job_id, quote_id, customer_id, trader_id, total_amount)
+      VALUES (${first.jobId}, ${first.quoteId}, ${customer.id}, ${first.traderId}, ${totalAmount})
+      RETURNING id
+    ` as unknown as BatchRow[];
+    const batch = batches[0];
+    if (!batch) throw new HttpError(500, 'Could not prepare the BuildPay payment');
+
+    for (const allocation of allocations) {
+      await getSql()`
+        INSERT INTO buildpay_funding_allocations(batch_id, milestone_id, amount, platform_fee)
+        VALUES (${batch.id}, ${allocation.stage.milestoneId}, ${allocation.stage.milestoneAmount}, ${allocation.fee})
+      `;
+    }
+
+    const transferGroup = `buildpair_job_${first.jobId}`;
+    const summary = orderedRequested.map((stage) => stage.milestoneTitle).join(' + ');
     const metadata = {
-      buildpairJobId: row.jobId,
-      milestoneId: row.milestoneId,
+      buildpairJobId: first.jobId,
+      buildpayFundingBatchId: batch.id,
       customerId: customer.id,
-      traderId: row.traderId,
-      milestoneKind: row.milestoneKind,
-      contractStageAmount: String(row.milestoneAmount),
-      laborServiceAmount: String(row.laborCost),
-      materialsAmount: String(row.materialsCost),
-      platformFeeBase: String(row.laborCost),
+      traderId: first.traderId,
+      fundingStageCount: String(orderedRequested.length),
+      contractAmount: String(totalAmount),
+      platformFeeBase: String(first.laborCost),
       platformFeePercent: String(platformFeePercent()),
-      platformFeeAmount: String(fee),
+      platformFeeAmount: String(totalPlatformFee),
       transferGroup,
     };
 
+    const stripe = getStripe();
     if (input.platform === 'web') {
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
         payment_method_types: ['card'],
         customer_email: customer.email ?? undefined,
-        line_items: [{ price_data: { currency: 'gbp', product_data: { name: `${row.milestoneTitle}: ${row.jobTitle}` }, unit_amount: row.milestoneAmount }, quantity: 1 }],
+        line_items: [{ price_data: { currency: 'gbp', product_data: { name: `BuildPay: ${summary}`, description: first.jobTitle }, unit_amount: totalAmount }, quantity: 1 }],
         payment_intent_data: { metadata, transfer_group: transferGroup },
-        success_url: providerReturnUrl('payment', 'complete', { jobId: row.jobId }),
-        cancel_url: providerReturnUrl('payment', 'cancelled', { jobId: row.jobId }),
+        success_url: providerReturnUrl('payment', 'complete', { jobId: first.jobId }),
+        cancel_url: providerReturnUrl('payment', 'cancelled', { jobId: first.jobId }),
         metadata,
       });
-      return Response.json({ url: session.url, amount: row.milestoneAmount, platformFee: fee });
+      await getSql()`UPDATE buildpay_funding_batches SET stripe_checkout_session_id = ${session.id}, updated_at = now() WHERE id = ${batch.id}`;
+      return Response.json({ url: session.url, amount: totalAmount, platformFee: totalPlatformFee, batchId: batch.id });
     }
 
     const intent = await stripe.paymentIntents.create({
-      amount: row.milestoneAmount,
+      amount: totalAmount,
       currency: 'gbp',
       payment_method_types: ['card'],
       transfer_group: transferGroup,
       metadata,
     });
-    await getDb().insert(payments).values({
-      jobId: row.jobId,
-      milestoneId: row.milestoneId,
-      customerId: customer.id,
-      traderId: row.traderId,
-      amount: row.milestoneAmount,
-      platformFee: fee,
-      stripePaymentIntentId: intent.id,
-    });
-    return Response.json({ clientSecret: intent.client_secret, amount: row.milestoneAmount, platformFee: fee });
+    await getSql()`UPDATE buildpay_funding_batches SET stripe_payment_intent_id = ${intent.id}, updated_at = now() WHERE id = ${batch.id}`;
+    return Response.json({ clientSecret: intent.client_secret, amount: totalAmount, platformFee: totalPlatformFee, batchId: batch.id });
   } catch (error) { return jsonError(error); }
 }

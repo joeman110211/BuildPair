@@ -31,6 +31,10 @@ type DisputeRow = {
   customerId: string;
   traderId: string;
   paymentMode: 'undecided' | 'buildpair' | 'external';
+  allocationId: string | null;
+  allocationStatus: string | null;
+  allocationTransferId: string | null;
+  fundingBatchId: string | null;
   paymentId: string | null;
   paymentStatus: string | null;
   stripePaymentIntentId: string | null;
@@ -45,16 +49,28 @@ async function disputeRow(milestoneId: string) {
            m.dispute_resolved_at AS "disputeResolvedAt", m.dispute_resolution_note AS "disputeResolutionNote",
            m.refund_requested_at AS "refundRequestedAt", m.refund_approved_at AS "refundApprovedAt",
            j.id AS "jobId", j.title AS "jobTitle", j.customer_id AS "customerId", j.payment_mode AS "paymentMode",
-           q.trader_id AS "traderId", p.id AS "paymentId", p.status AS "paymentStatus",
-           p.stripe_payment_intent_id AS "stripePaymentIntentId", p.stripe_transfer_id AS "stripeTransferId"
+           q.trader_id AS "traderId",
+           a.id AS "allocationId", a.status AS "allocationStatus", a.stripe_transfer_id AS "allocationTransferId", b.id AS "fundingBatchId",
+           COALESCE(bp.id, lp.id) AS "paymentId", COALESCE(bp.status, lp.status) AS "paymentStatus",
+           COALESCE(b.stripe_payment_intent_id, bp.stripe_payment_intent_id, lp.stripe_payment_intent_id) AS "stripePaymentIntentId",
+           lp.stripe_transfer_id AS "stripeTransferId"
     FROM job_milestones m
     JOIN jobs j ON j.id = m.job_id
     JOIN quotes q ON q.id = m.quote_id
     LEFT JOIN LATERAL (
+      SELECT * FROM buildpay_funding_allocations ax
+      WHERE ax.milestone_id = m.id AND ax.status <> 'refunded'
+      ORDER BY ax.created_at DESC LIMIT 1
+    ) a ON true
+    LEFT JOIN buildpay_funding_batches b ON b.id = a.batch_id
+    LEFT JOIN LATERAL (
+      SELECT * FROM payments px WHERE px.funding_batch_id = b.id ORDER BY px.created_at DESC LIMIT 1
+    ) bp ON b.id IS NOT NULL
+    LEFT JOIN LATERAL (
       SELECT * FROM payments px
-      WHERE px.milestone_id = m.id AND px.status IN ('funded', 'disputed', 'released', 'paid', 'refunded')
+      WHERE px.milestone_id = m.id AND px.funding_batch_id IS NULL AND px.status IN ('funded','disputed','released','paid','refunded')
       ORDER BY px.created_at DESC LIMIT 1
-    ) p ON true
+    ) lp ON true
     WHERE m.id = ${milestoneId}
     LIMIT 1
   ` as unknown as DisputeRow[];
@@ -93,7 +109,9 @@ export async function POST(request: Request) {
     if (!row || (row.customerId !== userId && row.traderId !== userId)) throw new HttpError(404, 'Payment issue not found');
     if (row.paymentMode !== 'buildpair') throw new HttpError(409, 'BuildPay issue controls only apply to BuildPay stages');
     if (row.milestoneStatus !== 'disputed') throw new HttpError(409, 'This stage does not currently have a paused BuildPay release');
-    if (!row.paymentId || !row.stripePaymentIntentId || row.stripeTransferId) throw new HttpError(409, 'This stage is not an unreleased BuildPay payment');
+    const usesFundingBatch = Boolean(row.allocationId && row.fundingBatchId);
+    const effectiveTransferId = usesFundingBatch ? row.allocationTransferId : row.stripeTransferId;
+    if (!row.paymentId || !row.stripePaymentIntentId || effectiveTransferId) throw new HttpError(409, 'This stage is not an unreleased BuildPay payment');
 
     const isCustomer = userId === row.customerId;
     const isTrader = userId === row.traderId;
@@ -117,7 +135,13 @@ export async function POST(request: Request) {
     if (input.action === 'resolve') {
       if (!isCustomer) throw new HttpError(403, 'Only the homeowner can resume a release they paused');
       await getSql()`UPDATE job_milestones SET status = 'completed', dispute_status = 'resolved', dispute_resolved_at = now(), dispute_resolved_by = ${userId}, dispute_resolution_note = ${input.note} WHERE id = ${row.milestoneId}`;
-      await getSql()`UPDATE payments SET status = 'funded' WHERE id = ${row.paymentId} AND status = 'disputed'`;
+      if (usesFundingBatch) {
+        await getSql()`UPDATE buildpay_funding_allocations SET status = 'funded', updated_at = now() WHERE id = ${row.allocationId} AND status = 'disputed'`;
+        const otherDisputes = await getSql()`SELECT 1 FROM buildpay_funding_allocations WHERE batch_id = ${row.fundingBatchId} AND status = 'disputed' LIMIT 1`;
+        await getSql()`UPDATE buildpay_funding_batches SET status = ${otherDisputes.length ? 'disputed' : 'partially_released'}, updated_at = now() WHERE id = ${row.fundingBatchId}`;
+      } else {
+        await getSql()`UPDATE payments SET status = 'funded' WHERE id = ${row.paymentId} AND status = 'disputed'`;
+      }
       await addJobEvent(row.jobId, userId, 'payment_issue_resolved', `${row.milestoneTitle} issue resolved`, `${input.note} The stage is ready for homeowner release review again.`, { milestoneId: row.milestoneId });
       await createNotification(row.traderId, { type: 'payment_issue_resolved', title: 'BuildPay issue resolved', body: `${row.jobTitle}: ${row.milestoneTitle} is no longer paused and is back with the homeowner for release review.`, href: `/trader/jobs/${row.jobId}`, email: true });
       return Response.json({ resolved: true, nextStatus: 'completed' });
@@ -133,16 +157,24 @@ export async function POST(request: Request) {
 
     if (!isTrader) throw new HttpError(403, 'Only the tradesperson can agree the requested refund');
     if (!row.refundRequestedAt) throw new HttpError(409, 'The homeowner has not requested a refund for this stage');
-    if (row.paymentStatus === 'refunded') throw new HttpError(409, 'This stage has already been refunded');
+    if (usesFundingBatch && row.allocationStatus === 'refunded') throw new HttpError(409, 'This stage has already been refunded');
+    if (!usesFundingBatch && row.paymentStatus === 'refunded') throw new HttpError(409, 'This stage has already been refunded');
 
     const stripe = getStripe();
     const refund = await stripe.refunds.create({
       payment_intent: row.stripePaymentIntentId,
       amount: row.milestoneAmount,
-      metadata: { buildpairJobId: row.jobId, milestoneId: row.milestoneId, resolution: 'mutual_unreleased_stage_refund' },
-    }, { idempotencyKey: `buildpay-mutual-refund-${row.milestoneId}-${row.stripePaymentIntentId}` });
+      metadata: { buildpairJobId: row.jobId, fundingBatchId: row.fundingBatchId ?? '', milestoneId: row.milestoneId, resolution: 'mutual_unreleased_stage_refund' },
+    }, { idempotencyKey: `buildpay-mutual-refund-v4-${row.milestoneId}-${row.stripePaymentIntentId}` });
 
-    await getSql()`UPDATE payments SET status = 'refunded', refunded_at = COALESCE(refunded_at, now()) WHERE id = ${row.paymentId}`;
+    if (usesFundingBatch) {
+      await getSql()`UPDATE buildpay_funding_allocations SET status = 'refunded', refunded_at = now(), updated_at = now() WHERE id = ${row.allocationId}`;
+      const active = await getSql()`SELECT status FROM buildpay_funding_allocations WHERE batch_id = ${row.fundingBatchId} AND status <> 'refunded'` as unknown as { status: string }[];
+      const batchStatus = !active.length ? 'refunded' : active.some((item) => item.status === 'disputed') ? 'disputed' : active.some((item) => item.status === 'funded') ? 'partially_released' : 'released';
+      await getSql()`UPDATE buildpay_funding_batches SET status = ${batchStatus}, updated_at = now() WHERE id = ${row.fundingBatchId}`;
+    } else {
+      await getSql()`UPDATE payments SET status = 'refunded', refunded_at = COALESCE(refunded_at, now()) WHERE id = ${row.paymentId}`;
+    }
     await getSql()`
       UPDATE job_milestones
       SET status = 'pending', funded_at = NULL, release_requested_at = NULL, release_approved_at = NULL, release_approved_by = NULL,
@@ -150,7 +182,7 @@ export async function POST(request: Request) {
           refund_approved_at = now(), dispute_resolution_note = ${input.note}
       WHERE id = ${row.milestoneId}
     `;
-    await addJobEvent(row.jobId, userId, 'payment_refunded_by_agreement', `${row.milestoneTitle} refund agreed`, `The parties agreed to refund the unreleased ${formatPence(row.milestoneAmount)} BuildPay stage. Stripe refund reference ${refund.id}.`, { milestoneId: row.milestoneId, stripeRefundId: refund.id });
+    await addJobEvent(row.jobId, userId, 'payment_refunded_by_agreement', `${row.milestoneTitle} refund agreed`, `The parties agreed to refund the unreleased ${formatPence(row.milestoneAmount)} BuildPay stage. Stripe refund reference ${refund.id}.`, { milestoneId: row.milestoneId, fundingBatchId: row.fundingBatchId, stripeRefundId: refund.id });
     await Promise.allSettled([
       createNotification(row.customerId, { type: 'payment_refunded_by_agreement', title: 'BuildPay refund submitted', body: `${row.jobTitle}: the ${row.milestoneTitle} refund has been submitted to Stripe. Bank/card timing is controlled by the payment network.`, href: `/customer/jobs/${row.jobId}`, email: true }),
       createNotification(row.traderId, { type: 'payment_refunded_by_agreement', title: 'Refund agreement recorded', body: `${row.jobTitle}: the unreleased ${row.milestoneTitle} payment was sent for refund.`, href: `/trader/jobs/${row.jobId}` }),

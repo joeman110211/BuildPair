@@ -60,6 +60,23 @@ type PrivateDetails = {
   complete: boolean;
 };
 
+type FundingAllocation = {
+  milestoneId: string;
+  title: string;
+  kind: 'materials' | 'deposit' | 'stage' | 'final';
+  amount: number;
+  status: 'pending' | 'funded' | 'released' | 'disputed' | 'refunded';
+  stripeTransferId: string | null;
+};
+type FundingBatch = {
+  id: string;
+  totalAmount: number;
+  status: 'requires_payment' | 'funded' | 'partially_released' | 'released' | 'disputed' | 'refunded';
+  fundedAt: string | null;
+  acknowledgedAt: string | null;
+  allocations: FundingAllocation[];
+};
+
 type Detail = { job: Job; acceptedQuote: Quote | null; milestones: Milestone[]; variations: JobVariation[]; timeline: JobTimelineEvent[] };
 
 export default function TraderJobDetail() {
@@ -69,6 +86,9 @@ export default function TraderJobDetail() {
   const [privateDetails, setPrivateDetails] = useState<PrivateDetails>();
   const [externalPayments, setExternalPayments] = useState<ExternalPaymentRecord[]>([]);
   const [disputes, setDisputes] = useState<PaymentDispute[]>([]);
+  const [fundingBatches, setFundingBatches] = useState<FundingBatch[]>([]);
+  const [startDate, setStartDate] = useState('');
+  const [startTime, setStartTime] = useState('08:00');
   const [title, setTitle] = useState('Additional work');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -82,18 +102,46 @@ export default function TraderJobDetail() {
     try {
       const detail = await apiFetch<Detail>(`/api/jobs/${id}`, {}, getToken);
       setData(detail);
-      const [addressResult, externalResult, disputeResult] = await Promise.allSettled([
+      if (detail.job.scheduledStartAt) {
+        const start = new Date(detail.job.scheduledStartAt);
+        setStartDate(formatInputDate(start));
+        setStartTime(start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
+      } else if (detail.acceptedQuote?.proposedStartAt) {
+        const suggested = new Date(detail.acceptedQuote.proposedStartAt);
+        setStartDate((current) => current || formatInputDate(suggested));
+      }
+      const [addressResult, externalResult, disputeResult, fundingResult] = await Promise.allSettled([
         apiFetch<PrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
         apiFetch<ExternalPaymentRecord[]>(`/api/external-payments?jobId=${encodeURIComponent(id)}`, {}, getToken),
         apiFetch<PaymentDispute[]>(`/api/payment-disputes?jobId=${encodeURIComponent(id)}`, {}, getToken),
+        apiFetch<FundingBatch[]>(`/api/buildpay/funding-status?jobId=${encodeURIComponent(id)}`, {}, getToken),
       ]);
       setPrivateDetails(addressResult.status === 'fulfilled' ? addressResult.value : undefined);
       setExternalPayments(externalResult.status === 'fulfilled' ? externalResult.value : []);
       setDisputes(disputeResult.status === 'fulfilled' ? disputeResult.value : []);
+      setFundingBatches(fundingResult.status === 'fulfilled' ? fundingResult.value : []);
       setError('');
     } catch (e) { setError(errorMessage(e)); }
   }, [getToken, id]);
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
+
+  async function proposeStart() {
+    const startAt = parseUkStart(startDate, startTime);
+    if (!startAt) { setError('Use a valid start date (DD/MM/YYYY) and time (HH:MM).'); return; }
+    try {
+      setBusy(true); setError('');
+      await apiFetch(`/api/jobs/${id}`, { method: 'PATCH', body: JSON.stringify({ action: 'propose_start', startAt: startAt.toISOString() }) }, getToken);
+      await load();
+    } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
+  }
+
+  async function acknowledgeFunding(batchId: string) {
+    try {
+      setBusy(true); setError('');
+      await apiFetch('/api/buildpay/acknowledge', { method: 'POST', body: JSON.stringify({ batchId, acknowledgedResponsibility: true }) }, getToken);
+      await load();
+    } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
+  }
 
   async function propose() {
     try {
@@ -154,6 +202,7 @@ export default function TraderJobDetail() {
   const orderedStages = [...data.milestones].sort((a, b) => a.sortOrder - b.sortOrder);
   const currentStage = orderedStages.find((stage) => stage.status !== 'paid');
   const allReleased = orderedStages.length > 0 && orderedStages.every((stage) => stage.status === 'paid');
+  const pendingAcknowledgement = fundingBatches.find((batch) => !batch.acknowledgedAt && ['funded', 'partially_released'].includes(batch.status) && batch.allocations.some((allocation) => allocation.kind === 'materials' && allocation.status === 'funded'));
 
   return <Screen title={data.job.title} subtitle={`${data.job.category} · ${data.job.status.replace('_', ' ')}`}>
     <AppCard style={styles.nextCard}>
@@ -171,6 +220,24 @@ export default function TraderJobDetail() {
       <View style={styles.row}><Link href="/trader/messages" asChild><Button mode="outlined" icon="message-text-outline">Messages</Button></Link><Link href={reportCustomerHref} asChild><Button mode="text" icon="alert-outline" textColor={colors.danger}>Report this homeowner</Button></Link></View>
     </AppCard>
 
+    {data.job.status === 'in_progress' ? <AppCard>
+      <Text variant="titleLarge" style={styles.title}>Agree the start</Text>
+      {data.job.startAgreedAt && data.job.scheduledStartAt ? <>
+        <Chip icon="calendar-check">Homeowner agreed ✓</Chip>
+        <Text variant="titleMedium">{formatStart(data.job.scheduledStartAt)}</Text>
+        <Text style={styles.muted}>This is the agreed start in the BuildPair project record. If it changes, propose a new date/time and the homeowner will confirm it again.</Text>
+      </> : data.job.scheduledStartAt ? <>
+        <Chip icon="clock-outline">Waiting for homeowner</Chip>
+        <Text variant="titleMedium">{formatStart(data.job.scheduledStartAt)}</Text>
+        <Text style={styles.muted}>The homeowner has been asked to approve this start. The opening BuildPay payment cannot be taken until they agree it.</Text>
+      </> : <Text style={styles.muted}>Confirm when you actually expect to start. The homeowner approves this before the opening BuildPay payment.</Text>}
+      <View style={styles.row}>
+        <TextInput style={styles.moneyInput} mode="outlined" label="Start date (DD/MM/YYYY)" value={startDate} onChangeText={setStartDate} placeholder="14/09/2026" />
+        <TextInput style={styles.moneyInput} mode="outlined" label="Start time (HH:MM)" value={startTime} onChangeText={setStartTime} placeholder="08:00" />
+      </View>
+      <Button mode={data.job.startAgreedAt ? 'outlined' : 'contained'} icon="calendar-clock" loading={busy} disabled={busy || !startDate.trim() || !startTime.trim()} onPress={() => void proposeStart()}>{data.job.startAgreedAt ? 'Propose a different start' : data.job.scheduledStartAt ? 'Update proposed start' : 'Send start for homeowner approval'}</Button>
+    </AppCard> : null}
+
     <AppCard>
       <Text variant="titleLarge" style={styles.title}>Job address</Text>
       {privateDetails?.complete ? <>
@@ -185,19 +252,28 @@ export default function TraderJobDetail() {
 
     {paymentMode === 'buildpair' ? <AppCard style={styles.protectionCard}>
       <Text variant="titleLarge" style={styles.title}>BuildPay</Text>
-      <Text style={styles.body}>The exact materials payment is released to your connected Stripe account for procurement. Deposits, progress stages and the final stage are controlled payments: the homeowner funds them first, you request release only after the agreed trigger is reached, and the homeowner approves release.</Text>
+      <Text style={styles.body}>The homeowner can fund materials and the first work stage together. When the opening payment is confirmed, you acknowledge it first. BuildPay then releases only the exact materials amount to your connected Stripe account; the work-stage money stays protected until you reach its agreed trigger and request release.</Text>
       <Text style={styles.muted}>BuildPair charges 1% of labour/service only, never materials or VAT. Stripe processing is recovered at cost from controlled service payouts. Record extra work as an agreed variation before charging for it.</Text>
     </AppCard> : paymentMode === 'external' ? <AppCard style={styles.externalCard}>
       <Text variant="titleLarge" style={styles.title}>Direct payments selected</Text>
       <Text style={styles.muted}>The homeowner pays you directly. BuildPair can record the quote, project, variations and what both sides say about payment, but it does not receive, hold, protect, refund or recover that money. BuildPay controls do not apply.</Text>
     </AppCard> : <AppCard style={styles.externalCard}><Text variant="titleLarge" style={styles.title}>Waiting for payment choice</Text><Text style={styles.muted}>The quote is accepted. The homeowner now confirms the job address and chooses BuildPay or direct payment.</Text></AppCard>}
 
+    {paymentMode === 'buildpair' && pendingAcknowledgement ? <AppCard style={styles.ackCard}>
+      <Chip icon="cash-check">Opening payment received</Chip>
+      <Text variant="titleLarge" style={styles.title}>{formatMoney(pendingAcknowledgement.totalAmount)} paid into BuildPay</Text>
+      {pendingAcknowledgement.allocations.map((allocation) => <View key={allocation.milestoneId} style={styles.row}><Text>{allocation.title}</Text><Text style={styles.money}>{formatMoney(allocation.amount)}</Text></View>)}
+      <Text>The homeowner’s card payment is confirmed. Nothing needs guessing here: acknowledge it when you are ready to obtain the quoted materials, contact the homeowner and start in line with the agreed date.</Text>
+      <Text style={styles.muted}>When you confirm, BuildPay releases only the materials allocation to your connected Stripe account. Any funded work stage remains protected and is not paid to you until its agreed completion point is reached and the homeowner approves release.</Text>
+      <Button mode="contained" icon="check-decagram-outline" loading={busy} disabled={busy} onPress={() => void acknowledgeFunding(pendingAcknowledgement.id)}>I’ve seen the payment · release materials</Button>
+    </AppCard> : null}
+
     <Text variant="titleLarge" style={styles.title}>Payment stages</Text>
     {orderedStages.length ? orderedStages.map((stage) => {
       const isCurrent = currentStage?.id === stage.id;
-      const buildPayImmediate = stage.kind === 'materials';
+      const buildPayMaterials = stage.kind === 'materials';
       const directUpfront = stage.kind === 'materials' || stage.kind === 'deposit';
-      const canRequestRelease = data.job.status === 'in_progress' && isCurrent && paymentMode === 'buildpair' && stage.status === 'funded' && !buildPayImmediate;
+      const canRequestRelease = data.job.status === 'in_progress' && isCurrent && paymentMode === 'buildpair' && stage.status === 'funded' && !buildPayMaterials;
       const canMarkPrivateComplete = data.job.status === 'in_progress' && isCurrent && paymentMode === 'external' && stage.status === 'pending' && !directUpfront;
       const externalRecord = externalPayments.find((record) => record.milestoneId === stage.id);
       const canConfirmDirectReceipt = paymentMode === 'external' && isCurrent && stage.status !== 'paid' && !externalRecord?.recipientConfirmedAt && (directUpfront || stage.status === 'completed');
@@ -208,11 +284,12 @@ export default function TraderJobDetail() {
           <View style={styles.badges}>{isCurrent ? <Chip icon="arrow-right-circle-outline">Next</Chip> : null}<Chip>{stage.kind}</Chip><Chip>{stageLabel(stage.status, paymentMode)}</Chip></View>
         </View>
 
-        {paymentMode === 'buildpair' && buildPayImmediate && stage.status === 'pending' ? <Text style={styles.muted}>Waiting for the exact materials payment. When Stripe confirms it, BuildPair releases that quoted materials amount to your connected payout account for procurement.</Text> : null}
-        {paymentMode === 'buildpair' && stage.status === 'pending' && !buildPayImmediate ? <Text style={styles.muted}>{isCurrent ? 'Waiting for the homeowner to fund this controlled BuildPay stage.' : 'This stage stays locked until the earlier stage is released.'}</Text> : null}
-        {paymentMode === 'buildpair' && stage.status === 'funded' ? <Text style={styles.notice}>Funded ✓ No transfer has been made to you for this controlled stage. Reach the agreed completion point, then request release.</Text> : null}
+        {paymentMode === 'buildpair' && buildPayMaterials && stage.status === 'pending' ? <Text style={styles.muted}>Waiting for the opening BuildPay payment.</Text> : null}
+        {paymentMode === 'buildpair' && buildPayMaterials && stage.status === 'funded' ? <Text style={styles.notice}>Homeowner payment confirmed ✓ Acknowledge the opening payment above before the materials amount is released.</Text> : null}
+        {paymentMode === 'buildpair' && stage.status === 'pending' && !buildPayMaterials ? <Text style={styles.muted}>{isCurrent ? 'Waiting for the homeowner to fund this controlled BuildPay stage.' : 'This stage stays locked until the earlier stage is released.'}</Text> : null}
+        {paymentMode === 'buildpair' && stage.status === 'funded' && !buildPayMaterials ? <Text style={styles.notice}>Funded ✓ No work-stage transfer has been made to you. Reach the agreed completion point, then request release.</Text> : null}
         {paymentMode === 'buildpair' && stage.status === 'completed' ? <Text style={styles.notice}>Release requested. The homeowner is being asked to check the agreed completion point and approve release or raise an issue.</Text> : null}
-        {paymentMode === 'buildpair' && stage.status === 'paid' ? <Text style={styles.success}>Released ✓ This stage is complete in the BuildPay record.</Text> : null}
+        {paymentMode === 'buildpair' && stage.status === 'paid' ? <Text style={styles.success}>{buildPayMaterials ? 'Materials released ✓' : 'Released ✓'} This stage is complete in the BuildPay record.</Text> : null}
         {canRequestRelease ? <Button mode="contained" icon="check" loading={stageBusy === stage.id} disabled={Boolean(stageBusy)} onPress={() => void requestRelease(stage.id)}>Request release of {formatMoney(stage.amount)}</Button> : null}
 
         {stage.status === 'disputed' ? <AppCard elevated={false} style={styles.issueBox}>
@@ -267,6 +344,7 @@ function nextTitle(status: Job['status'], paymentMode: Job['paymentMode'], curre
   if (paymentMode === 'external') return 'Direct payments selected';
   if (allReleased) return 'All agreed BuildPay stages are released';
   if (!current) return 'Follow the agreed project record';
+  if (current.kind === 'materials' && current.status === 'funded') return 'Acknowledge the opening payment';
   if (current.status === 'pending') return `Waiting for ${current.title.toLowerCase()}`;
   if (current.status === 'funded') return `Complete the trigger for ${current.title.toLowerCase()}`;
   if (current.status === 'completed') return `Waiting for ${current.title.toLowerCase()} approval`;
@@ -279,16 +357,43 @@ function nextCopy(status: Job['status'], paymentMode: Job['paymentMode'], curren
   if (paymentMode === 'external') return 'BuildPair keeps the project record, messages, variations and optional two-party payment confirmations, but does not process or protect money paid directly.';
   if (allReleased) return 'Every agreed BuildPay stage is released. Resolve any variations, then mark the whole job complete.';
   if (!current) return 'Keep the job record up to date as work progresses.';
-  if (current.status === 'pending') return current.kind === 'materials' ? 'Waiting for the homeowner to pay the exact materials stage through BuildPay.' : 'Waiting for the homeowner to fund this controlled BuildPay stage.';
+  if (current.kind === 'materials' && current.status === 'funded') return 'The homeowner payment is confirmed. Acknowledge it in the BuildPay card so the quoted materials amount can be released; any work-stage allocation remains protected.';
+  if (current.status === 'pending') return current.kind === 'materials' ? 'Waiting for the homeowner to make the opening BuildPay payment.' : 'Waiting for the homeowner to fund this controlled BuildPay stage.';
   if (current.status === 'funded') return 'The homeowner payment is confirmed but has not been transferred to you. Reach the agreed completion point, then request release.';
   if (current.status === 'completed') return 'You requested release. The homeowner is reviewing the agreed completion point.';
   return 'The homeowner raised an issue before release. Keep communication and evidence inside the project until it is resolved.';
+}
+
+function formatInputDate(value: Date) {
+  const day = String(value.getDate()).padStart(2, '0');
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  return `${day}/${month}/${value.getFullYear()}`;
+}
+
+function parseUkStart(dateValue: string, timeValue: string) {
+  const dateMatch = dateValue.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const timeMatch = timeValue.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!dateMatch || !timeMatch) return null;
+  const day = Number(dateMatch[1]);
+  const month = Number(dateMatch[2]);
+  const year = Number(dateMatch[3]);
+  const hour = Number(timeMatch[1]);
+  const minute = Number(timeMatch[2]);
+  if (month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+  const value = new Date(year, month - 1, day, hour, minute, 0, 0);
+  if (value.getFullYear() !== year || value.getMonth() !== month - 1 || value.getDate() !== day) return null;
+  return value;
+}
+
+function formatStart(value: string) {
+  return new Date(value).toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 const styles = StyleSheet.create({
   nextCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
   protectionCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
   externalCard: { backgroundColor: colors.goldSoft, borderColor: colors.gold },
+  ackCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary, borderWidth: 2 },
   currentStageCard: { borderColor: colors.primary, borderWidth: 2 },
   issueBox: { backgroundColor: colors.goldSoft, borderColor: colors.gold },
   directBox: { backgroundColor: colors.goldSoft, borderColor: colors.gold },
