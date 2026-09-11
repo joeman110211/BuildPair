@@ -1,5 +1,5 @@
-import { Link, usePathname } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { Link, usePathname, useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { colors } from '@/constants/theme';
@@ -7,10 +7,20 @@ import { ADMIN_NAV_GROUPS, adminNavItemForPath } from '@/lib/admin-navigation';
 
 export function AdminNav() {
   const pathname = usePathname();
-  const { width } = useWindowDimensions();
+  const router = useRouter();
+  const { width, height } = useWindowDimensions();
   const compact = width < 760;
   const [menuOpen, setMenuOpen] = useState(false);
   const current = useMemo(() => adminNavItemForPath(pathname), [pathname]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  const openMobileRoute = (href: string) => {
+    setMenuOpen(false);
+    if (pathname !== href) router.push(href as never);
+  };
 
   return (
     <View style={styles.shell}>
@@ -31,22 +41,31 @@ export function AdminNav() {
       </View>
 
       {compact ? (
-        menuOpen ? <ScrollView style={styles.mobileMenu} contentContainerStyle={styles.mobileMenuContent}>
+        menuOpen ? <ScrollView
+          style={[styles.mobileMenu, { maxHeight: Math.max(260, Math.min(560, height * 0.62)) }]}
+          contentContainerStyle={styles.mobileMenuContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator
+        >
           {ADMIN_NAV_GROUPS.map((group) => <View key={group.title} style={styles.group}>
             <Text style={styles.groupTitle}>{group.title}</Text>
             <Text style={styles.groupDescription}>{group.description}</Text>
             <View style={styles.groupLinks}>
               {group.items.map((item) => {
                 const selected = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                return <Link key={item.href} href={item.href as never} asChild>
-                  <Pressable onPressIn={() => setMenuOpen(false)} style={({ pressed }) => [styles.mobileLink, selected && styles.mobileLinkSelected, pressed && styles.pressed]}>
-                    <View style={styles.mobileLinkCopy}>
-                      <Text style={[styles.mobileLinkLabel, selected && styles.mobileLinkLabelSelected]}>{item.label}</Text>
-                      <Text style={styles.mobileLinkDescription}>{item.description}</Text>
-                    </View>
-                    <Text style={[styles.arrow, selected && styles.arrowSelected]}>→</Text>
-                  </Pressable>
-                </Link>;
+                return <Pressable
+                  key={item.href}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => openMobileRoute(item.href)}
+                  style={({ pressed }) => [styles.mobileLink, selected && styles.mobileLinkSelected, pressed && styles.pressed]}
+                >
+                  <View style={styles.mobileLinkCopy}>
+                    <Text style={[styles.mobileLinkLabel, selected && styles.mobileLinkLabelSelected]}>{item.label}</Text>
+                    <Text style={styles.mobileLinkDescription}>{item.description}</Text>
+                  </View>
+                  <Text style={[styles.arrow, selected && styles.arrowSelected]}>→</Text>
+                </Pressable>;
               })}
             </View>
           </View>)}
@@ -79,8 +98,8 @@ const styles = StyleSheet.create({
   desktopButton: { borderRadius: 999 },
   label: { color: colors.primary, fontWeight: '800' },
   selectedLabel: { fontWeight: '900' },
-  mobileMenu: { maxHeight: 560, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: '#FFFFFF' },
-  mobileMenuContent: { paddingHorizontal: 12, paddingVertical: 12, gap: 16 },
+  mobileMenu: { borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: '#FFFFFF' },
+  mobileMenuContent: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 24, gap: 16 },
   group: { gap: 4 },
   groupTitle: { color: colors.charcoal, fontWeight: '900', fontSize: 13 },
   groupDescription: { color: colors.muted, fontSize: 11, lineHeight: 16, marginBottom: 3 },
