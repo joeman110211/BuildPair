@@ -5,6 +5,7 @@ import { Image, ImageBackground, Pressable, StyleSheet, View } from 'react-nativ
 import { Text } from 'react-native-paper';
 import { colors } from '@/constants/theme';
 import { apiFetch } from '@/lib/api';
+import { optimizedImageUrl } from '@/lib/image-url';
 
 type FeaturedTrader = {
   id: string;
@@ -70,7 +71,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
   const thumbnails = trader.photos.slice(1, 4);
 
   return <ImageBackground
-    source={{ uri: trader.photos[0] }}
+    source={{ uri: optimizedImageUrl(trader.photos[0], 1600) }}
     style={[styles.panel, wide && styles.panelWide]}
     imageStyle={styles.image}
     accessibilityLabel={`${trader.businessName} featured work`}
@@ -90,7 +91,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
       <Text style={styles.metaLine}>{reputation} · {activity}</Text>
 
       {thumbnails.length ? <View style={styles.thumbRow}>
-        {thumbnails.map((photo, index) => <Image key={photo} source={{ uri: photo }} style={styles.thumb} accessibilityLabel={`${trader.businessName} work example ${index + 2}`} />)}
+        {thumbnails.map((photo, index) => <Image key={photo} source={{ uri: optimizedImageUrl(photo, 240) }} style={styles.thumb} accessibilityLabel={`${trader.businessName} work example ${index + 2}`} />)}
       </View> : null}
 
       <Pressable
