@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS buildpay_funding_allocations (
   amount integer NOT NULL CHECK (amount > 0),
   platform_fee integer NOT NULL DEFAULT 0 CHECK (platform_fee >= 0),
   status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','funded','released','disputed','refunded')),
+  stripe_transfer_id text,
   stripe_processing_fee_recovered integer NOT NULL DEFAULT 0 CHECK (stripe_processing_fee_recovered >= 0),
   trader_transfer_amount integer NOT NULL DEFAULT 0 CHECK (trader_transfer_amount >= 0),
   released_at timestamptz,
@@ -47,6 +48,9 @@ CREATE TABLE IF NOT EXISTS buildpay_funding_allocations (
   UNIQUE(milestone_id)
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS buildpay_funding_allocations_transfer_unique
+  ON buildpay_funding_allocations(stripe_transfer_id)
+  WHERE stripe_transfer_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS buildpay_funding_allocations_batch_idx
   ON buildpay_funding_allocations(batch_id, milestone_id);
 
