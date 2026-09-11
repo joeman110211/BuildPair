@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
@@ -66,7 +66,7 @@ export default function ConfirmVisitScreen() {
         body: JSON.stringify({ jobId: id, addressLine1, addressLine2, townCity, accessNotes }),
       }, getToken);
       await apiFetch('/api/site-visits', { method: 'PATCH', body: JSON.stringify({ id: visitId, action: 'accept' }) }, getToken);
-      router.replace(`/customer/jobs/${id}`);
+      router.replace(`/customer/jobs/${id}` as Href);
     } catch (e) { setError(errorMessage(e)); }
     finally { setBusy(false); }
   }
@@ -76,7 +76,7 @@ export default function ConfirmVisitScreen() {
     try {
       setBusy(true); setError('');
       await apiFetch('/api/site-visits', { method: 'PATCH', body: JSON.stringify({ id: visitId, action: 'decline' }) }, getToken);
-      router.replace(`/customer/jobs/${id}`);
+      router.replace(`/customer/jobs/${id}` as Href);
     } catch (e) { setError(errorMessage(e)); }
     finally { setBusy(false); }
   }
