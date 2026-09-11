@@ -23,6 +23,7 @@ export default function AdminLayout() {
             <Stack.Screen name="media" />
             <Stack.Screen name="activity" />
             <Stack.Screen name="moderation" />
+            <Stack.Screen name="payment-disputes" />
             <Stack.Screen name="credentials" />
           </Stack>
         </View>
