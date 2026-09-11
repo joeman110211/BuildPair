@@ -28,16 +28,16 @@ export default function CompareQuotesScreen() {
     try {
       setAccepting(quote.id); setError('');
       await apiFetch(`/api/quotes/${quote.id}`, { method: 'PATCH', body: JSON.stringify({ action: 'accept', paymentPlanChoice, acknowledgedPaymentSchedule: true }) }, getToken);
-      router.replace(`/customer/jobs/${jobId}`);
+      router.replace(`/customer/jobs/${jobId}/start` as Href);
     } catch (e) { setError(errorMessage(e)); }
     finally { setAccepting(undefined); }
   }
 
   function accept(quote: Quote, paymentPlanChoice: PaymentChoice) {
     const paymentText = paymentPlanChoice === 'full'
-      ? 'Materials are paid first, then the remaining service balance is funded as one protected payment and released after final approval.'
-      : 'Payments follow the milestone timeline shown. Each next stage stays locked until the previous protected stage is completed and approved.';
-    const message = `You are accepting the ${formatMoney(quote.totalAmount)} quote from ${quote.businessName ?? 'this tradesperson'}. ${paymentText} Accepting the quote does not itself charge your card.`;
+      ? 'The agreed schedule is materials first, then one protected service balance.'
+      : 'The agreed milestone schedule stays attached to the job.';
+    const message = `You are accepting the ${formatMoney(quote.totalAmount)} quote from ${quote.businessName ?? 'this tradesperson'}. ${paymentText} Accepting does not charge your card. Next you confirm the private job address and choose BuildPay or direct payment.`;
     if (typeof window !== 'undefined') {
       if (window.confirm(message)) void performAccept(quote, paymentPlanChoice);
       return;
