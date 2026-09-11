@@ -10,6 +10,7 @@ import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref } from '@/lib/account-mode';
 import { useAuthAvailable } from '@/lib/auth-availability';
+import { waitlistHref } from '@/lib/launch';
 import type { UserRole } from '@/types';
 
 const NAV_ITEMS: { label: string; href: Href }[] = [
@@ -26,7 +27,7 @@ const QUICK_NAV: { label: string; href: Href }[] = [
   { label: 'Find Trades', href: '/(public)/directory' },
   { label: 'How It Works', href: '/(public)/how-it-works' },
   { label: 'Membership', href: '/(public)/pricing' as Href },
-  { label: 'Advice Hub', href: '/(public)/advice' as Href },
+  { label: 'Launch list', href: waitlistHref(null, 'quick-nav') },
 ];
 
 function HeaderBrand() {
@@ -49,13 +50,13 @@ function NavMenu({ dashboard, signedIn, onSignOut, preview = false }: { dashboar
   ];
 
   if (preview) {
-    items.push({ label: 'Sign in unavailable in public preview', sectionLabel: 'Account', dividerBefore: true, disabled: true, onPress: () => undefined });
+    items.push({ label: 'Join launch waitlist', sectionLabel: 'Launch', dividerBefore: true, onPress: () => go(waitlistHref(null, 'header-menu')) });
   } else if (signedIn && dashboard) {
     items.push({ label: 'Dashboard', sectionLabel: 'Account', dividerBefore: true, onPress: () => go(dashboard) });
     items.push({ label: 'Sign out', onPress: () => onSignOut?.() });
   } else {
     items.push({ label: 'Sign in', sectionLabel: 'Account', dividerBefore: true, onPress: () => go('/auth/account') });
-    items.push({ label: 'Join BuildPair', onPress: () => go('/auth/account') });
+    items.push({ label: 'Join launch waitlist', onPress: () => go(waitlistHref(null, 'header-menu')) });
   }
 
   return <CompactNavMenu items={items} accessibilityLabel="Menu" />;
@@ -100,7 +101,7 @@ function AuthenticatedHeader() {
     <HeaderBrand />
     <View style={styles.actions}>
       <DesktopNav />
-      {isSignedIn ? <><Button mode="contained" contentStyle={styles.primaryAction} onPress={() => router.push(dashboard)}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href="/auth/account" asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join BuildPair</Button></Link><NavMenu /></>}
+      {isSignedIn ? <><Button mode="contained" contentStyle={styles.primaryAction} onPress={() => router.push(dashboard)}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href={waitlistHref(null, 'header')} asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join Waitlist</Button></Link><NavMenu /></>}
     </View>
   </View>;
 }
@@ -109,7 +110,7 @@ function PreviewHeader() {
   const { width } = useWindowDimensions();
   const compact = width < 1040;
   if (compact) return <CompactShell menu={<NavMenu preview />} />;
-  return <View style={styles.header}><HeaderBrand /><View style={styles.actions}><DesktopNav /><Text variant="bodySmall" style={styles.preview}>Public preview</Text><NavMenu preview /></View></View>;
+  return <View style={styles.header}><HeaderBrand /><View style={styles.actions}><DesktopNav /><Link href={waitlistHref(null, 'preview-header')} asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join Waitlist</Button></Link><Text variant="bodySmall" style={styles.preview}>Public preview</Text><NavMenu preview /></View></View>;
 }
 
 export function PublicHeader() {
