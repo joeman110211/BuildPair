@@ -27,5 +27,5 @@ const styles = StyleSheet.create({
   // The Cloudinary source is trimmed, so these dimensions preserve the exact
   // visible size of the previous lock-up without its large transparent margins.
   main: { width: 255, height: 70, maxWidth: '100%', backgroundColor: 'transparent' },
-  standard: { width: 158, height: 44, maxWidth: '100%', backgroundColor: 'transparent' },
+  standard: { width: 171, height: 48, maxWidth: '100%', backgroundColor: 'transparent' },
 });
