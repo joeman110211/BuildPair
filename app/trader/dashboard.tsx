@@ -50,20 +50,23 @@ export default function TraderDashboard() {
   const offersUsed = profile.monthlyQuotesUsed ?? 0;
   const offerProgress = offerLimit > 0 ? Math.min(1, offersUsed / offerLimit) : 0;
   const paidActive = profile.subscriptionTier !== 'free' && profile.isSubscriptionActive;
-  const payoutsReady = Boolean(profile.stripeAccountId && profile.stripeChargesEnabled);
+  // Stripe charges and Stripe payouts are separate capabilities. BuildPair payout readiness must
+  // always be based on payouts_enabled so every screen reports the same financial state.
+  const payoutsReady = Boolean(profile.stripeAccountId && profile.stripePayoutsEnabled);
+  const serviceArea = profile.locationLabel || profile.postcode || 'your saved service area';
 
   return <Screen title={profile.businessName} subtitle={`${profile.tradeCategory}${profile.locationLabel ? ` · ${profile.locationLabel}` : ''}`}>
     {!payoutsReady ? <AppCard style={styles.payoutCard}>
       <View style={styles.row}>
         <View style={styles.flex}>
-          <Text variant="titleLarge" style={styles.cardTitle}>Set up BuildPair payouts</Text>
-          <Text style={styles.muted}>Homeowners cannot use BuildPair staged payments with you until Stripe payout onboarding is complete. Stripe handles the payout details and identity checks, so BuildPair does not store your bank or card details itself.</Text>
+          <Text variant="titleLarge" style={styles.cardTitle}>Payout verification incomplete</Text>
+          <Text style={styles.muted}>Stripe has not yet confirmed that this account can receive BuildPair payouts. Your membership can still be active while payout verification is incomplete.</Text>
         </View>
-        <Chip icon="alert-circle-outline">Action needed</Chip>
+        <Chip icon="alert-circle-outline">Action required</Chip>
       </View>
-      <Link href="/trader/subscription" asChild><Button mode="contained" icon="bank-outline" contentStyle={styles.actionButton}>Set up payouts</Button></Link>
+      <Link href="/trader/subscription" asChild><Button mode="contained" icon="bank-outline" contentStyle={styles.actionButton}>Check Stripe payout status</Button></Link>
     </AppCard> : <AppCard style={styles.payoutReadyCard}>
-      <View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.cardTitle}>BuildPair payouts ready</Text><Text style={styles.muted}>You can receive materials, deposit and staged job payments through your connected Stripe payout account.</Text></View><Chip icon="check-circle-outline">Ready</Chip></View>
+      <View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.cardTitle}>BuildPair payouts ready</Text><Text style={styles.muted}>Stripe has confirmed that your connected account can receive materials, deposit and released staged payments.</Text></View><Chip icon="check-circle-outline">Ready</Chip></View>
     </AppCard>}
 
     <AppCard style={[styles.membershipCard, paidActive && styles.membershipCardPaid]}>
@@ -73,7 +76,7 @@ export default function TraderDashboard() {
           <Text variant="titleLarge" style={styles.cardTitle}>{plan.name}</Text>
           <Text style={styles.muted}>{profile.subscriptionTier === 'free'
             ? 'Your Starter profile can be shared externally and you can browse marketplace jobs. Upgrade to appear in BuildPair search and submit marketplace offers.'
-            : `${Math.max(0, offerLimit - offersUsed)} of ${offerLimit} marketplace offers remaining this month. Direct homeowner requests do not use this allowance.`}</Text>
+            : `${Math.max(0, offerLimit - offersUsed)} of ${offerLimit} marketplace offers remaining this month. An offer is counted when you submit an open-marketplace quote. Direct homeowner requests do not use this allowance.`}</Text>
         </View>
         <Chip>{paidActive ? 'Active' : profile.subscriptionTier === 'free' ? 'Starter' : 'Needs attention'}</Chip>
       </View>
@@ -82,6 +85,17 @@ export default function TraderDashboard() {
         <Link href="/trader/subscription" asChild><Button mode={profile.subscriptionTier === 'free' ? 'contained' : 'outlined'} contentStyle={styles.actionButton}>{profile.subscriptionTier === 'free' ? 'View membership options' : 'Manage membership & payouts'}</Button></Link>
         <Link href="/trader/analytics" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Business analytics</Button></Link>
       </View>
+    </AppCard>
+
+    <AppCard>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Text variant="titleMedium" style={styles.cardTitle}>Profile & job matching</Text>
+          <Text style={styles.muted}>Marketplace matching uses {serviceArea} and your saved {profile.radiusMiles || 0}-mile maximum radius. Change these details if the jobs shown do not match where you actually work.</Text>
+        </View>
+        <Chip icon={paidActive ? 'eye-outline' : 'eye-off-outline'}>{paidActive ? 'Search visible' : 'Search hidden'}</Chip>
+      </View>
+      <Link href="/trader/onboarding" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Review profile & service area</Button></Link>
     </AppCard>
 
     <View style={styles.stats}>
