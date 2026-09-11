@@ -148,12 +148,13 @@ export default function SubscriptionScreen() {
 
     <AppCard>
       <View style={styles.currentRow}>
-        <Text variant="titleLarge" style={styles.title}>Payout setup</Text>
+        <Text variant="titleLarge" style={styles.title}>BuildPay payout setup</Text>
         {payoutsReady ? <Chip icon="check-circle">Ready</Chip> : <Chip icon="alert-circle-outline">Setup required</Chip>}
       </View>
-      <Text>BuildPair uses Stripe to process supported job payments and pay tradespeople. Complete Stripe onboarding to receive payments through BuildPair.</Text>
-      <Text style={styles.muted}>Stripe collects the identity, business and bank information it requires. BuildPair receives your Stripe connected-account reference, payout status and payment-related references needed to operate the service.</Text>
-      <Text style={styles.muted}>You can create your profile and send eligible quotes before setup is complete. Homeowners cannot select BuildPair payments for your jobs until Stripe confirms that your account is ready to receive payouts.</Text>
+      <Text>BuildPay uses Stripe for supported job payments and tradesperson payouts. Complete Stripe onboarding so BuildPay can release eligible job payments to your connected Stripe account.</Text>
+      <Text style={styles.muted}>Stripe collects the identity, business and bank information it requires. BuildPair receives your connected-account reference, payout status and payment-related references needed to operate BuildPay.</Text>
+      <Text style={styles.muted}>You can create your profile and send eligible quotes before setup is complete. Homeowners cannot use BuildPay on your jobs until Stripe confirms that your account is ready to receive payouts.</Text>
+      <Text style={styles.muted}>A BuildPay release reaches your connected Stripe account first. Bank payout timing is then handled by Stripe and can vary depending on your account and payout method.</Text>
       {showPayoutOnboarding ? (
         <View style={styles.connectPanel}>
           <StripeConnectOnboarding
@@ -166,7 +167,7 @@ export default function SubscriptionScreen() {
         </View>
       ) : (
         <Button mode="contained" icon="bank" onPress={() => setShowPayoutOnboarding(true)}>
-          {payoutsReady ? 'Review payout details' : 'Set up payouts with Stripe'}
+          {payoutsReady ? 'Review BuildPay payout details' : 'Set up BuildPay payouts with Stripe'}
         </Button>
       )}
     </AppCard>
