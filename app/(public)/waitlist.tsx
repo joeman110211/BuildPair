@@ -6,7 +6,7 @@ import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { LAUNCH_DATE_LABEL, PUBLIC_CONTACT_EMAIL } from '@/lib/launch';
+import { LAUNCH_DATE_LABEL } from '@/lib/launch';
 
 type Audience = 'homeowner' | 'trader';
 
@@ -63,7 +63,6 @@ export default function WaitlistPage() {
       <Text style={styles.body}>We’ll email you when BuildPair registration opens. No BuildPair account has been created yet.</Text>
       {audience === 'trader' ? <Text style={styles.body}><Text style={styles.strong}>Founding Trades offer:</Text> the first 50 eligible tradespeople from the waiting list who complete registration within 24 hours of launch will receive BuildPair Pro free for 3 months.</Text> : null}
       {testerInterest ? <Text style={styles.body}>You also registered interest in real-world testing. Places are limited and selected testers may receive up to 6 months of Pro free.</Text> : null}
-      <Text style={styles.muted}>Questions, partnerships or suggestions: {PUBLIC_CONTACT_EMAIL}</Text>
       <Link href="/" asChild><Button mode="contained">Back to BuildPair</Button></Link>
     </AppCard>
   </Screen>;
@@ -108,8 +107,6 @@ export default function WaitlistPage() {
       <Button mode="contained" icon="account-clock-outline" loading={busy} disabled={busy || !canSubmit} onPress={() => void submit()}>Join the launch list</Button>
       <View style={styles.links}><Link href="/(public)/privacy" asChild><Button mode="text">Privacy</Button></Link><Link href="/auth/sign-in" asChild><Button mode="text">Existing member? Sign in</Button></Link></View>
     </AppCard>
-
-    <Text style={styles.contact}>Questions, partnerships, testing or suggestions · {PUBLIC_CONTACT_EMAIL}</Text>
   </Screen>;
 }
 
@@ -120,11 +117,9 @@ const styles = StyleSheet.create({
   successCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
   heading: { color: colors.charcoal, fontWeight: '900' },
   body: { color: colors.text, lineHeight: 22 },
-  muted: { color: colors.muted, lineHeight: 21 },
   strong: { fontWeight: '900' },
   label: { color: colors.charcoal, fontWeight: '800', marginTop: spacing.xs },
   checkboxLabel: { color: colors.text, lineHeight: 20 },
   privacy: { color: colors.muted, lineHeight: 19, fontSize: 12 },
   links: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.xs },
-  contact: { color: colors.muted, textAlign: 'center', paddingBottom: spacing.lg },
 });
