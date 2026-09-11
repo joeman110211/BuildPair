@@ -30,8 +30,8 @@ const QUICK_NAV: { label: string; href: Href }[] = [
   { label: 'Launch list', href: waitlistHref(null, 'quick-nav') },
 ];
 
-function HeaderBrand() {
-  return <Link href="/" asChild><Pressable style={styles.brandPressable} accessibilityLabel="BuildPair home"><BuildPairLogo /></Pressable></Link>;
+function HeaderBrand({ compact = false }: { compact?: boolean }) {
+  return <Link href="/" asChild><Pressable style={styles.brandPressable} accessibilityLabel="BuildPair home"><BuildPairLogo compact={compact} /></Pressable></Link>;
 }
 
 function NavMenu({ dashboard, signedIn, onSignOut, preview = false }: { dashboard?: Href; signedIn?: boolean; onSignOut?: () => void; preview?: boolean }) {
@@ -77,7 +77,7 @@ function MobileQuickNav() {
 }
 
 function CompactShell({ menu }: { menu: ReactNode }) {
-  return <View style={styles.shell}><View style={styles.compactHeader}><HeaderBrand />{menu}</View><MobileQuickNav /></View>;
+  return <View style={styles.shell}><View style={styles.compactHeader}><HeaderBrand compact />{menu}</View><MobileQuickNav /></View>;
 }
 
 function AuthenticatedHeader() {
