@@ -106,9 +106,9 @@ export default function TraderJobDetail() {
         const start = new Date(detail.job.scheduledStartAt);
         setStartDate(formatInputDate(start));
         setStartTime(start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
-      } else if (!startDate && detail.acceptedQuote?.proposedStartAt) {
+      } else if (detail.acceptedQuote?.proposedStartAt) {
         const suggested = new Date(detail.acceptedQuote.proposedStartAt);
-        setStartDate(formatInputDate(suggested));
+        setStartDate((current) => current || formatInputDate(suggested));
       }
       const [addressResult, externalResult, disputeResult, fundingResult] = await Promise.allSettled([
         apiFetch<PrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
@@ -122,7 +122,7 @@ export default function TraderJobDetail() {
       setFundingBatches(fundingResult.status === 'fulfilled' ? fundingResult.value : []);
       setError('');
     } catch (e) { setError(errorMessage(e)); }
-  }, [getToken, id, startDate]);
+  }, [getToken, id]);
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   async function proposeStart() {
@@ -263,9 +263,9 @@ export default function TraderJobDetail() {
       <Chip icon="cash-check">Opening payment received</Chip>
       <Text variant="titleLarge" style={styles.title}>{formatMoney(pendingAcknowledgement.totalAmount)} paid into BuildPay</Text>
       {pendingAcknowledgement.allocations.map((allocation) => <View key={allocation.milestoneId} style={styles.row}><Text>{allocation.title}</Text><Text style={styles.money}>{formatMoney(allocation.amount)}</Text></View>)}
-      <Text>The homeowner's card payment is confirmed. Nothing needs guessing here: acknowledge it when you are ready to obtain the quoted materials, contact the homeowner and start in line with the agreed date.</Text>
+      <Text>The homeowner’s card payment is confirmed. Nothing needs guessing here: acknowledge it when you are ready to obtain the quoted materials, contact the homeowner and start in line with the agreed date.</Text>
       <Text style={styles.muted}>When you confirm, BuildPay releases only the materials allocation to your connected Stripe account. Any funded work stage remains protected and is not paid to you until its agreed completion point is reached and the homeowner approves release.</Text>
-      <Button mode="contained" icon="check-decagram-outline" loading={busy} disabled={busy} onPress={() => void acknowledgeFunding(pendingAcknowledgement.id)}>I've seen the payment · release materials</Button>
+      <Button mode="contained" icon="check-decagram-outline" loading={busy} disabled={busy} onPress={() => void acknowledgeFunding(pendingAcknowledgement.id)}>I’ve seen the payment · release materials</Button>
     </AppCard> : null}
 
     <Text variant="titleLarge" style={styles.title}>Payment stages</Text>
