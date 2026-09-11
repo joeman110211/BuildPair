@@ -13,6 +13,7 @@ export default function AdminLayout() {
             <Stack.Screen name="dashboard" />
             <Stack.Screen name="assistant" />
             <Stack.Screen name="users" />
+            <Stack.Screen name="waitlist" />
             <Stack.Screen name="insights" />
             <Stack.Screen name="visitors" />
             <Stack.Screen name="system" />
@@ -24,6 +25,7 @@ export default function AdminLayout() {
             <Stack.Screen name="activity" />
             <Stack.Screen name="moderation" />
             <Stack.Screen name="credentials" />
+            <Stack.Screen name="payment-disputes" />
           </Stack>
         </View>
       </View>

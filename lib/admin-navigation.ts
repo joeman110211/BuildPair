@@ -59,6 +59,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     title: 'Growth & usage',
     description: 'Understand how people are finding and using BuildPair.',
     items: [
+      { href: '/admin/waitlist', label: 'Launch waitlist', shortLabel: 'Waitlist', description: 'See homeowners, tradespeople, Founding Trades candidates and tester volunteers waiting for launch.' },
       { href: '/admin/insights', label: 'Product insights', shortLabel: 'Insights', description: 'Understand account behaviour, marketplace use and product-level trends.' },
       { href: '/admin/visitors', label: 'Visitor analytics', shortLabel: 'Visitors', description: 'See public-site visits and acquisition behaviour before a person creates an account.' },
     ],

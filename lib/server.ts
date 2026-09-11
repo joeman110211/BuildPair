@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { users } from '@/db/schema';
 import { verifyBuildPairClerkSession } from '@/lib/clerk-session';
+import { REGISTRATION_OPEN } from '@/lib/launch-config';
 import { getSql } from '@/lib/sql';
 
 export class HttpError extends Error {
@@ -50,10 +51,6 @@ export async function authenticatedUserId(request: Request) {
   if (!token) throw new HttpError(401, 'Authentication required');
 
   try {
-    // BuildPair clients send Clerk's session token explicitly as a Bearer token.
-    // The verifier first uses Clerk's secret-key path, then verifies the same JWT
-    // against this Clerk instance's published JWKS when the staging server cannot
-    // use its Backend API credentials. Both paths enforce Clerk's signed session.
     const payload = await verifyBuildPairClerkSession(token);
     if (!payload.sub) throw new HttpError(401, 'Invalid authentication token');
     return payload.sub;
@@ -115,9 +112,10 @@ export async function ensureDbUser(userId: string) {
     return existing;
   }
 
-  // The Clerk session has already been verified above. The Clerk user id is
-  // enough to establish the local BuildPair account; optional identity fields
-  // can be synchronized separately without blocking a user's first login.
+  if (!REGISTRATION_OPEN && !bootstrapAdminIds().has(userId)) {
+    throw new HttpError(403, 'New BuildPair registrations are paused until 1 October 2026. Join the launch waiting list to be notified when sign-up opens.');
+  }
+
   const [created] = await db.insert(users).values({ id: userId }).onConflictDoNothing().returning();
   const user = created ?? await db.query.users.findFirst({ where: eq(users.id, userId) });
   if (!user) throw new Error('Unable to synchronize user');
