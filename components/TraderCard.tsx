@@ -4,6 +4,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { colors } from '@/constants/theme';
+import { optimizedImageUrl } from '@/lib/image-url';
 import type { TraderProfile } from '@/types';
 
 export function TraderCard({ trader }: { trader: TraderProfile }) {
@@ -15,7 +16,7 @@ export function TraderCard({ trader }: { trader: TraderProfile }) {
   return <AppCard style={styles.card}>
     <View style={styles.media}>
       {trader.photos[0]
-        ? <Image source={{ uri: trader.photos[0] }} style={styles.image} accessibilityLabel={`${trader.businessName} work example`} />
+        ? <Image source={{ uri: optimizedImageUrl(trader.photos[0], 900) }} style={styles.image} accessibilityLabel={`${trader.businessName} work example`} />
         : <View style={styles.placeholder}><View style={styles.placeholderMark}><Text style={styles.placeholderLetter}>{trader.businessName.slice(0, 1).toUpperCase()}</Text></View><Text style={styles.placeholderText}>Work gallery coming soon</Text></View>}
       {membership ? <View style={[styles.membershipBadge, isPro && styles.proBadge]}><Text style={[styles.membershipText, isPro && styles.proMembershipText]}>{membership}</Text></View> : null}
     </View>
