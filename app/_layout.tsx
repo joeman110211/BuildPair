@@ -10,7 +10,6 @@ import { AppStripeProvider } from '@/components/AppStripeProvider';
 import { OtaUpdateManager } from '@/components/OtaUpdateManager';
 import { PaperIcon } from '@/components/PaperIcon';
 import { PresenceHeartbeat } from '@/components/PresenceHeartbeat';
-import { VisitorAnalytics } from '@/components/VisitorAnalytics';
 import { colors, paperTheme } from '@/constants/theme';
 import { AuthAvailabilityProvider } from '@/lib/auth-availability';
 import { tokenCache } from '@/lib/token-cache';
@@ -24,7 +23,7 @@ function AppShell({ trackPresence = false }: { trackPresence?: boolean }) {
         <AppStripeProvider>
           <StatusBar style="dark" />
           <OtaUpdateManager />
-          {trackPresence ? <><PresenceHeartbeat /><VisitorAnalytics /></> : null}
+          {trackPresence ? <PresenceHeartbeat /> : null}
           <Stack screenOptions={{ headerTintColor: colors.primary, headerShadowVisible: false, contentStyle: { backgroundColor: colors.background } }}>
             <Stack.Screen name="(public)" options={{ headerShown: false }} />
             <Stack.Screen name="auth" options={{ headerShown: false }} />
