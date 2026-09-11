@@ -1,10 +1,6 @@
 import type { Href } from 'expo-router';
 import type { UserRole } from '@/types';
-
-export const LAUNCH_DATE_ISO = '2026-10-01T00:00:00+01:00';
-export const LAUNCH_DATE_LABEL = '1 October 2026';
-export const REGISTRATION_OPEN = false;
-export const PUBLIC_CONTACT_EMAIL = 'info@buildpair.co.uk';
+export { LAUNCH_DATE_ISO, LAUNCH_DATE_LABEL, REGISTRATION_OPEN, PUBLIC_CONTACT_EMAIL } from '@/lib/launch-config';
 
 export function waitlistHref(mode?: UserRole | null, source = 'website'): Href {
   const params = new URLSearchParams();
