@@ -58,6 +58,7 @@ type BusinessQuote = {
 
 const START_DATE_OPTIONS: SelectOption[] = buildQuoteStartDateOptions(365);
 const DURATION_OPTIONS: SelectOption[] = QUOTE_DURATION_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }));
+const INSPECTION_CAVEAT = 'This quote is based on the information currently available and is subject to inspection. If inspection identifies a different, concealed or additional fault outside the stated scope, any extra chargeable work must be agreed as a variation before it begins.';
 
 function QuoteDropdown({ label, value, options, placeholder, onSelect }: { label: string; value: string; options: SelectOption[]; placeholder: string; onSelect: (value: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -94,6 +95,7 @@ export default function NewQuoteScreen() {
   const [jobAddress, setJobAddress] = useState('');
   const [workIncluded, setWorkIncluded] = useState('');
   const [notIncluded, setNotIncluded] = useState('');
+  const [subjectToInspection, setSubjectToInspection] = useState(false);
   const [items, setItems] = useState<DraftItem[]>([
     { key: 'labour-1', description: 'Labour', category: 'labour', quantity: '1', unitPrice: '' },
     { key: 'materials-1', description: 'Materials', category: 'materials', quantity: '1', unitPrice: '' },
@@ -186,7 +188,12 @@ export default function NewQuoteScreen() {
   const overheadCost = pricedItems.filter((item) => item.category === 'other').reduce((sum, item) => sum + itemLineTotal(item), 0);
   const serviceCost = labourOnlyCost + overheadCost;
   const serviceFundingBalance = totalAmount - materialsCost;
-  const payoutReady = Boolean(profile?.stripeAccountId && (profile.stripePayoutsEnabled || profile.stripeChargesEnabled));
+  const payoutReady = Boolean(profile?.stripeAccountId && profile.stripePayoutsEnabled);
+  const effectiveNotIncluded = useMemo(() => {
+    const exclusions = notIncluded.trim();
+    if (!subjectToInspection) return exclusions;
+    return [exclusions, INSPECTION_CAVEAT].filter(Boolean).join('\n\n');
+  }, [notIncluded, subjectToInspection]);
 
   const depositAmount = useMemo(() => {
     if (planMode === 'single') return 0;
@@ -212,7 +219,7 @@ export default function NewQuoteScreen() {
         title: 'Materials payment',
         amount: materialsCost,
         kind: 'materials',
-        trigger: 'Paid first so the exact quoted materials can be ordered.',
+        trigger: 'Paid for the quoted materials allowance. Additional materials require homeowner approval before purchase.',
         sortOrder: result.length + 1,
       });
     }
@@ -257,7 +264,7 @@ export default function NewQuoteScreen() {
     jobTitle: jobTitle || job?.title || 'Job',
     jobAddress: external ? jobAddress || null : (job?.postcode ?? null),
     workIncluded: workIncluded || 'Add the work included in this price.',
-    notIncluded: notIncluded || null,
+    notIncluded: effectiveNotIncluded || null,
     expectedStart: external ? expectedStart || null : (START_DATE_OPTIONS.find((option) => option.value === proposedStartDate)?.label ?? null),
     durationText: external ? durationText || null : (DURATION_OPTIONS.find((option) => option.value === durationDays)?.label ?? null),
     warrantyText: warrantyText || null,
@@ -272,7 +279,7 @@ export default function NewQuoteScreen() {
     notes: notes || null,
     showBreakdown: external ? showBreakdown : true,
     validUntil,
-  }), [customerEmail, customerName, customerPhone, durationDays, durationText, expectedStart, external, job, jobAddress, jobTitle, notes, notIncluded, paymentMethod, paymentSchedule, paymentTerms, pricedItems, profile?.businessName, proposedStartDate, quoteId, showBreakdown, subtotal, totalAmount, validUntil, vatAmount, vatRate, warrantyText, workIncluded]);
+  }), [customerEmail, customerName, customerPhone, durationDays, durationText, effectiveNotIncluded, expectedStart, external, job, jobAddress, jobTitle, notes, paymentMethod, paymentSchedule, paymentTerms, pricedItems, profile?.businessName, proposedStartDate, quoteId, showBreakdown, subtotal, totalAmount, validUntil, vatAmount, vatRate, warrantyText, workIncluded]);
 
   function updateItem(index: number, patch: Partial<DraftItem>) {
     setItems((current) => current.map((item, i) => i === index ? { ...item, ...patch } : item));
@@ -351,7 +358,7 @@ export default function NewQuoteScreen() {
     if (finalAmount <= 0) return 'The deposit and stage payments must leave a final balance.';
     if (!external && !durationDays) return 'Choose roughly how long the job should take.';
     if (!external && !proposedStartDate) return 'Choose when you expect to start.';
-    if (external && paymentMethod === 'buildpair' && !payoutReady) return 'BuildPair payments are not available until payout setup is complete. Use direct payment for now or finish payout setup first.';
+    if (external && paymentMethod === 'buildpair' && !payoutReady) return 'BuildPair payments are not available until Stripe has confirmed payout readiness. Use direct payment for now or finish payout setup first.';
     return '';
   }
 
@@ -385,7 +392,7 @@ export default function NewQuoteScreen() {
           jobTitle: jobTitle.trim(),
           jobAddress: jobAddress.trim(),
           workIncluded: workIncluded.trim(),
-          notIncluded: notIncluded.trim(),
+          notIncluded: effectiveNotIncluded,
           expectedStart: expectedStart.trim(),
           durationText: durationText.trim(),
           warrantyText: warrantyText.trim(),
@@ -435,7 +442,7 @@ export default function NewQuoteScreen() {
           paymentTerms: paymentTerms.trim(),
           paymentSchedule,
           scope: workIncluded.trim(),
-          exclusions: notIncluded.trim() || undefined,
+          exclusions: effectiveNotIncluded || undefined,
           notes: notes.trim() || undefined,
           durationDays: Number(durationDays),
           warrantyMonths: warrantyText.match(/^\d+$/) ? Number(warrantyText) : undefined,
@@ -490,8 +497,16 @@ export default function NewQuoteScreen() {
       <Text variant="titleLarge" style={styles.title}>Job details</Text>
       {external ? <TextInput label="Job title" value={jobTitle} onChangeText={setJobTitle} mode="outlined" placeholder="e.g. Re-tile bathroom" /> : null}
       <TextInput label="Work included" value={workIncluded} onChangeText={setWorkIncluded} mode="outlined" multiline numberOfLines={5} placeholder="Describe what you are supplying and doing for this price" />
-      <HelperText type={workIncluded.trim().length >= QUOTE_SCOPE_MIN_LENGTH ? 'info' : 'error'}>{workIncluded.trim().length}/{QUOTE_SCOPE_MIN_LENGTH} minimum characters. Keep it plain and specific.</HelperText>
+      <HelperText type={workIncluded.trim().length >= QUOTE_SCOPE_MIN_LENGTH ? 'info' : 'error'}>{workIncluded.trim().length}/{QUOTE_SCOPE_MIN_LENGTH} minimum characters. {external ? 'Keep it plain and specific.' : 'The homeowner description is only a starting point. Edit this into the exact work you are offering.'}</HelperText>
+      {!external ? <View style={styles.switchRow}>
+        <View style={styles.flex}>
+          <Text style={styles.strong}>Scope subject to inspection</Text>
+          <Text style={styles.muted}>Use this when the fault or hidden condition cannot be confirmed from the job post. BuildPair will add a clear caveat requiring approval before extra chargeable work begins.</Text>
+        </View>
+        <Switch value={subjectToInspection} onValueChange={setSubjectToInspection} />
+      </View> : null}
       <TextInput label="Not included (optional)" value={notIncluded} onChangeText={setNotIncluded} mode="outlined" multiline numberOfLines={3} placeholder="e.g. Decorating, hidden defects, extra work not listed above" />
+      {subjectToInspection ? <HelperText type="info">Inspection caveat added to the customer-facing quote.</HelperText> : null}
       <Button mode="contained-tonal" icon="creation" loading={aiBusy} disabled={aiBusy} onPress={() => void buildWithAi()}>Help me draft the wording with AI</Button>
     </AppCard>
 
@@ -550,7 +565,7 @@ export default function NewQuoteScreen() {
             <Button mode="text" textColor={colors.danger} onPress={() => removeStage(sourceIndex)}>Remove stage</Button>
           </View>;
         })}
-        <View style={styles.actions}>{external ? <Button mode="outlined" icon="plus" onPress={() => addStage('materials', 'Materials payment', 'Due before materials are ordered.')}>Materials</Button> : null}<Button mode="outlined" icon="plus" onPress={() => addStage('stage', 'First fix', 'Released when first fix work is complete.')}>First fix</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', 'Second fix', 'Released when second fix work is complete.')}>Second fix</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', `Stage ${stages.length + 1}`, '')}>Custom</Button></View>
+        <View style={styles.actions}>{external ? <Button mode="outlined" icon="plus" onPress={() => addStage('materials', 'Materials payment', 'Due before materials are ordered.')}>Materials</Button> : null}<Button mode="outlined" icon="plus" onPress={() => addStage('stage', 'First fix', 'Released when the agreed first-stage work is complete.')}>First fix</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', 'Second fix', 'Released when the agreed second-stage work is complete.')}>Second fix</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', `Stage ${stages.length + 1}`, '')}>Custom</Button></View>
       </> : null}
       {totalAmount > 0 && paymentSchedule.length ? <View style={styles.timelineBox}>
         {!external ? <MilestoneTimeline items={paymentSchedule.map((stage) => ({ id: stage.key, title: stage.title, amount: stage.amount, kind: stage.kind, trigger: stage.trigger }))} compact /> : paymentSchedule.map((stage) => <View key={stage.key} style={styles.stageSummary}><View style={styles.row}><Text style={styles.strong}>{stage.title}</Text><Text style={styles.strong}>{formatMoney(stage.amount)}</Text></View>{stage.trigger ? <Text style={styles.muted}>{stage.trigger}</Text> : null}</View>)}
@@ -558,7 +573,7 @@ export default function NewQuoteScreen() {
       {external ? <>
         <Text variant="labelLarge" style={styles.label}>Payment method</Text>
         <SegmentedButtons value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'external' | 'buildpair')} buttons={[{ value: 'external', label: 'Paid directly' }, { value: 'buildpair', label: 'BuildPair payments', disabled: !payoutReady }]} />
-        {!payoutReady ? <HelperText type="info">BuildPair payments are unavailable until payout setup is complete. You can still create, send and track quotes normally.</HelperText> : null}
+        {!payoutReady ? <HelperText type="info">BuildPair payments are unavailable until Stripe has confirmed that payouts are enabled. You can still create, send and track quotes normally.</HelperText> : null}
       </> : null}
     </AppCard>
 
