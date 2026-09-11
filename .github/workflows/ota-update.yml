@@ -117,10 +117,12 @@ jobs:
             clerk=$(printf '%s' "$config" | jq -r '.clerkPublishableKey // empty')
             stripe=$(printf '%s' "$config" | jq -r '.stripePublishableKey // empty')
             if [ -z "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" ] && [ -n "$clerk" ]; then
-              echo "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=$clerk" >> "$GITHUB_ENV"
+              EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY="$clerk"
+              echo "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" >> "$GITHUB_ENV"
             fi
             if [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ] && [ -n "$stripe" ]; then
-              echo "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=$stripe" >> "$GITHUB_ENV"
+              EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY="$stripe"
+              echo "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" >> "$GITHUB_ENV"
             fi
           fi
           test -n "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" || { echo "::error::Missing Clerk publishable key"; exit 1; }
