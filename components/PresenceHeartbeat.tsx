@@ -26,7 +26,7 @@ export function PresenceHeartbeat() {
     };
 
     void ping();
-    const timer = setInterval(() => { void ping(); }, 45_000);
+    const timer = setInterval(() => { void ping(); }, 120_000);
     return () => {
       cancelled = true;
       clearInterval(timer);
