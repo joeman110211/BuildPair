@@ -72,7 +72,7 @@ jobs:
           while IFS= read -r file; do
             [ -n "$file" ] || continue
             case "$file" in
-              package.json|package-lock.json|app.json|app.config.js|eas.json|metro.config.*|babel.config.*|tsconfig.json|android/*|ios/*|plugins/*|.github/*|assets/icon.png|assets/adaptive-icon.png|assets/splash-icon.png)
+              package.json|package-lock.json|app.json|app.config.js|eas.json|metro.config.*|babel.config.*|tsconfig.json|android/*|ios/*|plugins/*|assets/icon.png|assets/adaptive-icon.png|assets/splash-icon.png)
                 unsafe=1
                 ;;
             esac
@@ -107,23 +107,48 @@ jobs:
         if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'
         run: npm ci --include=dev --no-audit --no-fund --prefer-offline
 
-      - name: Resolve client-safe configuration
+      - name: Wait for production client configuration
         if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          if [ -z "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" ] || [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ]; then
-            config=$(curl --fail --show-error --silent --retry 8 --retry-delay 3 "$EXPO_PUBLIC_API_URL/api/client-config")
-            clerk=$(printf '%s' "$config" | jq -r '.clerkPublishableKey // empty')
-            stripe=$(printf '%s' "$config" | jq -r '.stripePublishableKey // empty')
-            if [ -z "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" ] && [ -n "$clerk" ]; then
-              echo "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=$clerk" >> "$GITHUB_ENV"
-            fi
-            if [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ] && [ -n "$stripe" ]; then
-              echo "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=$stripe" >> "$GITHUB_ENV"
-            fi
+
+          if [ -n "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" ]; then
+            echo "Clerk publishable key supplied by GitHub Actions."
+            exit 0
           fi
+
+          ready=0
+          for attempt in $(seq 1 24); do
+            config=$(curl --silent --show-error --max-time 15 "$EXPO_PUBLIC_API_URL/api/client-config" || printf '{}')
+            clerk=$(printf '%s' "$config" | jq -r '.clerkPublishableKey // empty' 2>/dev/null || true)
+            stripe=$(printf '%s' "$config" | jq -r '.stripePublishableKey // empty' 2>/dev/null || true)
+
+            if [ -n "$clerk" ]; then
+              echo "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=$clerk" >> "$GITHUB_ENV"
+              if [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ] && [ -n "$stripe" ]; then
+                echo "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=$stripe" >> "$GITHUB_ENV"
+              fi
+              ready=1
+              echo "Production client configuration is available."
+              break
+            fi
+
+            echo "Production client configuration is not ready yet (attempt $attempt/24)."
+            sleep 10
+          done
+
+          test "$ready" -eq 1 || { echo "::error::Production did not expose a Clerk publishable key before the OTA safety window expired"; exit 1; }
+
+      - name: Require client-safe configuration
+        if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
           test -n "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" || { echo "::error::Missing Clerk publishable key"; exit 1; }
+          if [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ]; then
+            echo "::warning::Stripe publishable key is not available. OTA can publish, but native Stripe payment UI will remain unavailable until client configuration is populated."
+          fi
 
       - name: Verify update project and channel
         if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'

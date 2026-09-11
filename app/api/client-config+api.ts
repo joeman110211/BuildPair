@@ -1,11 +1,27 @@
 const DEFAULT_CLOUDINARY_CLOUD_NAME = 'qrrcn7ma';
 
+function firstPublicValue(...values: Array<string | undefined>) {
+  return values.map((value) => value?.trim()).find(Boolean) || null;
+}
+
 export function GET() {
   return Response.json(
     {
-      clerkPublishableKey: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || null,
-      stripePublishableKey: process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim() || null,
-      cloudinaryCloudName: process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim() || process.env.CLOUDINARY_CLOUD_NAME?.trim() || DEFAULT_CLOUDINARY_CLOUD_NAME,
+      clerkPublishableKey: firstPublicValue(
+        process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
+        process.env.CLERK_PUBLISHABLE_KEY,
+        process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+      ),
+      stripePublishableKey: firstPublicValue(
+        process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+        process.env.STRIPE_PUBLISHABLE_KEY,
+        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+      ),
+      cloudinaryCloudName: firstPublicValue(
+        process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME,
+        process.env.CLOUDINARY_CLOUD_NAME,
+      ) || DEFAULT_CLOUDINARY_CLOUD_NAME,
+      releaseSha: process.env.BUILDPAIR_BUILD_SHA?.trim() || null,
     },
     {
       headers: {
