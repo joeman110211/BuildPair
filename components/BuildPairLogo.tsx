@@ -6,10 +6,10 @@ type Props = {
   style?: StyleProp<ImageStyle>;
 };
 
-const mainLogo = require('@/assets/brand/buildpair-logo-main.jpg');
-const standardLogo = require('@/assets/brand/buildpair-logo-standard.jpg');
+const mainLogo = require('@/assets/brand/buildpair-logo-main.svg');
+const standardLogo = require('@/assets/brand/buildpair-logo-standard.svg');
 
-/** Official BuildPair artwork supplied by Joe. Do not redraw or approximate it. */
+/** Official BuildPair artwork traced directly from Joe's supplied logo files. */
 export function BuildPairLogo({ compact = false, tagline = true, style }: Props) {
   const useMain = !compact && tagline;
   return (
@@ -23,6 +23,6 @@ export function BuildPairLogo({ compact = false, tagline = true, style }: Props)
 }
 
 const styles = StyleSheet.create({
-  main: { width: 340, height: 92, maxWidth: '100%' },
-  standard: { width: 210, height: 66, maxWidth: '100%' },
+  main: { width: 340, height: 92, maxWidth: '100%', backgroundColor: 'transparent' },
+  standard: { width: 210, height: 66, maxWidth: '100%', backgroundColor: 'transparent' },
 });
