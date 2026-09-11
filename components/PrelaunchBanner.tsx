@@ -2,7 +2,7 @@ import { Link } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { colors, spacing } from '@/constants/theme';
-import { LAUNCH_DATE_LABEL, PUBLIC_CONTACT_EMAIL, waitlistHref } from '@/lib/launch';
+import { LAUNCH_DATE_LABEL, waitlistHref } from '@/lib/launch';
 
 export function PrelaunchBanner() {
   return <View style={styles.shell}>
@@ -12,7 +12,7 @@ export function PrelaunchBanner() {
         <Text variant="headlineSmall" style={styles.title}>BuildPair is in its final release steps.</Text>
         <Text style={styles.body}>Explore the full public site now. New account registration is paused until launch, so join the waiting list and we’ll let you know the moment sign-up opens.</Text>
         <Text style={styles.offer}><Text style={styles.strong}>Tradespeople:</Text> the first 50 eligible waiting-list trades who complete registration within 24 hours of launch get <Text style={styles.strong}>3 months of Pro free.</Text></Text>
-        <Text style={styles.small}>Real-world testers can also register interest for limited pre-launch testing places. Questions, partnerships or suggestions: {PUBLIC_CONTACT_EMAIL}</Text>
+        <Text style={styles.small}>Real-world testers can also register interest for limited pre-launch testing places.</Text>
       </View>
       <View style={styles.actions}>
         <Link href={waitlistHref(null, 'homepage-banner')} asChild><Button mode="contained" icon="account-clock-outline">Join launch waitlist</Button></Link>
