@@ -57,7 +57,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
 
     if (payload.action === 'set_payment_mode') {
       if (!modes.customerEnabled || !payload.mode) throw new HttpError(403, 'Homeowner payment choice required');
-      if (payload.mode === 'buildpair' && payload.acknowledgedPaymentTerms !== true) throw new HttpError(400, 'Confirm that you have reviewed the agreed payment stages and understand your responsibility for later release approvals.');
+      if (payload.mode === 'buildpair' && payload.acknowledgedPaymentTerms !== true) throw new HttpError(400, 'Confirm that you reviewed the agreed payment stages and understand your responsibility for later BuildPay release approvals.');
       const rows = await getSql()`
         SELECT j.customer_id AS "customerId", j.title, j.status, j.payment_mode AS "paymentMode",
                q.trader_id AS "traderId", q.total_amount AS "totalAmount", q.materials_cost AS "materialsCost", q.labor_cost AS "laborCost",
@@ -71,33 +71,33 @@ export async function PATCH(request: Request, { id }: { id: string }) {
 
       if (payload.mode === 'buildpair') {
         if (!row.stripeAccountId || (!row.stripePayoutsEnabled && !row.stripeChargesEnabled)) {
-          await createNotification(row.traderId, { type: 'payout_setup_required', title: 'Set up payouts to use BuildPair payments', body: `${row.title}: the homeowner wants to use BuildPair payments, but your Stripe payout setup is not complete yet.`, href: '/trader/subscription', email: true });
-          throw new HttpError(409, 'The tradesperson must finish Stripe payout setup before this job can use BuildPair payments. They have been notified.');
+          await createNotification(row.traderId, { type: 'payout_setup_required', title: 'Set up payouts to use BuildPay', body: `${row.title}: the homeowner wants to use BuildPay, but your Stripe payout setup is not complete yet.`, href: '/trader/subscription', email: true });
+          throw new HttpError(409, 'The tradesperson must finish Stripe payout setup before this job can use BuildPay. They have been notified.');
         }
         const economicsRows = await getSql()`
           SELECT count(*)::int AS "chargeCount", COALESCE(SUM(CASE WHEN kind = 'materials' THEN amount ELSE 0 END), 0)::int AS "materialsStages"
           FROM job_milestones WHERE job_id = ${id}
         ` as unknown as { chargeCount: number; materialsStages: number }[];
         const economics = economicsRows[0] ?? { chargeCount: 0, materialsStages: 0 };
-        if (economics.materialsStages !== row.materialsCost) throw new HttpError(409, 'The protected payment schedule must contain a materials stage equal to the exact quoted materials amount before BuildPair payments can be selected.');
+        if (economics.materialsStages !== row.materialsCost) throw new HttpError(409, 'The BuildPay schedule must contain a materials stage equal to the exact quoted materials amount before BuildPay can be selected.');
         try {
           validateProtectedPaymentEconomics({ totalAmount: row.totalAmount, materialsAmount: row.materialsCost, laborServiceAmount: row.laborCost, chargeCount: economics.chargeCount });
         } catch (error) {
-          throw new HttpError(409, error instanceof Error ? error.message : 'This payment schedule cannot safely cover its processing costs.');
+          throw new HttpError(409, error instanceof Error ? error.message : 'This BuildPay schedule cannot safely cover its processing costs.');
         }
       }
 
       if (row.paymentMode === 'buildpair' && payload.mode === 'external') {
         const collected = await getSql()`SELECT 1 FROM payments WHERE job_id = ${id} AND status IN ('funded', 'released', 'paid', 'disputed') LIMIT 1`;
-        if (collected.length) throw new HttpError(409, 'This job already has a BuildPair payment and can no longer switch to private payment');
+        if (collected.length) throw new HttpError(409, 'This job already has a BuildPay payment and can no longer switch that payment to a direct arrangement');
       }
       await getSql()`UPDATE jobs SET payment_mode = ${payload.mode}, updated_at = now() WHERE id = ${id}`;
       if (payload.mode === 'buildpair') {
-        await addJobEvent(id, userId, 'buildpair_payments_selected', 'BuildPair Protected Payments selected', 'The homeowner confirmed the agreed payment stages. Materials are released for procurement when paid; deposits, progress stages and final funds are controlled until the agreed trigger is completed and approved.', { paymentTermsVersion: '2026-09-10-v3', homeownerAcknowledgedPaymentTerms: true });
-        await createNotification(row.traderId, { type: 'payment_mode_selected', title: 'BuildPair Protected Payments selected', body: `${row.title}: the homeowner selected protected payments. BuildPair charges 1% only on labour/service value; Stripe processing is recovered at cost from controlled service payouts.`, href: `/trader/jobs/${id}`, email: true });
+        await addJobEvent(id, userId, 'buildpay_selected', 'BuildPay selected', 'The homeowner selected BuildPay. The exact materials amount releases for procurement when paid; deposits, progress stages and final funds remain controlled until the agreed trigger is completed and the homeowner approves release.', { paymentTermsVersion: '2026-09-11-buildpay-v1', homeownerAcknowledgedPaymentTerms: true });
+        await createNotification(row.traderId, { type: 'payment_mode_selected', title: 'BuildPay selected', body: `${row.title}: the homeowner selected BuildPay. BuildPair charges 1% only on labour/service value; materials and VAT are excluded, and Stripe processing is recovered at cost from controlled service payouts.`, href: `/trader/jobs/${id}`, email: true });
       } else {
-        await addJobEvent(id, userId, 'external_payments_selected', 'Private payment arrangement selected', 'The homeowner chose to arrange payment outside BuildPair. BuildPair cannot process, control or recover private payments.');
-        await createNotification(row.traderId, { type: 'external_payment_selected', title: 'Private payment arrangement selected', body: `${row.title}: the homeowner chose to arrange payments outside BuildPair. BuildPair payment-stage protections will not apply to those payments.`, href: `/trader/jobs/${id}`, email: true });
+        await addJobEvent(id, userId, 'direct_payments_selected', 'Direct payment selected', 'The homeowner chose to arrange payment directly with the tradesperson. BuildPair may record user confirmations but does not receive, hold, protect, release, refund, recover or independently verify money paid directly.');
+        await createNotification(row.traderId, { type: 'external_payment_selected', title: 'Direct payment selected', body: `${row.title}: the homeowner chose to pay you directly. BuildPay controls do not apply; BuildPair can still keep the quote, messages, variations and two-party payment record.`, href: `/trader/jobs/${id}`, email: true });
       }
       return Response.json({ paymentMode: payload.mode });
     }
@@ -107,13 +107,13 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       const rows = await getSql()`SELECT j.customer_id AS "customerId", j.title, j.status, j.payment_mode AS "paymentMode", q.trader_id AS "traderId" FROM jobs j JOIN quotes q ON q.id = j.accepted_quote_id WHERE j.id = ${id} LIMIT 1` as unknown as { customerId: string; title: string; status: string; paymentMode: 'undecided' | 'buildpair' | 'external'; traderId: string }[];
       const row = rows[0];
       if (!row || row.customerId !== userId) throw new HttpError(404, 'Active job not found');
-      if (row.status !== 'in_progress' || row.paymentMode !== 'external') throw new HttpError(409, 'Only an active privately managed job can be closed this way');
+      if (row.status !== 'in_progress' || row.paymentMode !== 'external') throw new HttpError(409, 'Only an active directly paid job can be closed this way');
       const pendingVariation = await getSql()`SELECT 1 FROM job_variations WHERE job_id = ${id} AND status = 'pending' LIMIT 1`;
       if (pendingVariation.length) throw new HttpError(409, 'Resolve outstanding variations before closing the project');
       await db.update(jobs).set({ status: 'completed', updatedAt: new Date() }).where(eq(jobs.id, id));
-      await addJobEvent(id, userId, 'external_job_completed', 'Privately managed job marked complete', 'The homeowner marked the project complete. BuildPair did not process or verify private payments on this job.');
-      await createNotification(row.traderId, { type: 'external_job_completed', title: 'Privately managed job marked complete', body: `${row.title}: the homeowner marked the project complete. Private payment status is not verified by BuildPair.`, href: `/trader/jobs/${id}`, email: true });
-      return Response.json({ completed: true, paymentVerification: 'external_unverified' });
+      await addJobEvent(id, userId, 'external_job_completed', 'Directly paid job marked complete', 'The homeowner marked the project complete. BuildPair did not process or independently verify direct payments on this job.');
+      await createNotification(row.traderId, { type: 'external_job_completed', title: 'Directly paid job marked complete', body: `${row.title}: the homeowner marked the project complete. Direct payment status is based only on the project confirmations users chose to record.`, href: `/trader/jobs/${id}`, email: true });
+      return Response.json({ completed: true, paymentVerification: 'external_user_declaration_only' });
     }
 
     if (payload.action !== 'complete') throw new HttpError(400, 'Unsupported job action');
@@ -124,7 +124,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     if (owned.status !== 'in_progress') throw new HttpError(409, 'Only work in progress can be marked complete');
     const pendingVariation = await getSql()`SELECT 1 FROM job_variations WHERE job_id = ${id} AND status = 'pending' LIMIT 1`;
     if (pendingVariation.length) throw new HttpError(409, 'Resolve outstanding job variations before marking the work complete');
-    if (owned.paymentMode === 'undecided') throw new HttpError(409, 'The homeowner must choose BuildPair or private payments first');
+    if (owned.paymentMode === 'undecided') throw new HttpError(409, 'The homeowner must choose BuildPay or direct payments first');
     if (owned.paymentMode === 'buildpair') {
       const unpaid = await getSql()`SELECT title FROM job_milestones WHERE job_id = ${id} AND status <> 'paid' ORDER BY sort_order ASC LIMIT 1` as unknown as { title: string }[];
       if (unpaid[0]) throw new HttpError(409, `${unpaid[0].title} must be completed and released before the job can be marked complete`);
