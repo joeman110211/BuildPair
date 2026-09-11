@@ -13,7 +13,7 @@ if (projectId) {
   expo.updates = {
     enabled: true,
     url: `https://u.expo.dev/${projectId}`,
-    checkAutomatically: 'NEVER',
+    checkAutomatically: 'ON_LOAD',
     fallbackToCacheTimeout: 0,
     requestHeaders: {
       'expo-channel-name': updateChannel,
