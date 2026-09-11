@@ -2,22 +2,25 @@ const appJson = require('./app.json');
 
 const committedProjectId = appJson.expo.extra?.eas?.projectId || '';
 const projectId = (process.env.EXPO_EAS_PROJECT_ID || committedProjectId).trim();
-const updateChannel = (process.env.EXPO_UPDATES_CHANNEL || 'preview').trim();
+const updateChannel = (process.env.EXPO_UPDATES_CHANNEL || '').trim();
 
 const expo = {
   ...appJson.expo,
-  runtimeVersion: { policy: 'appVersion' },
+  runtimeVersion: { policy: 'fingerprint' },
 };
 
 if (projectId) {
   expo.updates = {
+    ...(appJson.expo.updates || {}),
     enabled: true,
     url: `https://u.expo.dev/${projectId}`,
-    checkAutomatically: 'NEVER',
+    checkAutomatically: 'ON_LOAD',
     fallbackToCacheTimeout: 0,
-    requestHeaders: {
-      'expo-channel-name': updateChannel,
-    },
+    ...(updateChannel ? {
+      requestHeaders: {
+        'expo-channel-name': updateChannel,
+      },
+    } : {}),
   };
   expo.extra = {
     ...(appJson.expo.extra || {}),
