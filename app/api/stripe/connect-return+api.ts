@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { traderProfiles } from '@/db/schema';
+import { classifyPayoutStatus } from '@/lib/payout-status';
 import { requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { getStripe } from '@/lib/stripe';
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
     });
 
     if (!profile?.stripeAccountId) {
-      destination.searchParams.set('payouts', 'missing');
+      destination.searchParams.set('payouts', 'not_started');
       return Response.redirect(destination.toString(), 303);
     }
 
@@ -32,11 +33,20 @@ export async function GET(request: Request) {
       WHERE user_id = ${trader.id}
     `;
 
-    destination.searchParams.set('payouts', payoutsReady ? 'ready' : 'pending');
+    const status = classifyPayoutStatus({
+      hasAccount: true,
+      payoutsEnabled: payoutsReady,
+      detailsSubmitted: Boolean(account.details_submitted),
+      currentlyDue: account.requirements?.currently_due ?? [],
+      pastDue: account.requirements?.past_due ?? [],
+      disabledReason: account.requirements?.disabled_reason ?? null,
+    });
+
+    destination.searchParams.set('payouts', status.key);
     return Response.redirect(destination.toString(), 303);
   } catch (error) {
     console.error('[stripe-connect] failed to refresh payout status on return', error);
-    destination.searchParams.set('payouts', 'status-error');
+    destination.searchParams.set('payouts', 'status_error');
     return Response.redirect(destination.toString(), 303);
   }
 }
