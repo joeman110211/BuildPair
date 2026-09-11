@@ -3,7 +3,7 @@ import { addJobEvent, createNotification } from '@/lib/notifications';
 import { processingRecoveryForRelease } from '@/lib/payment-protection';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
-import { getStripe } from '@/lib/stripe';
+import { getStripe, stripeMetadata } from '@/lib/stripe';
 
 const schema = z.discriminatedUnion('action', [
   z.object({ milestoneId: z.uuid(), action: z.literal('release'), acknowledgedReleaseResponsibility: z.literal(true) }),
@@ -16,6 +16,7 @@ type ReleaseRow = {
   milestoneAmount: number;
   milestoneStatus: 'pending' | 'funded' | 'completed' | 'paid' | 'disputed';
   milestoneKind: 'materials' | 'deposit' | 'stage' | 'final';
+  sortOrder: number;
   jobId: string;
   jobTitle: string;
   customerId: string;
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     const customer = await requireRole(request, 'customer');
     const input = schema.parse(await request.json());
     const rows = await getSql()`
-      SELECT m.id AS "milestoneId", m.title AS "milestoneTitle", m.amount AS "milestoneAmount", m.status AS "milestoneStatus", m.kind AS "milestoneKind",
+      SELECT m.id AS "milestoneId", m.title AS "milestoneTitle", m.amount AS "milestoneAmount", m.status AS "milestoneStatus", m.kind AS "milestoneKind", m.sort_order AS "sortOrder",
              j.id AS "jobId", j.title AS "jobTitle", j.customer_id AS "customerId",
              q.trader_id AS "traderId", tp.stripe_account_id AS "stripeAccountId", tp.stripe_payouts_enabled AS "stripePayoutsEnabled",
              p.id AS "paymentId", p.status AS "paymentStatus", p.platform_fee AS "platformFee",
@@ -74,13 +75,24 @@ export async function POST(request: Request) {
     if (!row || row.customerId !== customer.id) throw new HttpError(404, 'Payment stage not found');
     if (!row.paymentId || !row.stripePaymentIntentId) throw new HttpError(409, 'This stage has not been funded through BuildPair');
 
+    // Kept for backwards compatibility with clients already deployed. New clients
+    // use /api/payments/disputes so the issue has a structured response history.
     if (input.action === 'dispute') {
       if (!['funded', 'completed'].includes(row.milestoneStatus) || row.paymentStatus !== 'funded') throw new HttpError(409, 'This payment stage cannot be paused at its current state');
+      const existing = await getSql()`SELECT id FROM payment_disputes WHERE milestone_id = ${row.milestoneId} AND status IN ('open', 'responded', 'escalated') LIMIT 1` as unknown as { id: string }[];
+      let disputeId = existing[0]?.id;
+      if (!disputeId) {
+        const inserted = await getSql()`
+          INSERT INTO payment_disputes(job_id, milestone_id, payment_id, customer_id, trader_id, reason)
+          VALUES (${row.jobId}, ${row.milestoneId}, ${row.paymentId}, ${row.customerId}, ${row.traderId}, ${input.reason}) RETURNING id
+        ` as unknown as { id: string }[];
+        disputeId = inserted[0]?.id;
+      }
       await getSql()`UPDATE job_milestones SET status = 'disputed', disputed_at = now(), dispute_reason = ${input.reason} WHERE id = ${row.milestoneId}`;
       await getSql()`UPDATE payments SET status = 'disputed', disputed_at = now() WHERE id = ${row.paymentId}`;
-      await addJobEvent(row.jobId, customer.id, 'payment_release_paused', `${row.milestoneTitle} release paused`, input.reason, { milestoneId: row.milestoneId });
-      await createNotification(row.traderId, { type: 'payment_release_paused', title: `${row.milestoneTitle} release paused`, body: `${row.jobTitle}: the homeowner raised an issue before release. Keep all discussion and evidence in BuildPair while it is resolved.`, href: `/trader/jobs/${row.jobId}`, email: true });
-      return Response.json({ disputed: true });
+      await addJobEvent(row.jobId, customer.id, 'buildpay_dispute_opened', `${row.milestoneTitle} release paused`, input.reason, { milestoneId: row.milestoneId, disputeId });
+      await createNotification(row.traderId, { type: 'payment_release_paused', title: `${row.milestoneTitle} release paused`, body: `${row.jobTitle}: the homeowner raised an issue before release. Reply in BuildPair while the funds remain paused.`, href: `/trader/jobs/${row.jobId}`, email: true });
+      return Response.json({ disputed: true, disputeId });
     }
 
     if (row.milestoneKind === 'materials') throw new HttpError(409, 'Materials are released automatically when their payment succeeds');
@@ -115,34 +127,47 @@ export async function POST(request: Request) {
       destination: row.stripeAccountId,
       source_transaction: row.stripeChargeId,
       transfer_group: `buildpair_job_${row.jobId}`,
-      metadata: {
-        buildpairJobId: row.jobId,
+      metadata: stripeMetadata({
+        jobId: row.jobId,
         milestoneId: row.milestoneId,
         traderId: row.traderId,
         approvedBy: customer.id,
-        approvalTermsVersion: '2026-09-10-v3',
-        homeownerAcknowledgedReleaseResponsibility: 'true',
-        contractStageAmount: String(row.milestoneAmount),
-        buildPairFeeAmount: String(buildPairFee),
-        stripeProcessingFeesRecovered: String(processing.recovered),
-        stripeProcessingFeesRemaining: String(processing.remaining),
+        approvalTerms: '2026-09-11-v4',
+        homeownerApprovedRelease: 'true',
+        contractAmount: String(row.milestoneAmount),
+        buildPairFee: String(buildPairFee),
+        stripeFeesRecovered: String(processing.recovered),
+        stripeFeesRemaining: String(processing.remaining),
         netTraderTransfer: String(transferAmount),
-      },
-    }, { idempotencyKey: `buildpair-release-v3-${row.milestoneId}-${row.stripePaymentIntentId}` });
+      }),
+    }, { idempotencyKey: `buildpair-release-v4-${row.milestoneId}-${row.stripePaymentIntentId}` });
 
-    await getSql()`UPDATE payments SET status = 'released', stripe_transfer_id = ${transfer.id}, stripe_processing_fee_recovered = ${processing.recovered}, trader_transfer_amount = ${transferAmount}, released_at = now() WHERE id = ${row.paymentId} AND status = 'funded'`;
+    await getSql()`UPDATE payments SET status = 'released', stripe_transfer_id = ${transfer.id}, stripe_processing_fee_recovered = ${processing.recovered}, trader_transfer_amount = ${transferAmount}, released_at = now(), paid_at = COALESCE(paid_at, now()) WHERE id = ${row.paymentId} AND status = 'funded'`;
     await getSql()`UPDATE job_milestones SET status = 'paid', paid_at = now(), release_approved_at = now(), release_approved_by = ${customer.id}, payment_method = 'stripe', payment_confirmed_by = ${customer.id} WHERE id = ${row.milestoneId}`;
 
-    await addJobEvent(row.jobId, customer.id, 'payment_stage_released', `${row.milestoneTitle} approved and released`, `The homeowner approved the ${formatPence(row.milestoneAmount)} contract stage. BuildPair instructed Stripe to transfer ${formatPence(transferAmount)} to the tradesperson after ${formatPence(processing.recovered)} of actual Stripe processing cost and ${formatPence(buildPairFee)} BuildPair service fee.`, {
-      milestoneId: row.milestoneId, stripeTransferId: transfer.id, contractStageAmount: row.milestoneAmount,
-      platformFee: buildPairFee, stripeProcessingFees: processing.recovered, stripeProcessingFeesRemaining: processing.remaining,
-      netTraderTransfer: transferAmount, approvalTermsVersion: '2026-09-10-v3', homeownerAcknowledgedReleaseResponsibility: true,
+    await addJobEvent(row.jobId, customer.id, 'payment_stage_released', `${row.milestoneTitle} approved and released`, `The homeowner approved the ${formatPence(row.milestoneAmount)} contract stage. BuildPair released ${formatPence(transferAmount)} to the tradesperson's connected Stripe account after ${formatPence(processing.recovered)} of Stripe processing cost and ${formatPence(buildPairFee)} BuildPair service fee.`, {
+      milestoneId: row.milestoneId,
+      stripeTransferId: transfer.id,
+      contractStageAmount: row.milestoneAmount,
+      platformFee: buildPairFee,
+      stripeProcessingFees: processing.recovered,
+      stripeProcessingFeesRemaining: processing.remaining,
+      netTraderTransfer: transferAmount,
+      approvalTermsVersion: '2026-09-11-v4',
+      homeownerAcknowledgedReleaseResponsibility: true,
     });
 
     await Promise.allSettled([
-      createNotification(row.traderId, { type: 'payment_released', title: `${row.milestoneTitle} released`, body: `${row.jobTitle}: ${formatPence(transferAmount)} was released after the recorded Stripe processing cost and BuildPair labour/service fee.`, href: `/trader/jobs/${row.jobId}`, email: true }),
-      createNotification(customer.id, { type: 'payment_released', title: 'Stage payment released', body: `${row.jobTitle}: ${row.milestoneTitle.toLowerCase()} is recorded as approved and released on your instruction.`, href: `/customer/jobs/${row.jobId}` }),
+      createNotification(row.traderId, { type: 'payment_released', title: `${row.milestoneTitle} released`, body: `${row.jobTitle}: ${formatPence(transferAmount)} was released to your connected Stripe account after the recorded payment costs and BuildPair labour/service fee.`, href: `/trader/jobs/${row.jobId}`, email: true }),
+      createNotification(customer.id, { type: 'payment_released', title: 'Stage payment released', body: `${row.jobTitle}: ${row.milestoneTitle.toLowerCase()} has been approved and released on your instruction.`, href: `/customer/jobs/${row.jobId}` }),
     ]);
+
+    const nextRows = await getSql()`
+      SELECT id, title, amount, kind, status FROM job_milestones
+      WHERE job_id = ${row.jobId} AND sort_order > ${row.sortOrder} AND status <> 'paid'
+      ORDER BY sort_order ASC LIMIT 1
+    ` as unknown as { id: string; title: string; amount: number; kind: string; status: string }[];
+    const nextMilestone = nextRows[0] ?? null;
 
     const remaining = await getSql()`SELECT 1 FROM job_milestones WHERE job_id = ${row.jobId} AND status <> 'paid' LIMIT 1`;
     if (!remaining.length) {
@@ -154,7 +179,17 @@ export async function POST(request: Request) {
       ]);
     }
 
-    return Response.json({ released: true, transferId: transfer.id, contractStageAmount: row.milestoneAmount, buildPairFee, stripeProcessingFees: processing.recovered, stripeProcessingFeesRemaining: processing.remaining, netTraderTransfer: transferAmount, projectCompleted: !remaining.length });
+    return Response.json({
+      released: true,
+      transferId: transfer.id,
+      contractStageAmount: row.milestoneAmount,
+      buildPairFee,
+      stripeProcessingFees: processing.recovered,
+      stripeProcessingFeesRemaining: processing.remaining,
+      netTraderTransfer: transferAmount,
+      projectCompleted: !remaining.length,
+      nextMilestone,
+    });
   } catch (error) { return jsonError(error); }
 }
 
