@@ -55,7 +55,7 @@ export default function ConfirmVisitScreen() {
     } catch (e) { setError(errorMessage(e)); }
   }, [getToken, id, visitId]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   async function confirm() {
     if (!visitId || !id) return;
