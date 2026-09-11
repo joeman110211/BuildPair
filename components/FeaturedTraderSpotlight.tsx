@@ -5,6 +5,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { colors } from '@/constants/theme';
 import { apiFetch } from '@/lib/api';
+import { optimizedImageUrl } from '@/lib/image-url';
 
 type FeaturedTrader = {
   id: string;
@@ -66,7 +67,7 @@ export function FeaturedTraderSpotlight() {
       <View style={styles.card}>
         <View style={styles.media}>
           {trader.photos[0]
-            ? <Image source={{ uri: trader.photos[0] }} style={styles.image} accessibilityLabel={`${trader.businessName} work example`} />
+            ? <Image source={{ uri: optimizedImageUrl(trader.photos[0], 1200) }} style={styles.image} accessibilityLabel={`${trader.businessName} work example`} />
             : <View style={styles.placeholder}><Text style={styles.placeholderLetter}>{trader.businessName.slice(0, 1).toUpperCase()}</Text></View>}
           <View style={styles.featureBadge}><Text style={styles.featureBadgeText}>FEATURED THIS WEEK</Text></View>
         </View>
