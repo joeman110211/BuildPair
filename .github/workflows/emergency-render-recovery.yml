@@ -1,0 +1,50 @@
+name: Emergency Render Recovery
+
+on:
+  push:
+    branches:
+      - emergency-render-recovery
+  workflow_dispatch:
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_API_TOKEN: ${{ secrets.RENDER_API_TOKEN }}
+      RENDER_TOKEN: ${{ secrets.RENDER_TOKEN }}
+    steps:
+      - name: Find existing Render credential
+        id: token
+        shell: bash
+        run: |
+          set -euo pipefail
+          TOKEN=""
+          SOURCE=""
+          if [ -n "${RENDER_API_KEY:-}" ]; then TOKEN="$RENDER_API_KEY"; SOURCE="RENDER_API_KEY"; fi
+          if [ -z "$TOKEN" ] && [ -n "${RENDER_API_TOKEN:-}" ]; then TOKEN="$RENDER_API_TOKEN"; SOURCE="RENDER_API_TOKEN"; fi
+          if [ -z "$TOKEN" ] && [ -n "${RENDER_TOKEN:-}" ]; then TOKEN="$RENDER_TOKEN"; SOURCE="RENDER_TOKEN"; fi
+          if [ -z "$TOKEN" ]; then
+            echo "No Render API credential is stored under the tested secret names."
+            exit 2
+          fi
+          echo "Using stored Render credential from $SOURCE (value remains masked)."
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Roll production back to last known good pre-regression artifact
+        shell: bash
+        env:
+          TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          set -euo pipefail
+          SERVICE_ID="srv-dafv5iad0e5s73e5icb0"
+          TARGET_DEPLOY="dep-dai38pp5efls73atfdsg"
+          HTTP_CODE=$(curl -sS -o /tmp/render-response.json -w "%{http_code}" \
+            -X POST "https://api.render.com/v1/services/${SERVICE_ID}/rollback" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data "{\"deployId\":\"${TARGET_DEPLOY}\"}")
+          echo "Render rollback HTTP status: ${HTTP_CODE}"
+          cat /tmp/render-response.json
+          echo
+          test "$HTTP_CODE" = "201"
