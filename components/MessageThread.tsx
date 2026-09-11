@@ -69,7 +69,7 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
   }, [conversationId]);
-  useEffect(() => { void load(); const refresh = setInterval(() => void load(), 5000); return () => clearInterval(refresh); }, [load]);
+  useEffect(() => { void load(); const refresh = setInterval(() => void load(), 30000); return () => clearInterval(refresh); }, [load]);
 
   const send = async () => {
     const text = body.trim();
