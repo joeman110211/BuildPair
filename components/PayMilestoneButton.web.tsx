@@ -3,7 +3,14 @@ import { useState } from 'react';
 import { Button } from 'react-native-paper';
 import { apiFetch, errorMessage } from '@/lib/api';
 
-export function PayMilestoneButton({ milestoneId, onPaid }: { milestoneId: string; onPaid: () => void }) {
+type Props = {
+  milestoneId?: string;
+  milestoneIds?: string[];
+  label?: string;
+  onPaid: () => void;
+};
+
+export function PayMilestoneButton({ milestoneId, milestoneIds, label = 'Pay with BuildPay', onPaid: _onPaid }: Props) {
   const { getToken } = useAuth();
   const [busy, setBusy] = useState(false);
   const stripeEnabled = Boolean(process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim());
@@ -11,7 +18,8 @@ export function PayMilestoneButton({ milestoneId, onPaid }: { milestoneId: strin
   async function payWithStripe() {
     try {
       setBusy(true);
-      const { url } = await apiFetch<{ url: string }>('/api/stripe/payment-intent', { method: 'POST', body: JSON.stringify({ milestoneId, platform: 'web' }) }, getToken);
+      const body = milestoneIds?.length ? { milestoneIds, platform: 'web' } : { milestoneId, platform: 'web' };
+      const { url } = await apiFetch<{ url: string }>('/api/stripe/payment-intent', { method: 'POST', body: JSON.stringify(body) }, getToken);
       window.location.assign(url);
     } catch (e) {
       window.alert(errorMessage(e));
@@ -20,5 +28,5 @@ export function PayMilestoneButton({ milestoneId, onPaid }: { milestoneId: strin
   }
 
   if (!stripeEnabled) return <Button mode="contained" icon="credit-card-off-outline" disabled>BuildPay temporarily unavailable</Button>;
-  return <Button mode="contained" icon="credit-card" loading={busy} disabled={busy} onPress={payWithStripe}>Pay with BuildPay</Button>;
+  return <Button mode="contained" icon="credit-card" loading={busy} disabled={busy || (!milestoneId && !milestoneIds?.length)} onPress={payWithStripe}>{label}</Button>;
 }
