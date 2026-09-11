@@ -7,6 +7,12 @@
     "orientation": "portrait",
     "scheme": "buildpair",
     "userInterfaceStyle": "light",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/2c528c36-07a7-4cad-b367-f23703f9cd47"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "uk.co.buildpair.app",
