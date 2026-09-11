@@ -1,12 +1,15 @@
 import { useAuth } from '@clerk/expo';
 import { usePathname } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
 import { apiFetch } from '@/lib/api';
 
 export function PresenceHeartbeat() {
   const { isSignedIn, getToken } = useAuth();
   const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+
+  useEffect(() => { pathnameRef.current = pathname; }, [pathname]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -18,7 +21,7 @@ export function PresenceHeartbeat() {
       try {
         await apiFetch('/api/presence', {
           method: 'POST',
-          body: JSON.stringify({ path: pathname || '/', platform: Platform.OS }),
+          body: JSON.stringify({ path: pathnameRef.current || '/', platform: Platform.OS }),
         }, getToken);
       } catch {
         // Presence is operational telemetry only and must never block the app.
@@ -31,7 +34,7 @@ export function PresenceHeartbeat() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [getToken, isSignedIn, pathname]);
+  }, [getToken, isSignedIn]);
 
   return null;
 }
