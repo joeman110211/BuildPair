@@ -6,18 +6,19 @@ type Props = {
   style?: StyleProp<ImageStyle>;
 };
 
-const mainLogo = require('@/assets/brand/buildpair-logo-main.svg');
-const standardLogo = require('@/assets/brand/buildpair-logo-standard.svg');
+const cloudinaryMainLogo = {
+  uri: 'https://res.cloudinary.com/qrrcn7ma/image/upload/v1789145309/buildpair-logo-transparent.png',
+};
 
-/** Official BuildPair artwork traced directly from Joe's supplied logo files. */
+/** Official BuildPair artwork served directly from Cloudinary. */
 export function BuildPairLogo({ compact = false, tagline = true, style }: Props) {
-  const useMain = !compact && tagline;
+  const useLarge = !compact && tagline;
   return (
     <Image
-      source={useMain ? mainLogo : standardLogo}
+      source={cloudinaryMainLogo}
       resizeMode="contain"
       accessibilityLabel="BuildPair. Pairing homeowners with the right trades."
-      style={[useMain ? styles.main : styles.standard, style]}
+      style={[useLarge ? styles.main : styles.standard, style]}
     />
   );
 }
