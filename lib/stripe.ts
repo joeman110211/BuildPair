@@ -1,5 +1,25 @@
 import Stripe from 'stripe';
 
+export const STRIPE_METADATA_KEY_MAX = 40;
+export const STRIPE_METADATA_VALUE_MAX = 500;
+
+/**
+ * Stripe rejects metadata keys longer than 40 characters (and values longer
+ * than 500). Validate locally so a release/payment action fails with a useful
+ * developer error before it reaches Stripe.
+ */
+export function stripeMetadata<T extends Record<string, string>>(metadata: T): T {
+  for (const [key, value] of Object.entries(metadata)) {
+    if (!key || key.length > STRIPE_METADATA_KEY_MAX || key.includes('[') || key.includes(']')) {
+      throw new Error(`Invalid Stripe metadata key "${key}". Keys must be 1-${STRIPE_METADATA_KEY_MAX} characters and cannot contain square brackets.`);
+    }
+    if (value.length > STRIPE_METADATA_VALUE_MAX) {
+      throw new Error(`Stripe metadata value for "${key}" exceeds ${STRIPE_METADATA_VALUE_MAX} characters.`);
+    }
+  }
+  return metadata;
+}
+
 let stripeClient: Stripe | undefined;
 export function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
