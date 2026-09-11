@@ -52,6 +52,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     description: 'Reports and decisions where a human administrator may need to intervene.',
     items: [
       { href: '/admin/moderation', label: 'Moderation', shortLabel: 'Safety', description: 'Handle reports, safety concerns and moderation actions with an audit trail.' },
+      { href: '/admin/payment-disputes', label: 'BuildPay issues', shortLabel: 'BuildPay', description: 'Review paused or escalated unreleased BuildPay stages, responses, refund requests and admin notes.' },
     ],
   },
   {
