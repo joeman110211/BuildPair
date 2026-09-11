@@ -24,13 +24,24 @@ module.exports = defineConfig([
   {
     files: [
       'app/customer/jobs/**/*.tsx',
+      'app/trader/jobs/**/*.tsx',
       'app/trader/quotes/new.tsx',
+      'app/admin/payment-disputes.tsx',
       'components/QuoteComparison.tsx',
     ],
     rules: {
       // These React Native Text nodes render ordinary product copy on native and web.
       // Apostrophes are safe text here and escaping them would make the shared copy harder to read.
       'react/no-unescaped-entities': 'off',
+    },
+  },
+  {
+    files: ['app/customer/jobs/[id].tsx'],
+    rules: {
+      // The awarded-job detail screen hydrates an editable private worksite form
+      // after the protected participant-only endpoint returns. This is form
+      // synchronisation from an external request, not derived display state.
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 ]);
