@@ -1,6 +1,6 @@
 # BuildPair production checklist
 
-Status reviewed: 7 September 2026.
+Status reviewed: 11 September 2026.
 
 The detailed current launch gate is in `docs/PRODUCTION_LAUNCH_2026.md`. This checklist is the shorter operational view. A green build proves that code compiles and tests pass; it does not make third-party services, app stores, payments, hosting, legal obligations or real-device testing disappear.
 
@@ -50,12 +50,24 @@ The detailed current launch gate is in `docs/PRODUCTION_LAUNCH_2026.md`. This ch
 - [ ] Ensure production runs with `BUILDPAIR_PREVIEW_DATA_ENABLED=false` and does not present demo accounts/jobs as real customers.
 - [ ] Remove quiet-launch `noindex, nofollow` only when BuildPair is deliberately ready for search-engine discovery.
 
-## Payments
+## Payments / BuildPay
 
 The live monthly Stripe catalogue currently contains:
 
 - BuildPair Plus £19.99/month: `price_1UCqAM8bTbZf5Cph1OFqiYPT`
 - BuildPair Pro £29.99/month: `price_1UCqC88bTbZf5CphvqAmDTnC`
+
+Current marketplace payment policy:
+
+- BuildPay uses Stripe Connect with separate platform charges and transfers.
+- BuildPair's marketplace fee is **1% of labour/service only**. Materials and VAT are excluded from the BuildPair percentage fee.
+- The 1% labour/service fee is spread across service-stage releases instead of being concentrated in the final payment.
+- Actual Stripe processing costs are recovered progressively from service payouts where the payment economics allow it.
+- Quoted materials are released at their exact quoted amount to the awarded tradesperson's connected Stripe account when the homeowner payment is confirmed.
+- A Stripe transfer to the connected account is not the same thing as a bank payout. Bank availability follows Stripe's payout timing for that connected account.
+- For a staged quote containing materials, initial BuildPay funding should collect the materials amount and first labour/service stage together. Materials release immediately; the first work stage remains secured until its completion point is approved.
+- Later stages are not silently charged. After a non-final release, BuildPay guides the homeowner directly into funding the next stage through an explicit Stripe payment step.
+- An internal BuildPay dispute pauses an unreleased stage. It is not an automatic refund or an automatic finding against either party.
 
 Before enabling public paid traffic:
 
@@ -63,12 +75,28 @@ Before enabling public paid traffic:
 - [ ] Map the live Plus/Pro price IDs to `STRIPE_BASIC_PRICE_ID` / `STRIPE_FEATURED_PRICE_ID`.
 - [ ] Configure and verify platform and Connect webhook destinations/signing secrets on `https://www.buildpair.co.uk/api/stripe/webhook`.
 - [ ] Configure and verify Billing Portal behaviour.
+- [ ] In Stripe Connect payout/onboarding settings, require at least one bank account before BuildPair treats a tradesperson as payout-ready.
+- [ ] Keep debit-card collection optional unless BuildPair deliberately enables Stripe Instant Payouts for eligible connected accounts. Do not promise instant bank availability universally.
+- [ ] Keep multiple payout accounts per currency disabled for the initial UK MVP unless a clear product requirement emerges.
+- [ ] Keep Stripe-hosted/Stripe-managed onboarding for connected tradespeople so BuildPair does not collect identity or bank credentials itself.
+- [ ] Verify the exact Connect capability/account state BuildPair uses for `payout ready`; incomplete verification or disabled payouts must block BuildPay funding/release with clear user wording.
+- [ ] Confirm payout schedules and explain expected bank timing to tradespeople. Do not impose a made-up fixed five-day rule; if a trader needs cleared materials money before purchase, the agreed start date must allow for their actual payout timing.
+- [ ] Decide whether to offer Instant Payouts later, including eligibility checks, fees, failure handling and the fallback to ordinary bank payouts.
 - [ ] Test subscription start, upgrade, downgrade, cancellation, failed renewal and portal access.
 - [ ] Test successful, declined, 3DS, cancelled, duplicate-webhook and refunded job payments before public traffic.
-- [ ] Test Connect onboarding including incomplete verification and disabled-payment states.
-- [ ] Confirm the 5% marketplace platform-fee policy and decide who absorbs Stripe processing fees.
-- [ ] Confirm actual UK VAT-registration status before enabling VAT collection or VAT claims.
+- [ ] Test grouped initial funding: materials + first work stage in one homeowner checkout, exact materials transfer, first work stage remaining secured.
+- [ ] Test a non-final work-stage release followed immediately by the explicit next-stage funding flow. Confirm cancellation/failure of the second payment does not undo the already-approved release and does not silently charge the homeowner.
+- [ ] Test the final release separately and confirm it completes the project without attempting another payment.
+- [ ] Test the full internal dispute path: homeowner raises issue, stage transfer pauses, tradesperson responds, homeowner resolves and continues release, either party can escalate, and no transfer occurs while the dispute remains active.
+- [ ] Define the administrator adjudication/refund policy for escalated disputes, including evidence, partial refunds, chargebacks and who absorbs unrecoverable Stripe processing costs. Do not automate money movement until this policy is explicit and tested.
+- [ ] Test Stripe card disputes/chargebacks against grouped charges, including a charge where materials have already been transferred but the service stage remains secured.
+- [ ] Test refunds against both single-stage and grouped charges and reconcile the BuildPair ledger, connected-account transfers, processing fees and remaining project state.
+- [ ] Test Connect onboarding including incomplete verification, missing bank account, restricted capabilities, disabled payouts and payout failure states.
 - [ ] Configure Stripe/Radar risk controls appropriate to the marketplace model and document chargeback/refund handling.
+- [ ] Confirm actual UK VAT-registration status before enabling VAT collection or VAT claims.
+- [ ] Verify customer receipts and statement descriptors for both subscriptions and job payments.
+- [ ] Verify production copy distinguishes **not funded**, **secured**, **released to the tradesperson's Stripe account**, and **paid out by Stripe to a bank** wherever those states are shown.
+- [ ] Run a low-value live end-to-end payment only after the sandbox flow, production settings and reconciliation checks above are complete.
 
 ## Android
 
