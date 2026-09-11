@@ -9,7 +9,7 @@ type ActivityCounts = {
 
 const EMPTY_COUNTS: ActivityCounts = { unreadMessages: 0, unreadNotifications: 0 };
 
-export function useActivityCounts(refreshMs = 8000) {
+export function useActivityCounts(refreshMs = 60_000) {
   const { getToken, isSignedIn } = useAuth();
   const getTokenRef = useRef(getToken);
   const [counts, setCounts] = useState<ActivityCounts>(EMPTY_COUNTS);
