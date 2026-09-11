@@ -1,0 +1,86 @@
+name: Live BuildPair Diagnostic
+
+on:
+  push:
+    branches:
+      - diagnostic-live
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch production and direct Render responses
+        shell: bash
+        run: |
+          set -euo pipefail
+          for url in \
+            'https://www.buildpair.co.uk/' \
+            'https://buildpair.onrender.com/' \
+            'https://www.buildpair.co.uk/sw.js' \
+            'https://www.buildpair.co.uk/manifest.webmanifest' \
+            'https://www.buildpair.co.uk/api/health'
+          do
+            echo "===== $url ====="
+            rm -f /tmp/body
+            curl -L --compressed --connect-timeout 15 --max-time 45 -sS \
+              -D - -o /tmp/body "$url" || true
+            echo "--- body bytes ---"
+            wc -c /tmp/body || true
+            echo "--- body preview ---"
+            head -c 3000 /tmp/body || true
+            echo
+          done
+
+      - name: Inspect production HTML assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --compressed --connect-timeout 15 --max-time 45 -sS \
+            'https://www.buildpair.co.uk/' -o /tmp/home.html
+          echo '===== script/src and stylesheet refs ====='
+          grep -Eo '(src|href)="[^"]+"' /tmp/home.html | head -100 || true
+          echo '===== likely Expo JS assets ====='
+          grep -Eo '/_expo/[^" ]+\.js' /tmp/home.html | sort -u > /tmp/js-assets.txt || true
+          cat /tmp/js-assets.txt || true
+          while read -r asset; do
+            [ -n "$asset" ] || continue
+            echo "===== $asset ====="
+            rm -f /tmp/asset
+            curl -L --compressed --connect-timeout 15 --max-time 45 -sS \
+              -o /tmp/asset -w 'status=%{http_code} type=%{content_type} bytes=%{size_download}\n' \
+              "https://www.buildpair.co.uk$asset" || true
+            head -c 160 /tmp/asset || true
+            echo
+          done < /tmp/js-assets.txt
+
+      - name: Headless Chrome render
+        shell: bash
+        run: |
+          set +e
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          echo "Chrome: $CHROME"
+          if [ -z "$CHROME" ]; then
+            echo 'No Chrome binary found on runner'
+            exit 0
+          fi
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --disable-dev-shm-usage \
+            --virtual-time-budget=15000 \
+            --enable-logging=stderr \
+            --v=0 \
+            --dump-dom \
+            'https://www.buildpair.co.uk/?diagnostic=github-runner' \
+            > /tmp/dom.html 2> /tmp/chrome.err
+          echo "Chrome exit: $?"
+          echo '===== rendered DOM bytes ====='
+          wc -c /tmp/dom.html
+          echo '===== rendered DOM preview ====='
+          head -c 16000 /tmp/dom.html
+          echo
+          echo '===== Chrome error lines ====='
+          grep -Ei 'error|exception|failed|uncaught|refused|clerk|service.?worker' /tmp/chrome.err | head -250 || true
+          exit 0
