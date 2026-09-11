@@ -17,7 +17,12 @@ export async function GET(request: Request, { id }: { id: string }) {
     const allowed = job.customerId === userId || accepted?.traderId === userId;
     if (!allowed) throw new HttpError(403, 'You cannot access this job');
 
-    const modeRows = await getSql()`SELECT payment_mode AS "paymentMode" FROM jobs WHERE id = ${id} LIMIT 1` as unknown as { paymentMode: 'undecided' | 'buildpair' | 'external' }[];
+    const modeRows = await getSql()`
+      SELECT payment_mode AS "paymentMode", start_agreed_at AS "startAgreedAt", start_proposed_by AS "startProposedBy",
+             scheduled_start_at AS "scheduledStartAt"
+      FROM jobs WHERE id = ${id} LIMIT 1
+    ` as unknown as { paymentMode: 'undecided' | 'buildpair' | 'external'; startAgreedAt: string | null; startProposedBy: string | null; scheduledStartAt: string | null }[];
+    const jobState = modeRows[0];
     const milestones = await getSql()`
       SELECT id, job_id AS "jobId", quote_id AS "quoteId", title, amount, status, kind,
              trigger_description AS "triggerDescription", sort_order AS "sortOrder", release_mode AS "releaseMode",
@@ -32,7 +37,21 @@ export async function GET(request: Request, { id }: { id: string }) {
     const payoutRows = accepted ? await getSql()`SELECT stripe_payouts_enabled AS "stripePayoutsEnabled" FROM trader_profiles WHERE user_id = ${accepted.traderId} LIMIT 1` as unknown as { stripePayoutsEnabled: boolean }[] : [];
     const variations = await getSql()`SELECT id, job_id AS "jobId", trader_id AS "traderId", customer_id AS "customerId", title, description, amount_delta AS "amountDelta", duration_delta_days AS "durationDeltaDays", status, created_at AS "createdAt", responded_at AS "respondedAt" FROM job_variations WHERE job_id = ${id} ORDER BY created_at DESC`;
     const timeline = await getSql()`SELECT id, event_type AS "eventType", title, description, metadata, actor_id AS "actorId", created_at AS "createdAt" FROM job_events WHERE job_id = ${id} ORDER BY created_at ASC`;
-    return Response.json({ job: { ...job, paymentMode: modeRows[0]?.paymentMode ?? 'undecided' }, acceptedQuote: accepted, milestones, trader: trader ? { ...trader, stripePayoutsEnabled: payoutRows[0]?.stripePayoutsEnabled ?? false } : null, existingReview, variations, timeline });
+    return Response.json({
+      job: {
+        ...job,
+        paymentMode: jobState?.paymentMode ?? 'undecided',
+        startAgreedAt: jobState?.startAgreedAt ?? null,
+        startProposedBy: jobState?.startProposedBy ?? null,
+        scheduledStartAt: jobState?.scheduledStartAt ?? job.scheduledStartAt,
+      },
+      acceptedQuote: accepted,
+      milestones,
+      trader: trader ? { ...trader, stripePayoutsEnabled: payoutRows[0]?.stripePayoutsEnabled ?? false } : null,
+      existingReview,
+      variations,
+      timeline,
+    });
   } catch (error) { return jsonError(error); }
 }
 
@@ -41,7 +60,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     const userId = await authenticatedUserId(request);
     await ensureDbUser(userId);
     const modes = await accountModes(userId);
-    const payload = await request.json() as { action?: string; mode?: 'buildpair' | 'external'; acknowledgedPaymentTerms?: boolean };
+    const payload = await request.json() as { action?: string; mode?: 'buildpair' | 'external'; acknowledgedPaymentTerms?: boolean; startAt?: string };
     const db = getDb();
 
     if (payload.action === 'cancel') {
@@ -53,6 +72,42 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       await addJobEvent(id, userId, 'job_cancelled', 'Job cancelled', cancelled.title);
       await Promise.allSettled(pendingTraders.map(({ traderId }) => createNotification(traderId, { type: 'job_cancelled', title: 'Job cancelled by homeowner', body: `${cancelled.title} is no longer accepting quotes.`, href: '/trader/my-jobs' })));
       return Response.json({ cancelled: true });
+    }
+
+    if (payload.action === 'propose_start') {
+      if (!modes.traderEnabled) throw new HttpError(403, 'Tradesperson account required');
+      const startAt = payload.startAt ? new Date(payload.startAt) : null;
+      if (!startAt || Number.isNaN(startAt.getTime())) throw new HttpError(400, 'Choose a valid start date and time');
+      if (startAt.getTime() < Date.now() - 60 * 60 * 1000) throw new HttpError(400, 'The proposed start time cannot be in the past');
+      if (startAt.getTime() > Date.now() + 2 * 365 * 24 * 60 * 60 * 1000) throw new HttpError(400, 'Choose a start date within the next two years');
+      const rows = await getSql()`
+        SELECT j.customer_id AS "customerId", j.title, j.status, q.trader_id AS "traderId"
+        FROM jobs j JOIN quotes q ON q.id = j.accepted_quote_id WHERE j.id = ${id} LIMIT 1
+      ` as unknown as { customerId: string; title: string; status: string; traderId: string }[];
+      const row = rows[0];
+      if (!row || row.traderId !== userId) throw new HttpError(404, 'Awarded job not found');
+      if (row.status !== 'in_progress') throw new HttpError(409, 'A start date can only be proposed for an active awarded job');
+      await getSql()`UPDATE jobs SET scheduled_start_at = ${startAt.toISOString()}, start_agreed_at = NULL, start_proposed_by = ${userId}, updated_at = now() WHERE id = ${id}`;
+      const when = formatUkDateTime(startAt);
+      await addJobEvent(id, userId, 'job_start_proposed', 'Start date proposed', `${when} proposed by the tradesperson. The homeowner must confirm it before the opening BuildPay payment can be taken.`, { startAt: startAt.toISOString() });
+      await createNotification(row.customerId, { type: 'job_start_proposed', title: `Start proposed · ${when}`, body: `${row.title}: confirm the proposed start date and time in BuildPair before making the opening BuildPay payment.`, href: `/customer/jobs/${id}/start`, email: true });
+      return Response.json({ proposed: true, scheduledStartAt: startAt.toISOString(), startAgreedAt: null });
+    }
+
+    if (payload.action === 'confirm_start') {
+      if (!modes.customerEnabled) throw new HttpError(403, 'Homeowner account required');
+      const rows = await getSql()`
+        SELECT j.customer_id AS "customerId", j.title, j.status, j.scheduled_start_at AS "scheduledStartAt", q.trader_id AS "traderId"
+        FROM jobs j JOIN quotes q ON q.id = j.accepted_quote_id WHERE j.id = ${id} LIMIT 1
+      ` as unknown as { customerId: string; title: string; status: string; scheduledStartAt: string | null; traderId: string }[];
+      const row = rows[0];
+      if (!row || row.customerId !== userId) throw new HttpError(404, 'Awarded job not found');
+      if (row.status !== 'in_progress' || !row.scheduledStartAt) throw new HttpError(409, 'The tradesperson must propose a start date and time first');
+      await getSql()`UPDATE jobs SET start_agreed_at = now(), updated_at = now() WHERE id = ${id}`;
+      const when = formatUkDateTime(new Date(row.scheduledStartAt));
+      await addJobEvent(id, userId, 'job_start_agreed', 'Start date agreed', `${when} confirmed by the homeowner.`, { startAt: row.scheduledStartAt });
+      await createNotification(row.traderId, { type: 'job_start_agreed', title: `Start agreed · ${when}`, body: `${row.title}: the homeowner confirmed the start date and time. BuildPay setup can now move to the opening payment.`, href: `/trader/jobs/${id}`, email: true });
+      return Response.json({ confirmed: true, scheduledStartAt: row.scheduledStartAt, startAgreedAt: new Date().toISOString() });
     }
 
     if (payload.action === 'set_payment_mode') {
@@ -75,13 +130,16 @@ export async function PATCH(request: Request, { id }: { id: string }) {
           throw new HttpError(409, 'The tradesperson must finish Stripe payout setup before this job can use BuildPay. They have been notified.');
         }
         const economicsRows = await getSql()`
-          SELECT count(*)::int AS "chargeCount", COALESCE(SUM(CASE WHEN kind = 'materials' THEN amount ELSE 0 END), 0)::int AS "materialsStages"
+          SELECT count(*)::int AS "stageCount",
+                 COALESCE(SUM(CASE WHEN kind = 'materials' THEN amount ELSE 0 END), 0)::int AS "materialsStages",
+                 count(*) FILTER (WHERE kind = 'materials')::int AS "materialsStageCount"
           FROM job_milestones WHERE job_id = ${id}
-        ` as unknown as { chargeCount: number; materialsStages: number }[];
-        const economics = economicsRows[0] ?? { chargeCount: 0, materialsStages: 0 };
+        ` as unknown as { stageCount: number; materialsStages: number; materialsStageCount: number }[];
+        const economics = economicsRows[0] ?? { stageCount: 0, materialsStages: 0, materialsStageCount: 0 };
         if (economics.materialsStages !== row.materialsCost) throw new HttpError(409, 'The BuildPay schedule must contain a materials stage equal to the exact quoted materials amount before BuildPay can be selected.');
+        const plannedChargeCount = Math.max(1, economics.stageCount - (economics.materialsStageCount > 0 && economics.stageCount > 1 ? 1 : 0));
         try {
-          validateProtectedPaymentEconomics({ totalAmount: row.totalAmount, materialsAmount: row.materialsCost, laborServiceAmount: row.laborCost, chargeCount: economics.chargeCount });
+          validateProtectedPaymentEconomics({ totalAmount: row.totalAmount, materialsAmount: row.materialsCost, laborServiceAmount: row.laborCost, chargeCount: plannedChargeCount });
         } catch (error) {
           throw new HttpError(409, error instanceof Error ? error.message : 'This BuildPay schedule cannot safely cover its processing costs.');
         }
@@ -93,7 +151,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       }
       await getSql()`UPDATE jobs SET payment_mode = ${payload.mode}, updated_at = now() WHERE id = ${id}`;
       if (payload.mode === 'buildpair') {
-        await addJobEvent(id, userId, 'buildpay_selected', 'BuildPay selected', 'The homeowner selected BuildPay. The exact materials amount releases for procurement when paid; deposits, progress stages and final funds remain controlled until the agreed trigger is completed and the homeowner approves release.', { paymentTermsVersion: '2026-09-11-buildpay-v1', homeownerAcknowledgedPaymentTerms: true });
+        await addJobEvent(id, userId, 'buildpay_selected', 'BuildPay selected', 'The homeowner selected BuildPay. The opening payment can combine the quoted materials with the first protected work stage. Materials release only after the tradesperson acknowledges the payment; work-stage money remains controlled until its agreed trigger is completed and the homeowner approves release.', { paymentTermsVersion: '2026-09-11-buildpay-v4', homeownerAcknowledgedPaymentTerms: true });
         await createNotification(row.traderId, { type: 'payment_mode_selected', title: 'BuildPay selected', body: `${row.title}: the homeowner selected BuildPay. BuildPair charges 1% only on labour/service value; materials and VAT are excluded, and Stripe processing is recovered at cost from controlled service payouts.`, href: `/trader/jobs/${id}`, email: true });
       } else {
         await addJobEvent(id, userId, 'direct_payments_selected', 'Direct payment selected', 'The homeowner chose to arrange payment directly with the tradesperson. BuildPair may record user confirmations but does not receive, hold, protect, release, refund, recover or independently verify money paid directly.');
@@ -134,4 +192,8 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     await createNotification(owned.customerId, { type: 'work_completed', title: 'Work marked complete', body: `${owned.title} has been marked complete. Review the project history and leave feedback when you are satisfied.`, href: `/customer/jobs/${id}`, email: true });
     return Response.json({ completed: true });
   } catch (error) { return jsonError(error); }
+}
+
+function formatUkDateTime(value: Date) {
+  return value.toLocaleString('en-GB', { timeZone: 'Europe/London', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
