@@ -101,13 +101,26 @@ export default function TraderJobBoard() {
   const limit = profile?.monthlyQuoteLimit ?? 0;
   const allowanceUsed = limit > 0 && used >= limit;
   const resetLabel = profile?.monthlyQuoteResetAt ? new Date(profile.monthlyQuoteResetAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'next month';
+  const activeFilters = [
+    search.trim() ? `Search: “${search.trim()}”` : null,
+    directOnly ? 'Direct requests only' : null,
+    urgentOnly ? 'Urgent only' : null,
+    radiusFilter != null ? `Within ${radiusFilter} miles` : null,
+  ].filter(Boolean) as string[];
+
+  function clearFilters() {
+    setSearch('');
+    setDirectOnly(false);
+    setUrgentOnly(false);
+    setRadiusFilter(profile?.radiusMiles ?? null);
+  }
 
   return <Screen title="Job Board" subtitle="Browse work matching your trades and service area. Direct requests can move straight to a quote or to a site visit first when the job needs inspecting.">
     <AppCard>
       <View style={styles.usageTop}>
         <View style={styles.flex}>
           <Text variant="titleMedium" style={styles.title}>{profile?.subscriptionTier === 'featured' ? 'BuildPair Pro' : profile?.subscriptionTier === 'basic' ? 'BuildPair Plus' : 'Starter Free'}</Text>
-          <Text style={styles.muted}>{paid ? `${used} of ${limit} open-marketplace offers used this month. Direct homeowner requests do not count.` : 'You can browse matching jobs. Upgrade to Plus or Pro when you want to offer or message.'}</Text>
+          <Text style={styles.muted}>{paid ? `${used} of ${limit} open-marketplace offers used this month. An offer is counted when you submit an open-marketplace quote. Opening a job, starting a conversation or preparing a draft does not use the allowance. Direct homeowner requests do not count.` : 'You can browse matching jobs. Upgrade to Plus or Pro when you want to submit an open-marketplace offer or message.'}</Text>
         </View>
         {paid ? <Chip icon="message-text-outline">{used}/{limit} used</Chip> : <Chip icon="eye-outline">Browse only</Chip>}
       </View>
@@ -135,7 +148,13 @@ export default function TraderJobBoard() {
     </View> : null}
 
     {error ? <Text style={styles.error}>{error}</Text> : null}
-    {!opportunities.length ? <EmptyState title="No matching jobs right now" body="Try clearing the filters or widening the search radius up to your profile service area. New jobs matching your selected trades and area will appear here automatically." /> : opportunities.map((job) => {
+    {!opportunities.length ? <EmptyState
+      title="No jobs match your current search"
+      body={activeFilters.length
+        ? `BuildPair checked your trade and service area with these filters: ${activeFilters.join(' · ')}. Clear the filters or widen the radius up to your saved service area.`
+        : 'There are currently no open jobs matching your selected trades and saved service area. New matching jobs will appear here automatically.'}
+      action={activeFilters.length ? <Button mode="outlined" icon="filter-remove-outline" onPress={clearFilters}>Clear search & filters</Button> : undefined}
+    /> : opportunities.map((job) => {
       const direct = job.targetTraderId === profile?.userId;
       const ownQuote = job.isPreview ? undefined : quotes.find((quote) => quote.jobId === job.id && quote.status === 'pending');
       const conversation = job.isPreview ? undefined : conversations.find((item) => item.jobId === job.id);
@@ -144,9 +163,11 @@ export default function TraderJobBoard() {
       const blockedByAllowance = paid && firstMarketplaceOffer && allowanceUsed;
       const canOpen = !job.isPreview && !blockedByPlan && !blockedByAllowance;
       const distanceLabel = job.distanceMiles == null ? null : job.distanceMiles < 1 ? '<1 mile away' : `${Math.round(job.distanceMiles)} miles away`;
+      const postedLabel = job.createdAt ? new Date(job.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Unknown time';
+      const jobRef = `BP-${job.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
 
       return <AppCard key={job.id}>
-        <View style={styles.cardTop}><View style={styles.titleBlock}><Text variant="titleLarge" style={styles.title}>{job.title}</Text><Text style={styles.muted}>📍 {job.postcode || job.locationLabel || 'Location available'} · {job.budgetRange}</Text></View><View style={styles.badges}>{job.isPreview ? <Chip compact icon="flask-outline">Preview job</Chip> : null}{direct ? <Chip compact icon="account-arrow-left">Direct request</Chip> : null}{conversation ? <Chip compact icon="message-check-outline">Conversation open</Chip> : ownQuote ? <Chip compact icon="check">Quoted</Chip> : !job.isPreview ? <Chip compact>New</Chip> : null}</View></View>
+        <View style={styles.cardTop}><View style={styles.titleBlock}><Text variant="titleLarge" style={styles.title}>{job.title}</Text><Text style={styles.muted}>📍 {job.postcode || job.locationLabel || 'Location available'} · {job.budgetRange}</Text><Text variant="bodySmall" style={styles.reference}>Job ref {jobRef} · Posted {postedLabel}</Text></View><View style={styles.badges}>{job.isPreview ? <Chip compact icon="flask-outline">Preview job</Chip> : null}{direct ? <Chip compact icon="account-arrow-left">Direct request</Chip> : null}{conversation ? <Chip compact icon="message-check-outline">Conversation open</Chip> : ownQuote ? <Chip compact icon="check">Quoted</Chip> : !job.isPreview ? <Chip compact>New</Chip> : null}</View></View>
         {job.photos?.[0] ? <Image source={{ uri: job.photos[0] }} style={styles.photo} /> : null}
         <View style={styles.meta}><Chip compact icon="home-outline">{job.propertyType}</Chip><Chip compact icon="clock-outline">{job.urgency}</Chip><Chip compact>{job.category}</Chip>{distanceLabel && !direct ? <Chip compact icon="map-marker-distance">{distanceLabel}</Chip> : null}</View>
         <Text numberOfLines={4} style={styles.description}>{job.description}</Text>
@@ -183,6 +204,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 220, gap: 3 },
   title: { fontWeight: '900', color: colors.charcoal },
   muted: { color: colors.muted, lineHeight: 21 },
+  reference: { color: colors.muted, fontWeight: '700' },
   badges: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   photo: { width: '100%', height: 210, borderRadius: 14, backgroundColor: colors.border },
   meta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
