@@ -1,14 +1,18 @@
 import { getSql } from '@/lib/sql';
+import { ensureLaunchWaitlistTable } from '@/lib/waitlist-store';
 
 export const BUILDPAIR_PRODUCT_MAP = `
 BuildPair is a UK home-improvement marketplace and project workflow platform with two account modes under one login: Homeowner and Tradesperson.
 
 PUBLIC PRODUCT
+- BuildPair is currently in pre-launch. Public visitors can join the launch waiting list as a homeowner or tradesperson before normal registration opens.
+- The launch waiting list records audience, trade (for tradespeople), tester interest, consent choices, source, status and join time. Eligible waiting-list tradespeople can qualify for the Founding Trades launch reward under the published offer rules.
 - Homeowners can describe work in plain English, search/match the right trade, browse trader profiles, post jobs, compare structured quotes, hire, message, track work, pay and review.
 - Tradespeople can build a public business profile, select trade categories/services, discover suitable jobs, quote, manage accepted work, invoices, visits, milestones, messages, payments, reviews, portfolio stories and subscription features.
 - Public information includes the homepage/search, trade directory and profiles, homeowner/trader product pages, pricing, advice, trust & safety, marketplace standards, payments information, building-regulations guidance, about/contact, terms and privacy.
 
 HOMEOWNER WORKFLOW
+- During pre-launch, a homeowner can join the launch waiting list and optionally volunteer for real-world testing.
 - Sign up/sign in with Clerk -> enable Homeowner mode -> dashboard.
 - Find a trade with AI-assisted trade matching or browse the directory.
 - Post a job with category/property details, photos and an optional Gemini-generated job specification.
@@ -16,6 +20,7 @@ HOMEOWNER WORKFLOW
 - Use job-linked messaging, milestones/payment records, notifications, saved trades and reviews.
 
 TRADESPERSON WORKFLOW
+- During pre-launch, a tradesperson can join the launch waiting list with their trade and optional tester interest. The admin waitlist records original join order for launch/reward administration.
 - Sign up/sign in with Clerk -> enable Tradesperson mode -> onboarding/business profile.
 - Profile contains business/trade/service-area details, bio, qualifications/credentials, media and portfolio/story content.
 - Job board and saved searches help find work. Quote assistant helps draft scope/exclusions/payment wording while BuildPair calculates money deterministically.
@@ -27,12 +32,12 @@ AI FEATURES
 - Job Spec: homeowner answers -> structured job specification.
 - Quote Assistant: trader/job details -> professional scope/exclusions/payment wording; monetary totals are not delegated to AI.
 - Message Assistant: conversation/job context -> summary plus three reply suggestions.
-- Admin Assistant: owner/admin-only whole-product investigation with live marketplace context and confirmation-gated administrative actions. Elevated Admin Assistant tools are never exposed to homeowner, tradesperson, public or other AI features.
+- Admin Assistant: owner/admin-only whole-product investigation with live marketplace and launch-waitlist context plus confirmation-gated administrative actions. Elevated Admin Assistant tools are never exposed to homeowner, tradesperson, public or other AI features.
 - AI calls use the server-only GEMINI_API_KEY. Per-user/IP limits and an application-wide paid-AI daily ceiling protect usage. AI request/response audit records are available only to administrators.
 
 PLATFORM & SECURITY
 - Clerk: authentication and account identity.
-- Neon PostgreSQL: marketplace/application data.
+- Neon PostgreSQL: marketplace/application data, including the launch_waitlist table.
 - Stripe: subscriptions, customer payments, Connect/trader payouts and webhooks.
 - Cloudinary: uploaded job/profile/project media.
 - Resend: transactional email/notifications.
@@ -52,6 +57,7 @@ ADMIN CONSOLE
 - Messages: conversations and flagged messages.
 - Photos & media: uploaded profile/job media.
 - Moderation: reports and moderation decisions.
+- Launch waitlist: pre-launch homeowners, tradespeople, Founding Trades candidates, tester volunteers, registration status and reward status.
 - Product insights: account and marketplace behaviour.
 - Visitor analytics: public traffic/acquisition.
 - System health: database, Clerk, Gemini, Cloudinary, Resend and Stripe.
@@ -68,8 +74,9 @@ async function safeQuery<T extends AnyRow>(run: () => Promise<T[]>) {
 
 export async function buildAdminLiveContext() {
   const sql = getSql();
+  await ensureLaunchWaitlistTable();
 
-  const [metrics, jobs, quotes, payments, reports, users, aiUsage] = await Promise.all([
+  const [metrics, jobs, quotes, payments, reports, users, aiUsage, waitlistSummary, recentWaitlist] = await Promise.all([
     safeQuery(() => sql`
       SELECT
         (SELECT count(*)::int FROM users WHERE coalesce(is_deleted, false) = false) AS "users",
@@ -122,6 +129,25 @@ export async function buildAdminLiveContext() {
         count(*) FILTER (WHERE created_at >= now() - interval '24 hours' AND status = 'error')::int AS "errors24h"
       FROM ai_request_logs
     ` as Promise<AnyRow[]>),
+    safeQuery(() => sql`
+      SELECT
+        count(*) FILTER (WHERE status <> 'removed')::int AS "total",
+        count(*) FILTER (WHERE status <> 'removed' AND audience = 'trader')::int AS "traders",
+        count(*) FILTER (WHERE status <> 'removed' AND audience = 'homeowner')::int AS "homeowners",
+        count(*) FILTER (WHERE status <> 'removed' AND tester_interest)::int AS "testers",
+        count(*) FILTER (WHERE status = 'registered')::int AS "registered",
+        count(*) FILTER (WHERE pro_reward_granted_at IS NOT NULL)::int AS "rewarded",
+        count(*) FILTER (WHERE status <> 'removed' AND created_at >= now() - interval '24 hours')::int AS "joined24h",
+        count(*) FILTER (WHERE status <> 'removed' AND created_at >= now() - interval '7 days')::int AS "joined7d"
+      FROM launch_waitlist
+    ` as Promise<AnyRow[]>),
+    safeQuery(() => sql`
+      SELECT audience, trade, tester_interest AS "testerInterest", source, status, created_at AS "createdAt"
+      FROM launch_waitlist
+      WHERE status <> 'removed'
+      ORDER BY created_at DESC
+      LIMIT 8
+    ` as Promise<AnyRow[]>),
   ]);
 
   const configuration = {
@@ -138,6 +164,8 @@ export async function buildAdminLiveContext() {
     capturedAt: new Date().toISOString(),
     configuration,
     metrics: metrics[0] ?? {},
+    launchWaitlist: waitlistSummary[0] ?? {},
+    recentWaitlist,
     recentJobs: jobs,
     recentQuotes: quotes,
     recentPayments: payments,
