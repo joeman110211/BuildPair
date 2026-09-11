@@ -53,7 +53,7 @@ type BusinessQuote = {
   shareToken: string;
   shareUrl: string;
   createdAt: string;
-  items: Array<{ id?: string; description: string; category: ItemCategory; quantity: number | string; unitPrice: number; lineTotal: number }>;
+  items: { id?: string; description: string; category: ItemCategory; quantity: number | string; unitPrice: number; lineTotal: number }[];
 };
 
 const START_DATE_OPTIONS: SelectOption[] = buildQuoteStartDateOptions(365);
@@ -219,7 +219,7 @@ export default function NewQuoteScreen() {
         title: 'Materials payment',
         amount: materialsCost,
         kind: 'materials',
-        trigger: 'Paid for the quoted materials allowance. Additional materials require homeowner approval before purchase.',
+        trigger: 'Included in the opening BuildPay payment. Released after the tradesperson acknowledges the payment so the quoted materials can be ordered.',
         sortOrder: result.length + 1,
       });
     }
@@ -227,10 +227,10 @@ export default function NewQuoteScreen() {
     if (depositAmount > 0) {
       result.push({
         key: 'deposit',
-        title: external ? 'Deposit' : 'Protected start deposit',
+        title: external ? 'Deposit' : 'Protected deposit',
         amount: depositAmount,
         kind: 'deposit',
-        trigger: external ? 'Due when the quote is accepted and before work starts.' : 'Released after the agreed start/material-arrival point is confirmed.',
+        trigger: external ? 'Due when the quote is accepted and before work starts.' : 'Held in BuildPay until the agreed deposit release point is reached and the homeowner approves it.',
         sortOrder: result.length + 1,
       });
     }
@@ -245,10 +245,10 @@ export default function NewQuoteScreen() {
 
     result.push({
       key: 'final',
-      title: external ? 'Final balance' : 'Final protected payment',
+      title: external ? 'Final balance' : 'Final payment',
       amount: finalAmount,
       kind: 'final',
-      trigger: external ? 'Due when the agreed work is complete.' : 'Released after final completion is approved by the homeowner.',
+      trigger: external ? 'Due when the agreed work is complete.' : 'Held in BuildPay and released after final completion is approved by the homeowner.',
       sortOrder: result.length + 1,
     });
     return result;
@@ -346,9 +346,9 @@ export default function NewQuoteScreen() {
     if ((jobTitle || job?.title || '').trim().length < 2) return 'Add a job title.';
     if (workIncluded.trim().length < QUOTE_SCOPE_MIN_LENGTH) return `Explain the work included in at least ${QUOTE_SCOPE_MIN_LENGTH} characters so the customer knows exactly what the price covers.`;
     if (!pricedItems.length || totalAmount <= 0) return 'Add at least one priced item.';
-    if (!external && serviceFundingBalance <= 0) return 'A BuildPair trade quote needs a labour/service amount as well as any materials. Materials-only sales are not supported as protected jobs.';
+    if (!external && serviceFundingBalance <= 0) return 'A BuildPair trade quote needs a labour/service amount as well as any materials. Materials-only sales are not supported as BuildPay jobs.';
     const depositLimit = external ? totalAmount : serviceFundingBalance;
-    if (planMode !== 'single' && (depositAmount < 0 || depositAmount >= depositLimit)) return `The deposit must be less than the ${external ? 'full quote total' : 'protected service balance after materials'}.`;
+    if (planMode !== 'single' && (depositAmount < 0 || depositAmount >= depositLimit)) return `The deposit must be less than the ${external ? 'full quote total' : materialsCost > 0 ? 'work balance after materials' : 'full work balance'}.`;
     if (depositUnit === 'percent' && (Number(depositValue || 0) < 0 || Number(depositValue || 0) >= 100)) return 'Deposit percentage must be less than 100%.';
     if (planMode === 'staged') {
       if (!stages.length) return 'Add at least one stage payment or choose a simpler payment option.';
@@ -358,7 +358,7 @@ export default function NewQuoteScreen() {
     if (finalAmount <= 0) return 'The deposit and stage payments must leave a final balance.';
     if (!external && !durationDays) return 'Choose roughly how long the job should take.';
     if (!external && !proposedStartDate) return 'Choose when you expect to start.';
-    if (external && paymentMethod === 'buildpair' && !payoutReady) return 'BuildPair payments are not available until Stripe has confirmed payout readiness. Use direct payment for now or finish payout setup first.';
+    if (external && paymentMethod === 'buildpair' && !payoutReady) return 'BuildPay is not available until Stripe has confirmed payout readiness. Use direct payment for now or finish payout setup first.';
     return '';
   }
 
@@ -472,14 +472,19 @@ export default function NewQuoteScreen() {
     return <Screen title="Preview quote" subtitle="This is what the customer will read. Check it before you send it." backHref="/trader/quotes" footer={footer}>
       <QuoteDocument quote={previewQuote} />
       {!external ? <AppCard style={styles.protectionCard}>
-        <Chip icon="shield-lock-outline">BuildPair Protected Payments</Chip>
-        <Text variant="titleMedium" style={styles.title}>Customer payment timeline</Text>
+        <Chip icon="shield-lock-outline">BuildPay</Chip>
+        <Text variant="titleMedium" style={styles.title}>How this quote can be paid</Text>
         <MilestoneTimeline items={paymentSchedule.map((stage) => ({ id: stage.key, title: stage.title, amount: stage.amount, kind: stage.kind, trigger: stage.trigger }))} />
-        <Text style={styles.muted}>Materials are the exact materials subtotal and carry no BuildPair platform fee. BuildPair's 1% applies to labour/service, including site overhead. Stripe processing is recovered at actual cost from controlled service payouts if the homeowner chooses BuildPair Protected Payments.</Text>
+        <Text style={styles.muted}>{materialsCost > 0 ? 'The homeowner can pay the materials amount together with the first protected work stage in one opening card payment. Materials are released only after you acknowledge that payment; the work-stage amount stays protected.' : 'There are no quoted materials on this job. BuildPay can hold a deposit, progress stage or the full work amount until the agreed release point is reached.'}</Text>
+        <Text style={styles.muted}>BuildPair takes 1% of labour/service only, never materials or VAT. Stripe processing is recovered at actual cost from controlled service payouts.</Text>
       </AppCard> : null}
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
     </Screen>;
   }
+
+  const buildPayPlanButtons = materialsCost > 0
+    ? [{ value: 'single', label: 'Materials + balance' }, { value: 'deposit', label: 'Materials + deposit' }, { value: 'staged', label: 'Materials + stages' }]
+    : [{ value: 'single', label: 'Full amount' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Stage payments' }];
 
   return <Screen title={quoteId ? 'Edit quote draft' : 'Create quote'} subtitle={external ? 'A straightforward quote for any customer. No BuildPair job required.' : (job?.title ?? title ?? 'BuildPair job')} backHref="/trader/quotes" footer={footer}>
     {external ? <AppCard>
@@ -528,7 +533,7 @@ export default function NewQuoteScreen() {
         {!external ? <><View style={styles.row}><Text>Materials</Text><Text>{formatMoney(materialsCost)}</Text></View><View style={styles.row}><Text>Labour</Text><Text>{formatMoney(labourOnlyCost)}</Text></View>{overheadCost > 0 ? <View style={styles.row}><Text>Site / overhead</Text><Text>{formatMoney(overheadCost)}</Text></View> : null}</> : null}
         <View style={styles.row}><Text>Subtotal</Text><Text>{formatMoney(subtotal)}</Text></View>{vatAmount ? <View style={styles.row}><Text>VAT</Text><Text>{formatMoney(vatAmount)}</Text></View> : null}<View style={styles.row}><Text variant="titleLarge" style={styles.title}>Total</Text><Text variant="headlineSmall" style={styles.total}>{formatMoney(totalAmount)}</Text></View>
       </View>
-      {!external ? <AppCard elevated={false} style={styles.feeCard}><Text variant="titleSmall" style={styles.title}>BuildPair payment economics</Text><Text style={styles.muted}>Materials: 0% BuildPair fee. Labour + site/overhead: 1% BuildPair fee if protected payments are used. Stripe's actual processing cost is also recovered from controlled service payouts, so your materials purchasing money is not shaved down by card fees.</Text></AppCard> : null}
+      {!external ? <AppCard elevated={false} style={styles.feeCard}><Text variant="titleSmall" style={styles.title}>BuildPay fees</Text><Text style={styles.muted}>Materials: no BuildPair fee. Labour + site/overhead: 1% BuildPair fee when BuildPay is used. Stripe processing is recovered at actual cost from controlled work payouts, so the quoted materials amount can be released in full.</Text></AppCard> : null}
     </AppCard>
 
     <AppCard>
@@ -544,18 +549,18 @@ export default function NewQuoteScreen() {
 
     <AppCard>
       <Text variant="titleLarge" style={styles.title}>Payment stages</Text>
-      <Text style={styles.muted}>{external ? 'Choose how you want this customer to pay.' : 'Materials are split out automatically. Then choose whether the service balance is paid at final completion, with a protected start deposit, or across progress milestones.'}</Text>
-      <SegmentedButtons value={planMode} onValueChange={(value) => setPlanMode(value as PlanMode)} buttons={external ? [{ value: 'single', label: 'Full at end' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Stage payments' }] : [{ value: 'single', label: 'Materials + final' }, { value: 'deposit', label: 'Materials + deposit' }, { value: 'staged', label: 'Materials + stages' }]} />
+      <Text style={styles.muted}>{external ? 'Choose how you want this customer to pay.' : materialsCost > 0 ? 'Materials are split out automatically. For a small job you can use materials + one protected balance. For a bigger job add a deposit or progress stages.' : 'There are no materials on this quote. Choose one protected full payment, a deposit + balance, or progress stages.'}</Text>
+      <SegmentedButtons value={planMode} onValueChange={(value) => setPlanMode(value as PlanMode)} buttons={external ? [{ value: 'single', label: 'Full at end' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Stage payments' }] : buildPayPlanButtons} />
       {planMode !== 'single' ? <View style={styles.depositBlock}>
-        <Text variant="labelLarge" style={styles.label}>{external ? 'Deposit' : 'Protected start deposit'}</Text>
-        {!external ? <Text style={styles.muted}>This deposit is part of the service balance, not the materials payment. It is released only after its agreed start/material-arrival trigger is confirmed.</Text> : null}
+        <Text variant="labelLarge" style={styles.label}>{external ? 'Deposit' : 'Protected deposit'}</Text>
+        {!external ? <Text style={styles.muted}>{materialsCost > 0 ? 'This deposit is part of the work balance, separate from the materials amount. It stays protected until its agreed release point is reached.' : 'This deposit stays protected in BuildPay until its agreed release point is reached and the homeowner approves it.'}</Text> : null}
         <SegmentedButtons value={depositUnit} onValueChange={(value) => setDepositUnit(value as DepositUnit)} buttons={[{ value: 'amount', label: '£ amount' }, { value: 'percent', label: '%' }]} />
         <TextInput label={depositUnit === 'percent' ? 'Deposit (%)' : 'Deposit (£)'} value={depositValue} onChangeText={setDepositValue} keyboardType="decimal-pad" mode="outlined" />
         {depositAmount > 0 ? <Text style={styles.muted}>Deposit: {formatMoney(depositAmount)}</Text> : null}
       </View> : null}
       {planMode === 'staged' ? <>
         <Text variant="titleMedium" style={styles.title}>Progress stages</Text>
-        <Text style={styles.muted}>Use normal site language. The homeowner should immediately understand what must be finished before they can approve release.</Text>
+        <Text style={styles.muted}>Use plain site language. The homeowner should know exactly what has to be finished before each payment can be released.</Text>
         {stages.filter((stage) => external || stage.kind !== 'materials').map((stage) => {
           const sourceIndex = stages.findIndex((candidate) => candidate.key === stage.key);
           return <View key={stage.key} style={styles.itemCard}>
@@ -565,15 +570,15 @@ export default function NewQuoteScreen() {
             <Button mode="text" textColor={colors.danger} onPress={() => removeStage(sourceIndex)}>Remove stage</Button>
           </View>;
         })}
-        <View style={styles.actions}>{external ? <Button mode="outlined" icon="plus" onPress={() => addStage('materials', 'Materials payment', 'Due before materials are ordered.')}>Materials</Button> : null}<Button mode="outlined" icon="plus" onPress={() => addStage('stage', 'First fix', 'Released when the agreed first-stage work is complete.')}>First fix</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', 'Second fix', 'Released when the agreed second-stage work is complete.')}>Second fix</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', `Stage ${stages.length + 1}`, '')}>Custom</Button></View>
+        <View style={styles.actions}>{external ? <Button mode="outlined" icon="plus" onPress={() => addStage('materials', 'Materials payment', 'Due before materials are ordered.')}>Materials</Button> : null}<Button mode="outlined" icon="plus" onPress={() => addStage('stage', 'Stage 1', 'Released when the agreed Stage 1 work is complete.')}>Stage 1</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', 'Stage 2', 'Released when the agreed Stage 2 work is complete.')}>Stage 2</Button><Button mode="outlined" icon="plus" onPress={() => addStage('stage', `Stage ${stages.length + 1}`, '')}>Custom</Button></View>
       </> : null}
       {totalAmount > 0 && paymentSchedule.length ? <View style={styles.timelineBox}>
         {!external ? <MilestoneTimeline items={paymentSchedule.map((stage) => ({ id: stage.key, title: stage.title, amount: stage.amount, kind: stage.kind, trigger: stage.trigger }))} compact /> : paymentSchedule.map((stage) => <View key={stage.key} style={styles.stageSummary}><View style={styles.row}><Text style={styles.strong}>{stage.title}</Text><Text style={styles.strong}>{formatMoney(stage.amount)}</Text></View>{stage.trigger ? <Text style={styles.muted}>{stage.trigger}</Text> : null}</View>)}
       </View> : null}
       {external ? <>
         <Text variant="labelLarge" style={styles.label}>Payment method</Text>
-        <SegmentedButtons value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'external' | 'buildpair')} buttons={[{ value: 'external', label: 'Paid directly' }, { value: 'buildpair', label: 'BuildPair payments', disabled: !payoutReady }]} />
-        {!payoutReady ? <HelperText type="info">BuildPair payments are unavailable until Stripe has confirmed that payouts are enabled. You can still create, send and track quotes normally.</HelperText> : null}
+        <SegmentedButtons value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'external' | 'buildpair')} buttons={[{ value: 'external', label: 'Paid directly' }, { value: 'buildpair', label: 'BuildPay', disabled: !payoutReady }]} />
+        {!payoutReady ? <HelperText type="info">BuildPay is unavailable until Stripe has confirmed that payouts are enabled. You can still create, send and track quotes normally.</HelperText> : null}
       </> : null}
     </AppCard>
 
