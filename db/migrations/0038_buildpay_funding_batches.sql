@@ -44,10 +44,12 @@ CREATE TABLE IF NOT EXISTS buildpay_funding_allocations (
   released_at timestamptz,
   refunded_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(milestone_id)
+  updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS buildpay_funding_allocations_active_milestone_unique
+  ON buildpay_funding_allocations(milestone_id)
+  WHERE status <> 'refunded';
 CREATE UNIQUE INDEX IF NOT EXISTS buildpay_funding_allocations_transfer_unique
   ON buildpay_funding_allocations(stripe_transfer_id)
   WHERE stripe_transfer_id IS NOT NULL;
