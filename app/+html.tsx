@@ -56,6 +56,9 @@ const shellCss = `
   }
 `;
 
+const favicon = 'https://res.cloudinary.com/qrrcn7ma/image/upload/c_crop,h_221,w_221,x_858,y_712/c_scale,w_64/f_png/v1789145219/file_000000003d24820b9445ddc0225f908a.png';
+const appleTouchIcon = 'https://res.cloudinary.com/qrrcn7ma/image/upload/c_crop,h_221,w_221,x_858,y_712/c_scale,w_180/f_png/v1789145219/file_000000003d24820b9445ddc0225f908a.png';
+
 export default function Root({ children }: PropsWithChildren) {
   return (
     <html lang="en-GB">
@@ -70,8 +73,8 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="BuildPair" />
         <link rel="manifest" href="/manifest.webmanifest" />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="icon" href={favicon} type="image/png" />
+        <link rel="apple-touch-icon" href={appleTouchIcon} />
         <title>BuildPair</title>
         <style dangerouslySetInnerHTML={{ __html: shellCss }} />
         <ScrollViewStyleReset />

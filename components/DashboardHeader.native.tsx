@@ -67,8 +67,8 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
       <View style={styles.header}>
-        <Link href={home} asChild>
-          <Pressable style={styles.brandButton} accessibilityLabel="BuildPair dashboard">
+        <Link href="/" asChild>
+          <Pressable style={styles.brandButton} accessibilityLabel="BuildPair home">
             <BuildPairLogo compact />
           </Pressable>
         </Link>
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  brandButton: { minHeight: 52, justifyContent: 'center' },
+  brandButton: { minHeight: 52, justifyContent: 'center', paddingLeft: spacing.sm },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   notificationWrap: { position: 'relative' },
   badge: { position: 'absolute', top: 2, right: 0 },

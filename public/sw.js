@@ -1,5 +1,5 @@
-const CACHE_NAME = 'buildpair-static-v4';
-const APP_SHELL = ['/', '/manifest.webmanifest', '/favicon.png', '/icons/icon-192.png', '/icons/icon-512.png'];
+const CACHE_NAME = 'buildpair-static-v5';
+const APP_SHELL = ['/', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -38,11 +38,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  const isStaticAsset = url.pathname.startsWith('/_expo/') || url.pathname.startsWith('/icons/') ||
-    url.pathname === '/favicon.png' || url.pathname === '/manifest.webmanifest';
+  const isStaticAsset = url.pathname.startsWith('/_expo/') || url.pathname === '/manifest.webmanifest';
   if (!isStaticAsset) return;
 
   // Prefer the deployed asset so users do not get trapped on an old JS bundle.
-  // The cache is now strictly an offline fallback, not the source of truth.
+  // The cache is strictly an offline fallback, not the source of truth.
   event.respondWith(networkFirst(request));
 });

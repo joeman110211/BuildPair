@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
+import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { colors, layout, radii, spacing } from '@/constants/theme';
 
 const linkGroups = [
@@ -51,7 +52,11 @@ export function PublicFooter() {
     <View style={styles.accentLine} />
     <View style={styles.inner}>
       <View style={styles.brandBlock}>
-        <Text variant="headlineSmall" style={styles.brand}>BuildPair</Text>
+        <Link href="/" asChild>
+          <Pressable style={styles.logoCard} accessibilityLabel="BuildPair home">
+            <BuildPairLogo />
+          </Pressable>
+        </Link>
         <Text style={styles.tagline}>Find the trade. Manage the job. Keep the record.</Text>
         <Text style={styles.description}>A UK marketplace and project platform connecting homeowners with local tradespeople. Search, quotes, messages, agreed changes, payment stages and project history stay connected.</Text>
         <Text style={styles.description}>Supported BuildPair payments are processed through Stripe. Users can also arrange payment privately, in which case BuildPair cannot process or manage that payment.</Text>
@@ -74,7 +79,7 @@ const styles = StyleSheet.create({
   accentLine: { height: 4, backgroundColor: colors.primary, marginHorizontal: -spacing.xl, marginBottom: spacing.xxxl },
   inner: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xxxl, justifyContent: 'space-between' },
   brandBlock: { flex: 2, minWidth: 260, maxWidth: 430, gap: spacing.sm },
-  brand: { color: '#FFFFFF', fontWeight: '900', letterSpacing: -0.4 },
+  logoCard: { alignSelf: 'flex-start', backgroundColor: '#FFFFFF', borderRadius: radii.md, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, overflow: 'hidden' },
   tagline: { color: '#FFE6D5', lineHeight: 23, fontWeight: '800' },
   description: { color: '#C8CDD1', lineHeight: 21, fontSize: 13, maxWidth: 420 },
   contactPill: { alignSelf: 'flex-start', marginTop: spacing.xs, borderRadius: radii.pill, backgroundColor: '#343B43', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },

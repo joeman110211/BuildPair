@@ -3,22 +3,20 @@
     "name": "BuildPair",
     "slug": "buildpair",
     "version": "1.0.1",
-    "icon": "./assets/icon.png",
+    "icon": "https://res.cloudinary.com/qrrcn7ma/image/upload/c_crop,h_221,w_221,x_858,y_712/c_scale,w_1024/f_png/v1789145219/file_000000003d24820b9445ddc0225f908a.png",
     "orientation": "portrait",
     "scheme": "buildpair",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "uk.co.buildpair.app",
-      "buildNumber": "2"
+      "buildNumber": "2",
+      "icon": "https://res.cloudinary.com/qrrcn7ma/image/upload/c_crop,h_221,w_221,x_858,y_712/c_scale,w_1024/f_png/v1789145219/file_000000003d24820b9445ddc0225f908a.png"
     },
     "android": {
       "package": "uk.co.buildpair.app",
       "versionCode": 2,
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#252A31"
-      }
+      "icon": "https://res.cloudinary.com/qrrcn7ma/image/upload/c_crop,h_221,w_221,x_858,y_712/c_scale,w_1024/f_png/v1789145219/file_000000003d24820b9445ddc0225f908a.png"
     },
     "web": {
       "bundler": "metro",
@@ -26,8 +24,7 @@
       "name": "BuildPair",
       "shortName": "BuildPair",
       "themeColor": "#D35400",
-      "backgroundColor": "#ECEFF1",
-      "favicon": "./assets/favicon.png"
+      "backgroundColor": "#ECEFF1"
     },
     "plugins": [
       [
@@ -41,9 +38,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
+          "image": "https://res.cloudinary.com/qrrcn7ma/image/upload/c_crop,h_221,w_221,x_858,y_712/c_scale,w_1024/f_png/v1789145219/file_000000003d24820b9445ddc0225f908a.png",
           "resizeMode": "contain",
-          "backgroundColor": "#ECEFF1",
+          "backgroundColor": "#FFFFFF",
           "imageWidth": 180
         }
       ],

@@ -12,22 +12,16 @@
   "categories": ["business", "lifestyle", "productivity"],
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "https://res.cloudinary.com/qrrcn7ma/image/upload/c_crop,h_221,w_221,x_858,y_712/c_scale,w_192/f_png/v1789145219/file_000000003d24820b9445ddc0225f908a.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "https://res.cloudinary.com/qrrcn7ma/image/upload/c_crop,h_221,w_221,x_858,y_712/c_scale,w_512/f_png/v1789145219/file_000000003d24820b9445ddc0225f908a.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }

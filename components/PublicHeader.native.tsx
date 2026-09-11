@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
   brandButton: {
     minHeight: 52,
     justifyContent: 'center',
+    paddingLeft: spacing.sm,
   },
   accountButtonContent: {
     minHeight: 42,

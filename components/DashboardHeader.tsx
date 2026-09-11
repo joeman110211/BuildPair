@@ -72,7 +72,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
   ];
 
   return <View style={[styles.header, compact ? styles.headerCompact : styles.headerDesktop]}>
-    <Link href="/" asChild><Pressable style={styles.brandButton} accessibilityLabel="BuildPair home"><BuildPairLogo compact /></Pressable></Link>
+    <Link href="/" asChild><Pressable style={[styles.brandButton, compact && styles.brandButtonCompact]} accessibilityLabel="BuildPair home"><BuildPairLogo compact /></Pressable></Link>
     {compact ? <View style={styles.compactActions}>
       <View style={styles.notificationWrap}>
         <IconButton icon="bell-outline" size={24} onPress={() => router.push(notificationsHref)} accessibilityLabel={notificationLabel} />
@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
   headerCompact: { paddingHorizontal: spacing.md },
   headerDesktop: { paddingHorizontal: spacing.xxl },
   brandButton: { minHeight: 56, justifyContent: 'center', paddingHorizontal: spacing.xxs },
+  brandButtonCompact: { paddingLeft: spacing.sm, paddingRight: 0 },
   compactActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
   notificationWrap: { position: 'relative' },
   notificationBadge: { position: 'absolute', top: 2, right: 0 },
