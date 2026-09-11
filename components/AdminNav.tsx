@@ -1,5 +1,5 @@
 import { Link, usePathname, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { colors } from '@/constants/theme';
@@ -12,10 +12,6 @@ export function AdminNav() {
   const compact = width < 760;
   const [menuOpen, setMenuOpen] = useState(false);
   const current = useMemo(() => adminNavItemForPath(pathname), [pathname]);
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
 
   const openMobileRoute = (href: string) => {
     setMenuOpen(false);
