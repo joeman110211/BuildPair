@@ -62,11 +62,10 @@ function publicShape(row: AccessRow) {
   };
 }
 
-export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { id }: { id: string }) {
   try {
     const userId = await authenticatedUserId(request);
     await ensureDbUser(userId);
-    const { id } = await context.params;
     const row = await loadJob(id);
     if (!row || (row.customerId !== userId && row.traderId !== userId)) throw new HttpError(404, 'Job not found');
     if (!row.traderId) throw new HttpError(409, 'Site details are shared only after a quote has been accepted');
@@ -74,11 +73,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   } catch (error) { return jsonError(error); }
 }
 
-export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, { id }: { id: string }) {
   try {
     const userId = await authenticatedUserId(request);
     await ensureDbUser(userId);
-    const { id } = await context.params;
     const row = await loadJob(id);
     if (!row || row.customerId !== userId) throw new HttpError(404, 'Job not found');
     if (!row.traderId || row.status !== 'in_progress') throw new HttpError(409, 'Confirm the worksite after accepting a quote');
