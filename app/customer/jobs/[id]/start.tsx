@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
@@ -140,7 +140,7 @@ export default function StartAwardedJobScreen() {
 
     {error ? <HelperText type="error">{error}</HelperText> : null}
     <View>
-      <Button mode="contained" disabled={!addressReady || paymentMode === 'undecided'} onPress={() => router.replace(`/customer/jobs/${id}`)}>Continue to project</Button>
+      <Button mode="contained" disabled={!addressReady || paymentMode === 'undecided'} onPress={() => router.replace(`/customer/jobs/${id}` as Href)}>Continue to project</Button>
     </View>
   </Screen>;
 }
