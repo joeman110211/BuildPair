@@ -120,6 +120,8 @@ export interface Job {
   photos: string[];
   isEmergency?: boolean;
   scheduledStartAt?: string | null;
+  startAgreedAt?: string | null;
+  startProposedBy?: string | null;
   status: JobStatus;
   acceptedQuoteId?: string | null;
   paymentMode?: PaymentMode;
