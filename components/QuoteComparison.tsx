@@ -75,7 +75,7 @@ export function QuoteComparison({ quotes, accepting, messaging, acting, onAccept
             <View style={styles.badges}>{lowest ? <Chip compact icon="cash-check">Lowest total</Chip> : null}{earliest ? <Chip compact icon="calendar-fast">Earliest start</Chip> : null}<Chip compact>{expired && quote.status === 'pending' ? 'Expired' : quote.status}</Chip></View>
             <Text variant="titleLarge" style={styles.title}>{quote.businessName ?? 'Trade quote'}</Text>
             <Text variant="displaySmall" style={styles.total}>{formatMoney(quote.totalAmount)}</Text>
-            <Text style={styles.muted}>Quoted job total. Materials remain outside BuildPair's 1% labour/service fee.</Text>
+            <Text style={styles.muted}>Quoted job total. Materials and VAT stay outside BuildPair's 1% labour/service fee.</Text>
           </View>
           <View style={styles.summaryFacts}>
             <Fact label="Start" value={quote.proposedStartAt ? new Date(quote.proposedStartAt).toLocaleDateString('en-GB') : 'To agree'} />
@@ -92,7 +92,7 @@ export function QuoteComparison({ quotes, accepting, messaging, acting, onAccept
           <Chip compact icon={expanded ? 'chevron-up' : 'chevron-down'}>{expanded ? 'Hide' : 'View'}</Chip>
         </Pressable>
         {expanded ? <View style={styles.breakdown}>
-          <PriceRow label="Materials" value={formatMoney(quote.materialsCost)} note="Paid as the exact quoted materials amount when using BuildPair Protected Payments." />
+          <PriceRow label="Materials" value={formatMoney(quote.materialsCost)} note="With BuildPay, the exact quoted materials amount is the first materials payment." />
           <PriceRow label="Labour / service" value={formatMoney(quote.laborCost)} note="BuildPair's 1% platform fee applies only to this amount." />
           {quote.vatAmount > 0 ? <PriceRow label="VAT" value={formatMoney(quote.vatAmount)} note="Shown separately and excluded from the BuildPair 1% fee base." /> : null}
           <Divider />
@@ -100,22 +100,22 @@ export function QuoteComparison({ quotes, accepting, messaging, acting, onAccept
         </View> : null}
 
         <View style={styles.section}>
-          <Text variant="titleLarge" style={styles.title}>Choose how to fund the job</Text>
-          <Text style={styles.muted}>The quote total does not change. This choice only changes when the protected service balance is funded and released.</Text>
+          <Text variant="titleLarge" style={styles.title}>Agree the payment schedule</Text>
+          <Text style={styles.muted}>This sets the stages attached to the quote. Accepting the quote does not charge your card. After acceptance you choose BuildPay or direct payment.</Text>
           <View style={styles.optionGrid}>
-            <PaymentOption selected={choice === 'full'} title="Pay in full" subtitle="Materials first, then fund the remaining service balance as one protected payment. It releases after final approval." onPress={() => setChoices((current) => ({ ...current, [quote.id]: 'full' }))} />
-            <PaymentOption selected={choice === 'milestones'} title="Staged protected payments" subtitle="Fund one agreed stage at a time. The next stage stays locked until the previous one is completed and approved." onPress={() => setChoices((current) => ({ ...current, [quote.id]: 'milestones' }))} />
+            <PaymentOption selected={choice === 'full'} title="One service balance" subtitle="Materials first, then the remaining service balance as one agreed final stage. If you later choose BuildPay, the service balance stays controlled until final approval." onPress={() => setChoices((current) => ({ ...current, [quote.id]: 'full' }))} />
+            <PaymentOption selected={choice === 'milestones'} title="Staged payments" subtitle="Use the agreed milestone schedule below. If you later choose BuildPay, each controlled stage unlocks after the previous one is completed and approved." onPress={() => setChoices((current) => ({ ...current, [quote.id]: 'milestones' }))} />
           </View>
         </View>
 
         <View style={styles.protectionBox}>
-          <Chip compact icon="shield-lock-outline">BuildPair Protected Payments</Chip>
-          <Text style={styles.body}>Stripe processes the payments. Materials are released for procurement; deposits and work stages stay controlled until the agreed completion point is marked complete and the homeowner approves release.</Text>
-          <Text variant="bodySmall" style={styles.muted}>BuildPair does not call this escrow and does not inspect workmanship. Payment decisions, approvals and disputes are recorded against the project.</Text>
+          <Chip compact icon="shield-lock-outline">BuildPay available after acceptance</Chip>
+          <Text style={styles.body}>Choose BuildPay after accepting the quote if you want Stripe-processed stage payments. Materials are released for procurement; deposits and work stages stay controlled until the agreed completion point is marked complete and the homeowner approves release.</Text>
+          <Text variant="bodySmall" style={styles.muted}>You can instead pay the tradesperson directly. Direct payments do not get BuildPay payment-stage protection. BuildPair can still keep the quote, messages, variations and project record.</Text>
         </View>
 
         <View style={styles.section}>
-          <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.title}>{choice === 'full' ? 'Full funding plan' : 'Milestone plan'}</Text>{awaitingTrader && choice === 'milestones' ? <Chip compact icon="clock-outline">Awaiting trader</Chip> : null}</View>
+          <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.title}>{choice === 'full' ? 'One-balance schedule' : 'Milestone schedule'}</Text>{awaitingTrader && choice === 'milestones' ? <Chip compact icon="clock-outline">Awaiting trader</Chip> : null}</View>
           <MilestoneTimeline items={selectedPlan.map((stage) => ({ id: stage.key, title: stage.title, amount: stage.amount, kind: stage.kind, trigger: stage.trigger }))} />
           {choice === 'milestones' && quote.paymentScheduleStatus === 'agreed' ? <Chip compact icon="check-circle-outline">Payment stages agreed by both sides</Chip> : null}
         </View>
@@ -141,7 +141,7 @@ export function QuoteComparison({ quotes, accepting, messaging, acting, onAccept
           {onMessage ? <Button mode="outlined" icon="message-text-outline" loading={messaging === quote.id} disabled={Boolean(messaging)} onPress={() => onMessage(quote)}>Request changes</Button> : null}
           {quote.status === 'pending' && !expired && choice === 'milestones' && onEditPlan ? <Button mode="text" icon="tune-variant" disabled={Boolean(acting)} onPress={() => beginEdit(quote)}>Edit milestones</Button> : null}
           {quote.status === 'pending' && !expired && onDecline ? <Button mode="text" textColor={colors.danger} disabled={Boolean(acting)} onPress={() => onDecline(quote)}>Decline</Button> : null}
-          {quote.status === 'pending' && !expired ? <Button mode="contained" icon="check-circle-outline" loading={accepting === quote.id} disabled={Boolean(accepting) || Boolean(acting) || (choice === 'milestones' && awaitingTrader)} onPress={() => onAccept(quote, choice)}>{choice === 'full' ? 'Accept & choose full funding' : awaitingTrader ? 'Waiting for trader' : 'Accept & use milestones'}</Button> : null}
+          {quote.status === 'pending' && !expired ? <Button mode="contained" icon="check-circle-outline" loading={accepting === quote.id} disabled={Boolean(accepting) || Boolean(acting) || (choice === 'milestones' && awaitingTrader)} onPress={() => onAccept(quote, choice)}>{choice === 'full' ? 'Accept quote & schedule' : awaitingTrader ? 'Waiting for trader' : 'Accept quote & milestones'}</Button> : null}
         </View> : null}
       </AppCard>;
     })}

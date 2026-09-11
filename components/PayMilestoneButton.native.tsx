@@ -15,7 +15,7 @@ function StripePaymentButton({ milestoneId, onPaid }: Props) {
     try {
       setBusy(true);
       const { clientSecret } = await apiFetch<{ clientSecret: string }>('/api/stripe/payment-intent', { method: 'POST', body: JSON.stringify({ milestoneId, platform: 'native' }) }, getToken);
-      const initialized = await initPaymentSheet({ merchantDisplayName: 'BuildPair', paymentIntentClientSecret: clientSecret, returnURL: 'buildpair://status?type=payment&state=complete', allowsDelayedPaymentMethods: false, googlePay: { merchantCountryCode: 'GB', testEnv: __DEV__ }, applePay: { merchantCountryCode: 'GB' }, style: 'alwaysLight' });
+      const initialized = await initPaymentSheet({ merchantDisplayName: 'BuildPair · BuildPay', paymentIntentClientSecret: clientSecret, returnURL: 'buildpair://status?type=payment&state=complete', allowsDelayedPaymentMethods: false, googlePay: { merchantCountryCode: 'GB', testEnv: __DEV__ }, applePay: { merchantCountryCode: 'GB' }, style: 'alwaysLight' });
       if (initialized.error) throw new Error(initialized.error.message);
       const presented = await presentPaymentSheet();
       if (presented.error) throw new Error(presented.error.message);
@@ -26,10 +26,10 @@ function StripePaymentButton({ milestoneId, onPaid }: Props) {
       setBusy(false);
     }
   }
-  return <Button mode="contained" icon="credit-card" loading={busy} disabled={busy} onPress={pay}>Pay through BuildPair</Button>;
+  return <Button mode="contained" icon="credit-card" loading={busy} disabled={busy} onPress={pay}>Pay with BuildPay</Button>;
 }
 
 export function PayMilestoneButton(props: Props) {
   const stripeEnabled = Boolean(process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim());
-  return stripeEnabled ? <StripePaymentButton {...props} /> : <Button mode="contained" icon="credit-card-off-outline" disabled>BuildPair payments temporarily unavailable</Button>;
+  return stripeEnabled ? <StripePaymentButton {...props} /> : <Button mode="contained" icon="credit-card-off-outline" disabled>BuildPay temporarily unavailable</Button>;
 }

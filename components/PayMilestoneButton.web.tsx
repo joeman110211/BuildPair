@@ -19,6 +19,6 @@ export function PayMilestoneButton({ milestoneId, onPaid }: { milestoneId: strin
     }
   }
 
-  if (!stripeEnabled) return <Button mode="contained" icon="credit-card-off-outline" disabled>BuildPair payments temporarily unavailable</Button>;
-  return <Button mode="contained" icon="credit-card" loading={busy} disabled={busy} onPress={payWithStripe}>Pay through BuildPair</Button>;
+  if (!stripeEnabled) return <Button mode="contained" icon="credit-card-off-outline" disabled>BuildPay temporarily unavailable</Button>;
+  return <Button mode="contained" icon="credit-card" loading={busy} disabled={busy} onPress={payWithStripe}>Pay with BuildPay</Button>;
 }
