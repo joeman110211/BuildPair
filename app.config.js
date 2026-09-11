@@ -14,7 +14,7 @@ if (projectId) {
     ...(appJson.expo.updates || {}),
     enabled: true,
     url: `https://u.expo.dev/${projectId}`,
-    checkAutomatically: 'ON_LOAD',
+    checkAutomatically: 'NEVER',
     fallbackToCacheTimeout: 0,
     ...(updateChannel ? {
       requestHeaders: {
