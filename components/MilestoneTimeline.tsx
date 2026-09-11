@@ -47,18 +47,18 @@ export function MilestoneTimeline({ items, compact = false }: { items: Milestone
 
 function kindLabel(kind: PaymentStageKind) {
   if (kind === 'materials') return 'Materials';
-  if (kind === 'deposit') return 'Protected deposit';
+  if (kind === 'deposit') return 'Deposit';
   if (kind === 'final') return 'Final';
   return 'Milestone';
 }
 
 function statusLabel(status: MilestoneTimelineItem['status']) {
   if (status === 'paid') return 'Released';
-  if (status === 'funded') return 'Protected';
-  if (status === 'completed') return 'Approval needed';
+  if (status === 'funded') return 'Secured';
+  if (status === 'completed') return 'Release requested';
   if (status === 'disputed') return 'Paused';
   if (status === 'upcoming') return 'Upcoming';
-  return 'Next payment';
+  return 'Not funded';
 }
 
 function statusIcon(status: MilestoneTimelineItem['status']) {
