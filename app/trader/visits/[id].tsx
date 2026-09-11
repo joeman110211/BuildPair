@@ -29,7 +29,7 @@ export default function TraderVisitScreen() {
     try { setVisit(await apiFetch<Visit>(`/api/site-visits?id=${encodeURIComponent(id)}`, {}, getToken)); setError(''); }
     catch (e) { setError(errorMessage(e)); }
   }, [getToken, id]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   async function complete() {
     if (!visit) return;
@@ -63,7 +63,7 @@ export default function TraderVisitScreen() {
         <Text>{address.postcode}</Text>
         {address.accessNotes ? <><Text variant="labelLarge">Access notes</Text><Text>{address.accessNotes}</Text></> : null}
         <HelperText type="info">This address was shared privately for this confirmed BuildPair visit. Do not republish it or use it for unrelated marketing.</HelperText>
-      </> : <Text>The homeowner's street address is not available until the visit is confirmed.</Text>}
+      </> : <Text>{"The homeowner's street address is not available until the visit is confirmed."}</Text>}
     </AppCard>
 
     <AppCard>
