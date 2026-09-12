@@ -5,15 +5,16 @@ import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Button, HelperText, Text } from 'react-native-paper';
 import { Screen } from '@/components/Screen';
-import { modeSetupHref, parseAccountMode, signInHref } from '@/lib/account-mode';
+import { modeSetupHref, parseAccountMode, safeInternalReturnTo, signInHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
 import { waitlistHref } from '@/lib/launch';
 
 export default function SocialContinueScreen() {
   const clerk = useClerk();
   const router = useRouter();
-  const params = useLocalSearchParams<{ mode?: string | string[] }>();
+  const params = useLocalSearchParams<{ mode?: string | string[]; returnTo?: string | string[] }>();
   const mode = parseAccountMode(params.mode);
+  const returnTo = safeInternalReturnTo(params.returnTo);
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();
   const started = useRef(false);
@@ -26,7 +27,7 @@ export default function SocialContinueScreen() {
       setError(`Your existing account needs another security step before BuildPair can continue (${String(session.currentTask.key ?? 'session task')}).`);
       return;
     }
-    router.replace(modeSetupHref(mode));
+    router.replace(modeSetupHref(mode, returnTo));
   }
 
   async function advanceFlow() {
@@ -75,7 +76,7 @@ export default function SocialContinueScreen() {
 
   return <Screen title="Couldn’t finish sign in" subtitle="New registration is paused until launch.">
     <HelperText type="error" visible>{error || 'This social login could not be matched to an existing BuildPair account.'}</HelperText>
-    <Button mode="contained" onPress={() => router.replace((mode ? signInHref(mode) : '/auth/account') as Href)}>Back to sign in</Button>
+    <Button mode="contained" onPress={() => router.replace((mode ? signInHref(mode, returnTo) : '/auth/account') as Href)}>Back to sign in</Button>
     <Button mode="outlined" onPress={() => router.replace(waitlistHref(mode, 'social-signup-error'))}>Join launch waitlist</Button>
   </Screen>;
 }
