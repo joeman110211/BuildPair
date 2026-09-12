@@ -76,8 +76,10 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
   const [traders, setTraders] = useState<FeaturedTrader[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [activePage, setActivePage] = useState(0);
-  const pageSize = wide ? 3 : 2;
-  const pageWidth = Math.max(280, Math.min(width - 36, 1140));
+  const [containerWidth, setContainerWidth] = useState(0);
+  const fallbackWidth = Math.max(280, Math.min(width - 36, 1140));
+  const pageWidth = Math.max(1, Math.min(containerWidth || fallbackWidth, 1140));
+  const pageSize = pageWidth >= 760 ? 3 : 2;
 
   useEffect(() => {
     let active = true;
@@ -119,7 +121,14 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
     setActivePage(next);
   };
 
-  return <View style={styles.wrapper} testID="home-featured-trader">
+  return <View
+    style={styles.wrapper}
+    testID="home-featured-trader"
+    onLayout={(event) => {
+      const nextWidth = Math.round(event.nativeEvent.layout.width);
+      if (nextWidth > 0 && nextWidth !== containerWidth) setContainerWidth(nextWidth);
+    }}
+  >
     <ScrollView
       horizontal
       pagingEnabled
@@ -148,7 +157,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', gap: 12 },
+  wrapper: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', gap: 12, overflow: 'hidden' },
   carousel: { width: '100%', maxWidth: 1140, minWidth: 0 },
   carouselContent: { alignItems: 'stretch' },
   page: { flexDirection: 'row', gap: 10, paddingHorizontal: 1 },
