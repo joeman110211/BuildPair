@@ -38,7 +38,7 @@ export function ensureLaunchWaitlistTable() {
     await sql`ALTER TABLE launch_waitlist ALTER COLUMN email DROP NOT NULL`;
     await sql`ALTER TABLE launch_waitlist ALTER COLUMN phone DROP NOT NULL`;
     await sql`ALTER TABLE launch_waitlist ADD COLUMN IF NOT EXISTS preferred_contact text NOT NULL DEFAULT 'email'`;
-    await sql`CREATE UNIQUE INDEX IF NOT EXISTS launch_waitlist_phone_unique_idx ON launch_waitlist(phone) WHERE phone IS NOT NULL AND phone <> ''`;
+    await sql`CREATE INDEX IF NOT EXISTS launch_waitlist_phone_idx ON launch_waitlist(phone) WHERE phone IS NOT NULL AND phone <> ''`;
     await sql`CREATE INDEX IF NOT EXISTS launch_waitlist_created_idx ON launch_waitlist(created_at)`;
     await sql`CREATE INDEX IF NOT EXISTS launch_waitlist_audience_idx ON launch_waitlist(audience, created_at)`;
     await sql`CREATE INDEX IF NOT EXISTS launch_waitlist_postcode_idx ON launch_waitlist(postcode)`;
