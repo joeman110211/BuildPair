@@ -41,6 +41,7 @@ const linkGroups = [
     links: [
       ['Terms & Conditions', '/(public)/terms'],
       ['Privacy Policy', '/(public)/privacy'],
+      ['Delete account', '/(public)/delete-account'],
       ['Cookie Policy', '/(public)/cookies'],
       ['Disclaimer', '/(public)/disclaimer'],
     ],
