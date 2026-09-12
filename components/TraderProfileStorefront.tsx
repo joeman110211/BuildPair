@@ -1,8 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { type Href, Link, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Image, Linking, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Chip, Divider, Text } from 'react-native-paper';
+import { Image, Linking, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Button, Chip, Divider, IconButton, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { ProfileShareButtons } from '@/components/ProfileShareButtons';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
@@ -22,7 +22,7 @@ type ProfileResult = Omit<TraderProfile, 'qualifications'> & {
   contactLocked: boolean;
 };
 
-type SectionKey = 'overview' | 'services' | 'gallery' | 'reviews' | 'credentials' | 'about';
+type SectionKey = 'overview' | 'services' | 'gallery' | 'reviews' | 'credentials';
 
 const SECTION_TABS: { key: SectionKey; label: string }[] = [
   { key: 'overview', label: 'Overview' },
@@ -30,7 +30,6 @@ const SECTION_TABS: { key: SectionKey; label: string }[] = [
   { key: 'gallery', label: 'Gallery' },
   { key: 'reviews', label: 'Reviews' },
   { key: 'credentials', label: 'Credentials' },
-  { key: 'about', label: 'About' },
 ];
 
 function SectionCard({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
@@ -55,6 +54,7 @@ export default function TraderProfileStorefront() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [activeSection, setActiveSection] = useState<SectionKey>('overview');
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
 
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
 
@@ -115,7 +115,16 @@ export default function TraderProfileStorefront() {
   const showGallery = showOverview || activeSection === 'gallery';
   const showReviews = showOverview || activeSection === 'reviews';
   const showCredentials = showOverview || activeSection === 'credentials';
-  const showAbout = showOverview || activeSection === 'about';
+  const showAbout = showOverview;
+  const selectedGalleryPhoto = galleryIndex === null ? null : profile.photos[galleryIndex];
+
+  function changeGalleryPhoto(delta: number) {
+    if (!profile.photos.length) return;
+    setGalleryIndex((current) => {
+      const index = current ?? 0;
+      return (index + delta + profile.photos.length) % profile.photos.length;
+    });
+  }
 
   return <Screen>
     {profile.shareOnly ? <AppCard style={styles.noticeCard}>
@@ -165,11 +174,16 @@ export default function TraderProfileStorefront() {
         </View>
       </View>
 
-      <View style={styles.tabs}>
-        {SECTION_TABS.map((tab) => <Pressable key={tab.key} onPress={() => setActiveSection(tab.key)} style={[styles.tab, activeSection === tab.key && styles.tabActive]}>
-          <Text style={[styles.tabText, activeSection === tab.key && styles.tabTextActive]}>{tab.label}</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.tabs}
+        contentContainerStyle={[styles.tabsContent, mobile && styles.tabsContentMobile]}
+      >
+        {SECTION_TABS.map((tab) => <Pressable key={tab.key} onPress={() => setActiveSection(tab.key)} style={[styles.tab, mobile && styles.tabMobile, activeSection === tab.key && styles.tabActive]}>
+          <Text numberOfLines={1} style={[styles.tabText, mobile && styles.tabTextMobile, activeSection === tab.key && styles.tabTextActive]}>{tab.label}</Text>
         </Pressable>)}
-      </View>
+      </ScrollView>
     </View>
 
     {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -188,14 +202,23 @@ export default function TraderProfileStorefront() {
         </SectionCard> : null}
 
         {showGallery && profile.photos.length ? <SectionCard title="Gallery" action={<Text style={styles.linkText}>{profile.photos.length} photos</Text>}>
-          <View style={styles.galleryGrid}>
-            <Image source={{ uri: profile.photos[0] }} style={styles.galleryHero} />
+          {mobile ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryMobileRow}>
+            {profile.photos.map((uri, index) => <Pressable key={`${uri}-${index}`} onPress={() => setGalleryIndex(index)} style={[styles.galleryMobileItem, { width: Math.min(Math.max(width - 92, 220), 310) }]}>
+              <Image source={{ uri }} style={styles.galleryMobileImage} />
+            </Pressable>)}
+          </ScrollView> : <View style={styles.galleryGrid}>
+            <Pressable onPress={() => setGalleryIndex(0)} style={styles.galleryHeroButton}>
+              <Image source={{ uri: profile.photos[0] }} style={styles.galleryHero} />
+            </Pressable>
             <View style={styles.gallerySide}>
-              {profile.photos.slice(1, 5).map((uri, index) => <Image key={`${uri}-${index}`} source={{ uri }} style={styles.galleryThumb} />)}
-              {profile.photos.length > 5 ? <View style={styles.morePhotos}><Text style={styles.morePhotosText}>+{profile.photos.length - 5}</Text></View> : null}
+              {profile.photos.slice(1, 5).map((uri, index) => <Pressable key={`${uri}-${index}`} onPress={() => setGalleryIndex(index + 1)} style={styles.galleryThumbButton}><Image source={{ uri }} style={styles.galleryThumb} /></Pressable>)}
+              {profile.photos.length > 5 ? <Pressable onPress={() => setGalleryIndex(5)} style={styles.morePhotos}><Text style={styles.morePhotosText}>+{profile.photos.length - 5}</Text></Pressable> : null}
             </View>
-          </View>
+          </View>}
+          <Text variant="bodySmall" style={styles.galleryHint}>{mobile ? 'Swipe through photos or tap one to enlarge.' : 'Click a photo to enlarge it.'}</Text>
         </SectionCard> : null}
+
+        {showGallery && !profile.photos.length ? <SectionCard title="Gallery"><Text style={styles.muted}>No work photos have been added yet.</Text></SectionCard> : null}
 
         {showServices ? <SectionCard title="Services">
           <View style={styles.serviceTags}>
@@ -302,6 +325,21 @@ export default function TraderProfileStorefront() {
       </View>
       {quoteButton}
     </View>
+
+    <Modal visible={galleryIndex !== null} transparent animationType="fade" onRequestClose={() => setGalleryIndex(null)}>
+      <View style={styles.lightboxBackdrop}>
+        <View style={styles.lightboxHeader}>
+          <Text style={styles.lightboxCounter}>{galleryIndex === null ? '' : `${galleryIndex + 1} / ${profile.photos.length}`}</Text>
+          <IconButton icon="close" iconColor="#FFFFFF" size={28} accessibilityLabel="Close photo" onPress={() => setGalleryIndex(null)} />
+        </View>
+        <View style={styles.lightboxBody}>
+          {profile.photos.length > 1 ? <IconButton icon="chevron-left" iconColor="#FFFFFF" containerColor="rgba(0,0,0,0.45)" size={32} style={styles.lightboxArrow} accessibilityLabel="Previous photo" onPress={() => changeGalleryPhoto(-1)} /> : null}
+          <View style={styles.lightboxImageFrame}>{selectedGalleryPhoto ? <Image source={{ uri: selectedGalleryPhoto }} style={styles.lightboxImage} /> : null}</View>
+          {profile.photos.length > 1 ? <IconButton icon="chevron-right" iconColor="#FFFFFF" containerColor="rgba(0,0,0,0.45)" size={32} style={styles.lightboxArrow} accessibilityLabel="Next photo" onPress={() => changeGalleryPhoto(1)} /> : null}
+        </View>
+        <Text style={styles.lightboxHint}>Use the arrows to browse photos.</Text>
+      </View>
+    </Modal>
   </Screen>;
 }
 
@@ -343,10 +381,14 @@ const styles = StyleSheet.create({
   statusDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: '#AAB4BB' },
   statusDotLive: { backgroundColor: '#31B66B' },
   responseText: { color: colors.muted, fontSize: 12, fontWeight: '700' },
-  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, paddingHorizontal: 18, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: '#FFFFFF' },
+  tabs: { width: '100%', borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: '#FFFFFF' },
+  tabsContent: { flexDirection: 'row', alignItems: 'stretch', paddingHorizontal: 18 },
+  tabsContentMobile: { paddingHorizontal: 6 },
   tab: { paddingHorizontal: 13, paddingVertical: 14, borderBottomWidth: 3, borderBottomColor: 'transparent' },
+  tabMobile: { paddingHorizontal: 9, paddingVertical: 12 },
   tabActive: { borderBottomColor: colors.primary },
   tabText: { color: colors.muted, fontWeight: '800' },
+  tabTextMobile: { fontSize: 12 },
   tabTextActive: { color: colors.primary },
   contentGrid: { width: '100%', gap: 18 },
   contentGridDesktop: { flexDirection: 'row', alignItems: 'flex-start' },
@@ -365,9 +407,15 @@ const styles = StyleSheet.create({
   detailIcon: { color: colors.primary, fontWeight: '900' },
   detailText: { flex: 1, color: colors.charcoalSoft, lineHeight: 21 },
   galleryGrid: { minHeight: 300, flexDirection: 'row', gap: 8 },
-  galleryHero: { flex: 2, minWidth: 0, borderRadius: 16, resizeMode: 'cover' },
+  galleryHeroButton: { flex: 2, minWidth: 0, borderRadius: 16, overflow: 'hidden' },
+  galleryHero: { width: '100%', height: '100%', minHeight: 300, resizeMode: 'cover' },
   gallerySide: { flex: 1, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  galleryThumb: { width: '47%', minHeight: 140, flexGrow: 1, borderRadius: 12, resizeMode: 'cover' },
+  galleryThumbButton: { width: '47%', minHeight: 140, flexGrow: 1, borderRadius: 12, overflow: 'hidden' },
+  galleryThumb: { width: '100%', height: '100%', minHeight: 140, resizeMode: 'cover' },
+  galleryMobileRow: { gap: 10, paddingRight: 4 },
+  galleryMobileItem: { height: 220, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
+  galleryMobileImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  galleryHint: { color: colors.muted, marginTop: -2 },
   morePhotos: { width: '47%', minHeight: 140, flexGrow: 1, borderRadius: 12, backgroundColor: colors.navy, alignItems: 'center', justifyContent: 'center' },
   morePhotosText: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
   linkText: { color: colors.primary, fontWeight: '800' },
@@ -409,6 +457,14 @@ const styles = StyleSheet.create({
   bottomEyebrow: { color: '#FFD0AE', fontSize: 10, fontWeight: '900', letterSpacing: 1.1 },
   bottomTitle: { color: '#FFFFFF', fontWeight: '900' },
   bottomText: { color: '#D9E4EA', lineHeight: 21 },
+  lightboxBackdrop: { flex: 1, backgroundColor: 'rgba(4,10,15,0.96)', paddingTop: 20, paddingBottom: 24, paddingHorizontal: 10 },
+  lightboxHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 54 },
+  lightboxCounter: { color: '#FFFFFF', fontWeight: '800', paddingLeft: 12 },
+  lightboxBody: { flex: 1, minHeight: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  lightboxImageFrame: { flex: 1, minWidth: 0, height: '100%', maxWidth: 1100, alignItems: 'center', justifyContent: 'center' },
+  lightboxImage: { width: '100%', height: '100%', resizeMode: 'contain' },
+  lightboxArrow: { margin: 0, flexShrink: 0 },
+  lightboxHint: { color: '#D7E0E6', textAlign: 'center', paddingTop: 8 },
   noticeCard: { gap: 6 },
   error: { color: colors.danger, fontWeight: '700' },
   flex: { flex: 1, minWidth: 0 },
