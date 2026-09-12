@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { type Href, useRouter } from 'expo-router';
+import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { Button, Chip, ProgressBar, Searchbar, Text } from 'react-native-paper';
@@ -12,10 +12,16 @@ import type { Job, Quote, TraderProfile } from '@/types';
 type Conversation = { id: string; jobId: string; traderId: string; customerId: string };
 type JobWithDistance = Job & { distanceMiles?: number | null };
 
+function scalar(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 export default function TraderJobBoard() {
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   const router = useRouter();
+  const params = useLocalSearchParams<{ jobId?: string | string[] }>();
+  const linkedJobId = scalar(params.jobId);
   const [profile, setProfile] = useState<TraderProfile>();
   const [jobs, setJobs] = useState<JobWithDistance[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -63,13 +69,14 @@ export default function TraderJobBoard() {
   const opportunities = useMemo(() => jobs.filter((job) => {
     const belongsToActiveJob = ['open', 'quoted'].includes(job.status) || Boolean(job.acceptedQuoteId);
     if (!belongsToActiveJob) return false;
+    if (linkedJobId && job.id !== linkedJobId) return false;
     if (directOnly && job.targetTraderId !== profile?.userId) return false;
     if (urgentOnly && !job.urgency.toLowerCase().includes('urgent') && !job.urgency.toLowerCase().includes('asap') && !job.isEmergency) return false;
     const openMarketplaceJob = job.targetTraderId == null && ['open', 'quoted'].includes(job.status) && !job.acceptedQuoteId;
     if (openMarketplaceJob && radiusFilter != null && job.distanceMiles != null && job.distanceMiles > radiusFilter) return false;
     const haystack = `${job.title} ${job.category} ${job.description} ${job.postcode ?? ''} ${job.locationLabel ?? ''}`.toLowerCase();
     return haystack.includes(search.trim().toLowerCase());
-  }), [directOnly, jobs, profile?.userId, radiusFilter, search, urgentOnly]);
+  }), [directOnly, jobs, linkedJobId, profile?.userId, radiusFilter, search, urgentOnly]);
 
   async function openOffer(job: JobWithDistance) {
     if (job.isPreview) return;
@@ -127,33 +134,49 @@ export default function TraderJobBoard() {
       {paid ? <><ProgressBar progress={limit ? Math.min(1, used / limit) : 0} color={allowanceUsed ? colors.danger : colors.primary} style={styles.progress} /><Text variant="bodySmall" style={styles.muted}>Resets {resetLabel}{allowanceUsed ? ' · You can still browse jobs and reply to direct requests.' : ''}</Text></> : <Button mode="contained" onPress={() => router.push('/trader/subscription')}>See Plus and Pro</Button>}
     </AppCard>
 
-    <Searchbar placeholder="Search jobs or locations" value={search} onChangeText={setSearch} style={styles.search} />
-    <View style={styles.filters}>
-      <Chip selected={!directOnly && !urgentOnly} showSelectedCheck onPress={() => { setDirectOnly(false); setUrgentOnly(false); }}>All</Chip>
-      <Chip selected={directOnly} showSelectedCheck onPress={() => setDirectOnly((value) => !value)}>Direct Requests</Chip>
-      <Chip selected={urgentOnly} showSelectedCheck onPress={() => setUrgentOnly((value) => !value)}>Urgent</Chip>
-      {(profile?.tradeCategories?.length ? profile.tradeCategories : profile?.tradeCategory ? [profile.tradeCategory] : []).slice(0, 3).map((category) => <Chip key={category} icon="tools">{category}</Chip>)}
-    </View>
+    {linkedJobId ? <AppCard style={styles.linkedCard}>
+      <View style={styles.usageTop}>
+        <View style={styles.flex}>
+          <Text variant="titleMedium" style={styles.title}>Opened from Latest Jobs</Text>
+          <Text style={styles.muted}>BuildPair is showing the job you selected on the homepage, but normal trade, service-area and availability rules still apply.</Text>
+        </View>
+        <Button mode="outlined" onPress={() => router.replace('/trader/job-board')}>Show all matching jobs</Button>
+      </View>
+    </AppCard> : null}
 
-    {radiusOptions.length ? <View style={styles.radiusRow}>
-      <Text variant="labelLarge" style={styles.radiusLabel}>Search radius</Text>
-      {radiusOptions.map((radius) => <Chip
-        key={radius}
-        selected={radiusFilter === radius}
-        showSelectedCheck
-        icon="map-marker-radius"
-        onPress={() => setRadiusFilter(radius)}
-      >Within {radius} miles</Chip>)}
-      <Text variant="bodySmall" style={styles.muted}>Your profile service area remains the maximum.</Text>
-    </View> : null}
+    {!linkedJobId ? <>
+      <Searchbar placeholder="Search jobs or locations" value={search} onChangeText={setSearch} style={styles.search} />
+      <View style={styles.filters}>
+        <Chip selected={!directOnly && !urgentOnly} showSelectedCheck onPress={() => { setDirectOnly(false); setUrgentOnly(false); }}>All</Chip>
+        <Chip selected={directOnly} showSelectedCheck onPress={() => setDirectOnly((value) => !value)}>Direct Requests</Chip>
+        <Chip selected={urgentOnly} showSelectedCheck onPress={() => setUrgentOnly((value) => !value)}>Urgent</Chip>
+        {(profile?.tradeCategories?.length ? profile.tradeCategories : profile?.tradeCategory ? [profile.tradeCategory] : []).slice(0, 3).map((category) => <Chip key={category} icon="tools">{category}</Chip>)}
+      </View>
+
+      {radiusOptions.length ? <View style={styles.radiusRow}>
+        <Text variant="labelLarge" style={styles.radiusLabel}>Search radius</Text>
+        {radiusOptions.map((radius) => <Chip
+          key={radius}
+          selected={radiusFilter === radius}
+          showSelectedCheck
+          icon="map-marker-radius"
+          onPress={() => setRadiusFilter(radius)}
+        >Within {radius} miles</Chip>)}
+        <Text variant="bodySmall" style={styles.muted}>Your profile service area remains the maximum.</Text>
+      </View> : null}
+    </> : null}
 
     {error ? <Text style={styles.error}>{error}</Text> : null}
     {!opportunities.length ? <EmptyState
-      title="No jobs match your current search"
-      body={activeFilters.length
-        ? `BuildPair checked your trade and service area with these filters: ${activeFilters.join(' · ')}. Clear the filters or widen the radius up to your saved service area.`
-        : 'There are currently no open jobs matching your selected trades and saved service area. New matching jobs will appear here automatically.'}
-      action={activeFilters.length ? <Button mode="outlined" icon="filter-remove-outline" onPress={clearFilters}>Clear search & filters</Button> : undefined}
+      title={linkedJobId ? 'This job is not available in your matching Job Board' : 'No jobs match your current search'}
+      body={linkedJobId
+        ? 'It may be outside your saved trade or service area, already taken, or no longer open. BuildPair will not bypass those matching rules just because the job was visible publicly.'
+        : activeFilters.length
+          ? `BuildPair checked your trade and service area with these filters: ${activeFilters.join(' · ')}. Clear the filters or widen the radius up to your saved service area.`
+          : 'There are currently no open jobs matching your selected trades and saved service area. New matching jobs will appear here automatically.'}
+      action={linkedJobId
+        ? <Button mode="outlined" onPress={() => router.replace('/trader/job-board')}>Show my matching jobs</Button>
+        : activeFilters.length ? <Button mode="outlined" icon="filter-remove-outline" onPress={clearFilters}>Clear search & filters</Button> : undefined}
     /> : opportunities.map((job) => {
       const direct = job.targetTraderId === profile?.userId;
       const ownQuote = job.isPreview ? undefined : quotes.find((quote) => quote.jobId === job.id && quote.status === 'pending');
@@ -203,6 +226,7 @@ const styles = StyleSheet.create({
   radiusRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   radiusLabel: { color: colors.charcoal, fontWeight: '800' },
   usageTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' },
+  linkedCard: { borderColor: '#E7B98E', backgroundColor: '#FFF8F1' },
   progress: { height: 9, borderRadius: 8, backgroundColor: colors.surfaceStrong },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' },
   titleBlock: { flex: 1, minWidth: 220, gap: 4 },
