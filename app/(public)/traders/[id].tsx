@@ -100,7 +100,7 @@ export default function TraderProfileScreen() {
   const ratingCounts = [5, 4, 3, 2, 1].map((rating) => ({ rating, count: profile.reviews.filter((review) => review.rating === rating).length }));
   const maxRatingCount = Math.max(1, ...ratingCounts.map((item) => item.count));
 
-  return <Screen contentStyle={styles.screenContent}>
+  return <Screen>
     {profile.shareOnly ? <AppCard style={styles.noticeCard}>
       <Text variant="titleMedium" style={styles.heading}>Shared Starter profile</Text>
       <Text style={styles.muted}>This profile was shared directly by {profile.businessName}. Starter profiles are not listed in marketplace search and cannot receive BuildPair quote requests.</Text>
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   heroCover: { minHeight: 430, justifyContent: 'flex-end' },
   heroCoverWide: { minHeight: 480 },
   heroCoverImage: { borderRadius: 28 },
-  heroShade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(8,20,30,0.43)' },
+  heroShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(8,20,30,0.43)' },
   heroOverlay: { padding: 18, justifyContent: 'flex-end' },
   heroOverlayWide: { padding: 30, minHeight: 480, alignItems: 'flex-start' },
   brandPanel: { width: '100%', maxWidth: 590, gap: 11, padding: 20, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.96)' },
