@@ -13,6 +13,8 @@ type InviteState = {
   valid: boolean;
   claimed?: boolean;
   email?: string;
+  needsEmail?: boolean;
+  phoneHint?: string;
   mode?: 'homeowner' | 'trader';
 };
 
@@ -27,9 +29,11 @@ export default function EarlyAccessSignup() {
   const invite = scalar(params.invite)?.trim() ?? '';
   const [inviteState, setInviteState] = useState<InviteState>();
   const [checking, setChecking] = useState(true);
+  const [accountEmail, setAccountEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const [savingEmail, setSavingEmail] = useState(false);
 
   const busy = fetchStatus === 'fetching';
   const email = inviteState?.email?.trim().toLowerCase() ?? '';
@@ -49,7 +53,10 @@ export default function EarlyAccessSignup() {
     async function validate() {
       try {
         const result = await readInvite();
-        if (alive) setInviteState(result);
+        if (alive) {
+          setInviteState(result);
+          if (result.email) setAccountEmail(result.email);
+        }
       } catch {
         if (alive) setInviteState({ valid: false });
       } finally {
@@ -61,6 +68,25 @@ export default function EarlyAccessSignup() {
   }, [invite]);
 
   const canCreate = useMemo(() => inviteState?.valid === true && Boolean(email) && password.length >= 8, [email, inviteState?.valid, password.length]);
+  const canAttachEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountEmail.trim());
+
+  async function attachEmail() {
+    if (!canAttachEmail) return;
+    try {
+      setSavingEmail(true);
+      setError('');
+      const result = await apiFetch<InviteState>('/api/early-access-invite', {
+        method: 'POST',
+        body: JSON.stringify({ invite, email: accountEmail.trim().toLowerCase() }),
+      });
+      setInviteState((current) => ({ ...current, ...result, valid: true, needsEmail: false }));
+      setAccountEmail(result.email ?? accountEmail.trim().toLowerCase());
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setSavingEmail(false);
+    }
+  }
 
   async function confirmInvite() {
     const latest = await readInvite();
@@ -124,7 +150,7 @@ export default function EarlyAccessSignup() {
 
   if (checking) return <LoadingScreen label="Checking your BuildPair early-access invite…" />;
 
-  if (!inviteState?.valid || !email) {
+  if (!inviteState?.valid) {
     return <Screen title="Early-access invite" subtitle="This invite is unavailable, has been withdrawn or has already been used.">
       <AppCard>
         <Chip icon="lock-outline">Registration remains invite-only</Chip>
@@ -132,6 +158,20 @@ export default function EarlyAccessSignup() {
         <Link href={signInHref(accountMode)} asChild><Button mode="contained">Sign in</Button></Link>
         <Link href={`/(public)/waitlist?audience=${accountMode === 'trader' ? 'trader' : 'homeowner'}&source=early-access`} asChild><Button mode="outlined">Back to the launch list</Button></Link>
       </AppCard>
+    </Screen>;
+  }
+
+  if (inviteState.needsEmail || !email) {
+    return <Screen title="Set up your BuildPair account" subtitle="Your text invite is valid. Add the email address you want to use to sign in.">
+      <AppCard style={styles.inviteCard}>
+        <Chip icon="message-check-outline">Early access approved</Chip>
+        <Text variant="titleLarge" style={styles.heading}>Your invitation is confirmed</Text>
+        <Text style={styles.body}>This invite was sent to {inviteState.phoneHint || 'your mobile'}. BuildPair accounts use a verified email for secure sign-in, receipts and important account messages.</Text>
+      </AppCard>
+      <TextInput mode="outlined" label="Email address for your account" value={accountEmail} onChangeText={setAccountEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
+      <Text style={styles.hint}>This will be added to your launch-list entry and locked to this one-time invitation.</Text>
+      <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
+      <Button mode="contained" loading={savingEmail} disabled={savingEmail || !canAttachEmail} onPress={() => void attachEmail()} contentStyle={styles.button}>Continue with this email</Button>
     </Screen>;
   }
 
@@ -153,7 +193,7 @@ export default function EarlyAccessSignup() {
     <AppCard style={styles.inviteCard}>
       <Chip icon="rocket-launch-outline">Early access approved</Chip>
       <Text variant="titleLarge" style={styles.heading}>Your account is ready to set up</Text>
-      <Text style={styles.body}>This invitation is locked to <Text style={styles.strong}>{email}</Text>. Once registered, use BuildPair normally and send us any feedback by replying to the invitation email.</Text>
+      <Text style={styles.body}>This invitation is locked to <Text style={styles.strong}>{email}</Text>. Once registered, use BuildPair normally and send us any feedback at info@buildpair.co.uk.</Text>
     </AppCard>
     <TextInput mode="outlined" label="Approved email address" value={email} editable={false} autoCapitalize="none" keyboardType="email-address" />
     <TextInput mode="outlined" label="Choose a password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" />
