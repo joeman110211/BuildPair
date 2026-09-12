@@ -22,7 +22,7 @@ async function sendInviteEmail(target: InviteTarget, token: string) {
   if (!apiKey) throw new Error('RESEND_API_KEY is not configured');
 
   const appUrl = (process.env.APP_URL || 'https://www.buildpair.co.uk').replace(/\/$/, '');
-  const inviteUrl = `${appUrl}/auth/sign-up?invite=${encodeURIComponent(token)}&mode=${target.audience}`;
+  const inviteUrl = `${appUrl}/auth/early-access?invite=${encodeURIComponent(token)}`;
   const from = process.env.INVOICE_FROM_EMAIL || 'BuildPair <info@buildpair.co.uk>';
   const greeting = target.name.trim() ? `Hi ${target.name.trim().split(/\s+/)[0]},` : 'Hi,';
   const roleCopy = target.audience === 'trader'
@@ -35,7 +35,7 @@ async function sendInviteEmail(target: InviteTarget, token: string) {
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to: [target.email], subject, text, html }),
+    body: JSON.stringify({ from, to: [target.email], reply_to: 'info@buildpair.co.uk', subject, text, html }),
   });
   if (!response.ok) throw new Error(`Early access email failed (${response.status})`);
 }
