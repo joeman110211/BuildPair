@@ -8,10 +8,10 @@ import { TraderCard } from '@/components/TraderCard';
 import { TRADE_CATEGORIES } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { searchTraders } from '@/lib/trade-search';
+import { searchTraders, searchTradersWithFallback } from '@/lib/trade-search';
 import type { TraderProfile } from '@/types';
 
-const EXAMPLE_SEARCHES = ['tiler', 'bathroom', 'water leak', 'wood', 'boiler', 'roof leak', 'kitchen', 'driveway'];
+const EXAMPLE_SEARCHES = ['tiler', 'bathroom', 'camera', 'security', 'water leak', 'wood', 'boiler', 'roof leak', 'kitchen', 'driveway'];
 
 type TradeSearchIntent = {
   matched?: boolean;
@@ -42,11 +42,11 @@ export default function DirectoryScreen() {
   const [storedIntent, setStoredIntent] = useState<StoredIntent | null>(null);
   const [aiCheckingQuery, setAiCheckingQuery] = useState('');
 
-  async function load(selected?: string) {
+  async function load() {
     try {
       setLoading(true);
       setError('');
-      setTraders(await apiFetch(`/api/traders${selected ? `?trade=${encodeURIComponent(selected)}` : ''}`));
+      setTraders(await apiFetch('/api/traders'));
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -55,12 +55,20 @@ export default function DirectoryScreen() {
   }
 
   useEffect(() => {
-    const timer = setTimeout(() => void load(initialTrade), 0);
+    const timer = setTimeout(() => void load(), 0);
     return () => clearTimeout(timer);
-  }, [initialTrade]);
+  }, []);
 
   const trimmedQuery = query.trim();
-  const localFiltered = useMemo(() => searchTraders(traders, query), [traders, query]);
+  const selectedTradeMatches = useMemo(
+    () => trade ? searchTraders(traders, '', [trade]) : traders,
+    [traders, trade],
+  );
+  const searchPool = selectedTradeMatches.length ? selectedTradeMatches : traders;
+  const localFiltered = useMemo(
+    () => searchTraders(searchPool, query, trade ? [trade] : []),
+    [searchPool, query, trade],
+  );
   const activeIntent = !trade && localFiltered.length === 0 && storedIntent?.query === trimmedQuery
     ? storedIntent.intent
     : null;
@@ -68,7 +76,19 @@ export default function DirectoryScreen() {
     if (!activeIntent?.matched || !activeIntent.primaryTrade) return [];
     return [activeIntent.primaryTrade, ...(activeIntent.alternatives ?? [])];
   }, [activeIntent]);
-  const filtered = useMemo(() => searchTraders(traders, query, inferredCategories), [traders, query, inferredCategories]);
+  const searchCategories = useMemo(
+    () => trade ? [trade] : inferredCategories,
+    [trade, inferredCategories],
+  );
+  const exactFiltered = useMemo(
+    () => searchTraders(searchPool, query, searchCategories),
+    [searchPool, query, searchCategories],
+  );
+  const filtered = useMemo(
+    () => searchTradersWithFallback(searchPool.length ? searchPool : traders, query, searchCategories),
+    [searchPool, traders, query, searchCategories],
+  );
+  const fallbackActive = Boolean((trimmedQuery || trade) && exactFiltered.length === 0 && filtered.length > 0);
   const aiChecking = !trade && localFiltered.length === 0 && aiCheckingQuery === trimmedQuery;
 
   useEffect(() => {
@@ -91,7 +111,7 @@ export default function DirectoryScreen() {
           setAiCheckingQuery((current) => current === requestedQuery ? '' : current);
         }
       }
-    }, 450);
+    }, 350);
 
     return () => {
       cancelled = true;
@@ -101,14 +121,14 @@ export default function DirectoryScreen() {
 
   if (loading) return <LoadingScreen label="Finding local trades…" />;
 
-  return <Screen title="Find the right trade" subtitle="Search by trade, job, material or problem. BuildPair understands related work, common wording and likely intent, so you do not need to know the exact trade name first.">
+  return <Screen title="Find the right trade" subtitle="Search by trade, job, material, brand, symptom or problem. BuildPair understands related work, common wording and likely intent, so you do not need to know the exact trade name first.">
     <View style={styles.searchPanel}>
       <View style={styles.search}>
         <TextInput
           mode="outlined"
           style={styles.searchInput}
           outlineStyle={styles.searchOutline}
-          placeholder="Try ‘water’, ‘wood’, ‘boiler’, ‘roof leak’ or describe the problem"
+          placeholder="Try ‘camera’, ‘water leak’, ‘wood’, ‘boiler’ or describe the problem"
           value={query}
           onChangeText={setQuery}
         />
@@ -118,11 +138,11 @@ export default function DirectoryScreen() {
           label="Trade category"
           value={trade}
           options={TRADE_CATEGORIES}
-          onChange={(value) => { setTrade(value); void load(value); }}
+          onChange={setTrade}
           placeholder="All trades"
         />
       </View>
-      {trade || query ? <Button mode="text" onPress={() => { setQuery(''); setTrade(undefined); void load(); }}>Clear</Button> : null}
+      {trade || query ? <Button mode="text" onPress={() => { setQuery(''); setTrade(undefined); }}>Clear</Button> : null}
     </View>
 
     <View style={styles.examples}>
@@ -135,26 +155,27 @@ export default function DirectoryScreen() {
     <View style={styles.filterChips}>
       <Chip>Smart intent matching</Chip>
       <Chip>Typo tolerant</Chip>
+      <Chip>Related services</Chip>
       <Chip>AI fallback</Chip>
-      <Chip>Customer reviews</Chip>
-      <Chip>Work galleries</Chip>
+      <Chip>Never dead-ends</Chip>
     </View>
 
     <View style={styles.resultsHeader}>
       <View style={styles.resultsCopy}>
         <Text variant="titleLarge" style={styles.title}>{filtered.length} trade{filtered.length === 1 ? '' : 's'} found</Text>
-        {query ? <Text style={styles.muted}>Best matches for “{query}” are shown first.</Text> : null}
+        {query && !fallbackActive ? <Text style={styles.muted}>Best matches for “{query}” are shown first.</Text> : null}
+        {fallbackActive ? <Text style={styles.muted}>No exact wording match, so BuildPair is showing the closest available trades instead of leaving you at a dead end.</Text> : null}
         {aiChecking ? <Text style={styles.muted}>Checking the likely trade behind your search…</Text> : null}
-        {!aiChecking && activeIntent?.matched && activeIntent.primaryTrade && filtered.length > 0
+        {!aiChecking && activeIntent?.matched && activeIntent.primaryTrade && exactFiltered.length > 0
           ? <Text style={styles.intentText}>BuildPair matched this to {activeIntent.primaryTrade}{activeIntent.source === 'ai' ? ' using AI intent matching' : ''}.</Text>
           : null}
       </View>
       {trade ? <Chip>{trade}</Chip> : null}
     </View>
 
-    {error ? <EmptyState title="Directory unavailable" body={error} action={<Button onPress={() => load(trade)}>Try again</Button>} /> : null}
-    {!error && !filtered.length && !aiChecking
-      ? <EmptyState title="No close matches yet" body="Try describing the job another way or clear the trade filter. BuildPair checks related services and can use AI to infer the likely trade when ordinary matching draws a blank." />
+    {error ? <EmptyState title="Directory unavailable" body={error} action={<Button onPress={() => load()}>Try again</Button>} /> : null}
+    {!error && !filtered.length
+      ? <EmptyState title="Trades are being added" body="There are no active paid trade profiles available to show yet." />
       : <View style={styles.grid}>{filtered.map((trader) => <TraderCard key={trader.id} trader={trader} />)}</View>}
 
     <Text variant="bodySmall" style={styles.disclaimer}>BuildPair distinguishes verified reviews from information supplied by tradespeople. Check qualifications, registrations and insurance that matter for your particular job before appointing anyone.</Text>
