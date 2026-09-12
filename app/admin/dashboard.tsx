@@ -69,6 +69,7 @@ type RecentUser = {
 type FlaggedMessage = { id: string; body: string; riskLevel: string; reason: string | null; createdAt: string; senderEmail: string | null; jobTitle: string | null };
 type Report = { id: string; reason: string; status: string; createdAt: string; reporterEmail: string | null; subjectEmail: string | null };
 type Overview = { metrics: Metrics; dataQuality: DataQuality; recentUsers: RecentUser[]; flaggedMessages: FlaggedMessage[]; recentReports: Report[]; generatedAt: string };
+type Traffic = { summary: Record<string, unknown>; sourceChannels: Record<string, unknown>[] };
 
 function fmt(value: string | null) {
   if (!value) return 'Never';
@@ -80,9 +81,14 @@ function money(value: number | string | undefined) {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 }).format(Number.isFinite(pounds) ? pounds : 0);
 }
 
-function Stat({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
-  return <View style={styles.stat}>
-    <Text variant="headlineSmall" style={styles.statValue}>{value}</Text>
+function compact(value: unknown) {
+  const parsed = Number(value ?? 0);
+  return new Intl.NumberFormat('en-GB', { notation: 'compact', maximumFractionDigits: 1 }).format(Number.isFinite(parsed) ? parsed : 0);
+}
+
+function Stat({ label, value, hint, live }: { label: string; value: string | number; hint?: string; live?: boolean }) {
+  return <View style={[styles.stat, live && styles.liveStat]}>
+    <View style={styles.statTop}>{live ? <View style={styles.liveDot} /> : null}<Text variant="headlineSmall" style={styles.statValue}>{value}</Text></View>
     <Text variant="labelLarge" style={styles.statLabel}>{label}</Text>
     {hint ? <Text variant="bodySmall" style={styles.muted}>{hint}</Text> : null}
   </View>;
@@ -100,8 +106,10 @@ export default function AdminDashboard() {
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   const [data, setData] = useState<Overview | null>(null);
+  const [traffic, setTraffic] = useState<Traffic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [trafficError, setTrafficError] = useState('');
 
   useEffect(() => {
     getTokenRef.current = getToken;
@@ -110,8 +118,16 @@ export default function AdminDashboard() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      setData(await apiFetch<Overview>('/api/admin/overview', {}, () => getTokenRef.current()));
+      const overview = await apiFetch<Overview>('/api/admin/overview', {}, () => getTokenRef.current());
+      setData(overview);
       setError('');
+      try {
+        const trafficData = await apiFetch<Traffic>('/api/admin/visitors?days=7', {}, () => getTokenRef.current());
+        setTraffic(trafficData);
+        setTrafficError('');
+      } catch (trafficCause) {
+        setTrafficError(errorMessage(trafficCause));
+      }
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
   }, []);
@@ -120,6 +136,8 @@ export default function AdminDashboard() {
   if (!data && !error) return <LoadingScreen label="Loading owner console…" />;
 
   const metrics = data?.metrics;
+  const trafficSummary = traffic?.summary ?? {};
+  const topSource = traffic?.sourceChannels?.[0];
   const actions = metrics ? [
     { show: metrics.pendingCredentials > 0, href: '/admin/credentials', label: `${metrics.pendingCredentials} credential${metrics.pendingCredentials === 1 ? '' : 's'} waiting` },
     { show: metrics.openReports > 0, href: '/admin/moderation', label: `${metrics.openReports} open report${metrics.openReports === 1 ? '' : 's'}` },
@@ -127,7 +145,7 @@ export default function AdminDashboard() {
     { show: metrics.overdueInvoices > 0, href: '/admin/activity', label: `${metrics.overdueInvoices} overdue invoice${metrics.overdueInvoices === 1 ? '' : 's'}` },
   ].filter((item) => item.show) : [];
 
-  return <Screen title="BuildPair Owner Console" subtitle="A cleaner operational view of real accounts, marketplace activity, trust & safety and BuildPair services.">
+  return <Screen title="BuildPair Owner Console" subtitle="Live traffic, real accounts, marketplace activity, trust & safety and platform health without hunting through fifteen screens first.">
     <View style={styles.toolbar}>
       <Button mode="contained" loading={loading} disabled={loading} onPress={() => void load()}>Refresh console</Button>
       {data ? <Chip>{`Updated ${fmt(data.generatedAt)}`}</Chip> : null}
@@ -160,6 +178,23 @@ export default function AdminDashboard() {
       </View>}
     </AppCard>
 
+    <Text variant="titleLarge" style={styles.sectionTitle}>Traffic & growth</Text>
+    <AppCard style={styles.trafficCard}>
+      <View style={styles.sectionHeading}>
+        <View style={styles.flex}><Text variant="titleLarge" style={styles.title}>Public-site traffic · last 7 days</Text><Text style={styles.muted}>Visitors are anonymous. Registered people currently using BuildPair are counted separately under signed-in online.</Text></View>
+        <Link href="/admin/visitors" asChild><Button mode="contained-tonal" icon="chart-timeline-variant">Open visitor intelligence</Button></Link>
+      </View>
+      {trafficError ? <HelperText type="error" visible>{trafficError}</HelperText> : null}
+      <View style={styles.statsGrid}>
+        <Stat live label="Anonymous on site" value={compact(trafficSummary.activeNow)} hint="Active in the last ~2 min" />
+        <Stat live label="Signed-in online" value={metrics?.onlineNow ?? 0} hint={`${metrics?.active15m ?? 0} signed-in active in 15 min`} />
+        <Stat label="Unique visitors" value={compact(trafficSummary.uniqueVisitors)} hint={`${compact(trafficSummary.newVisitors)} new · ${compact(trafficSummary.returningVisitors)} returning`} />
+        <Stat label="Visits" value={compact(trafficSummary.sessions)} hint={`${compact(trafficSummary.returningSessions)} repeat visits`} />
+        <Stat label="Page views" value={compact(trafficSummary.pageViews)} hint="Includes preserved older aggregate views" />
+        <Stat label="Top source" value={String(topSource?.channel ?? 'Waiting for data')} hint={topSource ? `${compact(topSource.visitors)} visitors · ${compact(topSource.sessions)} visits` : 'UTM and referrer traffic will appear here'} />
+      </View>
+    </AppCard>
+
     {metrics ? <>
       <Text variant="titleLarge" style={styles.sectionTitle}>Accounts</Text>
       <AppCard>
@@ -170,7 +205,6 @@ export default function AdminDashboard() {
           <Stat label="Dual mode" value={metrics.dualMode} hint="Both account modes enabled" />
           <Stat label="Mode not chosen" value={metrics.noMode} />
           <Stat label="New in 24h" value={metrics.newUsers24h} />
-          <Stat label="Online now" value={metrics.onlineNow} hint={`${metrics.active15m} active in 15 min`} />
           <Stat label="Suspended" value={metrics.suspendedUsers} />
         </View>
       </AppCard>
@@ -205,10 +239,18 @@ export default function AdminDashboard() {
     <Text variant="titleLarge" style={styles.sectionTitle}>Navigate</Text>
     <View style={styles.navGrid}>
       <AppCard style={styles.navGroup}>
+        <Text variant="titleMedium" style={styles.title}>Growth & usage</Text>
+        <Text style={styles.muted}>Traffic before signup, product behaviour after signup and launch demand.</Text>
+        <NavButton href="/admin/visitors" label="Visitor intelligence" detail="live traffic & sources" />
+        <NavButton href="/admin/insights" label="Product insights" detail="signed-in behaviour" />
+        <NavButton href="/admin/waitlist" label="Waitlist" detail="launch demand" />
+      </AppCard>
+
+      <AppCard style={styles.navGroup}>
         <Text variant="titleMedium" style={styles.title}>People</Text>
         <Text style={styles.muted}>Accounts, who is online, trade profiles and trust evidence.</Text>
         <NavButton href="/admin/users" label="Users" detail="accounts & access" />
-        <NavButton href="/admin/presence" label="Live users" detail="current activity" />
+        <NavButton href="/admin/presence" label="Live users" detail="signed-in activity" />
         <NavButton href="/admin/profiles" label="Trade profiles" detail="business listings" />
         <NavButton href="/admin/credentials" label="Credentials" detail="verification queue" />
       </AppCard>
@@ -223,10 +265,12 @@ export default function AdminDashboard() {
       </AppCard>
 
       <AppCard style={styles.navGroup}>
-        <Text variant="titleMedium" style={styles.title}>Safety & system</Text>
-        <Text style={styles.muted}>Moderation decisions and the services BuildPair relies on.</Text>
+        <Text variant="titleMedium" style={styles.title}>Safety, payments & platform</Text>
+        <Text style={styles.muted}>The queues and dependency checks that should never become mystery dead ends.</Text>
         <NavButton href="/admin/moderation" label="Moderation" detail="reports & actions" />
+        <NavButton href="/admin/payment-disputes" label="BuildPay issues" detail="payment escalations" />
         <NavButton href="/admin/system" label="System health" detail="live dependency checks" />
+        <NavButton href="/admin/assistant" label="Admin Assistant" detail="ask across BuildPair" />
       </AppCard>
     </View>
 
@@ -270,12 +314,16 @@ export default function AdminDashboard() {
 const styles = StyleSheet.create({
   toolbar: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
   warningCard: { borderColor: '#E8B36B' },
+  trafficCard: { borderTopWidth: 4, borderTopColor: colors.primary },
   good: { color: '#287A52', fontWeight: '800' },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   sectionTitle: { color: colors.charcoal, fontWeight: '900', marginTop: 4 },
   sectionHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   stat: { flexGrow: 1, flexBasis: 145, minWidth: 135, borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: 12, gap: 2, backgroundColor: colors.surfaceSoft },
+  liveStat: { borderColor: '#79C59F' },
+  statTop: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  liveDot: { width: 9, height: 9, borderRadius: 999, backgroundColor: '#2C9B65' },
   statValue: { color: colors.primary, fontWeight: '900' },
   statLabel: { color: colors.charcoal, fontWeight: '800' },
   navGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
