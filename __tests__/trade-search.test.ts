@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { searchTraders } from '@/lib/trade-search';
+import { searchTraders, searchTradersWithFallback } from '@/lib/trade-search';
 import type { TraderProfile } from '@/types';
 
 function trader(overrides: Partial<TraderProfile>): TraderProfile {
@@ -30,6 +30,16 @@ const traders = [
   trader({ id: 'roofer', businessName: 'Dry Roofs', tradeCategory: 'Roofing', subSkills: ['Roof repairs', 'Roof leaks', 'Flat roofs'] }),
   trader({ id: 'electrician', businessName: 'Bright Spark', tradeCategory: 'Electrical', subSkills: ['Sockets', 'Lighting', 'Rewires'] }),
   trader({ id: 'carpenter', businessName: 'NJL Carpentry', tradeCategory: 'Carpentry & Joinery', subSkills: ['Internal doors', 'Skirting & architraves', 'Built-in storage', 'Timber framing'] }),
+  trader({
+    id: 'security',
+    businessName: 'Surrey Secure Systems',
+    tradeCategory: 'Security, Smart Home & Locksmiths',
+    tradeCategories: ['Security, Smart Home & Locksmiths'],
+    subSkills: ['CCTV', 'Alarms', 'Access control', 'Video doorbells', 'Smart home systems', 'Door entry systems'],
+    serviceSelections: { 'Security, Smart Home & Locksmiths': ['CCTV', 'Alarms', 'Access control', 'Video doorbells'] },
+    bio: 'Local security installers for cameras, alarms, video doorbells and access control.',
+    locationLabel: 'Epsom and Ewell',
+  }),
 ];
 
 describe('related trade search', () => {
@@ -81,11 +91,29 @@ describe('related trade search', () => {
     expect(searchTraders(traders, 'carpinter')[0]?.id).toBe('carpenter');
   });
 
+  it('understands camera and security wording as security installation work', () => {
+    expect(searchTraders(traders, 'camera')[0]?.id).toBe('security');
+    expect(searchTraders(traders, 'security cameras')[0]?.id).toBe('security');
+    expect(searchTraders(traders, 'ring doorbell')[0]?.id).toBe('security');
+    expect(searchTraders(traders, 'cctv installation')[0]?.id).toBe('security');
+  });
+
+  it('understands common security brands and related equipment', () => {
+    expect(searchTraders(traders, 'hikvision')[0]?.id).toBe('security');
+    expect(searchTraders(traders, 'access control')[0]?.id).toBe('security');
+    expect(searchTraders(traders, 'intercom')[0]?.id).toBe('security');
+  });
+
   it('can rank by an AI-inferred category when the words themselves do not match', () => {
     expect(searchTraders(traders, 'mystery buzzing thing', ['Electrical'])[0]?.id).toBe('electrician');
   });
 
-  it('does not return unrelated traders for nonsense without an inferred category', () => {
+  it('does not manufacture a semantic match for unrelated nonsense', () => {
     expect(searchTraders(traders, 'spaceship engine repair')).toEqual([]);
+  });
+
+  it('can still return ranked marketplace options when a search has no semantic match', () => {
+    const results = searchTradersWithFallback(traders, 'spaceship engine repair');
+    expect(results.length).toBe(traders.length);
   });
 });
