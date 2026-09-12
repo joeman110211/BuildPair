@@ -6,6 +6,15 @@ export function waitlistHref(mode?: UserRole | null, source = 'website'): Href {
   const params = new URLSearchParams();
   if (mode) params.set('audience', mode === 'trader' ? 'trader' : 'homeowner');
   if (source) params.set('source', source);
+
+  if (typeof window !== 'undefined') {
+    const current = new URLSearchParams(window.location.search);
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign'] as const) {
+      const value = current.get(key);
+      if (value) params.set(key, value);
+    }
+  }
+
   const query = params.toString();
   return (`/(public)/waitlist${query ? `?${query}` : ''}`) as Href;
 }
