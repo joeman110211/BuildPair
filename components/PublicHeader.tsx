@@ -103,9 +103,11 @@ function AuthenticatedHeader() {
     }
     try {
       await apiFetch('/api/me', { method: 'PATCH', body: JSON.stringify({ role: mode }) }, getToken);
-    } finally {
-      router.replace(dashboardHref(mode));
+    } catch {
+      // The protected dashboard performs its own account check; still navigate so the
+      // user gets a visible error/retry screen rather than being stranded on a public page.
     }
+    router.replace(dashboardHref(mode));
   };
 
   if (compact) return <CompactShell menu={<NavMenu dashboard={dashboard} signedIn={isSignedIn} onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} />} />;
