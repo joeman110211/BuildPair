@@ -5,6 +5,7 @@ import { Image, Linking, Modal, Pressable, ScrollView, StyleSheet, useWindowDime
 import { Button, Chip, Divider, IconButton, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { ProfileShareButtons } from '@/components/ProfileShareButtons';
+import { ServiceAreaMap } from '@/components/ServiceAreaMap';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -292,11 +293,13 @@ export default function TraderProfileStorefront() {
 
         <AppCard style={styles.sideCard}>
           <Text variant="titleLarge" style={styles.panelTitle}>Service area</Text>
-          <View style={styles.mapMock}>
-            <View style={styles.mapRing}><View style={styles.mapPin}><Text style={styles.mapPinText}>●</Text></View></View>
-            <Text style={styles.mapLabel}>{profile.locationLabel || 'Local service area'}</Text>
-          </View>
-          <Text style={styles.muted}>Works within approximately {profile.radiusMiles} miles{serviceAreas.length ? ` · ${serviceAreas.slice(0, 3).join(', ')}` : ''}.</Text>
+          <ServiceAreaMap
+            latitude={profile.latitude}
+            longitude={profile.longitude}
+            radiusMiles={profile.radiusMiles}
+            locationLabel={profile.locationLabel}
+          />
+          <Text style={styles.muted}>Typically works within approximately {profile.radiusMiles} miles{serviceAreas.length ? ` · ${serviceAreas.slice(0, 3).join(', ')}` : ''}.</Text>
         </AppCard>
 
         <AppCard style={styles.sideCard}>
