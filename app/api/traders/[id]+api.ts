@@ -32,6 +32,8 @@ export async function GET(request: Request, { id }: { id: string }) {
       bio: traderProfiles.bio,
       radiusMiles: traderProfiles.radiusMiles,
       locationLabel: traderProfiles.locationLabel,
+      latitude: traderProfiles.latitude,
+      longitude: traderProfiles.longitude,
       qualifications: traderProfiles.qualifications,
       externalLinks: traderProfiles.externalLinks,
       photos: traderProfiles.photos,
@@ -45,6 +47,8 @@ export async function GET(request: Request, { id }: { id: string }) {
 
     const paidProfile = profile.subscriptionTier !== 'free' && profile.isSubscriptionActive;
     const tradeCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
+    const publicLatitude = Number.isFinite(profile.latitude) ? Math.round((profile.latitude as number) * 100) / 100 : null;
+    const publicLongitude = Number.isFinite(profile.longitude) ? Math.round((profile.longitude as number) * 100) / 100 : null;
 
     let showcase: Record<string, unknown> = {};
     try {
@@ -126,6 +130,8 @@ export async function GET(request: Request, { id }: { id: string }) {
 
     return Response.json({
       ...profile,
+      latitude: publicLatitude,
+      longitude: publicLongitude,
       tradeCategories,
       externalLinks: paidProfile ? profile.externalLinks : {},
       isSubscriptionActive: paidProfile,
