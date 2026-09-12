@@ -1,5 +1,5 @@
 import { Alert, Linking, Platform, Share, StyleSheet, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { IconButton, Text } from 'react-native-paper';
 import { colors } from '@/constants/theme';
 
 export function ProfileShareButtons({ profileId, businessName }: { profileId: string; businessName: string }) {
@@ -7,8 +7,11 @@ export function ProfileShareButtons({ profileId, businessName }: { profileId: st
   const text = `Find ${businessName} on BuildPair: ${url}`;
 
   async function open(target: string) {
-    try { await Linking.openURL(target); }
-    catch { Alert.alert('Could not open sharing app', 'Copy the BuildPair profile link instead.'); }
+    try {
+      await Linking.openURL(target);
+    } catch {
+      Alert.alert('Could not open sharing app', 'Use the share button instead.');
+    }
   }
 
   async function shareMore() {
@@ -18,7 +21,24 @@ export function ProfileShareButtons({ profileId, businessName }: { profileId: st
         return;
       }
       await Share.share({ title: `${businessName} on BuildPair`, message: text, url });
-    } catch { /* user cancelled the share sheet */ }
+    } catch {
+      // User cancelled the system share sheet.
+    }
+  }
+
+  async function shareMessenger() {
+    if (Platform.OS !== 'web') {
+      const messengerUrl = `fb-messenger://share?link=${encodeURIComponent(url)}`;
+      try {
+        if (await Linking.canOpenURL(messengerUrl)) {
+          await Linking.openURL(messengerUrl);
+          return;
+        }
+      } catch {
+        // Fall through to the system share sheet.
+      }
+    }
+    await shareMore();
   }
 
   async function copyLink() {
@@ -29,18 +49,70 @@ export function ProfileShareButtons({ profileId, businessName }: { profileId: st
         return;
       }
       await Share.share({ title: `${businessName} on BuildPair`, message: text, url });
-    } catch { Alert.alert('Could not copy link', url); }
+    } catch {
+      Alert.alert('Could not share link', url);
+    }
   }
 
   return <View style={styles.wrapper}>
     <Text variant="labelLarge" style={styles.label}>Share this BuildPair profile</Text>
     <View style={styles.actions}>
-      <Button compact mode="outlined" icon="whatsapp" onPress={() => void open(`https://wa.me/?text=${encodeURIComponent(text)}`)}>WhatsApp</Button>
-      <Button compact mode="outlined" icon="facebook" onPress={() => void open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`)}>Facebook</Button>
-      <Button compact mode="outlined" icon="facebook-messenger" onPress={() => void shareMore()}>Messenger / More</Button>
-      <Button compact mode="outlined" icon="email-outline" onPress={() => void open(`mailto:?subject=${encodeURIComponent(`${businessName} on BuildPair`)}&body=${encodeURIComponent(text)}`)}>Email</Button>
-      <Button compact mode="outlined" icon="message-text-outline" onPress={() => void open(`sms:?body=${encodeURIComponent(text)}`)}>SMS</Button>
-      <Button compact mode="outlined" icon="content-copy" onPress={() => void copyLink()}>Copy Link</Button>
+      <IconButton
+        icon="whatsapp"
+        mode="outlined"
+        size={24}
+        style={styles.iconButton}
+        accessibilityLabel="Share on WhatsApp"
+        onPress={() => void open(`https://wa.me/?text=${encodeURIComponent(text)}`)}
+      />
+      <IconButton
+        icon="facebook"
+        mode="outlined"
+        size={24}
+        style={styles.iconButton}
+        accessibilityLabel="Share on Facebook"
+        onPress={() => void open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`)}
+      />
+      <IconButton
+        icon="facebook-messenger"
+        mode="outlined"
+        size={24}
+        style={styles.iconButton}
+        accessibilityLabel="Share with Messenger"
+        onPress={() => void shareMessenger()}
+      />
+      <IconButton
+        icon="email-outline"
+        mode="outlined"
+        size={24}
+        style={styles.iconButton}
+        accessibilityLabel="Share by email"
+        onPress={() => void open(`mailto:?subject=${encodeURIComponent(`${businessName} on BuildPair`)}&body=${encodeURIComponent(text)}`)}
+      />
+      <IconButton
+        icon="message-text-outline"
+        mode="outlined"
+        size={24}
+        style={styles.iconButton}
+        accessibilityLabel="Share by SMS"
+        onPress={() => void open(`sms:?body=${encodeURIComponent(text)}`)}
+      />
+      <IconButton
+        icon="link-variant"
+        mode="outlined"
+        size={24}
+        style={styles.iconButton}
+        accessibilityLabel="Copy or share profile link"
+        onPress={() => void copyLink()}
+      />
+      <IconButton
+        icon="share-variant"
+        mode="contained"
+        size={24}
+        style={styles.iconButton}
+        accessibilityLabel="More sharing options"
+        onPress={() => void shareMore()}
+      />
     </View>
   </View>;
 }
@@ -48,5 +120,6 @@ export function ProfileShareButtons({ profileId, businessName }: { profileId: st
 const styles = StyleSheet.create({
   wrapper: { gap: 8 },
   label: { color: colors.charcoal, fontWeight: '800' },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 5 },
+  iconButton: { margin: 0 },
 });
