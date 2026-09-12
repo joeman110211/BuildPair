@@ -9,6 +9,7 @@ import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
 import { TRADE_CATEGORIES } from '@/constants/options';
 import { colors } from '@/constants/theme';
+import { waitlistHref } from '@/lib/launch';
 
 const POPULAR_TRADES = ['Tiling', 'Plumbing', 'Electrical', 'Building & Extensions', 'Roofing & Roofline', 'Painting & Decorating', 'Kitchens', 'Bathrooms'] as const;
 const HERO_BENEFITS = ['Genuinely local trade matching', 'Compare clear quotes', 'Keep decisions recorded', 'Manage the whole project'] as const;
@@ -58,7 +59,7 @@ export default function LandingPageRefined() {
           <Button mode="contained" contentStyle={styles.searchButton} onPress={() => goSearch(search)}>Find a trade</Button>
         </View>
         <View style={styles.heroActions} testID="home-hero-actions">
-          <Link href="/auth/account" asChild><Button mode="outlined" style={styles.heroActionButton}>Post a job</Button></Link>
+          <Link href={waitlistHref('customer', 'homepage-hero')} asChild><Button mode="outlined" style={styles.heroActionButton}>Join homeowner launch list</Button></Link>
           <Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" style={styles.heroActionButton}>I’m a tradesperson</Button></Link>
           <Link href="/(public)/how-it-works" asChild><Button mode="outlined" style={styles.heroActionButton}>How it works</Button></Link>
         </View>
@@ -74,7 +75,7 @@ export default function LandingPageRefined() {
             <Text style={styles.audienceEyebrow}>FOR HOMEOWNERS</Text>
             <Text variant="headlineSmall" style={styles.cardTitle}>Find the right person and stay in control of the job.</Text>
             <Text style={styles.cardText}>Describe what needs doing, compare suitable trades and structured quotes, then keep messages, changes and payment stages attached to the project.</Text>
-            <View style={styles.audienceActions}><Button mode="contained" onPress={() => goSearch('')}>Find a trade</Button><Link href="/auth/account" asChild><Button mode="text">Post a job</Button></Link></View>
+            <View style={styles.audienceActions}><Button mode="contained" onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('customer', 'homepage-audience')} asChild><Button mode="text">Join homeowner list</Button></Link></View>
           </View>
           <View style={[styles.audienceCard, styles.tradeAudienceCard]}>
             <Text style={[styles.audienceEyebrow, styles.tradeAudienceEyebrow]}>FOR TRADESPEOPLE</Text>
@@ -182,7 +183,7 @@ export default function LandingPageRefined() {
     <View style={styles.section}>
       <View style={styles.finalCta}>
         <View style={styles.finalCopy}><Text style={styles.finalEyebrow}>BUILDPAIR UK</Text><Text variant="headlineSmall" style={styles.finalTitle}>Find the trade. Agree the job. Keep everything connected.</Text><Text style={styles.finalText}>Search, quote, message, manage changes, handle payment stages and complete the project in one place.</Text></View>
-        <View style={styles.finalButtons}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} onPress={() => goSearch('')}>Find a trade</Button><Link href="/auth/account" asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.finalOutline}>Join BuildPair</Button></Link></View>
+        <View style={styles.finalButtons}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref(null, 'homepage-final')} asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.finalOutline}>Join launch list</Button></Link></View>
       </View>
     </View>
 
