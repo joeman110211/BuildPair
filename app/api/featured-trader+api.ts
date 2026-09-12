@@ -11,8 +11,7 @@ type FeaturedTraderRow = {
   locationLabel: string | null;
   photos: string[];
   qualifications: string[];
-  subscriptionTier: 'free' | 'basic' | 'featured';
-  isSubscriptionActive: boolean;
+  subscriptionTier: 'basic' | 'featured';
   createdAt: string;
   averageRating: number;
   reviewCount: number;
@@ -28,14 +27,6 @@ function currentWeekStart(date = new Date()) {
   const daysSinceMonday = (midnight.getUTCDay() + 6) % 7;
   midnight.setUTCDate(midnight.getUTCDate() - daysSinceMonday);
   return midnight;
-}
-
-function toPublicTrader(trader: FeaturedTraderRow, overrideUserId?: string) {
-  return {
-    ...trader,
-    galleryCount: trader.photos.length,
-    isOverride: trader.userId === overrideUserId,
-  };
 }
 
 export async function GET() {
@@ -56,7 +47,6 @@ export async function GET() {
              tp.photos,
              tp.qualifications,
              tp.subscription_tier AS "subscriptionTier",
-             tp.is_subscription_active AS "isSubscriptionActive",
              tp.created_at AS "createdAt",
              coalesce((
                SELECT avg(r.rating)::float
@@ -83,56 +73,49 @@ export async function GET() {
                  AND tc.status = 'verified'
                  AND (tc.expires_at IS NULL OR tc.expires_at > now())) AS "verifiedCredentialCount"
       FROM trader_profiles tp
-      WHERE NOT EXISTS (
-        SELECT 1 FROM users u
-        WHERE u.id = tp.user_id
-          AND (
-            coalesce(u.is_suspended, false) = true
-            OR coalesce(u.is_deleted, false) = true
-            OR coalesce(u.email, '') LIKE '%@buildpair.test'
-          )
-      )
+      WHERE tp.subscription_tier <> 'free'
+        AND tp.is_subscription_active = true
+        AND NOT EXISTS (
+          SELECT 1 FROM users u
+          WHERE u.id = tp.user_id
+            AND (
+              coalesce(u.is_suspended, false) = true
+              OR coalesce(u.is_deleted, false) = true
+              OR coalesce(u.email, '') LIKE '%@buildpair.test'
+            )
+        )
       ORDER BY tp.user_id ASC
       LIMIT 250
     ` as unknown as FeaturedTraderRow[];
 
-    const ranked = [...rows].sort((a, b) => (
-      b.completedJobs - a.completedJobs
-      || b.reviewCount - a.reviewCount
-      || b.averageRating - a.averageRating
-      || Number(b.photos.length > 0) - Number(a.photos.length > 0)
-      || a.userId.localeCompare(b.userId)
-    ));
-
-    const paidEligible = ranked.filter((trader) => (
-      trader.subscriptionTier !== 'free'
-      && trader.isSubscriptionActive
-      && new Date(trader.createdAt).getTime() < weekStart.getTime()
-    ));
-    const paid = ranked.filter((trader) => trader.subscriptionTier !== 'free' && trader.isSubscriptionActive);
-
     const overrideWeek = process.env.FEATURED_TRADER_OVERRIDE_WEEK?.trim();
     const overrideUserId = process.env.FEATURED_TRADER_OVERRIDE_USER_ID?.trim();
     const override = overrideWeek === weekStartIso && overrideUserId
-      ? ranked.find((trader) => trader.userId === overrideUserId)
+      ? rows.find((trader) => trader.userId === overrideUserId)
       : undefined;
 
-    const selected = override
-      ?? (paidEligible.length ? paidEligible[weekSerial % paidEligible.length] : undefined)
-      ?? paid[0]
-      ?? ranked[0];
+    const eligible = rows
+      .filter((trader) => new Date(trader.createdAt).getTime() < weekStart.getTime())
+      .sort((a, b) => (
+        b.completedJobs - a.completedJobs
+        || b.reviewCount - a.reviewCount
+        || b.averageRating - a.averageRating
+        || a.userId.localeCompare(b.userId)
+      ));
+
+    const selected = override ?? (eligible.length ? eligible[weekSerial % eligible.length] : rows[0]);
     const nextRefreshAt = new Date(weekStart.getTime() + WEEK_MS).toISOString();
 
     if (!selected) {
-      return Response.json({ trader: null, traders: [], weekStart: weekStartIso, nextRefreshAt });
+      return Response.json({ trader: null, weekStart: weekStartIso, nextRefreshAt });
     }
 
-    const ordered = [selected, ...ranked.filter((trader) => trader.userId !== selected.userId)];
-    const traders = ordered.slice(0, 6).map((trader) => toPublicTrader(trader, override?.userId));
-
     return Response.json({
-      trader: traders[0] ?? null,
-      traders,
+      trader: {
+        ...selected,
+        galleryCount: selected.photos.length,
+        isOverride: selected.userId === override?.userId,
+      },
       weekStart: weekStartIso,
       nextRefreshAt,
     }, {
