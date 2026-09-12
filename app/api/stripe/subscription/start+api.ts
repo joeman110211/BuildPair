@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { traderProfiles } from '@/db/schema';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
-import { getStripe, providerReturnUrl } from '@/lib/stripe';
+import { appUrl, getStripe, providerReturnUrl } from '@/lib/stripe';
 
 const plans = {
   basic: { name: 'BuildPair Plus', unitAmount: 1999, priceEnv: 'STRIPE_BASIC_PRICE_ID' },
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
       client_reference_id: trader.id,
       line_items: [lineItem],
       allow_promotion_codes: true,
-      success_url: providerReturnUrl('subscription', 'complete'),
+      success_url: `${appUrl()}/api/stripe/subscription-confirm?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: providerReturnUrl('subscription', 'cancelled'),
       metadata: { buildpairUserId: trader.id, tier },
       subscription_data: { metadata: { buildpairUserId: trader.id, tier } },
