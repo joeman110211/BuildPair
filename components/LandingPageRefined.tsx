@@ -64,7 +64,23 @@ export default function LandingPageRefined() {
           <Link href="/(public)/how-it-works" asChild><Button mode="outlined" style={styles.heroActionButton}>How it works</Button></Link>
         </View>
       </View>
-      <FeaturedTraderHero wide={wide} />
+    </View>
+
+    <View style={styles.featuredBand}>
+      <View style={styles.featuredSection}>
+        <SectionHeading eyebrow="Featured tradespeople" title="Meet trades already on BuildPair." body="Swipe or scroll through real BuildPair profiles and open any card to see the tradesperson in more detail." />
+        <FeaturedTraderHero wide={wide} />
+      </View>
+    </View>
+
+    <View style={styles.tradeBand}>
+      <View style={styles.section}>
+        <SectionHeading eyebrow="Find a trade" title="Search by the work, not the terminology." body="Choose a trade if you know it, or describe the job and let BuildPair narrow the starting point." />
+        <View style={styles.tradeGrid}>
+          {POPULAR_TRADES.map((trade) => <Pressable key={trade} style={styles.tradeCard} onPress={() => goTrade(trade)} accessibilityRole="button"><Text style={styles.tradeName}>{trade}</Text><Text style={styles.tradeArrow}>→</Text></Pressable>)}
+        </View>
+        <Link href="/(public)/directory" asChild><Button mode="text">Browse all {TRADE_CATEGORIES.length} trade categories →</Button></Link>
+      </View>
     </View>
 
     <View style={styles.audienceBand}>
@@ -98,16 +114,6 @@ export default function LandingPageRefined() {
         ].map(([number, title, copy]) => <View key={number} style={styles.routeCard}><Text style={styles.routeNumber}>{number}</Text><Text variant="titleLarge" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
       </View>
       <Link href="/(public)/how-it-works" asChild><Button mode="text">See the full process →</Button></Link>
-    </View>
-
-    <View style={styles.tradeBand}>
-      <View style={styles.section}>
-        <SectionHeading eyebrow="Find a trade" title="Search by the work, not the terminology." body="Choose a trade if you know it, or describe the job and let BuildPair narrow the starting point." />
-        <View style={styles.tradeGrid}>
-          {POPULAR_TRADES.map((trade) => <Pressable key={trade} style={styles.tradeCard} onPress={() => goTrade(trade)} accessibilityRole="button"><Text style={styles.tradeName}>{trade}</Text><Text style={styles.tradeArrow}>→</Text></Pressable>)}
-        </View>
-        <Link href="/(public)/directory" asChild><Button mode="text">Browse all {TRADE_CATEGORIES.length} trade categories →</Button></Link>
-      </View>
     </View>
 
     <View style={styles.section}>
@@ -195,9 +201,9 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   pageContent: { flexGrow: 1, width: '100%', maxWidth: '100%' },
   hero: { width: '100%', maxWidth: 1240, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 32, gap: 24 },
-  heroWide: { flexDirection: 'row', alignItems: 'stretch', paddingVertical: 42, gap: 30 },
+  heroWide: { paddingVertical: 42 },
   heroCopy: { width: '100%', maxWidth: '100%', minWidth: 0, flexShrink: 1, justifyContent: 'center', alignItems: 'center', gap: 15 },
-  heroCopyWide: { flex: 1, flexShrink: 1 },
+  heroCopyWide: { width: '100%', maxWidth: 900, alignSelf: 'center' },
   heroBadge: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: colors.primarySoft, borderRadius: 999, borderWidth: 1, borderColor: '#F2D7C3' },
   liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
   heroBadgeText: { color: colors.primaryDark, fontWeight: '800', fontSize: 12, textAlign: 'center' },
@@ -213,6 +219,8 @@ const styles = StyleSheet.create({
   searchButton: { minHeight: 50 },
   heroActions: { width: '100%', maxWidth: '100%', minWidth: 0, minHeight: 44, flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', alignItems: 'center' },
   heroActionButton: { borderRadius: 999, maxWidth: '100%' },
+  featuredBand: { backgroundColor: '#FFFFFF' },
+  featuredSection: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingTop: 20, paddingBottom: 38, gap: 16 },
   section: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 38, gap: 20 },
   sectionHeading: { width: '100%', maxWidth: 820, minWidth: 0, alignSelf: 'center', alignItems: 'center', gap: 7 },
   eyebrow: { color: colors.primary, fontWeight: '900', fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', textAlign: 'center' },
