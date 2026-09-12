@@ -161,7 +161,6 @@ export default function TraderJobBoard() {
       const firstMarketplaceOffer = !direct && !conversation && !ownQuote;
       const blockedByPlan = !paid && !conversation && !ownQuote;
       const blockedByAllowance = paid && firstMarketplaceOffer && allowanceUsed;
-      const canOpen = !job.isPreview && !blockedByPlan && !blockedByAllowance;
       const distanceLabel = job.distanceMiles == null ? null : job.distanceMiles < 1 ? '<1 mile away' : `${Math.round(job.distanceMiles)} miles away`;
       const postedLabel = job.createdAt ? new Date(job.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Unknown time';
       const jobRef = `BP-${job.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
@@ -176,14 +175,20 @@ export default function TraderJobBoard() {
           {job.isPreview ? <Button mode="outlined" disabled>Example only</Button> : <>
             <Button
               mode="contained"
-              icon={conversation ? 'message-text-outline' : direct ? 'account-arrow-left' : 'handshake-outline'}
+              icon={blockedByPlan ? 'lock-open-outline' : conversation ? 'message-text-outline' : direct ? 'account-arrow-left' : 'handshake-outline'}
               loading={openingJobId === job.id}
-              disabled={!canOpen || openingJobId === job.id}
-              onPress={() => void openOffer(job)}
-            >{conversation ? 'Open Conversation' : direct ? 'Open Direct Request' : blockedByPlan ? 'Plus or Pro required' : blockedByAllowance ? `${used}/${limit} offers used` : 'Offer / Message'}</Button>
+              disabled={blockedByAllowance || openingJobId === job.id}
+              onPress={() => {
+                if (blockedByPlan) {
+                  router.push('/trader/subscription');
+                  return;
+                }
+                void openOffer(job);
+              }}
+            >{conversation ? 'Open Conversation' : direct ? 'Open Direct Request' : blockedByPlan ? 'Upgrade to quote' : blockedByAllowance ? `${used}/${limit} offers used` : 'Offer / Message'}</Button>
             {conversation || ownQuote ? <Button mode="outlined" icon="file-document-edit-outline" onPress={() => router.push({ pathname: '/trader/quotes/new', params: { jobId: job.id, title: job.title } })}>{ownQuote ? 'Update Quote' : 'Quote now'}</Button> : null}
             {conversation && !ownQuote ? <Button mode="outlined" icon="calendar-account-outline" onPress={() => router.push({ pathname: '/trader/visits/new', params: { jobId: job.id, conversationId: conversation.id, title: job.title } } as Href)}>Visit before quote</Button> : null}
-            {(blockedByPlan || blockedByAllowance) ? <Button mode="text" onPress={() => router.push('/trader/subscription')}>{blockedByAllowance && profile?.subscriptionTier === 'basic' ? 'Upgrade to Pro' : 'View plans'}</Button> : null}
+            {blockedByAllowance ? <Button mode="text" onPress={() => router.push('/trader/subscription')}>{profile?.subscriptionTier === 'basic' ? 'Upgrade to Pro' : 'View plans'}</Button> : null}
           </>}
         </View>
         {blockedByAllowance ? <Text variant="bodySmall" style={styles.limitText}>Your open-marketplace allowance resets {resetLabel}. Direct homeowner requests remain available and do not count.</Text> : null}
