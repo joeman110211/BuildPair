@@ -22,7 +22,7 @@ ALTER TABLE launch_waitlist
   ADD CONSTRAINT launch_waitlist_preferred_contact_check
   CHECK (preferred_contact IN ('email', 'sms', 'both'));
 
-CREATE UNIQUE INDEX IF NOT EXISTS launch_waitlist_phone_unique_idx
+CREATE INDEX IF NOT EXISTS launch_waitlist_phone_idx
   ON launch_waitlist(phone)
   WHERE phone IS NOT NULL AND phone <> '';
 
