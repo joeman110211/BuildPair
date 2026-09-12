@@ -104,30 +104,25 @@ export async function GET() {
       || a.userId.localeCompare(b.userId)
     ));
 
-    const paidEligible = ranked.filter((trader) => (
-      trader.subscriptionTier !== 'free'
-      && trader.isSubscriptionActive
-      && new Date(trader.createdAt).getTime() < weekStart.getTime()
-    ));
     const paid = ranked.filter((trader) => trader.subscriptionTier !== 'free' && trader.isSubscriptionActive);
+    const paidEligible = paid.filter((trader) => new Date(trader.createdAt).getTime() < weekStart.getTime());
 
     const overrideWeek = process.env.FEATURED_TRADER_OVERRIDE_WEEK?.trim();
     const overrideUserId = process.env.FEATURED_TRADER_OVERRIDE_USER_ID?.trim();
     const override = overrideWeek === weekStartIso && overrideUserId
-      ? ranked.find((trader) => trader.userId === overrideUserId)
+      ? paid.find((trader) => trader.userId === overrideUserId)
       : undefined;
 
     const selected = override
       ?? (paidEligible.length ? paidEligible[weekSerial % paidEligible.length] : undefined)
-      ?? paid[0]
-      ?? ranked[0];
+      ?? paid[0];
     const nextRefreshAt = new Date(weekStart.getTime() + WEEK_MS).toISOString();
 
     if (!selected) {
       return Response.json({ trader: null, traders: [], weekStart: weekStartIso, nextRefreshAt });
     }
 
-    const ordered = [selected, ...ranked.filter((trader) => trader.userId !== selected.userId)];
+    const ordered = [selected, ...paid.filter((trader) => trader.userId !== selected.userId)];
     const traders = ordered.slice(0, 6).map((trader) => toPublicTrader(trader, override?.userId));
 
     return Response.json({
