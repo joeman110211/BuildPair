@@ -5,15 +5,16 @@ import { StyleSheet, View } from 'react-native';
 import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { Screen } from '@/components/Screen';
 import { SocialAuthButtons } from '@/components/SocialAuthButtons';
-import { forgotPasswordHref, modeSetupHref, parseAccountMode, signUpHref } from '@/lib/account-mode';
+import { forgotPasswordHref, modeSetupHref, parseAccountMode, safeInternalReturnTo, signUpHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
 
 export default function SignInScreen() {
   const { signIn, fetchStatus } = useSignIn();
   const router = useRouter();
-  const params = useLocalSearchParams<{ mode?: string | string[]; admin?: string | string[] }>();
+  const params = useLocalSearchParams<{ mode?: string | string[]; admin?: string | string[]; returnTo?: string | string[] }>();
   const admin = Array.isArray(params.admin) ? params.admin[0] === '1' : params.admin === '1';
   const mode = parseAccountMode(params.mode);
+  const returnTo = safeInternalReturnTo(params.returnTo);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -46,7 +47,7 @@ export default function SignInScreen() {
           router.replace('/admin');
           return;
         }
-        router.replace(modeSetupHref(mode));
+        router.replace(modeSetupHref(mode, returnTo));
       },
     });
   }
@@ -123,7 +124,7 @@ export default function SignInScreen() {
 
   return (
     <Screen title={title} subtitle={subtitle}>
-      {admin ? null : <SocialAuthButtons onError={setError} mode={mode} />}
+      {admin ? null : <SocialAuthButtons onError={setError} mode={mode} returnTo={returnTo} />}
       <TextInput
         label="Email address"
         value={email}
@@ -156,7 +157,7 @@ export default function SignInScreen() {
         <>
           <View style={styles.footer}>
             <Text>New to BuildPair?</Text>
-            <Link href={mode ? signUpHref(mode) : '/auth/account'} asChild><Button>Create account</Button></Link>
+            <Link href={mode ? signUpHref(mode, returnTo) : '/auth/account'} asChild><Button>Create account</Button></Link>
           </View>
           <Link href="/auth/account" asChild><Button>Back to account options</Button></Link>
         </>
