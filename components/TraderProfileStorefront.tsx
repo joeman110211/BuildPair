@@ -49,6 +49,7 @@ export default function TraderProfileStorefront() {
   const { width } = useWindowDimensions();
   const desktop = width >= 980;
   const mobile = width < 600;
+  const narrowMobile = width < 360;
   const getTokenRef = useRef(getToken);
   const [profile, setProfile] = useState<ProfileResult>();
   const [saving, setSaving] = useState(false);
@@ -181,7 +182,7 @@ export default function TraderProfileStorefront() {
         contentContainerStyle={[styles.tabsContent, mobile && styles.tabsContentMobile]}
       >
         {SECTION_TABS.map((tab) => <Pressable key={tab.key} onPress={() => setActiveSection(tab.key)} style={[styles.tab, mobile && styles.tabMobile, activeSection === tab.key && styles.tabActive]}>
-          <Text numberOfLines={1} style={[styles.tabText, mobile && styles.tabTextMobile, activeSection === tab.key && styles.tabTextActive]}>{tab.label}</Text>
+          <Text numberOfLines={1} style={[styles.tabText, mobile && styles.tabTextMobile, narrowMobile && styles.tabTextNarrowMobile, activeSection === tab.key && styles.tabTextActive]}>{tab.label}</Text>
         </Pressable>)}
       </ScrollView>
     </View>
@@ -383,12 +384,13 @@ const styles = StyleSheet.create({
   responseText: { color: colors.muted, fontSize: 12, fontWeight: '700' },
   tabs: { width: '100%', borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: '#FFFFFF' },
   tabsContent: { flexDirection: 'row', alignItems: 'stretch', paddingHorizontal: 18 },
-  tabsContentMobile: { paddingHorizontal: 6 },
+  tabsContentMobile: { flexGrow: 1, width: '100%', paddingHorizontal: 4 },
   tab: { paddingHorizontal: 13, paddingVertical: 14, borderBottomWidth: 3, borderBottomColor: 'transparent' },
-  tabMobile: { paddingHorizontal: 9, paddingVertical: 12 },
+  tabMobile: { flex: 1, minWidth: 0, paddingHorizontal: 2, paddingVertical: 13, alignItems: 'center', justifyContent: 'center' },
   tabActive: { borderBottomColor: colors.primary },
   tabText: { color: colors.muted, fontWeight: '800' },
-  tabTextMobile: { fontSize: 12 },
+  tabTextMobile: { fontSize: 12.5, textAlign: 'center' },
+  tabTextNarrowMobile: { fontSize: 10.5, letterSpacing: -0.2 },
   tabTextActive: { color: colors.primary },
   contentGrid: { width: '100%', gap: 18 },
   contentGridDesktop: { flexDirection: 'row', alignItems: 'flex-start' },
