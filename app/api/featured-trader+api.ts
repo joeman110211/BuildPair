@@ -29,6 +29,14 @@ function currentWeekStart(date = new Date()) {
   return midnight;
 }
 
+function toPublicTrader(trader: FeaturedTraderRow, overrideUserId?: string) {
+  return {
+    ...trader,
+    galleryCount: trader.photos.length,
+    isOverride: trader.userId === overrideUserId,
+  };
+}
+
 export async function GET() {
   try {
     const sql = getSql();
@@ -107,15 +115,16 @@ export async function GET() {
     const nextRefreshAt = new Date(weekStart.getTime() + WEEK_MS).toISOString();
 
     if (!selected) {
-      return Response.json({ trader: null, weekStart: weekStartIso, nextRefreshAt });
+      return Response.json({ trader: null, traders: [], weekStart: weekStartIso, nextRefreshAt });
     }
 
+    const pool = eligible.length ? eligible : rows;
+    const ordered = [selected, ...pool.filter((trader) => trader.userId !== selected.userId)];
+    const traders = ordered.slice(0, 6).map((trader) => toPublicTrader(trader, override?.userId));
+
     return Response.json({
-      trader: {
-        ...selected,
-        galleryCount: selected.photos.length,
-        isOverride: selected.userId === override?.userId,
-      },
+      trader: traders[0] ?? null,
+      traders,
       weekStart: weekStartIso,
       nextRefreshAt,
     }, {
