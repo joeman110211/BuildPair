@@ -49,6 +49,7 @@ export default function TraderProfileStorefront() {
   const { user } = useCurrentUser();
   const { width } = useWindowDimensions();
   const desktop = width >= 980;
+  const mobile = width < 600;
   const getTokenRef = useRef(getToken);
   const [profile, setProfile] = useState<ProfileResult>();
   const [saving, setSaving] = useState(false);
@@ -126,9 +127,9 @@ export default function TraderProfileStorefront() {
       <View style={styles.coverWrap}>
         {profile.coverPhotoUrl ? <Image source={{ uri: profile.coverPhotoUrl }} style={styles.cover} /> : <View style={styles.coverFallback}><Text style={styles.coverFallbackBrand}>BuildPair</Text><Text style={styles.coverFallbackText}>{categories[0]}</Text></View>}
         <View style={styles.coverShade} />
-        <View style={styles.coverCopy}>
-          <Text style={styles.coverEyebrow}>{categories[0]}</Text>
-          <Text style={styles.coverTitle}>Professional local work, presented properly.</Text>
+        <View style={[styles.coverCopy, mobile && styles.coverCopyMobile]}>
+          <Text style={[styles.coverEyebrow, mobile && styles.coverEyebrowMobile]}>{categories[0]}</Text>
+          <Text style={[styles.coverTitle, mobile && styles.coverTitleMobile]}>Professional local work, presented properly.</Text>
         </View>
         {desktop ? <View style={styles.coverServices}>
           {serviceList.slice(0, 6).map((service) => <View key={service} style={styles.coverService}><Text style={styles.coverServiceText}>{service}</Text></View>)}
@@ -313,8 +314,11 @@ const styles = StyleSheet.create({
   coverFallbackText: { color: '#FFD0AE', fontSize: 17, fontWeight: '800' },
   coverShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(8,21,31,0.28)' },
   coverCopy: { position: 'absolute', left: 20, bottom: 20, maxWidth: 320, alignSelf: 'flex-start', paddingHorizontal: 14, paddingVertical: 11, borderRadius: 14, backgroundColor: 'rgba(10,24,36,0.82)' },
+  coverCopyMobile: { left: 10, bottom: 10, maxWidth: 180, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 9 },
   coverEyebrow: { color: '#FFD0AE', fontSize: 9, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
+  coverEyebrowMobile: { fontSize: 7, letterSpacing: 0.7 },
   coverTitle: { color: '#FFFFFF', fontSize: 17, lineHeight: 22, fontWeight: '900', marginTop: 3 },
+  coverTitleMobile: { fontSize: 11, lineHeight: 14, marginTop: 2 },
   coverServices: { position: 'absolute', right: 18, top: 18, gap: 7, alignItems: 'flex-end' },
   coverService: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: 'rgba(10,24,36,0.82)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)' },
   coverServiceText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
