@@ -9,43 +9,40 @@ import { apiFetch, errorMessage } from '@/lib/api';
 import { LAUNCH_DATE_LABEL } from '@/lib/launch';
 
 type Audience = 'homeowner' | 'trader';
-
 type WaitlistResponse = { ok: true; alreadyJoined: boolean };
 
 export default function WaitlistPage() {
   const params = useLocalSearchParams<{ audience?: string; source?: string }>();
   const initialAudience: Audience = params.audience === 'trader' ? 'trader' : 'homeowner';
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [postcode, setPostcode] = useState('');
   const [audience, setAudience] = useState<Audience>(initialAudience);
   const [trade, setTrade] = useState('');
-  const [testerInterest, setTesterInterest] = useState(false);
-  const [smsOptIn, setSmsOptIn] = useState(false);
-  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [joined, setJoined] = useState<WaitlistResponse>();
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [postcode, setPostcode] = useState('');
+  const [smsOptIn, setSmsOptIn] = useState(false);
+  const [detailsSaved, setDetailsSaved] = useState(false);
+  const [detailsBusy, setDetailsBusy] = useState(false);
+  const [detailsError, setDetailsError] = useState('');
 
-  const canSubmit = useMemo(() => name.trim().length >= 2 && email.includes('@') && phone.trim().length >= 7 && postcode.trim().length >= 5 && (audience === 'homeowner' || trade.trim().length >= 2), [audience, email, name, phone, postcode, trade]);
+  const source = typeof params.source === 'string' ? params.source : 'website';
+  const canJoin = useMemo(() => email.trim().includes('@'), [email]);
+  const canSaveDetails = useMemo(() => name.trim().length >= 2 && phone.trim().length >= 7 && postcode.trim().length >= 5, [name, phone, postcode]);
 
-  async function submit() {
+  async function join() {
     try {
-      setBusy(true); setError('');
+      setBusy(true);
+      setError('');
       const result = await apiFetch<WaitlistResponse>('/api/waitlist', {
         method: 'POST',
         body: JSON.stringify({
-          name,
           email,
-          phone,
-          postcode,
           audience,
           trade: audience === 'trader' ? trade : '',
-          testerInterest,
-          smsOptIn,
-          marketingOptIn,
-          source: typeof params.source === 'string' ? params.source : 'website',
+          source,
         }),
       });
       setJoined(result);
@@ -56,63 +53,85 @@ export default function WaitlistPage() {
     }
   }
 
+  async function saveTestingDetails() {
+    try {
+      setDetailsBusy(true);
+      setDetailsError('');
+      await apiFetch<WaitlistResponse>('/api/waitlist', {
+        method: 'POST',
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          postcode,
+          audience,
+          trade: audience === 'trader' ? trade : '',
+          testerInterest: true,
+          smsOptIn,
+          source: `${source}-testing`,
+        }),
+      });
+      setDetailsSaved(true);
+    } catch (e) {
+      setDetailsError(errorMessage(e));
+    } finally {
+      setDetailsBusy(false);
+    }
+  }
+
   if (joined) return <Screen title="You’re on the BuildPair launch list" subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
     <AppCard style={styles.successCard}>
       <Chip icon="check-circle">Launch list confirmed</Chip>
-      <Text variant="headlineSmall" style={styles.heading}>{joined.alreadyJoined ? 'Your details have been updated.' : 'Your place is saved.'}</Text>
-      <Text style={styles.body}>We’ll email you when BuildPair registration opens. No BuildPair account has been created yet.</Text>
-      {audience === 'trader' ? <Text style={styles.body}><Text style={styles.strong}>Founding Trades offer:</Text> the first 50 eligible tradespeople from the waiting list who complete registration within 24 hours of launch will receive BuildPair Pro free for 3 months.</Text> : null}
-      {testerInterest ? <Text style={styles.body}>You also registered interest in real-world testing. Places are limited and selected testers may receive up to 6 months of Pro free.</Text> : null}
-      <Link href="/" asChild><Button mode="contained">Back to BuildPair</Button></Link>
-    </AppCard>
-  </Screen>;
-
-  return <Screen title="Join the BuildPair launch list" subtitle={`Launching ${LAUNCH_DATE_LABEL} · the full public site is open to explore now.`}>
-    <AppCard style={styles.launchCard}>
-      <Chip icon="rocket-launch-outline">Final release steps</Chip>
-      <Text variant="headlineSmall" style={styles.heading}>Registration is paused until launch.</Text>
-      <Text style={styles.body}>Explore BuildPair, our trade directory, pricing, guides and how the platform works. New accounts are not being opened yet, so join the list and we’ll tell you as soon as the doors open.</Text>
-    </AppCard>
-
-    <AppCard style={styles.buildPayCard}>
-      <Chip icon="shield-check-outline">Now introducing BuildPay</Chip>
-      <Text variant="titleLarge" style={styles.heading}>A clearer way to handle job payments.</Text>
-      <Text style={styles.body}>BuildPay follows the accepted quote and agreed payment stages. Materials can be released for procurement after the tradesperson acknowledges the opening payment, while work-stage funds stay controlled until the agreed stage is reached and the homeowner approves release.</Text>
+      <Text variant="headlineSmall" style={styles.heading}>{joined.alreadyJoined ? 'You’re already on the list.' : 'That’s it. You’re in.'}</Text>
+      <Text style={styles.body}>We’ll email you when BuildPair registration opens. No account has been created and you do not need to do anything else.</Text>
+      {audience === 'trader' ? <Text style={styles.body}><Text style={styles.strong}>Founding Trades:</Text> the first 50 eligible waiting-list tradespeople who complete registration within 24 hours of launch get 3 months of Pro free.</Text> : null}
     </AppCard>
 
     <AppCard>
-      <Text variant="titleLarge" style={styles.heading}>Your details</Text>
-      <TextInput mode="outlined" label="Name" value={name} onChangeText={setName} autoComplete="name" />
-      <TextInput mode="outlined" label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
-      <TextInput mode="outlined" label="Mobile" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" placeholder="07911 123456" />
-      <TextInput mode="outlined" label="Postcode" value={postcode} onChangeText={setPostcode} autoCapitalize="characters" placeholder="TW18 1AA" />
+      <Chip icon="flask-outline">Optional</Chip>
+      <Text variant="titleLarge" style={styles.heading}>Interested in testing BuildPair before launch?</Text>
+      <Text style={styles.body}>Only add these details if you want to be considered for limited real-world testing. Your launch-list place is already saved.</Text>
+      {detailsSaved ? <Text style={styles.saved}>Testing interest saved. Thanks.</Text> : <>
+        <TextInput mode="outlined" label="Name" value={name} onChangeText={setName} autoComplete="name" />
+        <TextInput mode="outlined" label="Mobile" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" placeholder="07911 123456" />
+        <TextInput mode="outlined" label="Postcode" value={postcode} onChangeText={setPostcode} autoCapitalize="characters" placeholder="TW18 1AA" />
+        <Checkbox.Item label="You may text me about testing" status={smsOptIn ? 'checked' : 'unchecked'} onPress={() => setSmsOptIn((value) => !value)} position="leading" labelStyle={styles.checkboxLabel} />
+        <HelperText type="error" visible={Boolean(detailsError)}>{detailsError}</HelperText>
+        <Button mode="outlined" loading={detailsBusy} disabled={detailsBusy || !canSaveDetails} onPress={() => void saveTestingDetails()}>Register testing interest</Button>
+      </>}
+    </AppCard>
 
+    <Link href="/" asChild><Button mode="text">Back to BuildPair</Button></Link>
+  </Screen>;
+
+  return <Screen title="Join the BuildPair launch list" subtitle={`Launching ${LAUNCH_DATE_LABEL}. One quick step.`}>
+    <AppCard style={styles.heroCard}>
+      <Chip icon="rocket-launch-outline">Launching soon</Chip>
+      <Text variant="headlineSmall" style={styles.heading}>Tell us where to send the launch email.</Text>
+      <Text style={styles.body}>No account setup. No phone number. No postcode. Just your email and whether you’re a homeowner or tradesperson.</Text>
+    </AppCard>
+
+    <AppCard>
       <Text variant="labelLarge" style={styles.label}>I’m joining as</Text>
       <SegmentedButtons value={audience} onValueChange={(value) => setAudience(value as Audience)} buttons={[{ value: 'homeowner', label: 'Homeowner', icon: 'home-outline' }, { value: 'trader', label: 'Tradesperson', icon: 'hammer-wrench' }]} />
+      <TextInput mode="outlined" label="Email address" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
       {audience === 'trader' ? <>
-        <TextInput mode="outlined" label="Main trade" value={trade} onChangeText={setTrade} placeholder="e.g. Plumber, electrician, tiler" />
+        <TextInput mode="outlined" label="Main trade (optional)" value={trade} onChangeText={setTrade} placeholder="e.g. Plumber, electrician, tiler" />
         <AppCard elevated={false} style={styles.offerCard}>
           <Text variant="titleMedium" style={styles.heading}>Founding Trades offer</Text>
-          <Text style={styles.body}>The first 50 eligible tradespeople from this waiting list who complete their BuildPair registration within 24 hours of launch get <Text style={styles.strong}>3 months of Pro free</Text>. One offer per genuine trade business.</Text>
+          <Text style={styles.body}>The first 50 eligible waiting-list tradespeople who complete registration within 24 hours of launch get <Text style={styles.strong}>3 months of BuildPair Pro free</Text>.</Text>
         </AppCard>
       </> : null}
-
-      <Checkbox.Item label="I’m interested in real-world testing before launch" status={testerInterest ? 'checked' : 'unchecked'} onPress={() => setTesterInterest((value) => !value)} position="leading" labelStyle={styles.checkboxLabel} />
-      {testerInterest ? <HelperText type="info">Limited places. Selected testers may receive up to 6 months of Pro free in return for genuine use and useful feedback.</HelperText> : null}
-      <Checkbox.Item label="You may text me about launch or testing" status={smsOptIn ? 'checked' : 'unchecked'} onPress={() => setSmsOptIn((value) => !value)} position="leading" labelStyle={styles.checkboxLabel} />
-      <Checkbox.Item label="Send me occasional BuildPair news and product updates after launch" status={marketingOptIn ? 'checked' : 'unchecked'} onPress={() => setMarketingOptIn((value) => !value)} position="leading" labelStyle={styles.checkboxLabel} />
-
-      <Text style={styles.privacy}>We’ll use the details above to manage this launch list and send the launch notification you requested. Optional marketing and SMS choices are stored separately. See our Privacy Policy for more information.</Text>
+      <Text style={styles.privacy}>We’ll use your email to manage the launch list and tell you when BuildPair registration opens. See our Privacy Policy for details.</Text>
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
-      <Button mode="contained" icon="account-clock-outline" loading={busy} disabled={busy || !canSubmit} onPress={() => void submit()}>Join the launch list</Button>
+      <Button mode="contained" icon="account-clock-outline" loading={busy} disabled={busy || !canJoin} onPress={() => void join()}>{audience === 'trader' ? 'Join the Founding Trades list' : 'Notify me at launch'}</Button>
       <View style={styles.links}><Link href="/(public)/privacy" asChild><Button mode="text">Privacy</Button></Link><Link href="/auth/sign-in" asChild><Button mode="text">Existing member? Sign in</Button></Link></View>
     </AppCard>
   </Screen>;
 }
 
 const styles = StyleSheet.create({
-  launchCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
-  buildPayCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+  heroCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
   offerCard: { backgroundColor: colors.goldSoft, borderColor: colors.gold },
   successCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
   heading: { color: colors.charcoal, fontWeight: '900' },
@@ -121,5 +140,6 @@ const styles = StyleSheet.create({
   label: { color: colors.charcoal, fontWeight: '800', marginTop: spacing.xs },
   checkboxLabel: { color: colors.text, lineHeight: 20 },
   privacy: { color: colors.muted, lineHeight: 19, fontSize: 12 },
+  saved: { color: colors.success, fontWeight: '800', lineHeight: 22 },
   links: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.xs },
 });
