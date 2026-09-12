@@ -102,11 +102,11 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
   const visibleActivePage = Math.min(activePage, Math.max(0, pages.length - 1));
 
   if (!loaded) {
-    return <View style={styles.loadingCard}><Text style={styles.loadingLabel}>Loading featured tradespeople…</Text></View>;
+    return <View style={[styles.loadingCard, wide && styles.wrapperWide]}><Text style={styles.loadingLabel}>Loading featured tradespeople…</Text></View>;
   }
 
   if (!traders.length) {
-    return <ImageBackground source={{ uri: FALLBACK_IMAGE }} style={styles.emptyState} imageStyle={styles.emptyImage}>
+    return <ImageBackground source={{ uri: FALLBACK_IMAGE }} style={[styles.emptyState, wide && styles.wrapperWide]} imageStyle={styles.emptyImage}>
       <View style={styles.emptyShade} />
       <View style={styles.emptyCopy}>
         <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
@@ -122,7 +122,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
   };
 
   return <View
-    style={styles.wrapper}
+    style={[styles.wrapper, wide && styles.wrapperWide]}
     testID="home-featured-trader"
     onLayout={(event) => {
       const nextWidth = Math.round(event.nativeEvent.layout.width);
@@ -158,6 +158,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
 
 const styles = StyleSheet.create({
   wrapper: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', gap: 12, overflow: 'hidden' },
+  wrapperWide: { width: '52%', maxWidth: 640, minWidth: 0, flexShrink: 0, alignSelf: 'stretch' },
   carousel: { width: '100%', maxWidth: 1140, minWidth: 0 },
   carouselContent: { alignItems: 'stretch' },
   page: { flexDirection: 'row', gap: 10, paddingHorizontal: 1 },
@@ -184,9 +185,9 @@ const styles = StyleSheet.create({
   dots: { flexDirection: 'row', gap: 5, alignItems: 'center' },
   dot: { width: 7, height: 7, borderRadius: 999, backgroundColor: '#CBD4D9' },
   dotActive: { width: 20, backgroundColor: colors.primary },
-  loadingCard: { minHeight: 260, alignItems: 'center', justifyContent: 'center', borderRadius: 24, backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border },
+  loadingCard: { width: '100%', maxWidth: 1140, minHeight: 260, alignItems: 'center', justifyContent: 'center', borderRadius: 24, backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border },
   loadingLabel: { color: colors.muted, fontWeight: '800' },
-  emptyState: { minHeight: 300, justifyContent: 'flex-end', padding: 18, overflow: 'hidden', borderRadius: 24 },
+  emptyState: { width: '100%', maxWidth: 1140, minHeight: 300, justifyContent: 'flex-end', padding: 18, overflow: 'hidden', borderRadius: 24 },
   emptyImage: { borderRadius: 24 },
   emptyShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(8,21,31,0.46)', borderRadius: 24 },
   emptyCopy: { maxWidth: 560, gap: 6, padding: 16, borderRadius: 18, backgroundColor: 'rgba(10,24,36,0.86)' },
