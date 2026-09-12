@@ -1,0 +1,33 @@
+name: BuildPair Source Backup
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/source-backup.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@v4
+
+      - name: Create exact source ZIP
+        shell: bash
+        run: |
+          short_sha="${GITHUB_SHA:0:12}"
+          backup_file="BuildPair-source-${short_sha}.zip"
+          git archive --format=zip --output="$backup_file" HEAD
+          echo "BACKUP_FILE=$backup_file" >> "$GITHUB_ENV"
+
+      - name: Upload source backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: BuildPair-source-${{ github.sha }}
+          path: ${{ env.BACKUP_FILE }}
+          if-no-files-found: error
+          retention-days: 30
