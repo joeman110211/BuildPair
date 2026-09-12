@@ -13,7 +13,7 @@ type InviteState = {
   valid: boolean;
   claimed?: boolean;
   email?: string;
-  mode?: 'trader';
+  mode?: 'homeowner' | 'trader';
 };
 
 function scalar(value: string | string[] | undefined) {
@@ -32,24 +32,26 @@ export default function EarlyAccessSignup() {
   const [error, setError] = useState('');
 
   const busy = fetchStatus === 'fetching';
-  const email = inviteState?.email ?? '';
+  const email = inviteState?.email?.trim().toLowerCase() ?? '';
+  const accountMode = inviteState?.mode === 'homeowner' ? 'customer' : 'trader';
+  const roleLabel = accountMode === 'customer' ? 'homeowner' : 'tradesperson';
   const needsEmailVerification = signUp.status === 'missing_requirements'
     && signUp.unverifiedFields.includes('email_address')
     && signUp.missingFields.length === 0;
 
+  async function readInvite() {
+    if (!invite) return { valid: false } as InviteState;
+    return apiFetch<InviteState>(`/api/early-access-invite?invite=${encodeURIComponent(invite)}`);
+  }
+
   useEffect(() => {
     let alive = true;
     async function validate() {
-      if (!invite) {
-        if (alive) { setInviteState({ valid: false }); setChecking(false); }
-        return;
-      }
       try {
-        const result = await apiFetch<InviteState>(`/api/early-access-invite?invite=${encodeURIComponent(invite)}`);
+        const result = await readInvite();
         if (alive) setInviteState(result);
-      } catch (e) {
-        const message = errorMessage(e);
-        if (alive) setInviteState({ valid: false, claimed: message.toLowerCase().includes('gone') });
+      } catch {
+        if (alive) setInviteState({ valid: false });
       } finally {
         if (alive) setChecking(false);
       }
@@ -58,16 +60,24 @@ export default function EarlyAccessSignup() {
     return () => { alive = false; };
   }, [invite]);
 
-  const canCreate = useMemo(() => inviteState?.valid === true && password.length >= 8, [inviteState?.valid, password.length]);
+  const canCreate = useMemo(() => inviteState?.valid === true && Boolean(email) && password.length >= 8, [email, inviteState?.valid, password.length]);
+
+  async function confirmInvite() {
+    const latest = await readInvite();
+    if (!latest.valid || latest.email?.trim().toLowerCase() !== email || latest.mode !== inviteState?.mode) {
+      throw new Error('This early-access invite is no longer valid.');
+    }
+  }
 
   async function startSignup() {
-    if (!email || !inviteState?.valid) return;
+    if (!canCreate) return;
     try {
       setError('');
+      await confirmInvite();
       const result = await signUp.password({
-        emailAddress: email.toLowerCase(),
+        emailAddress: email,
         password,
-        unsafeMetadata: { buildpairMode: 'trader', earlyAccessInvite: true },
+        unsafeMetadata: { buildpairMode: accountMode, buildpairEarlyAccess: true },
       });
       if (result.error) throw result.error;
       const verification = await signUp.verifications.sendEmailCode();
@@ -81,13 +91,18 @@ export default function EarlyAccessSignup() {
   async function verifyEmail() {
     try {
       setError('');
+      await confirmInvite();
+      if ((signUp.emailAddress ?? '').trim().toLowerCase() !== email) throw new Error('This invite is tied to a different email address.');
       const verification = await signUp.verifications.verifyEmailCode({ code: code.trim() });
       if (verification.error) throw verification.error;
-      if (signUp.status !== 'complete') throw new Error(`Account verification is incomplete (${signUp.status}).`);
+      if (signUp.status !== 'complete') {
+        const missing = signUp.missingFields?.join(', ');
+        throw new Error(missing ? `Account verification still needs: ${missing}.` : `Account verification is incomplete (${signUp.status}).`);
+      }
       const finalized = await signUp.finalize({
         navigate: async ({ session }) => {
           if (session?.currentTask) throw new Error('Your account needs another setup step before BuildPair can continue.');
-          router.replace(modeSetupHref('trader'));
+          router.replace(modeSetupHref(accountMode));
         },
       });
       if (finalized.error) throw finalized.error;
@@ -99,6 +114,7 @@ export default function EarlyAccessSignup() {
   async function resendCode() {
     try {
       setError('');
+      await confirmInvite();
       const result = await signUp.verifications.sendEmailCode();
       if (result.error) throw result.error;
     } catch (e) {
@@ -106,15 +122,15 @@ export default function EarlyAccessSignup() {
     }
   }
 
-  if (checking) return <LoadingScreen label="Checking your BuildPair invite…" />;
+  if (checking) return <LoadingScreen label="Checking your BuildPair early-access invite…" />;
 
-  if (!inviteState?.valid) {
-    return <Screen title="Early-access invite" subtitle="This invite is unavailable or has already been used.">
+  if (!inviteState?.valid || !email) {
+    return <Screen title="Early-access invite" subtitle="This invite is unavailable, has been withdrawn or has already been used.">
       <AppCard>
         <Chip icon="lock-outline">Registration remains invite-only</Chip>
-        <Text style={styles.body}>BuildPair registration is still paused for the public. Existing members can sign in normally.</Text>
-        <Link href={signInHref('trader')} asChild><Button mode="contained">Tradesperson sign in</Button></Link>
-        <Link href="/(public)/waitlist?audience=trader&source=early-access" asChild><Button mode="outlined">Join the launch list</Button></Link>
+        <Text style={styles.body}>If you already created your BuildPair account, sign in normally. Otherwise, your place on the launch list is unaffected.</Text>
+        <Link href={signInHref(accountMode)} asChild><Button mode="contained">Sign in</Button></Link>
+        <Link href={`/(public)/waitlist?audience=${accountMode === 'trader' ? 'trader' : 'homeowner'}&source=early-access`} asChild><Button mode="outlined">Back to the launch list</Button></Link>
       </AppCard>
     </Screen>;
   }
@@ -123,8 +139,8 @@ export default function EarlyAccessSignup() {
     return <Screen title="Verify your email" subtitle={`We sent a 6-digit code to ${email}.`}>
       <AppCard style={styles.inviteCard}>
         <Chip icon="check-decagram-outline">BuildPair early access</Chip>
-        <Text variant="titleLarge" style={styles.heading}>MKE Property Maintenance Ltd</Text>
-        <Text style={styles.body}>Confirm the invited email address to finish creating the tradesperson account.</Text>
+        <Text variant="titleLarge" style={styles.heading}>One last step</Text>
+        <Text style={styles.body}>Confirm the invited email address to finish creating your {roleLabel} account.</Text>
       </AppCard>
       <TextInput mode="outlined" label="Verification code" value={code} onChangeText={setCode} keyboardType="number-pad" autoComplete="one-time-code" />
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
@@ -133,25 +149,26 @@ export default function EarlyAccessSignup() {
     </Screen>;
   }
 
-  return <Screen title="Create your BuildPair tradesperson account" subtitle="This early-access invite is restricted to the approved email address below.">
+  return <Screen title={`Create your BuildPair ${roleLabel} account`} subtitle="You’ve been approved to join BuildPair before the public launch.">
     <AppCard style={styles.inviteCard}>
       <Chip icon="rocket-launch-outline">Early access approved</Chip>
-      <Text variant="titleLarge" style={styles.heading}>MKE Property Maintenance Ltd</Text>
-      <Text style={styles.body}>You can register now while public account creation remains closed.</Text>
+      <Text variant="titleLarge" style={styles.heading}>Your account is ready to set up</Text>
+      <Text style={styles.body}>This invitation is locked to <Text style={styles.strong}>{email}</Text>. Once registered, use BuildPair normally and send us any feedback by replying to the invitation email.</Text>
     </AppCard>
-    <TextInput mode="outlined" label="Invited email" value={email} editable={false} autoCapitalize="none" keyboardType="email-address" />
-    <TextInput mode="outlined" label="Create password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" />
-    <Text variant="bodySmall" style={styles.hint}>Use at least 8 characters. You will verify access using a code sent to the invited email address.</Text>
+    <TextInput mode="outlined" label="Approved email address" value={email} editable={false} autoCapitalize="none" keyboardType="email-address" />
+    <TextInput mode="outlined" label="Choose a password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" />
+    <Text variant="bodySmall" style={styles.hint}>Use at least 8 characters. You’ll verify access using a code sent to this email address.</Text>
     <View nativeID="clerk-captcha" />
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
-    <Button mode="contained" loading={busy} disabled={busy || !canCreate} onPress={() => void startSignup()} contentStyle={styles.button}>Create early-access account</Button>
-    <Link href={signInHref('trader')} asChild><Button mode="text">Already registered? Sign in</Button></Link>
+    <Button mode="contained" loading={busy} disabled={busy || !canCreate} onPress={() => void startSignup()} contentStyle={styles.button}>Create my BuildPair account</Button>
+    <Link href={signInHref(accountMode)} asChild><Button mode="text">Already registered? Sign in</Button></Link>
   </Screen>;
 }
 
 const styles = StyleSheet.create({
   inviteCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
   heading: { color: colors.charcoal, fontWeight: '900' },
+  strong: { color: colors.charcoal, fontWeight: '900' },
   body: { color: colors.text, lineHeight: 22 },
   hint: { color: colors.muted, lineHeight: 19 },
   button: { minHeight: 50 },
