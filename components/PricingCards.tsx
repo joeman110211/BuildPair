@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
+import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 const plans = [
   {
@@ -79,6 +80,8 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
         const featured = plan.tone === 'plus';
         const pro = plan.tone === 'pro';
         const features = compact ? plan.compactFeatures : plan.features;
+        const href = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', `pricing-${plan.tone}`);
+        const cta = REGISTRATION_OPEN ? plan.cta : (pro ? 'Join Founding Trades list' : 'Join tradesperson launch list');
         return <View key={plan.name} style={[styles.card, compact && styles.cardCompact, featured && styles.cardFeatured, pro && styles.cardPro]}>
           <Text style={[styles.eyebrow, featured && styles.eyebrowFeatured, pro && styles.eyebrowPro]}>{plan.eyebrow}</Text>
           <Text variant="titleLarge" style={styles.name}>{plan.name}</Text>
@@ -91,12 +94,13 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
               <Text style={styles.featureText}>{feature}</Text>
             </View>)}
           </View>
-          <Link href="/auth/account" asChild>
-            <Button mode={featured || pro ? 'contained' : 'outlined'} contentStyle={styles.buttonContent}>{plan.cta}</Button>
+          <Link href={href} asChild>
+            <Button mode={featured || pro ? 'contained' : 'outlined'} contentStyle={styles.buttonContent}>{cta}</Button>
           </Link>
         </View>;
       })}
     </View>
+    {!REGISTRATION_OPEN ? <Text style={styles.launchNote}>Registration opens at launch. Joining the list now only needs your email.</Text> : null}
     <Text style={styles.note}>Category limits count broad trade categories, not every service inside them. Direct homeowner requests do not use the monthly open-marketplace offer allowance.</Text>
   </View>;
 }
@@ -126,5 +130,6 @@ const styles = StyleSheet.create({
   tickText: { color: colors.charcoal, fontWeight: '900', fontSize: 11 },
   featureText: { color: colors.charcoalSoft, lineHeight: 21, flex: 1, minWidth: 0 },
   buttonContent: { minHeight: controlHeights.standard },
+  launchNote: { color: colors.primaryDark, fontSize: 13, lineHeight: 20, textAlign: 'center', fontWeight: '800', maxWidth: 820, alignSelf: 'center' },
   note: { color: colors.muted, fontSize: 12, lineHeight: 19, textAlign: 'center', maxWidth: 820, alignSelf: 'center' },
 });
