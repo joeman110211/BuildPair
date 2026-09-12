@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { type Href, Link, useLocalSearchParams } from 'expo-router';
+import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Image, Linking, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Divider, IconButton, Text } from 'react-native-paper';
@@ -45,6 +45,7 @@ function SectionCard({ title, action, children }: { title: string; action?: Reac
 
 export default function TraderProfileStorefront() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { getToken, isSignedIn } = useAuth();
   const { user } = useCurrentUser();
   const { width } = useWindowDimensions();
@@ -102,15 +103,24 @@ export default function TraderProfileStorefront() {
   const paidProfile = !profile.shareOnly && !profile.isPreview && profile.canRequestQuote !== false;
   const isAvailable = profile.availability?.some((slot) => slot.status === 'available') ?? false;
   const nextAvailability = profile.availability?.find((slot) => slot.status === 'available');
-  const quoteLink = { pathname: '/customer/new-job', params: { traderId: profile.userId, traderName: profile.businessName, tradeCategory: categories[0] } } as Href;
+  const quoteLink = `/customer/new-job?traderId=${encodeURIComponent(profile.userId)}&traderName=${encodeURIComponent(profile.businessName)}&tradeCategory=${encodeURIComponent(categories[0] ?? '')}`;
+  const quoteDestination = isSignedIn
+    ? user?.customerEnabled
+      ? quoteLink
+      : `/auth/choose-role?mode=customer&returnTo=${encodeURIComponent(quoteLink)}`
+    : `/auth/sign-in?mode=customer&returnTo=${encodeURIComponent(quoteLink)}`;
 
   const quoteButton = profile.isPreview
     ? <Button mode="outlined" icon="flask-outline" disabled>Preview profile only</Button>
     : !paidProfile
       ? <Button mode="outlined" icon="lock-outline" disabled>Quote requests unavailable</Button>
-      : isSignedIn && user?.customerEnabled
-        ? <Link href={quoteLink} asChild><Button mode="contained" icon="file-document-edit-outline">Request a Quote</Button></Link>
-        : <Link href="/auth/account" asChild><Button mode="contained">{isSignedIn ? 'Add Homeowner Mode' : 'Sign in to Request a Quote'}</Button></Link>;
+      : <Button
+          mode="contained"
+          icon="file-document-edit-outline"
+          onPress={() => router.push(quoteDestination as Href)}
+        >
+          {isSignedIn && !user?.customerEnabled ? 'Add Homeowner Mode' : isSignedIn ? 'Request a Quote' : 'Sign in to Request a Quote'}
+        </Button>;
 
   const showOverview = activeSection === 'overview';
   const showServices = showOverview || activeSection === 'services';
