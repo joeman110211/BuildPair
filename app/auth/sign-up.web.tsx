@@ -1,5 +1,19 @@
-import { Redirect } from 'expo-router';
+import { type Href, Redirect, useLocalSearchParams } from 'expo-router';
+import { parseAccountMode } from '@/lib/account-mode';
+import { waitlistHref } from '@/lib/launch';
 
-export default function SignUpClosed() {
-  return <Redirect href="/(public)/waitlist?source=direct-signup" />;
+function scalar(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default function SignUpWebEntry() {
+  const params = useLocalSearchParams<{ invite?: string | string[]; mode?: string | string[] }>();
+  const invite = scalar(params.invite)?.trim();
+  const mode = parseAccountMode(params.mode);
+
+  if (invite) {
+    return <Redirect href={`/auth/early-access?invite=${encodeURIComponent(invite)}` as Href} />;
+  }
+
+  return <Redirect href={waitlistHref(mode, 'direct-signup')} />;
 }
