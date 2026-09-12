@@ -12,7 +12,7 @@ type Audience = 'homeowner' | 'trader';
 type WaitlistResponse = { ok: true; alreadyJoined: boolean };
 
 export default function WaitlistPage() {
-  const params = useLocalSearchParams<{ audience?: string; source?: string }>();
+  const params = useLocalSearchParams<{ audience?: string; source?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string }>();
   const initialAudience: Audience = params.audience === 'trader' ? 'trader' : 'homeowner';
   const [email, setEmail] = useState('');
   const [audience, setAudience] = useState<Audience>(initialAudience);
@@ -28,7 +28,16 @@ export default function WaitlistPage() {
   const [detailsBusy, setDetailsBusy] = useState(false);
   const [detailsError, setDetailsError] = useState('');
 
-  const source = typeof params.source === 'string' ? params.source : 'website';
+  const source = useMemo(() => {
+    const base = typeof params.source === 'string' && params.source ? params.source : 'website';
+    const campaign = [
+      typeof params.utm_source === 'string' && params.utm_source ? `src:${params.utm_source}` : '',
+      typeof params.utm_medium === 'string' && params.utm_medium ? `med:${params.utm_medium}` : '',
+      typeof params.utm_campaign === 'string' && params.utm_campaign ? `cmp:${params.utm_campaign}` : '',
+    ].filter(Boolean).join('|');
+    return `${base}${campaign ? `|${campaign}` : ''}`.slice(0, 80);
+  }, [params.source, params.utm_source, params.utm_medium, params.utm_campaign]);
+
   const canJoin = useMemo(() => email.trim().includes('@'), [email]);
   const canSaveDetails = useMemo(() => name.trim().length >= 2 && phone.trim().length >= 7 && postcode.trim().length >= 5, [name, phone, postcode]);
 
@@ -68,7 +77,7 @@ export default function WaitlistPage() {
           trade: audience === 'trader' ? trade : '',
           testerInterest: true,
           smsOptIn,
-          source: `${source}-testing`,
+          source: `${source}-testing`.slice(0, 80),
         }),
       });
       setDetailsSaved(true);
