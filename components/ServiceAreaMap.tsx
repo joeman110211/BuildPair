@@ -29,7 +29,7 @@ export function ServiceAreaMap({ latitude, longitude, radiusMiles, locationLabel
     </View>;
   }
 
-  // Round the centre so a public profile never exposes a precise home location.
+  // Round the public centre so a trader's exact home location is never exposed.
   const centreLat = Math.round((latitude as number) * 100) / 100;
   const centreLon = Math.round((longitude as number) * 100) / 100;
   const safeRadius = Math.max(radiusMiles || 1, 1);
@@ -43,16 +43,20 @@ export function ServiceAreaMap({ latitude, longitude, radiusMiles, locationLabel
   const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${centreLat.toFixed(6)}%2C${centreLon.toFixed(6)}`;
   const fullMapUrl = `https://www.openstreetmap.org/?mlat=${centreLat.toFixed(5)}&mlon=${centreLon.toFixed(5)}#map=11/${centreLat.toFixed(5)}/${centreLon.toFixed(5)}`;
 
+  const iframe = Platform.OS === 'web'
+    ? createElement('iframe', {
+        src: embedUrl,
+        title: `${label} service area map`,
+        loading: 'lazy',
+        referrerPolicy: 'no-referrer-when-downgrade',
+        style: { width: '100%', height: '100%', border: 0, display: 'block' },
+      } as any)
+    : null;
+
   return <View style={styles.wrapper}>
     <View style={styles.mapFrame}>
       {Platform.OS === 'web'
-        ? createElement('iframe' as never, {
-            src: embedUrl,
-            title: `${label} service area map`,
-            loading: 'lazy',
-            referrerPolicy: 'no-referrer-when-downgrade',
-            style: { width: '100%', height: '100%', border: 0, display: 'block' },
-          } as never)
+        ? iframe
         : <Pressable style={styles.nativeMapFallback} onPress={() => void Linking.openURL(fullMapUrl)}>
             <Text style={styles.nativeMapTitle}>{label}</Text>
             <Text style={styles.nativeMapHint}>Tap to open the service area map</Text>
