@@ -12,7 +12,7 @@ type FeaturedTrader = {
   tradeCategory: string;
   locationLabel: string | null;
   photos: string[];
-  subscriptionTier: 'basic' | 'featured';
+  subscriptionTier: 'free' | 'basic' | 'featured';
   averageRating: number;
   reviewCount: number;
   completedJobs: number;
@@ -36,7 +36,7 @@ function chunk<T>(items: T[], size: number) {
 function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
   const router = useRouter();
   const rating = Number(trader.averageRating || 0);
-  const membership = trader.subscriptionTier === 'featured' ? 'PRO' : 'PLUS';
+  const membership = trader.subscriptionTier === 'featured' ? 'PRO' : trader.subscriptionTier === 'basic' ? 'PLUS' : 'STARTER';
   const reputation = trader.reviewCount > 0
     ? `${rating.toFixed(1)} ★ · ${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}`
     : 'New to BuildPair';
@@ -112,7 +112,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
       <View style={styles.emptyCopy}>
         <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
         <Text style={styles.emptyTitle}>Real profiles. Real work. No made-up directory filler.</Text>
-        <Text style={styles.emptyText}>Eligible BuildPair tradespeople will appear here automatically as profiles become available.</Text>
+        <Text style={styles.emptyText}>BuildPair trade profiles will appear here automatically as they become available.</Text>
       </View>
     </ImageBackground>;
   }
