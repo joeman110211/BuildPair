@@ -6,7 +6,7 @@ import { View } from 'react-native';
 import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { colors } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { modeSetupHref, parseAccountMode, signUpHref } from '@/lib/account-mode';
+import { modeSetupHref, parseAccountMode, safeInternalReturnTo, signUpHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
 import { clerkWebAppearance } from '@/lib/clerk-web';
 
@@ -203,11 +203,12 @@ function AdminSignInForm() {
 }
 
 export default function SignInWebScreen() {
-  const params = useLocalSearchParams<{ mode?: string | string[]; admin?: string | string[] }>();
+  const params = useLocalSearchParams<{ mode?: string | string[]; admin?: string | string[]; returnTo?: string | string[] }>();
   const admin = scalar(params.admin) === '1';
   const mode = parseAccountMode(params.mode);
-  const redirectUrl = String(modeSetupHref(mode));
-  const createUrl = mode ? String(signUpHref(mode)) : '/auth/account';
+  const returnTo = safeInternalReturnTo(params.returnTo);
+  const redirectUrl = String(modeSetupHref(mode, returnTo));
+  const createUrl = mode ? String(signUpHref(mode, returnTo)) : '/auth/account';
   const title = admin
     ? 'BuildPair Administrator Sign In'
     : mode === 'trader'
