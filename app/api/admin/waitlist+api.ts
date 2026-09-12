@@ -10,6 +10,7 @@ export async function GET(request: Request) {
     const entries = await sql`
       SELECT
         id, name, email, phone, postcode, audience, trade,
+        preferred_contact AS "preferredContact",
         tester_interest AS "testerInterest",
         sms_opt_in AS "smsOptIn",
         marketing_opt_in AS "marketingOptIn",
@@ -35,10 +36,11 @@ export async function GET(request: Request) {
         count(*) FILTER (WHERE audience = 'homeowner')::int AS homeowners,
         count(*) FILTER (WHERE tester_interest)::int AS testers,
         count(*) FILTER (WHERE status = 'registered')::int AS registered,
-        count(*) FILTER (WHERE pro_reward_granted_at IS NOT NULL)::int AS rewarded
+        count(*) FILTER (WHERE pro_reward_granted_at IS NOT NULL)::int AS rewarded,
+        count(*) FILTER (WHERE preferred_contact IN ('sms', 'both'))::int AS "textContacts"
       FROM launch_waitlist WHERE status <> 'removed'
-    ` as unknown as { total: number; traders: number; homeowners: number; testers: number; registered: number; rewarded: number }[];
-    return Response.json({ summary: summaryRows[0] ?? { total: 0, traders: 0, homeowners: 0, testers: 0, registered: 0, rewarded: 0 }, entries });
+    ` as unknown as { total: number; traders: number; homeowners: number; testers: number; registered: number; rewarded: number; textContacts: number }[];
+    return Response.json({ summary: summaryRows[0] ?? { total: 0, traders: 0, homeowners: 0, testers: 0, registered: 0, rewarded: 0, textContacts: 0 }, entries });
   } catch (error) {
     return jsonError(error);
   }
