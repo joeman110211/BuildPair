@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Divider, Text } from 'react-native-paper';
 import { controlHeights, spacing } from '@/constants/theme';
-import { modeSetupHref } from '@/lib/account-mode';
+import { modeSetupHref, safeInternalReturnTo } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
 import type { UserRole } from '@/types';
 
@@ -17,6 +17,7 @@ WebBrowser.maybeCompleteAuthSession();
 type Props = {
   onError: (message: string) => void;
   mode?: UserRole | null;
+  returnTo?: string | null;
 };
 
 const providers: Array<{ strategy: OAuthStrategy; label: string }> = [
@@ -24,10 +25,19 @@ const providers: Array<{ strategy: OAuthStrategy; label: string }> = [
   { strategy: 'oauth_facebook', label: 'Continue with Facebook' },
 ];
 
-export function SocialAuthButtons({ onError, mode = null }: Props) {
+export function SocialAuthButtons({ onError, mode = null, returnTo = null }: Props) {
   const { startSSOFlow } = useSSO();
   const router = useRouter();
   const [loadingStrategy, setLoadingStrategy] = useState<OAuthStrategy | null>(null);
+  const safeReturnTo = safeInternalReturnTo(returnTo ?? undefined);
+
+  function continuationHref() {
+    const params = new URLSearchParams();
+    if (mode) params.set('mode', mode);
+    if (safeReturnTo) params.set('returnTo', safeReturnTo);
+    const query = params.toString();
+    return (`/auth/social-continue${query ? `?${query}` : ''}`) as Href;
+  }
 
   async function continueWith(strategy: OAuthStrategy) {
     try {
@@ -40,7 +50,10 @@ export function SocialAuthButtons({ onError, mode = null }: Props) {
         scheme: 'buildpair',
         path: 'auth/social-continue',
       });
-      const redirectUrl = mode ? `${callback}${callback.includes('?') ? '&' : '?'}mode=${mode}` : callback;
+      const query = new URLSearchParams();
+      if (mode) query.set('mode', mode);
+      if (safeReturnTo) query.set('returnTo', safeReturnTo);
+      const redirectUrl = query.size ? `${callback}${callback.includes('?') ? '&' : '?'}${query.toString()}` : callback;
 
       const { createdSessionId, setActive } = await startSSOFlow({
         strategy,
@@ -52,10 +65,10 @@ export function SocialAuthButtons({ onError, mode = null }: Props) {
           session: createdSessionId,
           navigate: async ({ session }) => {
             if (session?.currentTask) {
-              router.replace((mode ? `/auth/social-continue?mode=${mode}` : '/auth/social-continue') as Href);
+              router.replace(continuationHref());
               return;
             }
-            router.replace(modeSetupHref(mode));
+            router.replace(modeSetupHref(mode, safeReturnTo));
           },
         });
         return;
@@ -64,7 +77,7 @@ export function SocialAuthButtons({ onError, mode = null }: Props) {
       // A first-time social user commonly has no existing Clerk account yet.
       // Clerk preserves the in-progress flow so the continuation screen can
       // transfer SignIn -> SignUp and finish creating the account.
-      router.replace((mode ? `/auth/social-continue?mode=${mode}` : '/auth/social-continue') as Href);
+      router.replace(continuationHref());
     } catch (error) {
       onError(errorMessage(error));
     } finally {
