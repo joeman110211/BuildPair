@@ -9,6 +9,7 @@ import { CompactNavMenu, type CompactNavItem } from '@/components/CompactNavMenu
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref } from '@/lib/account-mode';
+import { apiFetch } from '@/lib/api';
 import { useAuthAvailable } from '@/lib/auth-availability';
 import { waitlistHref } from '@/lib/launch';
 import type { UserRole } from '@/types';
@@ -34,7 +35,7 @@ function HeaderBrand({ compact = false }: { compact?: boolean }) {
   return <Link href="/" asChild><Pressable style={styles.brandPressable} accessibilityLabel="BuildPair home"><BuildPairLogo compact={compact} /></Pressable></Link>;
 }
 
-function NavMenu({ dashboard, signedIn, onSignOut, preview = false }: { dashboard?: Href; signedIn?: boolean; onSignOut?: () => void; preview?: boolean }) {
+function NavMenu({ dashboard, signedIn, onDashboard, onSignOut, preview = false }: { dashboard?: Href; signedIn?: boolean; onDashboard?: () => void; onSignOut?: () => void; preview?: boolean }) {
   const router = useRouter();
   const go = (href: Href) => router.push(href);
   const items: CompactNavItem[] = [
@@ -52,7 +53,7 @@ function NavMenu({ dashboard, signedIn, onSignOut, preview = false }: { dashboar
   if (preview) {
     items.push({ label: 'Join launch waitlist', sectionLabel: 'Launch', dividerBefore: true, onPress: () => go(waitlistHref(null, 'header-menu')) });
   } else if (signedIn && dashboard) {
-    items.push({ label: 'Dashboard', sectionLabel: 'Account', dividerBefore: true, onPress: () => go(dashboard) });
+    items.push({ label: 'Dashboard', sectionLabel: 'Account', dividerBefore: true, onPress: () => onDashboard ? onDashboard() : go(dashboard) });
     items.push({ label: 'Sign out', onPress: () => onSignOut?.() });
   } else {
     items.push({ label: 'Sign in', sectionLabel: 'Account', dividerBefore: true, onPress: () => go('/auth/account') });
@@ -82,7 +83,7 @@ function CompactShell({ menu }: { menu: ReactNode }) {
 
 function AuthenticatedHeader() {
   const { width } = useWindowDimensions();
-  const { user, isSignedIn } = useCurrentUser();
+  const { user, isSignedIn, getToken } = useCurrentUser();
   const { signOut } = useClerk();
   const router = useRouter();
   const compact = width < 1040;
@@ -95,13 +96,24 @@ function AuthenticatedHeader() {
 
   const dashboard = (mode ? dashboardHref(mode) : '/auth/choose-role') as Href;
   const doSignOut = async () => { await signOut(); router.replace('/'); };
+  const openDashboard = async () => {
+    if (!mode) {
+      router.replace('/auth/choose-role');
+      return;
+    }
+    try {
+      await apiFetch('/api/me', { method: 'PATCH', body: JSON.stringify({ role: mode }) }, getToken);
+    } finally {
+      router.replace(dashboardHref(mode));
+    }
+  };
 
-  if (compact) return <CompactShell menu={<NavMenu dashboard={dashboard} signedIn={isSignedIn} onSignOut={() => void doSignOut()} />} />;
+  if (compact) return <CompactShell menu={<NavMenu dashboard={dashboard} signedIn={isSignedIn} onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} />} />;
   return <View style={styles.header}>
     <HeaderBrand />
     <View style={styles.actions}>
       <DesktopNav />
-      {isSignedIn ? <><Button mode="contained" contentStyle={styles.primaryAction} onPress={() => router.push(dashboard)}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href={waitlistHref(null, 'header')} asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join Waitlist</Button></Link><NavMenu /></>}
+      {isSignedIn ? <><Button mode="contained" contentStyle={styles.primaryAction} onPress={() => void openDashboard()}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href={waitlistHref(null, 'header')} asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join Waitlist</Button></Link><NavMenu /></>}
     </View>
   </View>;
 }
