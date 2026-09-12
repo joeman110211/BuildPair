@@ -6,7 +6,7 @@ import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 're
 import { Button, Text } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { CompactNavMenu, type CompactNavItem } from '@/components/CompactNavMenu';
-import { colors, controlHeights, radii, spacing } from '@/constants/theme';
+import { colors, controlHeights, spacing } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref } from '@/lib/account-mode';
 import { useAuthAvailable } from '@/lib/auth-availability';
@@ -64,7 +64,7 @@ function NavMenu({ dashboard, signedIn, onSignOut, preview = false }: { dashboar
 
 function DesktopNav() {
   return <View style={styles.desktopNav}>
-    {NAV_ITEMS.slice(1).map((item) => <Link href={item.href} asChild key={item.label}><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{item.label}</Button></Link>)}
+    {NAV_ITEMS.slice(1).map((item) => <Link href={item.href} asChild key={item.label}><Button style={styles.navButton} mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{item.label}</Button></Link>)}
   </View>;
 }
 
@@ -85,7 +85,7 @@ function AuthenticatedHeader() {
   const { user, isSignedIn } = useCurrentUser();
   const { signOut } = useClerk();
   const router = useRouter();
-  const compact = width < 1040;
+  const compact = width < 1180;
 
   let mode: UserRole | null = null;
   if (user?.activeMode === 'customer' && user.customerEnabled) mode = 'customer';
@@ -101,16 +101,16 @@ function AuthenticatedHeader() {
     <HeaderBrand />
     <View style={styles.actions}>
       <DesktopNav />
-      {isSignedIn ? <><Button mode="contained" contentStyle={styles.primaryAction} onPress={() => router.push(dashboard)}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href={waitlistHref(null, 'header')} asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join Waitlist</Button></Link><NavMenu /></>}
+      {isSignedIn ? <><Button style={styles.navButton} mode="contained" contentStyle={styles.primaryAction} onPress={() => router.push(dashboard)}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button style={styles.navButton} mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href={waitlistHref(null, 'header')} asChild><Button style={styles.navButton} mode="contained" contentStyle={styles.primaryAction}>Join Waitlist</Button></Link><NavMenu /></>}
     </View>
   </View>;
 }
 
 function PreviewHeader() {
   const { width } = useWindowDimensions();
-  const compact = width < 1040;
+  const compact = width < 1180;
   if (compact) return <CompactShell menu={<NavMenu preview />} />;
-  return <View style={styles.header}><HeaderBrand /><View style={styles.actions}><DesktopNav /><Link href={waitlistHref(null, 'preview-header')} asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join Waitlist</Button></Link><Text variant="bodySmall" style={styles.preview}>Public preview</Text><NavMenu preview /></View></View>;
+  return <View style={styles.header}><HeaderBrand /><View style={styles.actions}><DesktopNav /><Link href={waitlistHref(null, 'preview-header')} asChild><Button style={styles.navButton} mode="contained" contentStyle={styles.primaryAction}>Join Waitlist</Button></Link><Text variant="bodySmall" style={styles.preview}>Public preview</Text><NavMenu preview /></View></View>;
 }
 
 export function PublicHeader() {
@@ -133,7 +133,8 @@ const styles = StyleSheet.create({
   quickNavShell: { height: 48, minHeight: 48, flexShrink: 0, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5', overflow: 'hidden' },
   quickNav: { flexGrow: 0, height: 48 },
   quickNavContent: { minHeight: 48, minWidth: '100%', paddingHorizontal: 4, gap: 0, alignItems: 'center', justifyContent: 'space-around' },
-  quickButton: { borderRadius: radii.pill },
+  navButton: { borderRadius: 14 },
+  quickButton: { borderRadius: 14 },
   quickButtonContent: { minHeight: 36, paddingHorizontal: 2 },
   quickButtonLabel: { fontSize: 12, marginHorizontal: 0 },
 });

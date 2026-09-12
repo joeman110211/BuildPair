@@ -107,13 +107,27 @@ export async function GET() {
     const nextRefreshAt = new Date(weekStart.getTime() + WEEK_MS).toISOString();
 
     if (!selected) {
-      return Response.json({ trader: null, weekStart: weekStartIso, nextRefreshAt });
+      return Response.json({ trader: null, traders: [], weekStart: weekStartIso, nextRefreshAt });
     }
 
+    // Keep the existing weekly spotlight first, then include current active profiles.
+    // The homepage never fills spare places with invented businesses or test accounts.
+    const featured = [selected, ...rows.filter((trader) => trader.id !== selected.id)].slice(0, 6);
+
     return Response.json({
+      traders: featured.map((trader) => ({
+        id: trader.id,
+        businessName: trader.businessName,
+        tradeCategory: trader.tradeCategory,
+        locationLabel: trader.locationLabel,
+        photos: (trader.photos ?? []).slice(0, 1),
+        averageRating: trader.averageRating,
+        reviewCount: trader.reviewCount,
+        galleryCount: (trader.photos ?? []).length,
+      })),
       trader: {
         ...selected,
-        galleryCount: selected.photos.length,
+        galleryCount: (selected.photos ?? []).length,
         isOverride: selected.userId === override?.userId,
       },
       weekStart: weekStartIso,
