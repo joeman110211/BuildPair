@@ -5,6 +5,7 @@ import { verifyBuildPairClerkSession } from '@/lib/clerk-session';
 import { ensureEarlyAccessInviteTable } from '@/lib/early-access-store';
 import { REGISTRATION_OPEN } from '@/lib/launch-config';
 import { getSql } from '@/lib/sql';
+import { sendWelcomeEmailOnce } from '@/lib/transactional-email';
 
 export class HttpError extends Error {
   constructor(public status: number, message: string) {
@@ -18,6 +19,12 @@ export type AccountModes = {
   customerEnabled: boolean;
   traderEnabled: boolean;
   activeMode: AccountMode | null;
+};
+
+type ClerkSignupIdentity = {
+  email: string | null;
+  name: string | null;
+  mode: AccountMode | null;
 };
 
 function bootstrapAdminIds() {
@@ -47,28 +54,38 @@ function clerkSessionToken(request: Request) {
   try { return decodeURIComponent(encoded); } catch { return encoded; }
 }
 
-async function clerkPrimaryEmail(userId: string) {
+async function clerkSignupIdentity(userId: string): Promise<ClerkSignupIdentity> {
   const secret = process.env.CLERK_SECRET_KEY?.trim();
-  if (!secret) return null;
+  if (!secret) return { email: null, name: null, mode: null };
   try {
     const response = await fetch(`https://api.clerk.com/v1/users/${encodeURIComponent(userId)}`, {
       headers: { Authorization: `Bearer ${secret}`, Accept: 'application/json' },
     });
-    if (!response.ok) return null;
+    if (!response.ok) return { email: null, name: null, mode: null };
     const data = await response.json() as {
       primary_email_address_id?: string | null;
       email_addresses?: { id: string; email_address: string }[];
+      first_name?: string | null;
+      last_name?: string | null;
+      unsafe_metadata?: Record<string, unknown> | null;
+      public_metadata?: Record<string, unknown> | null;
     };
     const primary = data.email_addresses?.find((item) => item.id === data.primary_email_address_id)
       ?? data.email_addresses?.[0];
-    return primary?.email_address?.trim().toLowerCase() || null;
+    const rawMode = data.unsafe_metadata?.buildpairMode ?? data.public_metadata?.buildpairMode;
+    const mode: AccountMode | null = rawMode === 'customer' || rawMode === 'trader' ? rawMode : null;
+    const name = [data.first_name, data.last_name].filter(Boolean).join(' ').trim() || null;
+    return {
+      email: primary?.email_address?.trim().toLowerCase() || null,
+      name,
+      mode,
+    };
   } catch {
-    return null;
+    return { email: null, name: null, mode: null };
   }
 }
 
-async function activeEarlyAccessEmail(userId: string) {
-  const email = await clerkPrimaryEmail(userId);
+async function activeEarlyAccessEmail(email: string | null) {
   if (!email) return null;
   await ensureEarlyAccessInviteTable();
   const rows = await getSql()`
@@ -148,15 +165,16 @@ export async function ensureDbUser(userId: string) {
     return existing;
   }
 
+  const identity = await clerkSignupIdentity(userId);
   let earlyAccessEmail: string | null = null;
   if (!REGISTRATION_OPEN && !bootstrapAdminIds().has(userId)) {
-    earlyAccessEmail = await activeEarlyAccessEmail(userId);
+    earlyAccessEmail = await activeEarlyAccessEmail(identity.email);
     if (!earlyAccessEmail) {
       throw new HttpError(403, 'New BuildPair registrations are paused until 1 October 2026. Join the launch waiting list to be notified when sign-up opens.');
     }
   }
 
-  const [created] = await db.insert(users).values({ id: userId }).onConflictDoNothing().returning();
+  const [created] = await db.insert(users).values({ id: userId, email: identity.email }).onConflictDoNothing().returning();
   const user = created ?? await db.query.users.findFirst({ where: eq(users.id, userId) });
   if (!user) throw new Error('Unable to synchronize user');
 
@@ -177,6 +195,19 @@ export async function ensureDbUser(userId: string) {
         SET status = 'registered', registered_user_id = ${userId}, registered_at = coalesce(registered_at, now()), updated_at = now()
         WHERE id = ${waitlistId}::uuid
       `;
+    }
+  }
+
+  if (created && identity.email) {
+    try {
+      await sendWelcomeEmailOnce({
+        userId,
+        email: identity.email,
+        name: identity.name,
+        mode: identity.mode ?? (earlyAccessEmail ? 'trader' : null),
+      });
+    } catch (error) {
+      console.error('[welcome-email]', error instanceof Error ? redactServerError(error.message) : typeof error);
     }
   }
 
