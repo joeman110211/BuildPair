@@ -26,7 +26,7 @@ const SEARCH_GROUPS = [
   ['insulation', 'insulate', 'loft insulation', 'wall insulation', 'soundproofing', 'thermal'],
   ['solar', 'solar panels', 'battery', 'battery storage', 'renewable', 'renewables', 'heat pump'],
   ['air conditioning', 'aircon', 'air con', 'ventilation', 'extractor', 'extractor fan', 'mvhr'],
-  ['cctv', 'alarm', 'alarms', 'security', 'smart home', 'doorbell', 'video doorbell', 'access control'],
+  ['camera', 'cameras', 'cctv', 'security', 'surveillance', 'alarm', 'alarms', 'security camera', 'security cameras', 'home security', 'camera installation', 'cctv installation', 'surveillance camera', 'smart home', 'doorbell', 'video doorbell', 'ring doorbell', 'access control', 'door entry', 'intercom', 'intruder alarm', 'burglar alarm', 'motion sensor', 'smart lock', 'nvr', 'dvr', 'hikvision', 'dahua', 'nest camera'],
   ['handyman', 'odd jobs', 'small repairs', 'shelves', 'flat pack', 'assembly', 'picture hanging'],
   ['scaffold', 'scaffolder', 'scaffolding', 'access tower'],
   ['demolition', 'demolish', 'strip out', 'strip-out', 'site clearance'],
@@ -187,6 +187,7 @@ export function scoreTraderSearch(trader: TraderProfile, query: string, inferred
   const selectedServices = Object.values(trader.serviceSelections ?? {}).flat();
   const skills = normalise([...new Set([...(trader.subSkills ?? []), ...selectedServices])].join(' '));
   const bio = normalise(trader.bio || '');
+  const location = normalise(trader.locationLabel || '');
 
   let score = inferredCategoryScore(categoryValues, inferredCategories);
 
@@ -195,6 +196,7 @@ export function scoreTraderSearch(trader: TraderProfile, query: string, inferred
     if (categoryValues.some((category) => normalise(category) === raw)) score += 145;
     else if (phraseIncludes(categories, raw) || phraseIncludes(raw, categories)) score += 115;
     if (phraseIncludes(skills, raw)) score += 95;
+    if (phraseIncludes(location, raw)) score += 42;
     if (phraseIncludes(bio, raw)) score += 18;
 
     for (const group of matchedGroups(query)) {
@@ -216,13 +218,24 @@ export function scoreTraderSearch(trader: TraderProfile, query: string, inferred
   return score;
 }
 
-export function searchTraders(traders: TraderProfile[], query: string, inferredCategories: string[] = []) {
-  if (!query.trim() && !inferredCategories.length) return traders;
+function rankResults(traders: TraderProfile[], query: string, inferredCategories: string[] = []) {
   return traders
     .map((trader) => ({ trader, score: scoreTraderSearch(trader, query, inferredCategories) }))
-    .filter((result) => result.score > 0)
     .sort((a, b) => b.score - a.score
       || (b.trader.rankingScore ?? 0) - (a.trader.rankingScore ?? 0)
-      || b.trader.averageRating - a.trader.averageRating)
+      || b.trader.averageRating - a.trader.averageRating);
+}
+
+export function searchTraders(traders: TraderProfile[], query: string, inferredCategories: string[] = []) {
+  if (!query.trim() && !inferredCategories.length) return traders;
+  return rankResults(traders, query, inferredCategories)
+    .filter((result) => result.score > 0)
     .map((result) => result.trader);
+}
+
+export function searchTradersWithFallback(traders: TraderProfile[], query: string, inferredCategories: string[] = []) {
+  if (!traders.length) return [];
+  const exact = searchTraders(traders, query, inferredCategories);
+  if (exact.length) return exact;
+  return rankResults(traders, query, inferredCategories).map((result) => result.trader);
 }
