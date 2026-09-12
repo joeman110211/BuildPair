@@ -28,6 +28,12 @@ const FALLBACK_RULES: [string[], string[]][] = [
   [['window', 'double glazing', 'bifold'], ['Windows, Doors & Glazing']],
   [['paint', 'wallpaper', 'decorat'], ['Painting & Decorating']],
   [['plaster', 'render'], ['Plastering, Rendering & Dry Lining']],
+  [['camera', 'cameras', 'cctv', 'surveillance', 'security', 'alarm', 'alarms', 'doorbell', 'video doorbell', 'ring doorbell', 'intercom', 'access control', 'door entry', 'smart home', 'smart lock', 'hikvision', 'dahua', 'nvr', 'dvr'], ['Security, Smart Home & Locksmiths']],
+  [['lock', 'locked out', 'door lock', 'locks'], ['Security, Smart Home & Locksmiths']],
+  [['blocked drain', 'drainage', 'sewer', 'soakaway'], ['Drainage']],
+  [['air con', 'air conditioning', 'ventilation', 'extractor fan'], ['Air Conditioning & Ventilation']],
+  [['solar', 'battery storage', 'ev charger', 'heat pump'], ['Renewables & EV', 'Electrical']],
+  [['odd job', 'flat pack', 'picture hanging', 'small repair'], ['Handyman & Property Maintenance']],
 ];
 
 type MatchMode = 'triage' | 'search';
@@ -51,7 +57,7 @@ function fallback(problem: string, mode: MatchMode) {
       matched: false,
       primaryTrade: null,
       alternatives: [],
-      reason: 'No confident trade match was found from the search wording alone.',
+      reason: 'No confident deterministic match was found, so the marketplace will fall back to its strongest available results.',
       questions: [],
       source: 'rules' as const,
     };
@@ -85,7 +91,7 @@ function modelCandidates() {
 
 async function generateTradeMatch(ai: GoogleGenAI, model: string, problem: string, mode: MatchMode) {
   const searchInstruction = mode === 'search'
-    ? 'This is a public marketplace search. Infer what kind of trade the person is probably trying to find even when they use an object, material, symptom, slang or misspelling instead of a trade name. If the wording is genuinely unrelated to building/property work or there is no sensible match, return matched false, primaryTrade null and no alternatives rather than inventing a result.'
+    ? 'This is a public marketplace search. Infer the most likely trade even when the person uses an object, material, room, symptom, brand, slang, partial word or misspelling instead of a trade name. Treat words such as camera, CCTV, surveillance, alarm, Ring doorbell, intercom and access control as security-installation intent. If the wording is plausibly about a home, property, repair, installation or trade service, choose the best matching category and up to two sensible alternatives. Return matched false only when the wording is clearly unrelated to property or trade work.'
     : 'This is job triage. Choose the safest sensible starting trade for the described property work.';
 
   const response = await ai.models.generateContent({
