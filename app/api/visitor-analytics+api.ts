@@ -26,8 +26,8 @@ const acquisitionSchema = z.object({
 
 const eventSchema = z.object({
   action: z.literal('event').default('event'),
-  mode: z.enum(['aggregate', 'detailed']),
-  eventType: z.enum(['page_view', 'click', 'scroll', 'page_time', 'form_interaction', 'form_submit']),
+  mode: z.enum(['aggregate', 'detailed', 'anonymous']),
+  eventType: z.enum(['page_view', 'click', 'scroll', 'page_time', 'form_interaction', 'form_submit', 'heartbeat']),
   path: text(500),
   target: text(200),
   targetPath: text(500),
@@ -36,6 +36,7 @@ const eventSchema = z.object({
   acquisition: acquisitionSchema,
   sessionId: z.string().uuid().optional().nullable(),
   visitorId: z.string().uuid().optional().nullable(),
+  firstSeenAt: z.string().datetime().optional().nullable(),
   consentedAt: z.string().datetime().optional().nullable(),
   details: z.record(z.string(), z.union([z.string().max(300), z.number().finite(), z.boolean(), z.null()])).default({}),
 });
@@ -129,30 +130,16 @@ export async function POST(request: Request) {
       region: geo.region,
       city: geo.city,
     };
-    const dimensionKey = createHash('sha256').update(JSON.stringify(dimensions)).digest('hex').slice(0, 40);
-    const value = payload.value ?? 0;
 
-    await sql`
-      INSERT INTO visitor_analytics_hourly(bucket_start, event_type, dimension_key, dimensions, event_count, total_value, max_value)
-      VALUES (date_trunc('hour', now()), ${payload.eventType}, ${dimensionKey}, ${JSON.stringify(dimensions)}::jsonb, 1, ${value}, ${payload.value ?? null})
-      ON CONFLICT (bucket_start, event_type, dimension_key)
-      DO UPDATE SET
-        event_count = visitor_analytics_hourly.event_count + 1,
-        total_value = visitor_analytics_hourly.total_value + EXCLUDED.total_value,
-        max_value = CASE
-          WHEN EXCLUDED.max_value IS NULL THEN visitor_analytics_hourly.max_value
-          WHEN visitor_analytics_hourly.max_value IS NULL THEN EXCLUDED.max_value
-          ELSE greatest(visitor_analytics_hourly.max_value, EXCLUDED.max_value)
-        END
-    `;
-
-    if (payload.mode === 'detailed') {
-      if (!payload.sessionId || !payload.visitorId || !payload.consentedAt) {
-        return Response.json({ error: 'Detailed analytics requires explicit consent and session identifiers' }, { status: 400 });
+    const sessionTracked = payload.mode !== 'aggregate';
+    if (sessionTracked) {
+      const firstSeenAt = payload.firstSeenAt || payload.consentedAt;
+      if (!payload.sessionId || !payload.visitorId || !firstSeenAt) {
+        return Response.json({ error: 'Anonymous session analytics requires visitor and session identifiers' }, { status: 400 });
       }
-      const consentedAt = new Date(payload.consentedAt);
-      if (Number.isNaN(consentedAt.getTime()) || consentedAt.getTime() > Date.now() + 60_000) {
-        return Response.json({ error: 'Invalid analytics consent timestamp' }, { status: 400 });
+      const firstSeen = new Date(firstSeenAt);
+      if (Number.isNaN(firstSeen.getTime()) || firstSeen.getTime() > Date.now() + 60_000) {
+        return Response.json({ error: 'Invalid anonymous visitor timestamp' }, { status: 400 });
       }
 
       if (payload.eventType === 'page_view') {
@@ -180,9 +167,12 @@ export async function POST(request: Request) {
         touch: Boolean(payload.device.touch),
       };
 
+      // The existing consented_at column is retained for database compatibility;
+      // for anonymous analytics it stores when this anonymous browser identifier
+      // was first created, not a claim that a consent prompt was shown.
       await sql`
         INSERT INTO visitor_sessions(id, visitor_id, consented_at, landing_path, last_path, referrer_host, acquisition, device, geo)
-        VALUES (${payload.sessionId}::uuid, ${payload.visitorId}::uuid, ${payload.consentedAt}::timestamptz,
+        VALUES (${payload.sessionId}::uuid, ${payload.visitorId}::uuid, ${firstSeenAt}::timestamptz,
           ${dimensions.path}, ${dimensions.path}, ${acquisition.referrerHost}, ${JSON.stringify(acquisition)}::jsonb,
           ${JSON.stringify(device)}::jsonb, ${JSON.stringify(geo)}::jsonb)
         ON CONFLICT (id) DO UPDATE SET
@@ -191,7 +181,32 @@ export async function POST(request: Request) {
           device = EXCLUDED.device,
           geo = EXCLUDED.geo
       `;
+    }
 
+    // Heartbeats exist only to make the live visitor count accurate. Keeping
+    // them out of aggregate/event tables prevents a quiet page from producing
+    // thousands of meaningless analytics rows.
+    if (payload.eventType === 'heartbeat') {
+      return Response.json({ accepted: true });
+    }
+
+    const dimensionKey = createHash('sha256').update(JSON.stringify(dimensions)).digest('hex').slice(0, 40);
+    const value = payload.value ?? 0;
+    await sql`
+      INSERT INTO visitor_analytics_hourly(bucket_start, event_type, dimension_key, dimensions, event_count, total_value, max_value)
+      VALUES (date_trunc('hour', now()), ${payload.eventType}, ${dimensionKey}, ${JSON.stringify(dimensions)}::jsonb, 1, ${value}, ${payload.value ?? null})
+      ON CONFLICT (bucket_start, event_type, dimension_key)
+      DO UPDATE SET
+        event_count = visitor_analytics_hourly.event_count + 1,
+        total_value = visitor_analytics_hourly.total_value + EXCLUDED.total_value,
+        max_value = CASE
+          WHEN EXCLUDED.max_value IS NULL THEN visitor_analytics_hourly.max_value
+          WHEN visitor_analytics_hourly.max_value IS NULL THEN EXCLUDED.max_value
+          ELSE greatest(visitor_analytics_hourly.max_value, EXCLUDED.max_value)
+        END
+    `;
+
+    if (sessionTracked && payload.sessionId) {
       await sql`
         INSERT INTO visitor_session_events(session_id, event_type, path, target, value, details)
         VALUES (${payload.sessionId}::uuid, ${payload.eventType}, ${dimensions.path}, ${dimensions.target}, ${payload.value ?? null}, ${JSON.stringify({ ...normaliseDetails(payload.details), targetPath: dimensions.targetPath })}::jsonb)
