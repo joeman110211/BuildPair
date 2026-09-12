@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { users } from '@/db/schema';
 import { verifyBuildPairClerkSession } from '@/lib/clerk-session';
+import { ensureEarlyAccessInviteTable } from '@/lib/early-access-store';
 import { REGISTRATION_OPEN } from '@/lib/launch-config';
 import { getSql } from '@/lib/sql';
 
@@ -44,6 +45,41 @@ function clerkSessionToken(request: Request) {
   const encoded = cookie.match(/(?:^|;\s*)__session=([^;]+)/)?.[1];
   if (!encoded) return null;
   try { return decodeURIComponent(encoded); } catch { return encoded; }
+}
+
+async function clerkPrimaryEmail(userId: string) {
+  const secret = process.env.CLERK_SECRET_KEY?.trim();
+  if (!secret) return null;
+  try {
+    const response = await fetch(`https://api.clerk.com/v1/users/${encodeURIComponent(userId)}`, {
+      headers: { Authorization: `Bearer ${secret}`, Accept: 'application/json' },
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as {
+      primary_email_address_id?: string | null;
+      email_addresses?: { id: string; email_address: string }[];
+    };
+    const primary = data.email_addresses?.find((item) => item.id === data.primary_email_address_id)
+      ?? data.email_addresses?.[0];
+    return primary?.email_address?.trim().toLowerCase() || null;
+  } catch {
+    return null;
+  }
+}
+
+async function activeEarlyAccessEmail(userId: string) {
+  const email = await clerkPrimaryEmail(userId);
+  if (!email) return null;
+  await ensureEarlyAccessInviteTable();
+  const rows = await getSql()`
+    SELECT id
+    FROM early_access_invites
+    WHERE lower(email) = lower(${email})
+      AND revoked_at IS NULL
+      AND used_at IS NULL
+    LIMIT 1
+  ` as unknown as { id: string }[];
+  return rows.length ? email : null;
 }
 
 export async function authenticatedUserId(request: Request) {
@@ -112,13 +148,38 @@ export async function ensureDbUser(userId: string) {
     return existing;
   }
 
+  let earlyAccessEmail: string | null = null;
   if (!REGISTRATION_OPEN && !bootstrapAdminIds().has(userId)) {
-    throw new HttpError(403, 'New BuildPair registrations are paused until 1 October 2026. Join the launch waiting list to be notified when sign-up opens.');
+    earlyAccessEmail = await activeEarlyAccessEmail(userId);
+    if (!earlyAccessEmail) {
+      throw new HttpError(403, 'New BuildPair registrations are paused until 1 October 2026. Join the launch waiting list to be notified when sign-up opens.');
+    }
   }
 
   const [created] = await db.insert(users).values({ id: userId }).onConflictDoNothing().returning();
   const user = created ?? await db.query.users.findFirst({ where: eq(users.id, userId) });
   if (!user) throw new Error('Unable to synchronize user');
+
+  if (earlyAccessEmail) {
+    const sql = getSql();
+    await sql`UPDATE users SET email = coalesce(email, ${earlyAccessEmail}), updated_at = now() WHERE id = ${userId}`;
+    const inviteRows = await sql`
+      UPDATE early_access_invites
+      SET used_at = coalesce(used_at, now()), updated_at = now()
+      WHERE lower(email) = lower(${earlyAccessEmail})
+        AND revoked_at IS NULL
+      RETURNING waitlist_id AS "waitlistId"
+    ` as unknown as { waitlistId: string | null }[];
+    const waitlistId = inviteRows[0]?.waitlistId;
+    if (waitlistId) {
+      await sql`
+        UPDATE launch_waitlist
+        SET status = 'registered', registered_user_id = ${userId}, registered_at = coalesce(registered_at, now()), updated_at = now()
+        WHERE id = ${waitlistId}::uuid
+      `;
+    }
+  }
+
   await assertAccountActive(userId);
   return user;
 }
