@@ -1,38 +1,54 @@
 import { useAuth } from '@clerk/expo';
 import { usePathname } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
-import { Button, Portal, Surface, Text } from 'react-native-paper';
-import { colors } from '@/constants/theme';
+import { useCallback, useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 
-type AnalyticsChoice = 'basic' | 'detailed' | 'off';
-type StoredChoice = { choice: AnalyticsChoice; updatedAt: string };
-type EventType = 'page_view' | 'click' | 'scroll' | 'page_time' | 'form_interaction' | 'form_submit';
+type EventType = 'page_view' | 'click' | 'scroll' | 'page_time' | 'form_interaction' | 'form_submit' | 'heartbeat';
 type EventDetails = Record<string, string | number | boolean | null>;
+type TrackingMode = 'off' | 'aggregate' | 'anonymous';
 
-const CHOICE_KEY = 'buildpair_analytics_choice_v1';
+type StoredVisitor = {
+  id: string;
+  createdAt: string;
+};
+
+const LEGACY_CHOICE_KEY = 'buildpair_analytics_choice_v1';
 const VISITOR_KEY = 'buildpair_analytics_visitor_v1';
 const SESSION_KEY = 'buildpair_analytics_session_v1';
 const SIGNUP_INTENT_KEY = 'buildpair_analytics_signup_intent_v1';
+export const INTERNAL_ANALYTICS_EXCLUSION_KEY = 'buildpair_internal_analytics_excluded_v1';
 const VISITOR_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+const HEARTBEAT_MS = 45_000;
 
 function onWeb() {
   return Platform.OS === 'web' && typeof window !== 'undefined';
 }
 
-function readChoice(): AnalyticsChoice | null {
+function legacyChoice(): 'basic' | 'detailed' | 'off' | null {
   if (!onWeb()) return null;
   try {
-    const raw = window.localStorage.getItem(CHOICE_KEY);
+    const raw = window.localStorage.getItem(LEGACY_CHOICE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as StoredChoice;
-    return ['basic', 'detailed', 'off'].includes(parsed.choice) ? parsed.choice : null;
+    const parsed = JSON.parse(raw) as { choice?: string };
+    return parsed.choice === 'basic' || parsed.choice === 'detailed' || parsed.choice === 'off' ? parsed.choice : null;
   } catch { return null; }
 }
 
-function saveChoice(choice: AnalyticsChoice) {
-  if (!onWeb()) return;
-  try { window.localStorage.setItem(CHOICE_KEY, JSON.stringify({ choice, updatedAt: new Date().toISOString() } satisfies StoredChoice)); } catch { /* best effort */ }
+function trackingMode(): TrackingMode {
+  if (!onWeb()) return 'off';
+  try {
+    if (window.localStorage.getItem(INTERNAL_ANALYTICS_EXCLUSION_KEY) === '1') return 'off';
+  } catch { /* storage may be unavailable */ }
+
+  const nav = navigator as Navigator & { globalPrivacyControl?: boolean; doNotTrack?: string | null };
+  if (nav.globalPrivacyControl === true || nav.doNotTrack === '1') return 'off';
+
+  // Preserve choices made under the old analytics panel. New visitors use the
+  // privacy-conscious anonymous session analytics by default, without a popup.
+  const previousChoice = legacyChoice();
+  if (previousChoice === 'off') return 'off';
+  if (previousChoice === 'basic') return 'aggregate';
+  return 'anonymous';
 }
 
 function randomId() {
@@ -43,31 +59,33 @@ function randomId() {
   });
 }
 
-function detailedIdentity() {
+function anonymousIdentity() {
   if (!onWeb()) return null;
   try {
     const now = Date.now();
-    let visitorId = '';
-    let consentedAt = new Date().toISOString();
+    let visitor: StoredVisitor | null = null;
     const raw = window.localStorage.getItem(VISITOR_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as { id?: string; createdAt?: string; consentedAt?: string };
-      const createdAt = new Date(parsed.createdAt ?? 0).getTime();
-      if (parsed.id && Number.isFinite(createdAt) && now - createdAt < VISITOR_TTL_MS) {
-        visitorId = parsed.id;
-        consentedAt = parsed.consentedAt || consentedAt;
+      const parsed = JSON.parse(raw) as Partial<StoredVisitor> & { consentedAt?: string };
+      const createdAt = parsed.createdAt || parsed.consentedAt || '';
+      const createdMs = new Date(createdAt).getTime();
+      if (parsed.id && Number.isFinite(createdMs) && now - createdMs < VISITOR_TTL_MS) {
+        visitor = { id: parsed.id, createdAt };
       }
     }
-    if (!visitorId) {
-      visitorId = randomId();
-      window.localStorage.setItem(VISITOR_KEY, JSON.stringify({ id: visitorId, createdAt: new Date().toISOString(), consentedAt }));
+
+    if (!visitor) {
+      visitor = { id: randomId(), createdAt: new Date().toISOString() };
+      window.localStorage.setItem(VISITOR_KEY, JSON.stringify(visitor));
     }
+
     let sessionId = window.sessionStorage.getItem(SESSION_KEY);
     if (!sessionId) {
       sessionId = randomId();
       window.sessionStorage.setItem(SESSION_KEY, sessionId);
     }
-    return { visitorId, sessionId, consentedAt };
+
+    return { visitorId: visitor.id, sessionId, firstSeenAt: visitor.createdAt };
   } catch { return null; }
 }
 
@@ -77,18 +95,10 @@ function existingIdentity() {
     const raw = window.localStorage.getItem(VISITOR_KEY);
     const sessionId = window.sessionStorage.getItem(SESSION_KEY);
     if (!raw || !sessionId) return null;
-    const parsed = JSON.parse(raw) as { id?: string; consentedAt?: string };
-    return parsed.id ? { visitorId: parsed.id, sessionId, consentedAt: parsed.consentedAt || new Date().toISOString() } : null;
+    const parsed = JSON.parse(raw) as Partial<StoredVisitor> & { consentedAt?: string };
+    const firstSeenAt = parsed.createdAt || parsed.consentedAt || '';
+    return parsed.id && firstSeenAt ? { visitorId: parsed.id, sessionId, firstSeenAt } : null;
   } catch { return null; }
-}
-
-function clearIdentity() {
-  if (!onWeb()) return;
-  try {
-    window.localStorage.removeItem(VISITOR_KEY);
-    window.sessionStorage.removeItem(SESSION_KEY);
-    window.sessionStorage.removeItem(SIGNUP_INTENT_KEY);
-  } catch { /* best effort */ }
 }
 
 function browserName(userAgent: string) {
@@ -176,19 +186,18 @@ function post(payload: object) {
 export function VisitorAnalytics() {
   const { isSignedIn } = useAuth();
   const pathname = usePathname();
-  const [choice, setChoice] = useState<AnalyticsChoice | null>(() => readChoice());
-  const [showChoices, setShowChoices] = useState(() => readChoice() === null);
   const previousPath = useRef<string | null>(null);
   const pageStartedAt = useRef(0);
   const conversionSent = useRef(false);
-  const effectiveChoice: AnalyticsChoice = choice ?? 'basic';
 
   const sendEvent = useCallback((eventType: EventType, path: string, target?: string, targetPath?: string, value?: number, details?: EventDetails) => {
-    if (!onWeb() || isSignedIn || effectiveChoice === 'off') return;
-    const identity = effectiveChoice === 'detailed' ? detailedIdentity() : null;
+    if (!onWeb() || isSignedIn) return;
+    const mode = trackingMode();
+    if (mode === 'off') return;
+    const identity = mode === 'anonymous' ? anonymousIdentity() : null;
     post({
       action: 'event',
-      mode: identity ? 'detailed' : 'aggregate',
+      mode: identity ? 'anonymous' : 'aggregate',
       eventType,
       path,
       target,
@@ -199,10 +208,10 @@ export function VisitorAnalytics() {
       ...(identity ?? {}),
       details,
     });
-  }, [effectiveChoice, isSignedIn]);
+  }, [isSignedIn]);
 
   useEffect(() => {
-    if (!onWeb() || isSignedIn || effectiveChoice === 'off') return;
+    if (!onWeb() || isSignedIn || trackingMode() === 'off') return;
     const now = Date.now();
     if (previousPath.current && previousPath.current !== pathname && pageStartedAt.current > 0) {
       sendEvent('page_time', previousPath.current, undefined, undefined, Math.max(0, Math.min(86400, (now - pageStartedAt.current) / 1000)));
@@ -213,14 +222,28 @@ export function VisitorAnalytics() {
       try { window.sessionStorage.setItem(SIGNUP_INTENT_KEY, '1'); } catch { /* best effort */ }
     }
     sendEvent('page_view', pathname);
-  }, [effectiveChoice, isSignedIn, pathname, sendEvent]);
+  }, [isSignedIn, pathname, sendEvent]);
 
   useEffect(() => {
-    if (!onWeb() || isSignedIn || effectiveChoice === 'off') return;
+    if (!onWeb() || isSignedIn || trackingMode() === 'off') return;
+    const heartbeat = () => {
+      if (document.visibilityState === 'visible') sendEvent('heartbeat', pathname);
+    };
+    const timer = window.setInterval(heartbeat, HEARTBEAT_MS);
+    const onVisibility = () => { if (document.visibilityState === 'visible') heartbeat(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [isSignedIn, pathname, sendEvent]);
+
+  useEffect(() => {
+    if (!onWeb() || isSignedIn || trackingMode() === 'off') return;
     const onClick = (event: MouseEvent) => {
       const node = event.target instanceof Element ? event.target : null;
       const element = node?.closest('a,button,[role="button"],input[type="submit"],input[type="button"]') as HTMLElement | null;
-      if (!element || element.closest('[data-testid^="analytics-choice"]')) return;
+      if (!element) return;
       const target = cleanLabel(element.getAttribute('aria-label') || element.textContent || element.getAttribute('value') || element.tagName.toLowerCase());
       let targetPath = '';
       const href = element.getAttribute('href');
@@ -250,10 +273,10 @@ export function VisitorAnalytics() {
       document.removeEventListener('focusin', onFocus, true);
       document.removeEventListener('submit', onSubmit, true);
     };
-  }, [effectiveChoice, isSignedIn, pathname, sendEvent]);
+  }, [isSignedIn, pathname, sendEvent]);
 
   useEffect(() => {
-    if (!onWeb() || isSignedIn || effectiveChoice === 'off') return;
+    if (!onWeb() || isSignedIn || trackingMode() === 'off') return;
     const reached = new Set<number>();
     const onScroll = () => {
       const denominator = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
@@ -267,10 +290,10 @@ export function VisitorAnalytics() {
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, [effectiveChoice, isSignedIn, pathname, sendEvent]);
+  }, [isSignedIn, pathname, sendEvent]);
 
   useEffect(() => {
-    if (!onWeb() || isSignedIn || effectiveChoice === 'off') return;
+    if (!onWeb() || isSignedIn || trackingMode() === 'off') return;
     const onPageHide = () => {
       if (!previousPath.current || pageStartedAt.current <= 0) return;
       const seconds = Math.max(0, Math.min(86400, (Date.now() - pageStartedAt.current) / 1000));
@@ -279,7 +302,7 @@ export function VisitorAnalytics() {
     };
     window.addEventListener('pagehide', onPageHide);
     return () => window.removeEventListener('pagehide', onPageHide);
-  }, [effectiveChoice, isSignedIn, sendEvent]);
+  }, [isSignedIn, sendEvent]);
 
   useEffect(() => {
     if (!onWeb() || !isSignedIn || conversionSent.current) return;
@@ -295,44 +318,5 @@ export function VisitorAnalytics() {
     } catch { /* best effort */ }
   }, [isSignedIn]);
 
-  if (!onWeb() || isSignedIn) return null;
-
-  const choose = (next: AnalyticsChoice) => {
-    const existing = existingIdentity();
-    saveChoice(next);
-    setChoice(next);
-    setShowChoices(false);
-    if (next === 'detailed') {
-      detailedIdentity();
-    } else {
-      if (existing?.visitorId) post({ action: 'withdraw', visitorId: existing.visitorId });
-      clearIdentity();
-    }
-  };
-
-  return (
-    <Portal>
-      {showChoices ? (
-        <Surface style={styles.panel} elevation={4} testID="analytics-choice-panel">
-          <Text variant="titleMedium" style={styles.title}>BuildPair analytics choices</Text>
-          <Text style={styles.copy}>Basic analytics counts pages, clicks, scroll depth, devices, referrers and coarse location signals in aggregate so BuildPair can improve the site. Detailed analytics is optional and records an anonymous visit journey so we can see where people get stuck. We do not record passwords, form contents, raw IP addresses or precise GPS location.</Text>
-          <View style={styles.actions}>
-            <Button testID="analytics-choice-detailed" mode="contained" onPress={() => choose('detailed')}>Allow detailed</Button>
-            <Button testID="analytics-choice-basic" mode="outlined" onPress={() => choose('basic')}>Basic only</Button>
-            <Button testID="analytics-choice-off" mode="text" onPress={() => choose('off')}>No analytics</Button>
-          </View>
-        </Surface>
-      ) : (
-        <Button testID="analytics-choice-open" compact mode="text" style={styles.choiceButton} onPress={() => setShowChoices(true)}>Analytics choices</Button>
-      )}
-    </Portal>
-  );
+  return null;
 }
-
-const styles = StyleSheet.create({
-  panel: { position: 'absolute', left: 12, right: 12, bottom: 12, alignSelf: 'center', width: 'auto', maxWidth: 760, borderRadius: 18, padding: 16, gap: 10, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: colors.border },
-  title: { fontWeight: '900', color: colors.text },
-  copy: { color: colors.muted, lineHeight: 21 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
-  choiceButton: { position: 'absolute', right: 8, bottom: 4, backgroundColor: 'rgba(255,255,255,0.92)' },
-});
