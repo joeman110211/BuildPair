@@ -2,19 +2,20 @@ import { useAuth } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, ProgressBar, Text, TextInput } from 'react-native-paper';
+import { Button, HelperText, ProgressBar, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { FormSelect } from '@/components/FormSelect';
 import { PhotoUploader } from '@/components/PhotoUploader';
 import { Screen } from '@/components/Screen';
 import { TradeCategorySelector } from '@/components/TradeCategorySelector';
+import { TraderProfileDraftPreview } from '@/components/TraderProfileDraftPreview';
 import { RADIUS_OPTIONS, SUB_SKILLS, TRADE_CATEGORIES, TRADER_BIO_MIN_LENGTH, type TradeCategory } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, ApiError, errorMessage } from '@/lib/api';
 import { clearDraft, loadDraft, saveDraft } from '@/lib/draft-storage';
 import type { BeforeAfterProject, TraderProfile } from '@/types';
 
-const STEP_TITLES = ['Business Details', 'Build Your Profile', 'Portfolio', 'Review & Publish'] as const;
+const STEP_TITLES = ['Business & Service Area', 'Build Your Storefront', 'Portfolio & Trust', 'Preview & Publish'] as const;
 const DRAFT_KEY = 'trader-onboarding-v2';
 
 const LEGACY_CATEGORY_MAP: Record<string, TradeCategory> = {
@@ -167,6 +168,9 @@ export default function TraderOnboarding() {
   const tradeCategory = tradeCategories[0];
   const selectedServiceCount = useMemo(() => tradeCategories.reduce((sum, category) => sum + (serviceSelections[category]?.length ?? 0), 0), [serviceSelections, tradeCategories]);
   const everyCategoryHasService = tradeCategories.every((category) => (serviceSelections[category]?.length ?? 0) > 0);
+  const serviceAreas = useMemo(() => serviceAreasText.split(/[,\n]/).map((value) => value.trim()).filter(Boolean).slice(0, 20), [serviceAreasText]);
+  const qualifications = useMemo(() => qualificationsText.split('\n').map((value) => value.trim()).filter(Boolean), [qualificationsText]);
+  const previewLocationLabel = serviceAreas[0] || postcode.trim().toUpperCase().split(/\s+/)[0] || 'Your service area';
 
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
 
@@ -303,7 +307,6 @@ export default function TraderOnboarding() {
       setBusy(true);
       setError('');
       const links = { gasSafe, trustMark, facebook, instagram, tiktok, whatsapp };
-      const serviceAreas = serviceAreasText.split(/[,\n]/).map((value) => value.trim()).filter(Boolean).slice(0, 20);
       const flattenedServices = [...new Set(Object.values(serviceSelections).flatMap((value) => value ?? []))];
       await apiFetch('/api/me', {
         method: 'PUT',
@@ -316,7 +319,7 @@ export default function TraderOnboarding() {
           bio,
           postcode,
           radiusMiles: Number(radius),
-          qualifications: qualificationsText.split('\n').map((value) => value.trim()).filter(Boolean),
+          qualifications,
           externalLinks: links,
           photos,
           selfCertified: certified,
@@ -352,7 +355,7 @@ export default function TraderOnboarding() {
   return <Screen
     key={step}
     title={STEP_TITLES[step]}
-    subtitle="Build a profile homeowners can understand and trust without fighting through a giant form."
+    subtitle="Build the same polished storefront homeowners will see, with your services, work, service area and trust information in the right place."
     footer={footer}
   >
     <View style={styles.progressBlock}>
@@ -366,8 +369,8 @@ export default function TraderOnboarding() {
     {loadingExisting ? <HelperText type="info">Loading your existing profile details…</HelperText> : draftStatus ? <HelperText type="info">{draftStatus}</HelperText> : null}
 
     {step === 0 ? <AppCard>
-      <Text variant="titleLarge" style={styles.title}>Tell us about your business</Text>
-      <Text style={styles.muted}>Choose broad trade categories first, then expand each one and tick the services you actually offer. Services do not use extra plan slots.</Text>
+      <Text variant="titleLarge" style={styles.title}>Business, services and working area</Text>
+      <Text style={styles.muted}>These details power the top of your public profile, the Services tab, local job matching and the service-area map.</Text>
       <TextInput label="Business or trading name" accessibilityLabel="Business or trading name" value={businessName} onChangeText={setBusinessName} mode="outlined" />
 
       <Text variant="titleMedium" style={styles.title}>What work do you offer?</Text>
@@ -385,26 +388,28 @@ export default function TraderOnboarding() {
         <TextInput style={styles.flex} label="Years of experience" accessibilityLabel="Years of experience" value={yearsExperience} onChangeText={setYearsExperience} mode="outlined" keyboardType="number-pad" />
         <TextInput style={styles.flex} label="Year established" accessibilityLabel="Year established" value={yearEstablished} onChangeText={setYearEstablished} mode="outlined" keyboardType="number-pad" />
       </View>
-      <Text variant="titleMedium" style={styles.title}>Your local service area</Text>
-      <Text style={styles.muted}>BuildPair keeps marketplace work local by matching jobs to your real service base and working radius.</Text>
+      <Text variant="titleMedium" style={styles.title}>Your service area</Text>
+      <Text style={styles.muted}>Your postcode is used to position an approximate public map and match nearby jobs. Homeowners never need to see your exact address.</Text>
       <TextInput label="Base postcode" accessibilityLabel="Base postcode" value={postcode} onChangeText={setPostcode} editable={!baseLocationLocked} mode="outlined" autoCapitalize="characters" placeholder="e.g. SW1A 1AA" />
       <HelperText type="info">{baseLocationLocked
         ? 'Your published base postcode is locked. If you genuinely move home or relocate your business, contact info@buildpair.co.uk to request an update.'
         : 'Your full postcode is never displayed publicly. Once you publish your profile, this base location is locked so marketplace jobs stay genuinely local. If you later relocate, BuildPair support can update it and may ask for reasonable evidence.'}</HelperText>
       <FormSelect label="Working radius (miles)" value={radius} options={RADIUS_OPTIONS} onChange={setRadius} />
-      <HelperText type="info">You can adjust your working radius later. It controls the maximum distance for ordinary marketplace job matching.</HelperText>
+      <HelperText type="info">This radius controls both ordinary marketplace matching and the approximate service-area circle shown on your profile.</HelperText>
       <TextInput label="Other areas you cover" accessibilityLabel="Other areas you cover" value={serviceAreasText} onChangeText={setServiceAreasText} mode="outlined" multiline placeholder="Staines, Egham, Chertsey, Windsor…" />
     </AppCard> : null}
 
     {step === 1 ? <>
       <AppCard>
-        <Text variant="titleLarge" style={styles.title}>Make the profile look like your business</Text>
+        <Text variant="titleLarge" style={styles.title}>Build the storefront homeowners will recognise</Text>
+        <Text style={styles.muted}>The cover image creates the large profile header. Your logo is used first in the round business image, with your profile photo as the fallback.</Text>
         <PhotoUploader kind="trader" photos={coverPhoto} onChange={setCoverPhoto} max={1} title="Cover photo" buttonLabel="Choose Cover Photo" emptyText="Use a strong wide photo of finished work, your van or your team." />
-        <PhotoUploader kind="trader" photos={profileImage} onChange={setProfileImage} max={1} title="Profile photo" buttonLabel="Choose Profile Photo" emptyText="A clear photo of you or your team works best." />
-        <PhotoUploader kind="trader" photos={logo} onChange={setLogo} max={1} title="Company logo" buttonLabel="Choose Logo" emptyText="Optional. Add your logo if you have one." />
+        <PhotoUploader kind="trader" photos={logo} onChange={setLogo} max={1} title="Company logo" buttonLabel="Choose Logo" emptyText="Recommended for the round business image shown beside your name." />
+        <PhotoUploader kind="trader" photos={profileImage} onChange={setProfileImage} max={1} title="Profile photo" buttonLabel="Choose Profile Photo" emptyText="Used if you do not add a company logo." />
       </AppCard>
       <AppCard>
         <Text variant="titleLarge" style={styles.title}>About your business</Text>
+        <Text style={styles.muted}>This becomes the About section directly beneath the profile header, so write it for a homeowner deciding whether to contact you.</Text>
         <TextInput label="Business bio" accessibilityLabel="Business bio" value={bio} onChangeText={setBio} mode="outlined" multiline numberOfLines={7} />
         <View style={styles.bioMeta}>
           <HelperText style={styles.helperFlex} type={bioLength > 0 && bioCharactersRemaining > 0 ? 'error' : 'info'}>
@@ -412,8 +417,8 @@ export default function TraderOnboarding() {
           </HelperText>
           <Text style={[styles.counter, bioLength >= TRADER_BIO_MIN_LENGTH && styles.counterOk]}>{bioLength} / {TRADER_BIO_MIN_LENGTH}</Text>
         </View>
-        <Text style={styles.muted}>Explain what you specialise in, how you work and what customers can expect.</Text>
         <TextInput label="Qualifications, cards and certificates (one per line)" accessibilityLabel="Qualifications, cards and certificates (one per line)" value={qualificationsText} onChangeText={setQualificationsText} mode="outlined" multiline />
+        <Text style={styles.muted}>Declared qualifications appear separately from BuildPair-verified credentials, so homeowners can clearly see what has actually been checked.</Text>
         <Text variant="titleMedium" style={styles.title}>Registers & social links</Text>
         {([
           ['Gas Safe register URL', gasSafe, setGasSafe],
@@ -426,42 +431,59 @@ export default function TraderOnboarding() {
       </AppCard>
     </> : null}
 
-    {step === 2 ? <AppCard>
-      <Text variant="titleLarge" style={styles.title}>Show your work</Text>
-      <Text style={styles.muted}>Photos sell workmanship better than a paragraph ever will. Add finished jobs and useful before-and-after examples.</Text>
-      <PhotoUploader kind="trader" photos={photos} onChange={setPhotos} max={30} title="Work gallery" buttonLabel="Add Work Photo" emptyText="Bathrooms, kitchens, floors, details, finishes and other completed work." />
-      <Text variant="titleMedium" style={styles.title}>Before & after projects</Text>
-      <PhotoUploader kind="trader" photos={beforeDraft} onChange={setBeforeDraft} max={1} title="Before" buttonLabel="Add Before Photo" />
-      <PhotoUploader kind="trader" photos={afterDraft} onChange={setAfterDraft} max={1} title="After" buttonLabel="Add After Photo" />
-      <TextInput label="Project caption (optional)" accessibilityLabel="Project caption (optional)" value={projectCaption} onChangeText={setProjectCaption} mode="outlined" placeholder="Full bathroom retile in Staines" />
-      <Button mode="outlined" icon="image-plus" disabled={!beforeDraft[0] || !afterDraft[0] || beforeAfterProjects.length >= 12} onPress={addBeforeAfter}>Add Before & After Project</Button>
-      {beforeAfterProjects.map((project, index) => <View key={`${project.before}-${index}`} style={styles.projectRow}>
-        <View style={styles.flex}>
-          <Text style={styles.title}>{project.caption || `Project ${index + 1}`}</Text>
-          <Text style={styles.muted}>Before / after pair ready ✓</Text>
+    {step === 2 ? <>
+      <AppCard>
+        <Text variant="titleLarge" style={styles.title}>Show your work properly</Text>
+        <Text style={styles.muted}>The new profile makes the gallery swipeable on mobile and expandable on tap, so strong finished-work photos now matter even more.</Text>
+        <PhotoUploader kind="trader" photos={photos} onChange={setPhotos} max={30} title="Work gallery" buttonLabel="Add Work Photo" emptyText="Bathrooms, kitchens, floors, details, finishes and other completed work." />
+        <Text variant="titleMedium" style={styles.title}>Before & after projects</Text>
+        <PhotoUploader kind="trader" photos={beforeDraft} onChange={setBeforeDraft} max={1} title="Before" buttonLabel="Add Before Photo" />
+        <PhotoUploader kind="trader" photos={afterDraft} onChange={setAfterDraft} max={1} title="After" buttonLabel="Add After Photo" />
+        <TextInput label="Project caption (optional)" accessibilityLabel="Project caption (optional)" value={projectCaption} onChangeText={setProjectCaption} mode="outlined" placeholder="Full bathroom retile in Staines" />
+        <Button mode="outlined" icon="image-plus" disabled={!beforeDraft[0] || !afterDraft[0] || beforeAfterProjects.length >= 12} onPress={addBeforeAfter}>Add Before & After Project</Button>
+        {beforeAfterProjects.map((project, index) => <View key={`${project.before}-${index}`} style={styles.projectRow}>
+          <View style={styles.flex}>
+            <Text style={styles.title}>{project.caption || `Project ${index + 1}`}</Text>
+            <Text style={styles.muted}>Before / after pair ready ✓</Text>
+          </View>
+          <Button compact onPress={() => setBeforeAfterProjects((current) => current.filter((_, i) => i !== index))}>Remove</Button>
+        </View>)}
+      </AppCard>
+      <AppCard style={styles.trustCard}>
+        <Text variant="titleLarge" style={styles.title}>Trust & availability come next</Text>
+        <Text style={styles.muted}>Your public profile has dedicated Credentials & Insurance and Availability sections. Publish the core profile first, then use Trust & Availability to upload evidence for BuildPair verification and show when you can take new work.</Text>
+        <View style={styles.trustPoints}>
+          <Text style={styles.trustPoint}>✓ Qualifications entered here are shown as trader-declared.</Text>
+          <Text style={styles.trustPoint}>✓ Verified badges only appear after BuildPair reviews supporting evidence.</Text>
+          <Text style={styles.trustPoint}>✓ Availability can be updated whenever your workload changes.</Text>
         </View>
-        <Button compact onPress={() => setBeforeAfterProjects((current) => current.filter((_, i) => i !== index))}>Remove</Button>
-      </View>)}
-    </AppCard> : null}
+      </AppCard>
+    </> : null}
 
     {step === 3 ? <>
-      <AppCard>
-        <Text variant="titleLarge" style={styles.title}>Profile preview</Text>
-        <View style={styles.previewHeader}>
-          <View style={styles.previewMark}><Text style={styles.previewMarkText}>{businessName.slice(0, 1).toUpperCase() || 'B'}</Text></View>
-          <View style={styles.flex}>
-            <Text variant="headlineSmall" style={styles.title}>{businessName || 'Your business'}</Text>
-            <Text style={styles.muted}>{tradeCategory || 'Primary trade'} · {postcode || 'Service area'} · within {radius} miles</Text>
-          </View>
-        </View>
-        <View style={styles.previewChips}>{tradeCategories.map((category) => <Chip key={category} compact>{category} · {serviceSelections[category]?.length ?? 0} services</Chip>)}</View>
-        <Text numberOfLines={5} style={styles.previewBio}>{bio || 'Your business bio will appear here.'}</Text>
-        <Text style={styles.muted}>{tradeCategories.length} trade categor{tradeCategories.length === 1 ? 'y' : 'ies'} · {selectedServiceCount} service{selectedServiceCount === 1 ? '' : 's'} · {photos.length} work photo{photos.length === 1 ? '' : 's'} · {beforeAfterProjects.length} before/after project{beforeAfterProjects.length === 1 ? '' : 's'}</Text>
-      </AppCard>
+      <TraderProfileDraftPreview
+        businessName={businessName}
+        tradeCategory={tradeCategory}
+        tradeCategories={tradeCategories}
+        serviceSelections={serviceSelections}
+        locationLabel={previewLocationLabel}
+        radiusMiles={Number(radius) || 15}
+        coverPhotoUrl={coverPhoto[0]}
+        profileImageUrl={profileImage[0]}
+        logoUrl={logo[0]}
+        bio={bio}
+        yearsExperience={Number(yearsExperience) || 0}
+        yearEstablished={yearEstablished ? Number(yearEstablished) : null}
+        photos={photos}
+        serviceAreas={serviceAreas}
+        qualifications={qualifications}
+        beforeAfterCount={beforeAfterProjects.length}
+      />
       <AppCard>
         <Text variant="titleLarge" style={styles.title}>Confirm & publish</Text>
+        <Text style={styles.muted}>This preview now follows the same layout as the live BuildPair storefront. Reviews, verified badges, membership status, sharing controls and live availability are added automatically from the platform rather than typed into the profile.</Text>
         <Text style={styles.muted}>Starter Free lets you complete and externally share this profile and browse BuildPair jobs. Starter profiles are hidden from BuildPair search and cannot offer on jobs until you choose Plus or Pro. There is no trial during beta testing.</Text>
-        {!baseLocationLocked ? <Text style={styles.muted}>Your base postcode will be locked when this profile is first published. This helps keep BuildPair’s marketplace genuinely local. If you later move or relocate the business, contact BuildPair support to request a change.</Text> : null}
+        {!baseLocationLocked ? <Text style={styles.muted}>Your base postcode will be locked when this profile is first published. BuildPair uses it to create the approximate service-area map and local job matching without exposing your exact address.</Text> : null}
         <Pressable accessibilityRole="checkbox" accessibilityLabel="Confirm profile information is accurate" accessibilityState={{ checked: certified }} onPress={() => setCertified((value) => !value)} style={styles.check}>
           <View style={[styles.checkBox, certified && styles.checkBoxSelected]}>{certified ? <Text style={styles.checkMark}>✓</Text> : null}</View>
           <Text style={styles.checkText}>I confirm that the information I have provided is accurate and that I hold any insurance or trade accreditation required for the work I offer.</Text>
@@ -487,11 +509,9 @@ const styles = StyleSheet.create({
   counter: { color: colors.warning, fontWeight: '800' },
   counterOk: { color: colors.success },
   projectRow: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  previewHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  previewMark: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  previewMarkText: { color: '#FFF', fontSize: 26, fontWeight: '900' },
-  previewChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  previewBio: { color: colors.text, lineHeight: 23 },
+  trustCard: { backgroundColor: colors.primarySoft, borderColor: '#F2D7C3' },
+  trustPoints: { gap: 7 },
+  trustPoint: { color: colors.charcoalSoft, lineHeight: 20, fontWeight: '700' },
   check: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 10 },
   checkBox: { width: 26, height: 26, borderRadius: 7, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   checkBoxSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
