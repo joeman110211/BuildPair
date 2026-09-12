@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Button, HelperText, Text } from 'react-native-paper';
@@ -8,7 +8,7 @@ import { LoadingScreen, Screen } from '@/components/Screen';
 import { TRADE_CATEGORIES } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { dashboardHref, parseAccountMode } from '@/lib/account-mode';
+import { dashboardHref, parseAccountMode, safeInternalReturnTo } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
 import type { CurrentUser, UserRole } from '@/types';
 
@@ -20,9 +20,10 @@ function scalar(value: string | string[] | undefined) {
 
 export default function ChooseRoleScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ mode?: string | string[]; trade?: string | string[] }>();
+  const params = useLocalSearchParams<{ mode?: string | string[]; trade?: string | string[]; returnTo?: string | string[] }>();
   const requestedMode = parseAccountMode(params.mode);
   const requestedTrade = TRADE_CATEGORIES.find((trade) => trade === scalar(params.trade));
+  const returnTo = safeInternalReturnTo(params.returnTo);
   const { getToken, isLoaded: authLoaded, isSignedIn } = useAuth();
   const { user, error: loadError, refresh } = useCurrentUser();
   const [role, setRole] = useState<UserRole | null>(requestedMode);
@@ -47,7 +48,9 @@ export default function ChooseRoleScreen() {
           ? Boolean(user?.customerEnabled)
           : Boolean(user?.traderEnabled);
 
-      if (selectedRole === 'trader' && !wasEnabled) {
+      if (selectedRole === 'customer' && returnTo) {
+        router.replace(returnTo as Href);
+      } else if (selectedRole === 'trader' && !wasEnabled) {
         router.replace(requestedTrade ? `/trader/onboarding?trade=${encodeURIComponent(requestedTrade)}` : '/trader/onboarding');
       } else {
         router.replace(dashboardHref(selectedRole));
