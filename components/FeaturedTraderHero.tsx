@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ImageBackground, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Text } from 'react-native-paper';
+import { LatestJobsShowcase } from '@/components/LatestJobsShowcase';
 import { colors } from '@/constants/theme';
 import { apiFetch } from '@/lib/api';
 
@@ -106,14 +107,17 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
   }
 
   if (!traders.length) {
-    return <ImageBackground source={{ uri: FALLBACK_IMAGE }} style={[styles.emptyState, wide && styles.wrapperWide]} imageStyle={styles.emptyImage}>
-      <View style={styles.emptyShade} />
-      <View style={styles.emptyCopy}>
-        <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
-        <Text style={styles.emptyTitle}>Real profiles. Real work. No made-up directory filler.</Text>
-        <Text style={styles.emptyText}>BuildPair trade profiles will appear here automatically as they become available.</Text>
-      </View>
-    </ImageBackground>;
+    return <View style={[styles.wrapper, wide && styles.wrapperWide]}>
+      <ImageBackground source={{ uri: FALLBACK_IMAGE }} style={[styles.emptyState, wide && styles.wrapperWide]} imageStyle={styles.emptyImage}>
+        <View style={styles.emptyShade} />
+        <View style={styles.emptyCopy}>
+          <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
+          <Text style={styles.emptyTitle}>Real profiles. Real work. No made-up directory filler.</Text>
+          <Text style={styles.emptyText}>BuildPair trade profiles will appear here automatically as they become available.</Text>
+        </View>
+      </ImageBackground>
+      <LatestJobsShowcase wide={wide} />
+    </View>;
   }
 
   const updatePage = (offsetX: number) => {
@@ -153,6 +157,8 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
         {pages.map((_, index) => <View key={`dot-${index}`} style={[styles.dot, index === visibleActivePage && styles.dotActive]} />)}
       </View>
     </View>
+
+    <LatestJobsShowcase wide={wide} />
   </View>;
 }
 
