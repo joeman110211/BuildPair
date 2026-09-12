@@ -1,6 +1,6 @@
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ImageBackground, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { colors } from '@/constants/theme';
@@ -96,11 +96,8 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
     return () => { active = false; };
   }, []);
 
-  const pages = useMemo(() => chunk(traders, pageSize), [traders, pageSize]);
-
-  useEffect(() => {
-    if (activePage >= pages.length) setActivePage(0);
-  }, [activePage, pages.length]);
+  const pages = chunk(traders, pageSize);
+  const visibleActivePage = Math.min(activePage, Math.max(0, pages.length - 1));
 
   if (!loaded) {
     return <View style={styles.loadingCard}><Text style={styles.loadingLabel}>Loading featured tradespeople…</Text></View>;
@@ -144,7 +141,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
     <View style={styles.carouselFooter}>
       <Text style={styles.swipeHint}>{wide ? 'Swipe or scroll to explore profiles' : 'Swipe to see more tradespeople'}</Text>
       <View style={styles.dots}>
-        {pages.map((_, index) => <View key={`dot-${index}`} style={[styles.dot, index === activePage && styles.dotActive]} />)}
+        {pages.map((_, index) => <View key={`dot-${index}`} style={[styles.dot, index === visibleActivePage && styles.dotActive]} />)}
       </View>
     </View>
   </View>;
