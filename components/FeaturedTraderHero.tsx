@@ -158,7 +158,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
 
 const styles = StyleSheet.create({
   wrapper: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', gap: 12, overflow: 'hidden' },
-  wrapperWide: { width: '52%', maxWidth: 640, minWidth: 0, flexShrink: 0, alignSelf: 'stretch' },
+  wrapperWide: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center' },
   carousel: { width: '100%', maxWidth: 1140, minWidth: 0 },
   carouselContent: { alignItems: 'stretch' },
   page: { flexDirection: 'row', gap: 10, paddingHorizontal: 1 },
