@@ -28,20 +28,18 @@ ALTER TABLE jobs ADD CONSTRAINT jobs_external_payment_requires_both_parties
 CREATE OR REPLACE FUNCTION require_completed_confirmed_site_visit_before_quote()
 RETURNS trigger
 LANGUAGE plpgsql
-AS $$
-BEGIN
+AS 'BEGIN
   IF EXISTS (
     SELECT 1
     FROM job_site_visits v
     WHERE v.job_id = NEW.job_id
       AND v.trader_id = NEW.trader_id
-      AND v.status = 'confirmed'
+      AND v.status = ''confirmed''
   ) THEN
-    RAISE EXCEPTION 'Mark the confirmed site visit completed in BuildPair before sending the post-visit quote.';
+    RAISE EXCEPTION ''Mark the confirmed site visit completed in BuildPair before sending the post-visit quote.'';
   END IF;
   RETURN NEW;
-END;
-$$;
+END;';
 
 DROP TRIGGER IF EXISTS quotes_require_completed_site_visit ON quotes;
 CREATE TRIGGER quotes_require_completed_site_visit
