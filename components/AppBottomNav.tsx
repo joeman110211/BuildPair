@@ -10,7 +10,7 @@ import type { UserRole } from '@/types';
 type NavItem = { label: string; href: Href; matches: string[] };
 
 const traderItems: NavItem[] = [
-  { label: 'Home', href: '/trader/dashboard', matches: ['/trader/dashboard'] },
+  { label: 'Home', href: '/trader', matches: ['/trader/dashboard'] },
   { label: 'Find work', href: '/trader/job-board', matches: ['/trader/job-board'] },
   { label: 'Jobs', href: '/trader/my-jobs', matches: ['/trader/my-jobs', '/trader/jobs/', '/trader/quotes/', '/trader/invoices', '/trader/visits/'] },
   { label: 'Messages', href: '/trader/messages', matches: ['/trader/messages'] },
@@ -35,7 +35,9 @@ export function AppBottomNav({ role }: { role: UserRole }) {
   const items = role === 'trader' ? traderItems : customerItems;
   return <View style={styles.wrap} accessibilityLabel={`${role === 'trader' ? 'Tradesperson' : 'Homeowner'} navigation`}>
     {items.map((item) => {
-      const active = item.matches.some((match) => pathname.includes(match));
+      const active = role === 'trader' && item.label === 'Home'
+        ? pathname === '/trader' || pathname === '/trader/dashboard'
+        : item.matches.some((match) => pathname.includes(match));
       const showUnread = item.label === 'Messages' && unreadMessages > 0;
       return <Pressable
         key={item.label}
