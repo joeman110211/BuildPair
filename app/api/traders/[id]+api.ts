@@ -58,6 +58,35 @@ export async function GET(request: Request, { id }: { id: string }) {
 
     const paidProfile = profile.subscriptionTier !== 'free' && profile.isSubscriptionActive;
     const tradeCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
+
+    let viewerId: string | null = null;
+    try {
+      viewerId = await authenticatedUserId(request);
+      await ensureDbUser(viewerId);
+    } catch {
+      viewerId = null;
+    }
+    const viewerIsOwner = viewerId === profile.userId;
+
+    if (!paidProfile && !viewerIsOwner) {
+      return Response.json({
+        id: profile.id,
+        userId: profile.userId,
+        businessName: profile.businessName,
+        tradeCategory: profile.tradeCategory,
+        tradeCategories,
+        subscriptionTier: profile.subscriptionTier,
+        isSubscriptionActive: false,
+        isPreview: false,
+        publicLocked: true,
+        viewerIsOwner: false,
+        shareOnly: true,
+        canRequestQuote: false,
+        contact: null,
+        contactLocked: true,
+      });
+    }
+
     const serviceSelections = normaliseServiceSelections(
       tradeCategories,
       profile.serviceSelections as Record<string, string[]> | null,
@@ -125,31 +154,26 @@ export async function GET(request: Request, { id }: { id: string }) {
       `,
     ]);
 
-    let viewerId: string | null = null;
     let contact: { email: string | null; phone: string | null } | null = null;
     let savedByViewer = false;
-    try {
-      viewerId = await authenticatedUserId(request);
-      await ensureDbUser(viewerId);
-      if (paidProfile) {
-        const mayViewContact = viewerId === profile.userId || Boolean((await sqlClient`
-          SELECT 1
-          FROM jobs j
-          JOIN quotes q ON q.id = j.accepted_quote_id
-          WHERE j.customer_id = ${viewerId}
-            AND q.trader_id = ${profile.userId}
-          LIMIT 1
-        `).length);
-        if (mayViewContact) {
-          const [owner] = await db.select({ email: users.email, phone: users.phone }).from(users).where(eq(users.id, profile.userId)).limit(1);
-          contact = owner ?? null;
-        }
-        const saved = await sqlClient`SELECT 1 FROM saved_traders WHERE customer_id = ${viewerId} AND trader_id = ${profile.userId} LIMIT 1`;
-        savedByViewer = saved.length > 0;
+    if (viewerId && paidProfile) {
+      const mayViewContact = viewerIsOwner || Boolean((await sqlClient`
+        SELECT 1
+        FROM jobs j
+        JOIN quotes q ON q.id = j.accepted_quote_id
+        WHERE j.customer_id = ${viewerId}
+          AND q.trader_id = ${profile.userId}
+        LIMIT 1
+      `).length);
+      if (mayViewContact) {
+        const [owner] = await db.select({ email: users.email, phone: users.phone }).from(users).where(eq(users.id, profile.userId)).limit(1);
+        contact = owner ?? null;
       }
-    } catch { /* guest or unrelated viewer: deliberately no contact details or saved state */ }
+      const saved = await sqlClient`SELECT 1 FROM saved_traders WHERE customer_id = ${viewerId} AND trader_id = ${profile.userId} LIMIT 1`;
+      savedByViewer = saved.length > 0;
+    }
 
-    if (viewerId !== profile.userId) {
+    if (!viewerIsOwner) {
       void sqlClient`
         INSERT INTO trader_profile_view_daily(trader_id, view_day, view_count)
         VALUES (${profile.userId}, current_date, 1)
@@ -164,9 +188,11 @@ export async function GET(request: Request, { id }: { id: string }) {
       longitude: publicLongitude,
       tradeCategories,
       serviceSelections,
-      externalLinks: paidProfile ? profile.externalLinks : {},
+      externalLinks: paidProfile || viewerIsOwner ? profile.externalLinks : {},
       isSubscriptionActive: paidProfile,
       isPreview: false,
+      publicLocked: false,
+      viewerIsOwner,
       shareOnly: !paidProfile,
       canRequestQuote: paidProfile,
       ...defaultShowcase,
