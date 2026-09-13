@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { buildPayCustomerFee } from '@/lib/buildpay-fees';
+import { buildPayCustomerFee, plannedBuildPayChargeCount } from '@/lib/buildpay-fees';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
@@ -17,6 +17,8 @@ type SummaryRow = {
   laborCost: number;
 };
 
+type StageRow = { kind: 'materials' | 'deposit' | 'stage' | 'final' };
+
 export async function GET(request: Request) {
   try {
     const userId = await authenticatedUserId(request);
@@ -33,8 +35,8 @@ export async function GET(request: Request) {
     ` as unknown as SummaryRow[];
     const row = rows[0];
     if (!row || (row.customerId !== userId && row.traderId !== userId)) throw new HttpError(404, 'BuildPay summary not found');
-    const stageRows = await getSql()`SELECT count(*)::int AS count FROM job_milestones WHERE job_id = ${jobId}` as unknown as { count: number }[];
-    const plannedChargeCount = Math.max(1, stageRows[0]?.count ?? 1);
+    const stageRows = await getSql()`SELECT kind FROM job_milestones WHERE job_id = ${jobId} ORDER BY sort_order ASC` as unknown as StageRow[];
+    const plannedChargeCount = plannedBuildPayChargeCount(stageRows);
     const preview = buildPayCustomerFee({ contractAmount: row.totalAmount, laborServiceAmount: row.laborCost, plannedChargeCount });
     const customerFee = row.paymentMode === 'buildpair' ? row.buildPayCustomerFeeTotal : preview.customerFee;
     return Response.json({
