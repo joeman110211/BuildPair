@@ -59,17 +59,31 @@ export async function GET() {
              tp.is_subscription_active AS "isSubscriptionActive",
              tp.created_at AS "createdAt",
              coalesce((
-               SELECT avg(r.rating)::float
-               FROM reviews r
-               WHERE r.trader_id = tp.user_id
-                 AND r.verified_completion = true
-                 AND r.created_at < ${weekStart.toISOString()}::timestamptz
+               SELECT avg(review_data.rating)::float
+               FROM (
+                 SELECT r.rating
+                 FROM reviews r
+                 WHERE r.trader_id = tp.user_id
+                   AND r.verified_completion = true
+                   AND r.created_at < ${weekStart.toISOString()}::timestamptz
+                 UNION ALL
+                 SELECT er.rating
+                 FROM external_reviews er
+                 WHERE er.trader_id = tp.user_id
+               ) review_data
              ), 0)::float AS "averageRating",
              (SELECT count(*)::int
-                FROM reviews r
-               WHERE r.trader_id = tp.user_id
-                 AND r.verified_completion = true
-                 AND r.created_at < ${weekStart.toISOString()}::timestamptz) AS "reviewCount",
+                FROM (
+                  SELECT r.id
+                  FROM reviews r
+                  WHERE r.trader_id = tp.user_id
+                    AND r.verified_completion = true
+                    AND r.created_at < ${weekStart.toISOString()}::timestamptz
+                  UNION ALL
+                  SELECT er.id
+                  FROM external_reviews er
+                  WHERE er.trader_id = tp.user_id
+                ) review_data) AS "reviewCount",
              (SELECT count(DISTINCT j.id)::int
                 FROM jobs j
                 JOIN quotes q ON q.id = j.accepted_quote_id
