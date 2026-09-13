@@ -91,11 +91,11 @@ export default function TraderDashboard() {
       <View style={styles.row}>
         <View style={styles.flex}>
           <Text variant="titleMedium" style={styles.cardTitle}>Profile & job matching</Text>
-          <Text style={styles.muted}>Marketplace matching uses {serviceArea} and your saved {profile.radiusMiles || 0}-mile maximum radius. Change these details if the jobs shown do not match where you actually work.</Text>
+          <Text style={styles.muted}>Marketplace matching uses {serviceArea} and your saved {profile.radiusMiles || 0}-mile maximum radius. Manage your profile to update photos, business details, services and working area, or open the public version exactly as homeowners see it.</Text>
         </View>
         <Chip icon={paidActive ? 'eye-outline' : 'eye-off-outline'}>{paidActive ? 'Search visible' : 'Search hidden'}</Chip>
       </View>
-      <Link href="/trader/onboarding" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Review profile & service area</Button></Link>
+      <Link href="/trader/profile" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Manage profile & service area</Button></Link>
     </AppCard>
 
     <View style={styles.stats}>
@@ -110,7 +110,7 @@ export default function TraderDashboard() {
       <Link href="/trader/job-board" asChild><Button mode="contained" contentStyle={styles.actionButton}>Find jobs</Button></Link>
       <Link href="/trader/my-jobs" asChild><Button mode="outlined" contentStyle={styles.actionButton}>My active jobs</Button></Link>
       <Link href="/trader/invoices/new" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Create invoice</Button></Link>
-      <Link href="/trader/onboarding" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Edit profile</Button></Link>
+      <Link href="/trader/profile" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Manage profile</Button></Link>
       <Button mode="outlined" contentStyle={styles.actionButton} onPress={() => router.push(`/(public)/traders/${profile.id}` as Href)}>View public profile</Button>
     </View>
 
