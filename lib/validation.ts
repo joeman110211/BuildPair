@@ -29,7 +29,7 @@ const serviceSelectionsSchema = z.record(
 
 export const traderProfileSchema = z.object({
   businessName: z.string().trim().min(2, 'Enter your business or trading name').max(100),
-  tradeCategories: z.array(z.enum(TRADE_CATEGORIES)).min(1, 'Select at least one trade category').max(6, 'A trader profile can contain no more than 6 trade categories').optional(),
+  tradeCategories: z.array(z.enum(TRADE_CATEGORIES)).min(1, 'Select at least one trade category').max(TRADE_CATEGORIES.length, `A trader profile can contain no more than ${TRADE_CATEGORIES.length} trade categories`).optional(),
   serviceSelections: serviceSelectionsSchema,
   tradeCategory: z.enum(TRADE_CATEGORIES).optional(),
   subSkills: z.array(z.string().trim().min(1).max(80)).max(100).optional(),
