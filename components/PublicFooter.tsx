@@ -30,6 +30,7 @@ const linkGroups = [
     title: 'BuildPair',
     links: [
       ['Membership', '/(public)/pricing'],
+      ['BuildPair Rewards', '/(public)/rewards'],
       ['How payments work', '/(public)/payments'],
       ['About us', '/(public)/about'],
       ['Download app', '/(public)/download'],
@@ -51,6 +52,17 @@ const linkGroups = [
 export function PublicFooter() {
   return <View style={styles.footer}>
     <View style={styles.accentLine} />
+    <View style={styles.flowStrip}>
+      <View style={styles.flowCopy}>
+        <Text style={styles.flowEyebrow}>A FLEXIBLE JOB FLOW</Text>
+        <Text style={styles.flowTitle}>Visit in person. Compare structured quotes. Choose how you pay.</Text>
+        <Text style={styles.flowText}>A tradesperson can visit before quoting. Homeowners can compare active quotes and stop new ones when they have enough. After one quote is accepted, use BuildPay for protected staged payments or, if both sides explicitly agree, arrange payment outside BuildPair while keeping the project record.</Text>
+      </View>
+      <View style={styles.flowLinks}>
+        <Link href="/(public)/how-it-works" asChild><Pressable style={styles.flowButton}><Text style={styles.flowButtonText}>How it works</Text></Pressable></Link>
+        <Link href="/(public)/rewards" asChild><Pressable style={styles.flowButtonAlt}><Text style={styles.flowButtonAltText}>BuildPair Rewards</Text></Pressable></Link>
+      </View>
+    </View>
     <View style={styles.inner}>
       <View style={styles.brandBlock}>
         <Link href="/" asChild>
@@ -60,7 +72,7 @@ export function PublicFooter() {
         </Link>
         <Text style={styles.tagline}>Find the trade. Manage the job. Keep the record.</Text>
         <Text style={styles.description}>A UK marketplace and project platform connecting homeowners with local tradespeople. Search, quotes, messages, agreed changes, payment stages and project history stay connected.</Text>
-        <Text style={styles.description}>Supported BuildPair payments are processed through Stripe. Users can also arrange payment privately, in which case BuildPair cannot process or manage that payment.</Text>
+        <Text style={styles.description}>Supported BuildPay payments are processed through Stripe. Users can also mutually agree to arrange payment privately, in which case BuildPair cannot process, hold, protect, refund or recover that payment.</Text>
         <View style={styles.contactPill}><Text style={styles.contactText}>info@buildpair.co.uk</Text></View>
       </View>
       {linkGroups.map((group) => <View key={group.title} style={styles.group}>
@@ -77,7 +89,17 @@ export function PublicFooter() {
 
 const styles = StyleSheet.create({
   footer: { marginTop: spacing.xxxl, backgroundColor: colors.charcoal, paddingHorizontal: spacing.xl, paddingTop: 0, paddingBottom: spacing.xxl },
-  accentLine: { height: 4, backgroundColor: colors.primary, marginHorizontal: -spacing.xl, marginBottom: spacing.xxxl },
+  accentLine: { height: 4, backgroundColor: colors.primary, marginHorizontal: -spacing.xl, marginBottom: spacing.xxl },
+  flowStrip: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', backgroundColor: '#27313A', borderWidth: 1, borderColor: '#49535C', borderRadius: radii.lg, padding: spacing.xl, marginBottom: spacing.xxxl, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: spacing.lg },
+  flowCopy: { flex: 1, minWidth: 240, maxWidth: 760, gap: spacing.xs },
+  flowEyebrow: { color: colors.secondary, fontSize: 11, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
+  flowTitle: { color: '#FFFFFF', fontSize: 20, lineHeight: 26, fontWeight: '900' },
+  flowText: { color: '#D4D9DD', lineHeight: 21, fontSize: 13 },
+  flowLinks: { minWidth: 190, gap: spacing.sm },
+  flowButton: { borderRadius: radii.pill, backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, alignItems: 'center' },
+  flowButtonText: { color: '#FFFFFF', fontWeight: '900' },
+  flowButtonAlt: { borderRadius: radii.pill, borderWidth: 1, borderColor: '#FFFFFF', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, alignItems: 'center' },
+  flowButtonAltText: { color: '#FFFFFF', fontWeight: '900' },
   inner: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xxxl, justifyContent: 'space-between' },
   brandBlock: { flex: 2, minWidth: 260, maxWidth: 430, gap: spacing.sm },
   logoCard: { alignSelf: 'flex-start', backgroundColor: '#FFFFFF', borderRadius: radii.md, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, overflow: 'hidden' },

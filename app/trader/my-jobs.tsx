@@ -58,6 +58,7 @@ export default function TraderMyJobs() {
         <View style={styles.actions}>
           {tab === 'quoted' && ownQuote ? <Button mode="outlined" onPress={() => router.push({ pathname: '/trader/quotes/new', params: { jobId: job.id, title: job.title } })}>View / Update Quote</Button> : null}
           {tab !== 'quoted' ? <Button mode="outlined" icon="timeline-clock-outline" onPress={() => router.push(`/trader/jobs/${job.id}` as Href)}>Timeline & Variations</Button> : null}
+          {tab === 'active' && job.paymentMode !== 'external' ? <Button mode="outlined" icon="bank-transfer-out" onPress={() => router.push(`/trader/jobs/${job.id}/payment-arrangement` as Href)}>Payment arrangement</Button> : null}
           {tab === 'active' ? <Button mode="contained" icon="check-circle-outline" onPress={() => void complete(job.id)}>Mark Work Complete</Button> : null}
           <Button mode="text" onPress={() => router.push('/trader/messages')}>Messages</Button>
         </View>

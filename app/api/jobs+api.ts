@@ -3,6 +3,7 @@ import { getDb } from '@/db/client';
 import { jobs, traderProfiles } from '@/db/schema';
 import { addJobEvent, createNotification } from '@/lib/notifications';
 import { InvalidPostcodeError, lookupPostcode, outwardCode } from '@/lib/postcode';
+import { MAX_ACTIVE_QUOTES_PER_JOB } from '@/lib/quote-marketplace';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
@@ -54,11 +55,18 @@ export async function GET(request: Request) {
             )))
           ) <= ${profile.radiusMiles}`
         : sql`false`;
+      const intakeOpen = sql`exists (
+        select 1 from jobs quote_job
+        where quote_job.id = ${jobs.id}
+          and quote_job.quote_intake_closed_at is null
+          and (select count(*) from quotes active_quote where active_quote.job_id = quote_job.id and active_quote.status = 'pending') < ${MAX_ACTIVE_QUOTES_PER_JOB}
+      )`;
       const openMarketplace = and(
         inArray(jobs.status, ['open', 'quoted']),
         sql`${jobs.targetTraderId} is null`,
         inArray(jobs.category, acceptedCategories),
         withinRadius,
+        intakeOpen,
       );
 
       const access = or(acceptedWork, directWork, openMarketplace)!;

@@ -79,16 +79,19 @@ export async function POST(request: Request) {
     await getSql()`
       UPDATE jobs
       SET payment_mode = 'buildpair', buildpay_requested_by = 'customer', buildpay_fee_mode = 'customer_pays',
-          buildpay_customer_fee_total = ${fee.customerFee}, buildpay_fee_terms_version = ${BUILDPAY_FEE_TERMS_VERSION}, updated_at = now()
+          buildpay_customer_fee_total = ${fee.customerFee}, buildpay_fee_terms_version = ${BUILDPAY_FEE_TERMS_VERSION},
+          external_payment_proposed_by = NULL, external_payment_proposed_at = NULL,
+          external_payment_customer_agreed_at = NULL, external_payment_trader_agreed_at = NULL,
+          updated_at = now()
       WHERE id = ${input.jobId}
     `;
-    await addJobEvent(input.jobId, customer.id, 'buildpay_selected', 'BuildPay selected by homeowner', `The homeowner chose optional BuildPay protection after accepting the contract. The ${formatPence(fee.customerFee)} BuildPay service fee was shown separately, making the all-in BuildPay total ${formatPence(fee.customerTotal)}.`, {
+    await addJobEvent(input.jobId, customer.id, 'buildpay_selected', 'BuildPay selected by homeowner', `The homeowner chose optional BuildPay protection after accepting the contract. The ${formatPence(fee.customerFee)} BuildPay service fee was shown separately, making the all-in BuildPay total ${formatPence(fee.customerTotal)}. Any pending proposal to arrange payment outside BuildPair was cleared.`, {
       buildPayRequestedBy: 'customer', buildPayFeeMode: 'customer_pays', buildPayCustomerFeeTotal: fee.customerFee,
       contractAmount: row.totalAmount, allInTotal: fee.customerTotal, feeTermsVersion: BUILDPAY_FEE_TERMS_VERSION,
       plannedChargeCount,
       homeownerAcknowledgedPaymentTerms: true, homeownerAcknowledgedBuildPayFee: true,
     });
-    await createNotification(row.traderId, { type: 'payment_mode_selected', title: 'Homeowner selected BuildPay', body: `${row.title}: the homeowner requested BuildPay and is paying the disclosed BuildPay service fee. Your accepted contract amount is not reduced by that fee.`, href: `/trader/jobs/${input.jobId}`, email: true });
+    await createNotification(row.traderId, { type: 'payment_mode_selected', title: 'Homeowner selected BuildPay', body: `${row.title}: the homeowner requested BuildPay and is paying the disclosed BuildPay service fee. Your accepted contract amount is not reduced by that fee. Any pending direct-payment proposal is no longer active.`, href: `/trader/jobs/${input.jobId}`, email: true });
     return Response.json({ paymentMode: 'buildpair', buildPayRequestedBy: 'customer', buildPayFeeMode: 'customer_pays', buildPayCustomerFeeTotal: fee.customerFee, allInTotal: fee.customerTotal });
   } catch (error) { return jsonError(error); }
 }

@@ -15,10 +15,10 @@ const POPULAR_TRADES = ['Tiling', 'Plumbing', 'Electrical', 'Building & Extensio
 const HERO_BENEFITS = ['Genuinely local trade matching', 'Compare clear quotes', 'Keep decisions recorded', 'Manage the whole project'] as const;
 
 const FAQS = [
-  ['What if a tradesperson needs to visit before quoting?', 'They can arrange a site visit through the BuildPair job. The formal quote and proposed payment stages can then be sent through the same project record.'],
-  ['How do BuildPair payments work?', 'After a quote is accepted, the homeowner can choose BuildPair payments. Upfront materials payments and deposits transfer when paid. Progress and final stages transfer only after the tradesperson requests release and the homeowner approves it.'],
+  ['What if a tradesperson needs to visit before quoting?', 'They can arrange a site visit through the BuildPair job. Once the confirmed visit has happened, it is marked complete and the formal structured quote can be sent through the same project record.'],
+  ['How do BuildPay payments work?', 'For a staged job that starts with materials, the opening card payment can fund the quoted materials and the first protected work stage together. After the tradesperson acknowledges the payment, only the materials allocation is released. Protected work stages transfer later only after their recorded completion point is reached and release is approved.'],
   ['How does BuildPair keep jobs local?', 'Tradespeople set a genuine service base and working radius. Open marketplace jobs are matched inside that area, so homeowners are not inviting quotes from businesses claiming to be local from hundreds of miles away.'],
-  ['Can we arrange payment privately?', 'Yes. The quote, messages and project record can stay in BuildPair, but BuildPair cannot process, pause, refund or recover money paid outside its payment flow.'],
+  ['Can we arrange payment privately?', 'Yes. Either side can propose paying outside BuildPair and the other person must explicitly agree before the job switches to direct payment. The quote, messages and project record can stay in BuildPair, but BuildPair cannot process, hold, protect, refund or recover money paid outside its payment flow.'],
   ['What memberships are available to tradespeople?', 'Starter is £0/month, BuildPair Plus is £19.99/month and BuildPair Pro is £29.99/month. Paid plans add searchable marketplace access, more quoting capacity and additional business tools.'],
 ] as const;
 
@@ -90,13 +90,13 @@ export default function LandingPageRefined() {
           <View style={[styles.audienceCard, styles.homeownerCard]}>
             <Text style={styles.audienceEyebrow}>FOR HOMEOWNERS</Text>
             <Text variant="headlineSmall" style={styles.cardTitle}>Find the right person and stay in control of the job.</Text>
-            <Text style={styles.cardText}>Describe what needs doing, compare suitable trades and structured quotes, then keep messages, changes and payment stages attached to the project.</Text>
+            <Text style={styles.cardText}>Describe what needs doing, compare suitable trades and structured quotes, stop new quotes when you have enough, then keep messages, changes and payment stages attached to the project.</Text>
             <View style={styles.audienceActions}><Button mode="contained" onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('customer', 'homepage-audience')} asChild><Button mode="text">Join homeowner list</Button></Link></View>
           </View>
           <View style={[styles.audienceCard, styles.tradeAudienceCard]}>
             <Text style={[styles.audienceEyebrow, styles.tradeAudienceEyebrow]}>FOR TRADESPEOPLE</Text>
             <Text variant="headlineSmall" style={styles.cardTitle}>Present your business well, quote clearly and manage work in one place.</Text>
-            <Text style={styles.cardText}>Build your profile, find relevant local opportunities, respond with structured quotes and keep the project record organised after the work is won.</Text>
+            <Text style={styles.cardText}>Build your profile, find relevant local opportunities, arrange a site visit where needed, respond with structured quotes and keep the project record organised after the work is won.</Text>
             <View style={styles.audienceActions}><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined">See trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="text">View membership</Button></Link></View>
           </View>
         </View>
@@ -108,9 +108,9 @@ export default function LandingPageRefined() {
       <View style={styles.routeGrid}>
         {[
           ['01', 'Describe the job', 'Search directly or explain the problem in ordinary language. Add useful details and photos where they help.'],
-          ['02', 'Find and compare', 'Browse suitable local tradespeople, request quotes directly or post the job to the marketplace.'],
-          ['03', 'Visit, quote and agree', 'The tradesperson can quote from the information supplied or arrange a visit first. Scope, exclusions, timing and payment stages are recorded clearly.'],
-          ['04', 'Run the project', 'Messages, agreed changes, payment stages, timeline events and completion stay attached to the same job.'],
+          ['02', 'Find and compare', 'Browse suitable local tradespeople, request quotes directly or post the job to the marketplace. Compare active structured quotes and pause new responses when you have enough.'],
+          ['03', 'Visit, quote and agree', 'The tradesperson can quote from the information supplied or arrange a site visit first. After a confirmed visit is completed, scope, exclusions, timing and payment stages are recorded in the structured quote.'],
+          ['04', 'Run the project', 'After one quote is accepted, use BuildPay or mutually agree direct payment. Messages, agreed changes, payment records, timeline events and completion stay attached to the same job.'],
         ].map(([number, title, copy]) => <View key={number} style={styles.routeCard}><Text style={styles.routeNumber}>{number}</Text><Text variant="titleLarge" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
       </View>
       <Link href="/(public)/how-it-works" asChild><Button mode="text">See the full process →</Button></Link>
@@ -130,20 +130,20 @@ export default function LandingPageRefined() {
 
     <View style={styles.paymentBand}>
       <View style={styles.section}>
-        <SectionHeading eyebrow="Payments" title="Choose the payment route that suits the job." body="Use BuildPair payments for recorded stages and release decisions, or arrange payment privately. The project can stay organised either way, but BuildPair can only manage payments made through its own payment flow." />
+        <SectionHeading eyebrow="Payments" title="Choose the payment route that suits the job." body="Use BuildPay for supported protected stages and recorded release decisions, or mutually agree to arrange payment privately. The project can stay organised either way, but BuildPair can only manage payments made through BuildPay." />
         <View style={styles.paymentGrid}>
           <View style={[styles.paymentCard, styles.protectedCard]}>
-            <Chip icon="credit-card-check-outline" style={styles.cardChip}>BuildPair payments</Chip>
-            <Text variant="titleLarge" style={styles.cardTitle}>Payment stages follow the accepted quote.</Text>
-            <Text style={styles.cardText}>Upfront materials payments and deposits transfer when paid. Progress and final stages transfer only after release is requested and approved.</Text>
+            <Chip icon="credit-card-check-outline" style={styles.cardChip}>BuildPay</Chip>
+            <Text variant="titleLarge" style={styles.cardTitle}>Protected stages follow the accepted quote.</Text>
+            <Text style={styles.cardText}>When a staged schedule begins with materials, the opening payment can fund the materials and first protected work stage together. Only the materials allocation releases after the tradesperson acknowledges it; protected work stages release later after their agreed completion point and approval.</Text>
           </View>
           <View style={[styles.paymentCard, styles.privateCard]}>
             <Chip icon="account-arrow-right-outline" style={styles.cardChip}>Private payment arrangement</Chip>
-            <Text variant="titleLarge" style={styles.cardTitle}>Pay directly if both sides prefer.</Text>
-            <Text style={styles.cardText}>The project record can remain in BuildPair, but BuildPair cannot process, pause, refund or recover money paid privately.</Text>
+            <Text variant="titleLarge" style={styles.cardTitle}>Pay directly if both sides agree.</Text>
+            <Text style={styles.cardText}>Either side can propose payment outside BuildPair and the other must confirm. The project record can remain in BuildPair, but BuildPair cannot process, hold, protect, pause, refund or recover money paid privately.</Text>
           </View>
         </View>
-        <Link href="/(public)/payments" asChild><Button mode="outlined">How BuildPair payments work</Button></Link>
+        <Link href="/(public)/payments" asChild><Button mode="outlined">How BuildPay works</Button></Link>
       </View>
     </View>
 
@@ -188,7 +188,7 @@ export default function LandingPageRefined() {
 
     <View style={styles.section}>
       <View style={styles.finalCta}>
-        <View style={styles.finalCopy}><Text style={styles.finalEyebrow}>BUILDPAIR UK</Text><Text variant="headlineSmall" style={styles.finalTitle}>Find the trade. Agree the job. Keep everything connected.</Text><Text style={styles.finalText}>Search, quote, message, manage changes, handle payment stages and complete the project in one place.</Text></View>
+        <View style={styles.finalCopy}><Text style={styles.finalEyebrow}>BUILDPAIR UK</Text><Text variant="headlineSmall" style={styles.finalTitle}>Find the trade. Agree the job. Keep everything connected.</Text><Text style={styles.finalText}>Search, compare structured quotes, message, manage changes, choose the payment route and complete the project in one place.</Text></View>
         <View style={styles.finalButtons}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref(null, 'homepage-final')} asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.finalOutline}>Join launch list</Button></Link></View>
       </View>
     </View>

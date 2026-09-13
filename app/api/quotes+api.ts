@@ -4,6 +4,7 @@ import { jobs, quotes, traderProfiles } from '@/db/schema';
 import { buildPayCustomerFee, buildPayFeeModeForRequest, plannedBuildPayChargeCount, type BuildPayFeeMode } from '@/lib/buildpay-fees';
 import { addJobEvent, createNotification } from '@/lib/notifications';
 import { normalizeMaterialsFirstSchedule, paymentScheduleSchema, type PaymentStagePlan, validatePaymentSchedule } from '@/lib/payment-plan';
+import { canAcceptNewQuote } from '@/lib/quote-marketplace';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
@@ -75,6 +76,32 @@ export async function POST(request: Request) {
     if (!job || !['open', 'quoted'].includes(job.status)) throw new HttpError(409, 'This job is not open for quotes');
     if (job.targetTraderId && job.targetTraderId !== trader.id) throw new HttpError(403, 'This direct request belongs to another tradesperson');
     if (!hasActiveLeadAccess(profile)) throw new HttpError(402, 'BuildPair Plus or Pro is required to send quotes and use BuildPair messaging');
+
+    const intakeRows = await getSql()`
+      SELECT j.quote_intake_closed_at AS "quoteIntakeClosedAt",
+             count(q.id) FILTER (WHERE q.status = 'pending')::int AS "activeQuoteCount",
+             bool_or(q.trader_id = ${trader.id} AND q.status = 'pending') AS "traderAlreadyQuoted"
+      FROM jobs j
+      LEFT JOIN quotes q ON q.job_id = j.id
+      WHERE j.id = ${payload.jobId}
+      GROUP BY j.id
+      LIMIT 1
+    ` as unknown as { quoteIntakeClosedAt: string | null; activeQuoteCount: number; traderAlreadyQuoted: boolean | null }[];
+    const intake = intakeRows[0];
+    if (!intake || !canAcceptNewQuote({ intakeClosedAt: intake.quoteIntakeClosedAt, activeQuoteCount: intake.activeQuoteCount, traderAlreadyQuoted: Boolean(intake.traderAlreadyQuoted) })) {
+      throw new HttpError(409, 'The homeowner has enough quotes to compare and is not accepting additional quotes right now.');
+    }
+
+    const visitRows = await getSql()`
+      SELECT status
+      FROM job_site_visits
+      WHERE job_id = ${payload.jobId} AND trader_id = ${trader.id}
+      ORDER BY updated_at DESC, created_at DESC
+      LIMIT 1
+    ` as unknown as { status: string }[];
+    if (visitRows[0]?.status === 'confirmed') {
+      throw new HttpError(409, 'Mark the confirmed site visit completed in BuildPair before sending the post-visit quote.');
+    }
 
     if (!job.targetTraderId) {
       const listedCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
