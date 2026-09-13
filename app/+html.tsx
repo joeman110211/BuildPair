@@ -1,12 +1,40 @@
 import { ScrollViewStyleReset } from 'expo-router/html';
 import type { PropsWithChildren } from 'react';
 
-const registerServiceWorker = `
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/sw.js').catch(function () {});
-    });
-  }
+const clearLegacyWebAppCache = `
+  window.addEventListener('load', function () {
+    var hadController = Boolean(navigator.serviceWorker && navigator.serviceWorker.controller);
+    var cleanup = [];
+
+    if ('serviceWorker' in navigator) {
+      cleanup.push(
+        navigator.serviceWorker.getRegistrations()
+          .then(function (registrations) {
+            return Promise.all(registrations.map(function (registration) { return registration.unregister(); }));
+          })
+          .catch(function () {})
+      );
+    }
+
+    if ('caches' in window) {
+      cleanup.push(
+        caches.keys()
+          .then(function (keys) {
+            return Promise.all(keys.filter(function (key) { return key.indexOf('buildpair-static-') === 0; }).map(function (key) { return caches.delete(key); }));
+          })
+          .catch(function () {})
+      );
+    }
+
+    Promise.all(cleanup).then(function () {
+      if (!hadController) return;
+      try {
+        if (window.sessionStorage.getItem('buildpair-browser-cache-cleaned-v1')) return;
+        window.sessionStorage.setItem('buildpair-browser-cache-cleaned-v1', '1');
+      } catch (_) {}
+      window.location.reload();
+    }).catch(function () {});
+  });
 `;
 
 const shellCss = `
@@ -81,7 +109,7 @@ export default function Root({ children }: PropsWithChildren) {
       </head>
       <body>
         {children}
-        <script dangerouslySetInnerHTML={{ __html: registerServiceWorker }} />
+        <script dangerouslySetInnerHTML={{ __html: clearLegacyWebAppCache }} />
       </body>
     </html>
   );
