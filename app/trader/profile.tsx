@@ -65,6 +65,12 @@ export default function TraderProfileHub() {
         <Text style={styles.muted}>Turn completed work into useful case studies with area, duration, photos and a proper project narrative.</Text>
         <Link href="/trader/stories" asChild><Button mode="text">Manage project stories →</Button></Link>
       </AppCard>
+      <AppCard style={[styles.toolCard, styles.toolGoogle]}>
+        <Text style={styles.eyebrow}>EXISTING REPUTATION</Text>
+        <Text variant="titleLarge" style={styles.title}>Google reviews</Text>
+        <Text style={styles.muted}>Connect your Google business listing so homeowners can see your existing Google rating and review excerpts without turning them into BuildPair job reviews.</Text>
+        <Link href="/trader/google-reviews" asChild><Button mode="text">Connect Google reviews →</Button></Link>
+      </AppCard>
       <AppCard style={[styles.toolCard, styles.toolAnalytics]}>
         <Text style={styles.eyebrow}>BUSINESS INSIGHT</Text>
         <Text variant="titleLarge" style={styles.title}>Analytics</Text>
@@ -120,6 +126,7 @@ const styles = StyleSheet.create({
   toolCard: { flexGrow: 1, flexBasis: 300, minWidth: 265 },
   toolTrust: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' },
   toolPortfolio: { backgroundColor: colors.primarySoft, borderColor: '#F2D7C3' },
+  toolGoogle: { backgroundColor: '#F7F8FA', borderColor: '#DADCE0' },
   toolAnalytics: { backgroundColor: colors.blueSoft, borderColor: '#D4E1E9' },
   toolAlerts: { backgroundColor: colors.goldSoft, borderColor: '#ECDDBF' },
   strengthGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
