@@ -134,7 +134,7 @@ export default function TraderOnboarding() {
   const [businessName, setBusinessName] = useState('');
   const [tradeCategories, setTradeCategories] = useState<TradeCategory[]>([]);
   const [serviceSelections, setServiceSelections] = useState<ServiceSelections>({});
-  const [categoryLimit, setCategoryLimit] = useState(TRADE_CATEGORIES.length);
+  const [categoryLimit, setCategoryLimit] = useState<number>(TRADE_CATEGORIES.length);
   const [categoryChangeAvailableAt, setCategoryChangeAvailableAt] = useState<string | null>(null);
   const [postcode, setPostcode] = useState('');
   const [baseLocationLocked, setBaseLocationLocked] = useState(false);
