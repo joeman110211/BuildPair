@@ -58,12 +58,24 @@ async function uploadAsset(asset: ImagePicker.ImagePickerAsset, signed: UploadSi
   return body.secure_url;
 }
 
+async function ensurePhotoPermission() {
+  if (Platform.OS === 'web') return;
+  const current = await ImagePicker.getMediaLibraryPermissionsAsync();
+  if (current.granted || current.accessPrivileges === 'limited') return;
+  const requested = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!requested.granted && requested.accessPrivileges !== 'limited') {
+    throw new Error('Photo access is required to upload images. Allow photo access for BuildPair in your phone settings, then try again.');
+  }
+}
+
 export async function pickAndUploadImages(
   kind: MediaKind,
   getToken: TokenGetter,
   selectionLimit = MAX_BATCH_UPLOADS,
 ): Promise<UploadBatchResult> {
   const limit = Math.min(Math.max(Math.floor(selectionLimit), 1), MAX_BATCH_UPLOADS);
+  await ensurePhotoPermission();
+
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     allowsEditing: false,
