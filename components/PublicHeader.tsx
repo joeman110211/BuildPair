@@ -114,7 +114,7 @@ function AuthenticatedHeader() {
     // after a deployment. A document navigation guarantees the protected dashboard starts
     // against the current production bundle and also crosses the layout boundary cleanly.
     if (typeof window !== 'undefined') {
-      window.location.assign(target);
+      window.location.assign(String(target));
       return;
     }
     router.replace(target);
