@@ -17,3 +17,10 @@ SET external_payment_customer_agreed_at = COALESCE(j.external_payment_customer_a
     external_payment_trader_agreed_at = COALESCE(j.external_payment_trader_agreed_at, j.updated_at, now()),
     external_payment_proposed_at = COALESCE(j.external_payment_proposed_at, j.updated_at, now())
 WHERE j.payment_mode = 'external';
+
+ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_external_payment_requires_both_parties;
+ALTER TABLE jobs ADD CONSTRAINT jobs_external_payment_requires_both_parties
+  CHECK (
+    payment_mode <> 'external'
+    OR (external_payment_customer_agreed_at IS NOT NULL AND external_payment_trader_agreed_at IS NOT NULL)
+  );
