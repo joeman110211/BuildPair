@@ -17,7 +17,7 @@ export default function TraderLayout() {
     <Stack.Screen name="saved-searches" options={{ headerShown: false }} />
     <Stack.Screen name="stories" options={{ headerShown: false }} />
     <Stack.Screen name="jobs/[id]" options={{ title: 'Manage job' }} />
-    <Stack.Screen name="onboarding" options={{ title: 'Build your profile' }} />
+    <Stack.Screen name="onboarding" options={{ title: 'Manage your profile' }} />
     <Stack.Screen name="subscription" options={{ title: 'Plans and payouts' }} />
     <Stack.Screen name="quotes/index" options={{ headerShown: false }} />
     <Stack.Screen name="quotes/new" options={{ title: 'Create quote' }} />
