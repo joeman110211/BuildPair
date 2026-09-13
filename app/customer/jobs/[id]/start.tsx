@@ -9,8 +9,9 @@ import { AppCard } from '@/components/AppCard';
 import { PayMilestoneButton } from '@/components/PayMilestoneButton';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { allocateCustomerBuildPayFee } from '@/lib/buildpay-fees';
 import { formatMoney } from '@/lib/money';
-import type { Job, PaymentStageStatus, Quote, TraderProfile } from '@/types';
+import type { BuildPayFeeMode, BuildPayRequestedBy, Job, PaymentStageStatus, Quote, TraderProfile } from '@/types';
 
 type Milestone = {
   id: string;
@@ -24,12 +25,25 @@ type Milestone = {
 
 type Detail = { job: Job; acceptedQuote: Quote | null; milestones: Milestone[]; trader: TraderProfile | null };
 type PrivateDetails = { addressLine1: string; addressLine2: string; townCity: string; postcode: string; accessNotes: string; complete: boolean };
+type BuildPaySummary = {
+  paymentMode: 'undecided' | 'buildpair' | 'external';
+  buildPayRequestedBy: BuildPayRequestedBy | null;
+  buildPayFeeMode: BuildPayFeeMode | null;
+  buildPayCustomerFeeTotal: number;
+  buildPayFeeTermsVersion: string | null;
+  contractAmount: number;
+  allInTotal: number;
+  previewCustomerFee: number;
+  previewAllInTotal: number;
+  plannedChargeCount: number;
+};
 
 export default function StartAwardedJobScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getToken } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<Detail>();
+  const [buildPaySummary, setBuildPaySummary] = useState<BuildPaySummary>();
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [townCity, setTownCity] = useState('');
@@ -41,11 +55,13 @@ export default function StartAwardedJobScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [detail, privateDetails] = await Promise.all([
+      const [detail, privateDetails, feeSummary] = await Promise.all([
         apiFetch<Detail>(`/api/jobs/${id}`, {}, getToken),
         apiFetch<PrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
+        apiFetch<BuildPaySummary>(`/api/buildpay/summary?jobId=${encodeURIComponent(id)}`, {}, getToken),
       ]);
       setData(detail);
+      setBuildPaySummary(feeSummary);
       setAddressLine1(privateDetails.addressLine1);
       setAddressLine2(privateDetails.addressLine2);
       setTownCity(privateDetails.townCity);
@@ -78,16 +94,23 @@ export default function StartAwardedJobScreen() {
   async function choosePaymentMode(mode: 'buildpair' | 'external') {
     try {
       setBusy(true); setError('');
-      await apiFetch(`/api/jobs/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ action: 'set_payment_mode', mode, acknowledgedPaymentTerms: mode === 'buildpair' ? true : undefined }),
-      }, getToken);
+      if (mode === 'buildpair') {
+        await apiFetch('/api/buildpay/select', {
+          method: 'POST',
+          body: JSON.stringify({ jobId: id, acknowledgedPaymentTerms: true, acknowledgedBuildPayFee: true }),
+        }, getToken);
+      } else {
+        await apiFetch(`/api/jobs/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ action: 'set_payment_mode', mode: 'external' }),
+        }, getToken);
+      }
       await load();
     } catch (e) { setError(errorMessage(e)); }
     finally { setBusy(false); }
   }
 
-  if (!data) return <LoadingScreen label="Preparing your project…" />;
+  if (!data || !buildPaySummary) return <LoadingScreen label="Preparing your project…" />;
   const paymentMode = data.job.paymentMode ?? 'undecided';
   const ordered = [...data.milestones].sort((a, b) => a.sortOrder - b.sortOrder);
   const current = ordered.find((stage) => stage.status !== 'paid');
@@ -98,15 +121,24 @@ export default function StartAwardedJobScreen() {
   const openingBundle = current?.status === 'pending' && current.kind === 'materials' && nextAfterCurrent?.status === 'pending'
     ? [current, nextAfterCurrent]
     : current?.status === 'pending' ? [current] : [];
-  const openingTotal = openingBundle.reduce((sum, stage) => sum + stage.amount, 0);
+  const openingContractTotal = openingBundle.reduce((sum, stage) => sum + stage.amount, 0);
+  const customerFeeTotal = paymentMode === 'buildpair' ? buildPaySummary.buildPayCustomerFeeTotal : buildPaySummary.previewCustomerFee;
+  const feeAllocations = allocateCustomerBuildPayFee(ordered.map((stage) => ({ id: stage.id, amount: stage.amount, sortOrder: stage.sortOrder })), customerFeeTotal);
+  const openingFee = openingBundle.reduce((sum, stage) => sum + (feeAllocations.get(stage.id) ?? 0), 0);
+  const openingCheckoutTotal = openingContractTotal + openingFee;
+  const currentFee = current ? (feeAllocations.get(current.id) ?? 0) : 0;
+  const currentCheckoutTotal = (current?.amount ?? 0) + currentFee;
   const openingReady = addressReady && startAgreed && paymentMode === 'buildpair' && openingBundle.length > 0;
   const materialsOnlyOption = openingBundle.length === 2 && openingBundle[0]?.kind === 'materials';
+  const materialsOnlyFee = materialsOnlyOption ? (feeAllocations.get(openingBundle[0]!.id) ?? 0) : 0;
+  const materialsOnlyCheckout = materialsOnlyOption ? openingBundle[0]!.amount + materialsOnlyFee : 0;
 
   return <Screen title="Start the job" subtitle={data.job.title}>
     <AppCard>
       <Chip icon="check-circle-outline">Quote accepted</Chip>
       <Text variant="headlineSmall">{data.trader?.businessName ?? 'Tradesperson'} has the job</Text>
       <Text>The quote is agreed. BuildPair now keeps the private address, start time and payment setup in one place so both sides know exactly what happens next.</Text>
+      {buildPaySummary.buildPayRequestedBy ? <Text>{buildPaySummary.buildPayRequestedBy === 'trader' ? 'The tradesperson included BuildPay in the accepted proposal.' : 'You requested BuildPay protected stages before acceptance.'} {buildPaySummary.buildPayFeeMode === 'customer_pays' ? `Work price ${formatMoney(buildPaySummary.contractAmount)} + BuildPay service fee ${formatMoney(buildPaySummary.buildPayCustomerFeeTotal)} = ${formatMoney(buildPaySummary.allInTotal)} all-in.` : `The tradesperson is absorbing the agreed BuildPay costs, so your total remains ${formatMoney(buildPaySummary.contractAmount)}.`}</Text> : null}
     </AppCard>
 
     <AppCard>
@@ -144,17 +176,22 @@ export default function StartAwardedJobScreen() {
       <Text variant="titleLarge">3. Choose how the money moves</Text>
       {paymentMode === 'undecided' ? <>
         <AppCard elevated={false}>
-          <Chip icon="shield-lock-outline">BuildPay</Chip>
-          <Text variant="titleMedium">Pay through BuildPay</Text>
-          <Text>Stripe processes the card payment. Materials can be combined with the first work stage in one opening payment. The materials amount is released only after the tradesperson acknowledges that payment; work-stage money stays protected until the agreed stage is finished and you approve release.</Text>
-          <Text>BuildPair charges the tradesperson 1% of labour/service only, never materials or VAT. Stripe processing is recovered at cost from controlled service payouts.</Text>
-          <Button mode="contained" icon="shield-check-outline" loading={busy} disabled={busy || !addressReady} onPress={() => void choosePaymentMode('buildpair')}>Use BuildPay</Button>
+          <Chip icon="shield-lock-outline">Optional BuildPay</Chip>
+          <Text variant="titleMedium">Use protected staged payments</Text>
+          <Text>Stripe processes the card payments. Materials can be combined with the first protected work stage. The materials amount is released only after the tradesperson acknowledges that payment; work-stage money stays protected until the agreed stage is finished and you approve release.</Text>
+          <View style={{ gap: 6 }}>
+            <Text>Work price: <Text style={{ fontWeight: '800' }}>{formatMoney(buildPaySummary.contractAmount)}</Text></Text>
+            <Text>BuildPay service fee: <Text style={{ fontWeight: '800' }}>{formatMoney(buildPaySummary.previewCustomerFee)}</Text></Text>
+            <Text variant="titleMedium">All-in with BuildPay: {formatMoney(buildPaySummary.previewAllInTotal)}</Text>
+          </View>
+          <Text variant="bodySmall">Because you are choosing BuildPay after accepting a quote that did not require it, you pay the disclosed BuildPay service fee. It is a BuildPay protection/administration fee, not a card surcharge. Your tradesperson's accepted work price is not reduced by this fee.</Text>
+          <Button mode="contained" icon="shield-check-outline" loading={busy} disabled={busy || !addressReady} onPress={() => void choosePaymentMode('buildpair')}>Use BuildPay · {formatMoney(buildPaySummary.previewAllInTotal)} all-in</Button>
           {!addressReady ? <HelperText type="info">Save the private job address first.</HelperText> : null}
         </AppCard>
 
         <AppCard elevated={false}>
           <Chip icon="bank-transfer-out">Direct payment</Chip>
-          <Text variant="titleMedium">Pay the tradesperson directly</Text>
+          <Text variant="titleMedium">Pay the tradesperson directly · {formatMoney(buildPaySummary.contractAmount)}</Text>
           <Text>You can pay by bank transfer, cash or another method agreed directly with the tradesperson. BuildPair remains the introduction and project-record platform, but does not receive, hold, protect, release, refund or recover that money.</Text>
           <Text>Any direct-payment record in BuildPair is based on what you and the tradesperson confirm. It is not BuildPair verification of the payment or the work.</Text>
           <Button mode="outlined" loading={busy} disabled={busy || !addressReady} onPress={() => void choosePaymentMode('external')}>Pay tradesperson directly</Button>
@@ -162,6 +199,7 @@ export default function StartAwardedJobScreen() {
       </> : paymentMode === 'buildpair' ? <>
         <Chip icon="shield-check-outline">BuildPay selected</Chip>
         <Text>BuildPay keeps the job simple: fund what is needed next, release work money only after the agreed point is reached, then move straight on to the next stage.</Text>
+        {buildPaySummary.buildPayFeeMode === 'customer_pays' ? <Text>Work price {formatMoney(buildPaySummary.contractAmount)} + agreed BuildPay service fee {formatMoney(buildPaySummary.buildPayCustomerFeeTotal)} = {formatMoney(buildPaySummary.allInTotal)} all-in. The fee is allocated across the agreed card payments, so it does not suddenly appear at checkout.</Text> : <Text>The tradesperson chose to absorb the agreed BuildPay costs. Your total remains the {formatMoney(buildPaySummary.contractAmount)} work price.</Text>}
       </> : <>
         <Chip icon="bank-transfer-out">Direct payment selected</Chip>
         <Text>Payments are between you and the tradesperson. BuildPair keeps the quote, messages, variations and optional payment confirmations together, but BuildPay protection does not apply.</Text>
@@ -173,19 +211,19 @@ export default function StartAwardedJobScreen() {
       {!startAgreed ? <Text>Nothing is charged yet. First agree the start date and time above.</Text> : openingBundle.length ? <>
         {openingBundle.length === 2 ? <>
           <Chip icon="credit-card-check-outline">Recommended first payment</Chip>
-          <Text variant="headlineSmall">Pay {formatMoney(openingTotal)} now</Text>
-          <Text>{openingBundle[0]!.title}: {formatMoney(openingBundle[0]!.amount)} + {openingBundle[1]!.title}: {formatMoney(openingBundle[1]!.amount)}</Text>
-          <Text>The tradesperson is notified when Stripe confirms the payment. They then acknowledge it in BuildPair. Only the quoted materials amount is released to their connected account; {openingBundle[1]!.title.toLowerCase()} stays protected until its agreed completion point is reached.</Text>
-          <PayMilestoneButton milestoneIds={openingBundle.map((stage) => stage.id)} label={`Pay ${formatMoney(openingTotal)} opening payment`} onPaid={() => setTimeout(load, 1500)} />
+          <Text variant="headlineSmall">Pay {formatMoney(openingCheckoutTotal)} now</Text>
+          <Text>Contract stages: {openingBundle[0]!.title} {formatMoney(openingBundle[0]!.amount)} + {openingBundle[1]!.title} {formatMoney(openingBundle[1]!.amount)}{openingFee > 0 ? ` + ${formatMoney(openingFee)} allocated BuildPay service fee` : ''}.</Text>
+          <Text>The tradesperson is notified when Stripe confirms the payment. They then acknowledge it in BuildPair. Only the quoted materials amount is released immediately; {openingBundle[1]!.title.toLowerCase()} stays protected until its agreed completion point is reached.</Text>
+          <PayMilestoneButton milestoneIds={openingBundle.map((stage) => stage.id)} label={`Pay ${formatMoney(openingCheckoutTotal)} opening payment`} onPaid={() => setTimeout(load, 1500)} />
           {materialsOnlyOption ? <>
-            <Text variant="bodySmall">Prefer to pay only for materials first?</Text>
-            <PayMilestoneButton milestoneId={openingBundle[0]!.id} label={`Pay materials only · ${formatMoney(openingBundle[0]!.amount)}`} onPaid={() => setTimeout(load, 1500)} />
+            <Text variant="bodySmall">Prefer to pay only for materials first? This creates an extra card transaction, but BuildPair does not increase the already agreed BuildPay service fee.</Text>
+            <PayMilestoneButton milestoneId={openingBundle[0]!.id} label={`Pay materials first · ${formatMoney(materialsOnlyCheckout)}`} onPaid={() => setTimeout(load, 1500)} />
           </> : null}
         </> : <>
           <Chip icon="credit-card-check-outline">Next payment</Chip>
-          <Text variant="headlineSmall">{current?.title} · {formatMoney(current?.amount ?? 0)}</Text>
-          <Text>{current?.kind === 'deposit' ? 'This deposit is funded into BuildPay and stays protected until its agreed release point.' : current?.kind === 'final' ? 'This is the full protected work payment for this job. It stays controlled until final completion is approved.' : 'This work-stage payment stays controlled until the agreed completion point is reached and you approve release.'}</Text>
-          {openingReady ? <PayMilestoneButton milestoneId={current!.id} label={`Pay ${formatMoney(current!.amount)} with BuildPay`} onPaid={() => setTimeout(load, 1500)} /> : null}
+          <Text variant="headlineSmall">{current?.title} · {formatMoney(currentCheckoutTotal)}</Text>
+          <Text>{currentFee > 0 ? `${formatMoney(current?.amount ?? 0)} contract stage + ${formatMoney(currentFee)} allocated BuildPay service fee. ` : ''}{current?.kind === 'deposit' ? 'This deposit is funded into BuildPay and stays protected until its agreed release point.' : current?.kind === 'final' ? 'This is the protected final work payment for this job. It stays controlled until final completion is approved.' : 'This work-stage payment stays controlled until the agreed completion point is reached and you approve release.'}</Text>
+          {openingReady ? <PayMilestoneButton milestoneId={current!.id} label={`Pay ${formatMoney(currentCheckoutTotal)} with BuildPay`} onPaid={() => setTimeout(load, 1500)} /> : null}
         </>}
       </> : current ? <>
         <Chip icon="clock-check-outline">Payment received</Chip>
