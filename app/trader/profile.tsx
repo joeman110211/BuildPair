@@ -32,7 +32,7 @@ export default function TraderProfileHub() {
   const planLabel = profile.subscriptionTier === 'featured' ? 'BuildPair Pro' : profile.subscriptionTier === 'basic' ? 'BuildPair Plus' : 'Starter';
   const ratingLabel = profile.reviewCount ? `${profile.averageRating.toFixed(1)} ★ · ${profile.reviewCount} review${profile.reviewCount === 1 ? '' : 's'}` : 'New profile · no reviews yet';
 
-  return <Screen title="Business profile" subtitle="Manage the public identity, trust information and business tools connected to your BuildPair trade account.">
+  return <Screen title="Manage business profile" subtitle="Review your public profile, update business details and services, add or remove work photos, and manage the trust information homeowners see.">
     <AppCard style={styles.profileCard}>
       {profile.coverPhotoUrl ? <Image source={{ uri: profile.coverPhotoUrl }} style={styles.cover} accessibilityLabel={`${profile.businessName} cover`} /> : <View style={styles.coverFallback}><Text style={styles.coverFallbackText}>Add a strong cover photo of completed work</Text></View>}
       <View style={styles.identity}>
@@ -47,8 +47,8 @@ export default function TraderProfileHub() {
     </AppCard>
 
     <View style={styles.primaryActions}>
-      <Link href="/trader/onboarding" asChild><Button mode="contained">Edit profile</Button></Link>
-      <Button mode="outlined" onPress={() => router.push(`/(public)/traders/${profile.id}` as Href)}>View public profile</Button>
+      <Link href="/trader/onboarding" asChild><Button mode="contained" icon="pencil-outline">Edit profile & photos</Button></Link>
+      <Button mode="outlined" icon="eye-outline" onPress={() => router.push(`/(public)/traders/${profile.id}` as Href)}>View public profile</Button>
       <Link href="/trader/subscription" asChild><Button mode="outlined">Membership & payouts</Button></Link>
     </View>
 
@@ -90,7 +90,7 @@ export default function TraderProfileHub() {
         <View style={styles.strengthItem}><Text style={styles.strengthStatus}>{profile.coverPhotoUrl ? '✓' : '○'}</Text><Text style={styles.strengthText}>Cover image</Text></View>
         <View style={styles.strengthItem}><Text style={styles.strengthStatus}>{(profile.verifiedCredentialCount ?? 0) > 0 ? '✓' : '○'}</Text><Text style={styles.strengthText}>Verified credential evidence</Text></View>
       </View>
-      <Text style={styles.muted}>Declared qualifications and BuildPair-reviewed credential evidence are shown separately so customers are not encouraged to confuse a profile claim with verification.</Text>
+      <Text style={styles.muted}>Use Edit profile & photos to keep your gallery, cover image, logo, business write-up, services and working area current. Declared qualifications and BuildPair-reviewed credential evidence are shown separately so customers are not encouraged to confuse a profile claim with verification.</Text>
     </AppCard>
 
     {error ? <EmptyState title="Something needs attention" body={error} action={<Button onPress={load}>Try again</Button>} /> : null}
