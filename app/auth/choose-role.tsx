@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/expo';
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Button, HelperText, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
@@ -31,6 +31,14 @@ export default function ChooseRoleScreen() {
   const [error, setError] = useState('');
   const autoStarted = useRef(false);
 
+  function navigate(href: Href) {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.location.assign(String(href));
+      return;
+    }
+    router.replace(href);
+  }
+
   async function save(selectedRole = role) {
     if (!selectedRole || busy || !authLoaded || !isSignedIn) return;
 
@@ -49,11 +57,11 @@ export default function ChooseRoleScreen() {
           : Boolean(user?.traderEnabled);
 
       if (selectedRole === 'customer' && returnTo) {
-        router.replace(returnTo as Href);
+        navigate(returnTo as Href);
       } else if (selectedRole === 'trader' && !wasEnabled) {
-        router.replace(requestedTrade ? `/trader/onboarding?trade=${encodeURIComponent(requestedTrade)}` : '/trader/onboarding');
+        navigate((requestedTrade ? `/trader/onboarding?trade=${encodeURIComponent(requestedTrade)}` : '/trader/onboarding') as Href);
       } else {
-        router.replace(dashboardHref(selectedRole));
+        navigate(dashboardHref(selectedRole));
       }
     } catch (e) {
       autoStarted.current = false;
