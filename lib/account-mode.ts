@@ -40,5 +40,5 @@ export function forgotPasswordHref(mode: UserRole | null): Href {
 }
 
 export function dashboardHref(mode: UserRole): Href {
-  return mode === 'trader' ? '/trader/dashboard' : '/customer/dashboard';
+  return mode === 'trader' ? '/trader' : '/customer/dashboard';
 }
