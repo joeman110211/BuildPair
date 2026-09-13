@@ -14,7 +14,7 @@ import { dashboardHref, modeSetupHref } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
 import type { UserRole } from '@/types';
 
-export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trader/dashboard' }) {
+export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trader' | '/trader/dashboard' }) {
   const { signOut } = useClerk();
   const router = useRouter();
   const { user, getToken } = useCurrentUser();
