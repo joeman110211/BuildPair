@@ -134,7 +134,7 @@ export default function TraderOnboarding() {
   const [businessName, setBusinessName] = useState('');
   const [tradeCategories, setTradeCategories] = useState<TradeCategory[]>([]);
   const [serviceSelections, setServiceSelections] = useState<ServiceSelections>({});
-  const [categoryLimit, setCategoryLimit] = useState(2);
+  const [categoryLimit, setCategoryLimit] = useState(TRADE_CATEGORIES.length);
   const [categoryChangeAvailableAt, setCategoryChangeAvailableAt] = useState<string | null>(null);
   const [postcode, setPostcode] = useState('');
   const [baseLocationLocked, setBaseLocationLocked] = useState(false);
@@ -208,7 +208,7 @@ export default function TraderOnboarding() {
       setBusinessName(profile.businessName ?? '');
       setTradeCategories(categories);
       setServiceSelections(normaliseServices(categories, profile.serviceSelections, profile.subSkills ?? []));
-      setCategoryLimit(profile.categoryLimit ?? 2);
+      setCategoryLimit(profile.categoryLimit ?? TRADE_CATEGORIES.length);
       setCategoryChangeAvailableAt(profile.categoryChangeAvailableAt ?? null);
       setPostcode(profile.postcode ?? '');
       setBaseLocationLocked(Boolean(profile.postcode));
