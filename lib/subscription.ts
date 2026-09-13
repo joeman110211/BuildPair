@@ -16,8 +16,13 @@ export const TRADER_MONTHLY_QUOTE_LIMITS = {
 
 export type TraderWorkTypeTier = keyof typeof TRADER_WORK_TYPE_LIMITS;
 
-export function traderWorkTypeLimit(profile?: { subscriptionTier?: TraderWorkTypeTier | null }) {
-  return TRADER_WORK_TYPE_LIMITS[profile?.subscriptionTier ?? 'free'];
+export function traderWorkTypeLimit(profile?: {
+  subscriptionTier?: TraderWorkTypeTier | null;
+  tradeCategories?: readonly string[] | null;
+}) {
+  const planLimit = TRADER_WORK_TYPE_LIMITS[profile?.subscriptionTier ?? 'free'];
+  const existingAllowance = profile?.tradeCategories?.length ?? 0;
+  return Math.max(planLimit, existingAllowance);
 }
 
 export function traderMonthlyQuoteLimit(profile?: { subscriptionTier?: TraderWorkTypeTier | null }) {
