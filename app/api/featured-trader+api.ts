@@ -109,6 +109,7 @@ export async function GET() {
 
     const overrideWeek = process.env.FEATURED_TRADER_OVERRIDE_WEEK?.trim();
     const overrideUserId = process.env.FEATURED_TRADER_OVERRIDE_USER_ID?.trim();
+    const secondUserId = process.env.FEATURED_TRADER_SECOND_USER_ID?.trim();
     const override = overrideWeek === weekStartIso && overrideUserId
       ? paid.find((trader) => trader.userId === overrideUserId)
       : undefined;
@@ -122,7 +123,14 @@ export async function GET() {
       return Response.json({ trader: null, traders: [], weekStart: weekStartIso, nextRefreshAt });
     }
 
-    const ordered = [selected, ...paid.filter((trader) => trader.userId !== selected.userId)];
+    const pinnedSecond = secondUserId && secondUserId !== selected.userId
+      ? paid.find((trader) => trader.userId === secondUserId)
+      : undefined;
+    const ordered = [
+      selected,
+      ...(pinnedSecond ? [pinnedSecond] : []),
+      ...paid.filter((trader) => trader.userId !== selected.userId && trader.userId !== pinnedSecond?.userId),
+    ];
     const traders = ordered.slice(0, 6).map((trader) => toPublicTrader(trader, override?.userId));
 
     return Response.json({
