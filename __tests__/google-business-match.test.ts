@@ -45,6 +45,15 @@ describe('Google business verification matching', () => {
     expect(result.signals.emailDomain).toBe(false);
   });
 
+  it('never auto-verifies from a professional email-domain match alone', () => {
+    const result = matchGoogleBusiness(
+      { ...buildPair, postcode: null, phone: null, websiteUri: null },
+      { ...google, postcode: null, nationalPhoneNumber: null, internationalPhoneNumber: null },
+    );
+    expect(result.signals.emailDomain).toBe(true);
+    expect(result.status).toBe('pending_review');
+  });
+
   it('sends a weak or ambiguous match to admin review instead of publishing it', () => {
     const result = matchGoogleBusiness(
       { ...buildPair, businessName: 'Smith Renovations', postcode: 'GU2 7AA', phone: '07700 900123', email: 'smith@gmail.com', websiteUri: null },
