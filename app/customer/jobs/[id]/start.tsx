@@ -129,9 +129,6 @@ export default function StartAwardedJobScreen() {
   const currentFee = current ? (feeAllocations.get(current.id) ?? 0) : 0;
   const currentCheckoutTotal = (current?.amount ?? 0) + currentFee;
   const openingReady = addressReady && startAgreed && paymentMode === 'buildpair' && openingBundle.length > 0;
-  const materialsOnlyOption = openingBundle.length === 2 && openingBundle[0]?.kind === 'materials';
-  const materialsOnlyFee = materialsOnlyOption ? (feeAllocations.get(openingBundle[0]!.id) ?? 0) : 0;
-  const materialsOnlyCheckout = materialsOnlyOption ? openingBundle[0]!.amount + materialsOnlyFee : 0;
 
   return <Screen title="Start the job" subtitle={data.job.title}>
     <AppCard>
@@ -178,7 +175,7 @@ export default function StartAwardedJobScreen() {
         <AppCard elevated={false}>
           <Chip icon="shield-lock-outline">Optional BuildPay</Chip>
           <Text variant="titleMedium">Use protected staged payments</Text>
-          <Text>Stripe processes the card payments. Materials can be combined with the first protected work stage. The materials amount is released only after the tradesperson acknowledges that payment; work-stage money stays protected until the agreed stage is finished and you approve release.</Text>
+          <Text>Stripe processes the card payments. When the schedule starts with materials, the materials amount and first protected work stage are paid together in one opening payment. Only the materials amount is released after the tradesperson acknowledges that payment; the first work-stage money stays protected until the agreed stage is finished and you approve release.</Text>
           <View style={{ gap: 6 }}>
             <Text>Work price: <Text style={{ fontWeight: '800' }}>{formatMoney(buildPaySummary.contractAmount)}</Text></Text>
             <Text>BuildPay service fee: <Text style={{ fontWeight: '800' }}>{formatMoney(buildPaySummary.previewCustomerFee)}</Text></Text>
@@ -210,15 +207,11 @@ export default function StartAwardedJobScreen() {
       <Text variant="titleLarge">4. Opening BuildPay payment</Text>
       {!startAgreed ? <Text>Nothing is charged yet. First agree the start date and time above.</Text> : openingBundle.length ? <>
         {openingBundle.length === 2 ? <>
-          <Chip icon="credit-card-check-outline">Recommended first payment</Chip>
+          <Chip icon="credit-card-check-outline">Materials + first protected stage</Chip>
           <Text variant="headlineSmall">Pay {formatMoney(openingCheckoutTotal)} now</Text>
           <Text>Contract stages: {openingBundle[0]!.title} {formatMoney(openingBundle[0]!.amount)} + {openingBundle[1]!.title} {formatMoney(openingBundle[1]!.amount)}{openingFee > 0 ? ` + ${formatMoney(openingFee)} allocated BuildPay service fee` : ''}.</Text>
           <Text>The tradesperson is notified when Stripe confirms the payment. They then acknowledge it in BuildPair. Only the quoted materials amount is released immediately; {openingBundle[1]!.title.toLowerCase()} stays protected until its agreed completion point is reached.</Text>
           <PayMilestoneButton milestoneIds={openingBundle.map((stage) => stage.id)} label={`Pay ${formatMoney(openingCheckoutTotal)} opening payment`} onPaid={() => setTimeout(load, 1500)} />
-          {materialsOnlyOption ? <>
-            <Text variant="bodySmall">Prefer to pay only for materials first? This creates an extra card transaction, but BuildPair does not increase the already agreed BuildPay service fee.</Text>
-            <PayMilestoneButton milestoneId={openingBundle[0]!.id} label={`Pay materials first · ${formatMoney(materialsOnlyCheckout)}`} onPaid={() => setTimeout(load, 1500)} />
-          </> : null}
         </> : <>
           <Chip icon="credit-card-check-outline">Next payment</Chip>
           <Text variant="headlineSmall">{current?.title} · {formatMoney(currentCheckoutTotal)}</Text>
