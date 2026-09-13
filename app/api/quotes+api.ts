@@ -1,6 +1,7 @@
 import { desc, eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { jobs, quotes, traderProfiles } from '@/db/schema';
+import { buildPayCustomerFee, buildPayFeeModeForRequest, type BuildPayFeeMode } from '@/lib/buildpay-fees';
 import { addJobEvent, createNotification } from '@/lib/notifications';
 import { normalizeMaterialsFirstSchedule, paymentScheduleSchema, type PaymentStagePlan, validatePaymentSchedule } from '@/lib/payment-plan';
 import { assertRateLimit } from '@/lib/rate-limit';
@@ -55,7 +56,12 @@ export async function GET(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
     const rows = await getDb().select().from(quotes).where(eq(quotes.traderId, trader.id)).orderBy(desc(quotes.updatedAt));
-    const plans = await getSql()`SELECT id, cost_items AS "costItems", payment_schedule AS "paymentSchedule", payment_schedule_status AS "paymentScheduleStatus", payment_schedule_revision AS "paymentScheduleRevision" FROM quotes WHERE trader_id = ${trader.id}` as unknown as { id: string; costItems: unknown[]; paymentSchedule: PaymentStagePlan[]; paymentScheduleStatus: string; paymentScheduleRevision: number }[];
+    const plans = await getSql()`
+      SELECT id, cost_items AS "costItems", payment_schedule AS "paymentSchedule", payment_schedule_status AS "paymentScheduleStatus",
+             payment_schedule_revision AS "paymentScheduleRevision", buildpay_requested_by AS "buildPayRequestedBy",
+             buildpay_fee_mode AS "buildPayFeeMode", buildpay_customer_fee_estimate AS "buildPayCustomerFeeEstimate"
+      FROM quotes WHERE trader_id = ${trader.id}
+    ` as unknown as { id: string; costItems: unknown[]; paymentSchedule: PaymentStagePlan[]; paymentScheduleStatus: string; paymentScheduleRevision: number; buildPayRequestedBy: 'trader' | 'customer' | null; buildPayFeeMode: BuildPayFeeMode | null; buildPayCustomerFeeEstimate: number }[];
     const byId = new Map(plans.map((plan) => [plan.id, plan]));
     return Response.json(rows.map((row) => ({ ...row, ...(byId.get(row.id) ?? {}) })));
   } catch (error) { return jsonError(error); }
@@ -94,6 +100,24 @@ export async function POST(request: Request) {
         : normalizeMaterialsFirstSchedule(suppliedSchedule, totalAmount, payload.materialsCost);
     } catch (error) { throw new HttpError(400, error instanceof Error ? error.message : 'Invalid payment plan'); }
 
+    const requestBuildPay = raw.requestBuildPay === true;
+    const requestedFeeMode = raw.buildPayFeeMode === 'trader_absorbs' ? 'trader_absorbs' : raw.buildPayFeeMode === 'customer_pays' ? 'customer_pays' : null;
+    let buildPayFeeMode: BuildPayFeeMode | null = null;
+    let buildPayCustomerFeeEstimate = 0;
+    if (requestBuildPay) {
+      if (!profile.stripeAccountId || (!profile.stripePayoutsEnabled && !profile.stripeChargesEnabled)) {
+        throw new HttpError(409, 'Finish Stripe payout setup before sending a quote that requires BuildPay.');
+      }
+      buildPayFeeMode = buildPayFeeModeForRequest('trader', requestedFeeMode);
+      if (buildPayFeeMode === 'customer_pays') {
+        buildPayCustomerFeeEstimate = buildPayCustomerFee({
+          contractAmount: totalAmount,
+          laborServiceAmount: payload.laborCost,
+          plannedChargeCount: paymentSchedule.length,
+        }).customerFee;
+      }
+    }
+
     const validUntil = payload.validUntil ? new Date(payload.validUntil) : null;
     const proposedStartAt = payload.proposedStartAt ? new Date(payload.proposedStartAt) : null;
     const quoteValues = {
@@ -106,12 +130,30 @@ export async function POST(request: Request) {
     if (!quote) throw new Error('Quote could not be saved');
 
     const costItems = Array.isArray(raw.costItems) ? raw.costItems : [];
-    await getSql()`UPDATE quotes SET cost_items = ${JSON.stringify(costItems)}::jsonb, payment_schedule = ${JSON.stringify(paymentSchedule)}::jsonb, payment_schedule_status = 'proposed', payment_schedule_revision = payment_schedule_revision + 1, payment_schedule_updated_by = ${trader.id}, updated_at = now() WHERE id = ${quote.id}`;
+    await getSql()`
+      UPDATE quotes
+      SET cost_items = ${JSON.stringify(costItems)}::jsonb,
+          payment_schedule = ${JSON.stringify(paymentSchedule)}::jsonb,
+          payment_schedule_status = 'proposed', payment_schedule_revision = payment_schedule_revision + 1,
+          payment_schedule_updated_by = ${trader.id},
+          buildpay_requested_by = ${requestBuildPay ? 'trader' : null},
+          buildpay_fee_mode = ${buildPayFeeMode},
+          buildpay_customer_fee_estimate = ${buildPayCustomerFeeEstimate},
+          updated_at = now()
+      WHERE id = ${quote.id}
+    `;
     await db.update(jobs).set({ status: 'quoted', updatedAt: new Date() }).where(eq(jobs.id, payload.jobId));
     const conversations = await getSql()`INSERT INTO conversations(job_id, customer_id, trader_id) VALUES (${payload.jobId}, ${job.customerId}, ${trader.id}) ON CONFLICT (job_id, customer_id, trader_id) DO UPDATE SET updated_at = now() RETURNING id` as unknown as { id: string }[];
 
-    await addJobEvent(payload.jobId, trader.id, 'quote_received', 'Quote received', `${profile.businessName} submitted a quote with ${paymentSchedule.length} payment stage${paymentSchedule.length === 1 ? '' : 's'}.`, { quoteId: quote.id, totalAmount, materialsAmount: payload.materialsCost, laborServiceAmount: payload.laborCost });
-    await createNotification(job.customerId, { type: 'quote_received', title: `New quote from ${profile.businessName}`, body: `A quote for ${job.title} is ready to review, including protected payment options.`, href: `/customer/compare/${job.id}`, email: true });
-    return Response.json({ ...quote, costItems, paymentSchedule, paymentScheduleStatus: 'proposed', conversationId: conversations[0]?.id ?? null }, { status: 201 });
+    const buildPayCopy = requestBuildPay
+      ? buildPayFeeMode === 'trader_absorbs'
+        ? ' BuildPay is requested and the tradesperson has chosen to absorb the BuildPay fee.'
+        : ` BuildPay is requested with an estimated ${formatPence(buildPayCustomerFeeEstimate)} service fee shown separately to the homeowner.`
+      : '';
+    await addJobEvent(payload.jobId, trader.id, 'quote_received', 'Quote received', `${profile.businessName} submitted a quote with ${paymentSchedule.length} payment stage${paymentSchedule.length === 1 ? '' : 's'}.${buildPayCopy}`, { quoteId: quote.id, totalAmount, materialsAmount: payload.materialsCost, laborServiceAmount: payload.laborCost, buildPayRequestedBy: requestBuildPay ? 'trader' : null, buildPayFeeMode, buildPayCustomerFeeEstimate });
+    await createNotification(job.customerId, { type: 'quote_received', title: `New quote from ${profile.businessName}`, body: `A quote for ${job.title} is ready to review, including its payment schedule${requestBuildPay ? ' and BuildPay terms' : ''}.`, href: `/customer/compare/${job.id}`, email: true });
+    return Response.json({ ...quote, costItems, paymentSchedule, paymentScheduleStatus: 'proposed', buildPayRequestedBy: requestBuildPay ? 'trader' : null, buildPayFeeMode, buildPayCustomerFeeEstimate, conversationId: conversations[0]?.id ?? null }, { status: 201 });
   } catch (error) { return jsonError(error); }
 }
+
+function formatPence(value: number) { return `£${(value / 100).toFixed(2)}`; }
