@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     const row = rows[0];
     if (!row || row.customerId !== customer.id) throw new HttpError(404, 'Active job not found');
     if (row.status !== 'in_progress') throw new HttpError(409, 'BuildPay is only available for an active accepted job');
-    if (!row.stripeAccountId || (!row.stripePayoutsEnabled && !row.stripeChargesEnabled)) {
+    if (!row.stripeAccountId || !row.stripePayoutsEnabled) {
       await createNotification(row.traderId, { type: 'payout_setup_required', title: 'Set up payouts to use BuildPay', body: `${row.title}: the homeowner wants to use BuildPay, but your Stripe payout setup is not complete yet.`, href: '/trader/subscription', email: true });
       throw new HttpError(409, 'The tradesperson must finish Stripe payout setup before this job can use BuildPay. They have been notified.');
     }
