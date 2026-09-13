@@ -109,7 +109,7 @@ export async function POST(request: Request) {
         type: 'external_payment_proposed',
         title: 'Direct payment arrangement proposed',
         body: `${row.title}: ${actor.toLowerCase()} proposed arranging payments outside BuildPair. Review and agree only if that is what you both want.`,
-        href: isCustomer ? `/trader/jobs/${input.jobId}` : `/customer/jobs/${input.jobId}/start`,
+        href: isCustomer ? `/trader/jobs/${input.jobId}/payment-arrangement` : `/customer/jobs/${input.jobId}/start`,
         email: true,
       });
     } else if (input.action === 'confirm_external') {
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
         WHERE id = ${input.jobId}
       `;
       await addJobEvent(input.jobId, userId, 'external_payment_proposal_cancelled', 'Direct payment proposal cancelled', 'The pending proposal to pay outside BuildPair was cancelled.');
-      await createNotification(otherId, { type: 'external_payment_proposal_cancelled', title: 'Direct payment proposal cancelled', body: `${row.title}: the pending direct-payment proposal was cancelled.`, href: isCustomer ? `/trader/jobs/${input.jobId}` : `/customer/jobs/${input.jobId}/start` });
+      await createNotification(otherId, { type: 'external_payment_proposal_cancelled', title: 'Direct payment proposal cancelled', body: `${row.title}: the pending direct-payment proposal was cancelled.`, href: isCustomer ? `/trader/jobs/${input.jobId}/payment-arrangement` : `/customer/jobs/${input.jobId}/start` });
     }
 
     const updated = await readArrangement(input.jobId);
