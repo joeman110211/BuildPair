@@ -16,12 +16,31 @@ ALTER TABLE quotes ADD CONSTRAINT quotes_buildpay_fee_mode_check
 ALTER TABLE quotes DROP CONSTRAINT IF EXISTS quotes_buildpay_customer_fee_non_negative;
 ALTER TABLE quotes ADD CONSTRAINT quotes_buildpay_customer_fee_non_negative
   CHECK (buildpay_customer_fee_estimate >= 0);
+ALTER TABLE quotes DROP CONSTRAINT IF EXISTS quotes_buildpay_fee_terms_consistent;
+ALTER TABLE quotes ADD CONSTRAINT quotes_buildpay_fee_terms_consistent
+  CHECK (
+    (buildpay_requested_by IS NULL AND buildpay_fee_mode IS NULL AND buildpay_customer_fee_estimate = 0)
+    OR
+    (buildpay_requested_by IS NOT NULL AND buildpay_fee_mode IS NOT NULL AND
+      ((buildpay_fee_mode = 'trader_absorbs' AND buildpay_customer_fee_estimate = 0) OR buildpay_fee_mode = 'customer_pays'))
+  );
 
 ALTER TABLE jobs
   ADD COLUMN IF NOT EXISTS buildpay_requested_by text,
   ADD COLUMN IF NOT EXISTS buildpay_fee_mode text,
   ADD COLUMN IF NOT EXISTS buildpay_customer_fee_total integer NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS buildpay_fee_terms_version text;
+
+-- Existing beta BuildPay jobs used the original economics: the homeowner paid
+-- only the contract price and BuildPair/Stripe costs were recovered from the
+-- tradesperson's controlled service payouts. Preserve those jobs explicitly.
+UPDATE jobs
+SET buildpay_requested_by = 'trader',
+    buildpay_fee_mode = 'trader_absorbs',
+    buildpay_customer_fee_total = 0,
+    buildpay_fee_terms_version = 'legacy-pre-2026-09-13'
+WHERE payment_mode = 'buildpair'
+  AND buildpay_requested_by IS NULL;
 
 ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_buildpay_requested_by_check;
 ALTER TABLE jobs ADD CONSTRAINT jobs_buildpay_requested_by_check
@@ -32,6 +51,17 @@ ALTER TABLE jobs ADD CONSTRAINT jobs_buildpay_fee_mode_check
 ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_buildpay_customer_fee_non_negative;
 ALTER TABLE jobs ADD CONSTRAINT jobs_buildpay_customer_fee_non_negative
   CHECK (buildpay_customer_fee_total >= 0);
+ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_buildpay_fee_terms_consistent;
+ALTER TABLE jobs ADD CONSTRAINT jobs_buildpay_fee_terms_consistent
+  CHECK (
+    payment_mode <> 'buildpair'
+    OR (
+      buildpay_requested_by IS NOT NULL
+      AND buildpay_fee_mode IS NOT NULL
+      AND buildpay_fee_terms_version IS NOT NULL
+      AND ((buildpay_fee_mode = 'trader_absorbs' AND buildpay_customer_fee_total = 0) OR buildpay_fee_mode = 'customer_pays')
+    )
+  );
 
 ALTER TABLE buildpay_funding_batches
   ADD COLUMN IF NOT EXISTS customer_fee_amount integer NOT NULL DEFAULT 0,
