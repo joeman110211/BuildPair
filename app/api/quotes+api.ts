@@ -97,7 +97,7 @@ export async function POST(request: Request) {
     let buildPayFeeMode: BuildPayFeeMode | null = null;
     let buildPayCustomerFeeEstimate = 0;
     if (requestBuildPay) {
-      if (!profile.stripeAccountId || (!profile.stripePayoutsEnabled && !profile.stripeChargesEnabled)) throw new HttpError(409, 'Finish Stripe payout setup before sending a quote that requires BuildPay.');
+      if (!profile.stripeAccountId || !profile.stripePayoutsEnabled) throw new HttpError(409, 'Finish Stripe payout setup before sending a quote that requires BuildPay.');
       buildPayFeeMode = buildPayFeeModeForRequest('trader', requestedFeeMode);
       if (buildPayFeeMode === 'customer_pays') {
         buildPayCustomerFeeEstimate = buildPayCustomerFee({ contractAmount: totalAmount, laborServiceAmount: payload.laborCost, plannedChargeCount: plannedBuildPayChargeCount(paymentSchedule) }).customerFee;
