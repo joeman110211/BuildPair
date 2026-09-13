@@ -19,16 +19,10 @@ ALTER TABLE google_review_connections ADD COLUMN IF NOT EXISTS match_reasons tex
 ALTER TABLE google_review_connections ADD COLUMN IF NOT EXISTS reviewed_by text REFERENCES users(id) ON DELETE SET NULL;
 ALTER TABLE google_review_connections ADD COLUMN IF NOT EXISTS reviewed_at timestamptz;
 
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'google_review_connections_status_check'
-  ) THEN
-    ALTER TABLE google_review_connections
-      ADD CONSTRAINT google_review_connections_status_check
-      CHECK (verification_status IN ('verified', 'pending_review', 'rejected'));
-  END IF;
-END $$;
+ALTER TABLE google_review_connections DROP CONSTRAINT IF EXISTS google_review_connections_status_check;
+ALTER TABLE google_review_connections
+  ADD CONSTRAINT google_review_connections_status_check
+  CHECK (verification_status IN ('verified', 'pending_review', 'rejected'));
 
 CREATE INDEX IF NOT EXISTS google_review_connections_place_idx ON google_review_connections(place_id);
 CREATE INDEX IF NOT EXISTS google_review_connections_review_queue_idx ON google_review_connections(verification_status, updated_at DESC);
