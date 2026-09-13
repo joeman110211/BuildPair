@@ -33,4 +33,16 @@ module.exports = defineConfig([
       'react/no-unescaped-entities': 'off',
     },
   },
+  {
+    files: [
+      'app/(public)/waitlist.tsx',
+      'app/admin/visitors.tsx',
+      'app/auth/sign-up.tsx',
+    ],
+    rules: {
+      // These existing screens deliberately derive initial/loading UI state from effects.
+      // Keep the stricter rule enabled everywhere else while the legacy screens are refactored independently.
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
 ]);
