@@ -1,4 +1,4 @@
-import { type Href, useRouter } from 'expo-router';
+import { type Href, usePathname, useRouter } from 'expo-router';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { ActivityIndicator, Button, Text } from 'react-native-paper';
@@ -15,9 +15,19 @@ type ScreenProps = PropsWithChildren<{
 
 export function Screen({ children, title, subtitle, scroll = true, backHref, footer }: ScreenProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { width } = useWindowDimensions();
   const canGoBack = router.canGoBack();
-  const showBack = canGoBack || Boolean(backHref);
+  const sectionBackHref: Href | undefined = backHref ?? (title
+    ? pathname === '/trader/dashboard' || pathname === '/customer/dashboard'
+      ? '/'
+      : pathname.startsWith('/trader/')
+        ? '/trader/dashboard'
+        : pathname.startsWith('/customer/')
+          ? '/customer/dashboard'
+          : undefined
+    : undefined);
+  const showBack = canGoBack || Boolean(sectionBackHref);
   const footerInScroll = Boolean(footer && scroll && width < 900);
   const contentPadding = width < 520 ? styles.contentMobile : width < 900 ? styles.contentTablet : styles.contentDesktop;
 
@@ -26,7 +36,7 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
       router.back();
       return;
     }
-    if (backHref) router.replace(backHref);
+    if (sectionBackHref) router.replace(sectionBackHref);
   }
 
   const content = (
