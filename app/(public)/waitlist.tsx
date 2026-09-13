@@ -22,6 +22,7 @@ export default function WaitlistPage() {
   const [contactOptions, setContactOptions] = useState<ContactOptions>({ emailEnabled: true, smsEnabled: false, smsProvider: 'disabled' });
   const [audience, setAudience] = useState<Audience>(initialAudience);
   const [trade, setTrade] = useState('');
+  const [requestEarlyAccess, setRequestEarlyAccess] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [joined, setJoined] = useState<WaitlistResponse>();
@@ -69,6 +70,7 @@ export default function WaitlistPage() {
           phone,
           audience,
           trade: audience === 'trader' ? trade : '',
+          testerInterest: requestEarlyAccess,
           preferredContact: contactPreference,
           smsOptIn: contactPreference === 'sms' || contactPreference === 'both',
           source,
@@ -98,10 +100,11 @@ export default function WaitlistPage() {
           trade: audience === 'trader' ? trade : '',
           testerInterest: true,
           smsOptIn,
-          source: `${source}-testing`,
+          source: `${source}-early-access`,
         }),
       });
       setDetailsSaved(true);
+      setRequestEarlyAccess(true);
     } catch (e) {
       setDetailsError(errorMessage(e));
     } finally {
@@ -115,28 +118,32 @@ export default function WaitlistPage() {
       ? 'We’ll email and text you when BuildPair registration opens.'
       : 'We’ll email you when BuildPair registration opens.';
 
-  if (joined) return <Screen title="You’re on the BuildPair launch list" subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
+  if (joined) return <Screen title="Welcome to the BuildPair launch list" subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
     <AppCard style={styles.successCard}>
       <Chip icon="check-circle">Launch list confirmed</Chip>
-      <Text variant="headlineSmall" style={styles.heading}>{joined.alreadyJoined ? 'You’re already on the list.' : 'That’s it. You’re in.'}</Text>
-      <Text style={styles.body}>{chosenContactCopy} No account has been created and you do not need to do anything else.</Text>
+      <Text variant="headlineSmall" style={styles.heading}>{joined.alreadyJoined ? 'You’re already on the list.' : 'You’re in. Welcome to BuildPair.'}</Text>
+      <Text style={styles.body}>{chosenContactCopy} No account has been created yet and there is nothing else you have to do.</Text>
+      {requestEarlyAccess ? <View style={styles.earlySuccess}>
+        <Chip icon="key-clock-outline">Early access requested</Chip>
+        <Text style={styles.body}>You’ve asked to start before the public launch. We’ll invite selected early users in manageable batches while we finish real-world testing. Requesting a place does not guarantee an invitation, but your interest is now recorded.</Text>
+      </View> : null}
       {audience === 'trader' ? <>
         <Text style={styles.body}><Text style={styles.strong}>Founding Trades:</Text> the first 100 eligible tradespeople to complete BuildPair registration during the launch offer receive 3 months of Pro free. Other eligible tradespeople joining during the launch offer receive 3 months of Plus free.</Text>
-        <Text style={styles.body}>After launch, genuine completed jobs, BuildPay completions and other qualifying activity can unlock further membership rewards.</Text>
+        <Text style={styles.body}>No pay-per-lead charges. Keep using BuildPair for genuine jobs and BuildPay completions and you can unlock further membership rewards.</Text>
         <Link href="/(public)/rewards" asChild><Button mode="text">See BuildPair Rewards →</Button></Link>
       </> : null}
     </AppCard>
 
     <AppCard>
-      <Chip icon="flask-outline">Optional</Chip>
-      <Text variant="titleLarge" style={styles.heading}>Interested in testing BuildPair before launch?</Text>
-      <Text style={styles.body}>Only add these details if you want to be considered for limited real-world testing. Your launch-list place is already saved.</Text>
-      {detailsSaved ? <Text style={styles.saved}>Testing interest saved. Thanks.</Text> : <>
+      <Chip icon="key-plus">Optional</Chip>
+      <Text variant="titleLarge" style={styles.heading}>{requestEarlyAccess ? 'Help us prioritise your early-access request' : 'Want to request early access?'}</Text>
+      <Text style={styles.body}>{requestEarlyAccess ? 'Add your name and postcode so we have a little more context when selecting early users. Your launch-list place and early-access request are already saved.' : 'If you would like to try BuildPair before public launch, add a few details here. Your launch-list place is already saved.'}</Text>
+      {detailsSaved ? <Text style={styles.saved}>Early-access details saved. Thanks.</Text> : <>
         <TextInput mode="outlined" label="Name" value={name} onChangeText={setName} autoComplete="name" />
         {!phone.trim() ? <TextInput mode="outlined" label="Mobile (optional)" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" placeholder="07911 123456" /> : null}
         <TextInput mode="outlined" label="Postcode" value={postcode} onChangeText={setPostcode} autoCapitalize="characters" placeholder="TW18 1AA" />
         <Checkbox.Item
-          label="You may text me about pre-launch testing"
+          label="You may text me about my requested early access"
           status={smsOptIn ? 'checked' : 'unchecked'}
           disabled={!phone.trim() || !contactOptions.smsEnabled}
           onPress={() => setSmsOptIn((value) => !value)}
@@ -145,18 +152,18 @@ export default function WaitlistPage() {
         />
         {!contactOptions.smsEnabled && phone.trim() ? <Text style={styles.smsNote}>Texting is not switched on yet. Your number can still be saved, but no SMS will be sent until BuildPair enables the service.</Text> : null}
         <HelperText type="error" visible={Boolean(detailsError)}>{detailsError}</HelperText>
-        <Button mode="outlined" loading={detailsBusy} disabled={detailsBusy || !canSaveDetails} onPress={() => void saveTestingDetails()}>Register testing interest</Button>
+        <Button mode="outlined" icon="key-plus" loading={detailsBusy} disabled={detailsBusy || !canSaveDetails} onPress={() => void saveTestingDetails()}>{requestEarlyAccess ? 'Save early-access details' : 'Request early access'}</Button>
       </>}
     </AppCard>
 
     <Link href="/" asChild><Button mode="text">Back to BuildPair</Button></Link>
   </Screen>;
 
-  return <Screen title="Join the BuildPair launch list" subtitle={`Launching ${LAUNCH_DATE_LABEL}. One quick step.`}>
+  return <Screen title="Join the BuildPair launch list" subtitle={`Launching ${LAUNCH_DATE_LABEL}. Get your place and choose whether you want early access.`}>
     <AppCard style={styles.heroCard}>
-      <Chip icon="rocket-launch-outline">Launching soon</Chip>
-      <Text variant="headlineSmall" style={styles.heading}>Choose how BuildPair should contact you.</Text>
-      <Text style={styles.body}>No account setup and no postcode required. Use email, text, or both once SMS is connected.</Text>
+      <Chip icon="rocket-launch-outline">You’re early. That’s a good thing.</Chip>
+      <Text variant="headlineSmall" style={styles.heading}>Join now. Start at launch, or ask to get in sooner.</Text>
+      <Text style={styles.body}>BuildPair is being built for homeowners who want a clearer job process and tradespeople who are tired of paying just to chase leads. Joining takes less than a minute.</Text>
     </AppCard>
 
     <AppCard>
@@ -197,20 +204,32 @@ export default function WaitlistPage() {
       {audience === 'trader' ? <>
         <TextInput mode="outlined" label="Main trade (optional)" value={trade} onChangeText={setTrade} placeholder="e.g. Plumber, electrician, tiler" />
         <AppCard elevated={false} style={styles.offerCard}>
-          <Text variant="titleMedium" style={styles.heading}>Founding Trades offer</Text>
+          <Text variant="titleMedium" style={styles.heading}>A better launch deal for trades</Text>
           <Text style={styles.body}>The first 100 eligible tradespeople to complete BuildPair registration during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Pro free</Text>. Other eligible tradespeople joining during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Plus free</Text>.</Text>
+          <Text style={styles.tradePromise}>No paying for a lead that goes nowhere. No giant bill just for sitting in a directory. BuildPair uses straightforward membership options and gives you tools to quote, manage and complete the work once you win it.</Text>
           <Text variant="bodySmall" style={styles.smsNote}>BuildPair Rewards can add further Pro time for genuine completed jobs, BuildPay completions and qualifying member activity. Promotional eligibility and fair-use rules apply.</Text>
           <Link href="/(public)/rewards" asChild><Button mode="text">View BuildPair Rewards</Button></Link>
         </AppCard>
       </> : null}
 
+      <AppCard elevated={false} style={styles.earlyCard}>
+        <Checkbox.Item
+          label="I’d like early access before the public launch"
+          status={requestEarlyAccess ? 'checked' : 'unchecked'}
+          onPress={() => setRequestEarlyAccess((value) => !value)}
+          position="leading"
+          labelStyle={styles.earlyLabel}
+        />
+        <Text style={styles.earlyHelp}>We’re inviting a limited number of homeowners and tradespeople in batches for real-world testing. Tick this if you want to be considered. Your normal launch-list place is still secured either way.</Text>
+      </AppCard>
+
       <Text style={styles.privacy}>{contactPreference === 'sms'
         ? 'You’re asking BuildPair to send service texts about the launch and your requested early access. We will not use this as consent for marketing texts.'
         : contactPreference === 'both'
           ? 'You’re asking BuildPair to contact you by email and service text about the launch and requested early access. Marketing messages require separate consent.'
-          : 'We’ll use your email for the launch list. If you add an optional mobile number, we will not text it unless you later choose text updates or separately opt in.'} See our Privacy Policy for details.</Text>
+          : `We’ll use your email for the launch list${requestEarlyAccess ? ' and your early-access request' : ''}. If you add an optional mobile number, we will not text it unless you later choose text updates or separately opt in.`} See our Privacy Policy for details.</Text>
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
-      <Button mode="contained" icon="account-clock-outline" loading={busy} disabled={busy || !canJoin} onPress={() => void join()}>{audience === 'trader' ? 'Join the Founding Trades list' : 'Join the launch list'}</Button>
+      <Button mode="contained" icon={requestEarlyAccess ? 'key-plus' : 'account-clock-outline'} loading={busy} disabled={busy || !canJoin} onPress={() => void join()}>{requestEarlyAccess ? 'Join list & request early access' : audience === 'trader' ? 'Join the Founding Trades list' : 'Join the launch list'}</Button>
       <View style={styles.links}><Link href="/(public)/privacy" asChild><Button mode="text">Privacy</Button></Link><Link href="/auth/sign-in" asChild><Button mode="text">Existing member? Sign in</Button></Link></View>
     </AppCard>
   </Screen>;
@@ -219,11 +238,16 @@ export default function WaitlistPage() {
 const styles = StyleSheet.create({
   heroCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
   offerCard: { backgroundColor: colors.goldSoft, borderColor: colors.gold },
+  earlyCard: { backgroundColor: '#F7FAFC', borderColor: colors.primary, gap: 2 },
   successCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+  earlySuccess: { gap: 6, marginTop: 4 },
   heading: { color: colors.charcoal, fontWeight: '900' },
   body: { color: colors.text, lineHeight: 22 },
   strong: { fontWeight: '900' },
+  tradePromise: { color: colors.charcoal, lineHeight: 21, fontSize: 14, fontWeight: '700' },
   label: { color: colors.charcoal, fontWeight: '800', marginTop: spacing.xs },
+  earlyLabel: { color: colors.charcoal, lineHeight: 21, fontWeight: '800' },
+  earlyHelp: { color: colors.muted, lineHeight: 19, fontSize: 12, paddingHorizontal: spacing.sm, paddingBottom: spacing.xs },
   checkboxLabel: { color: colors.text, lineHeight: 20 },
   privacy: { color: colors.muted, lineHeight: 19, fontSize: 12 },
   smsNote: { color: colors.muted, lineHeight: 19, fontSize: 12 },

@@ -13,18 +13,21 @@ export function PrelaunchBanner() {
       <View style={[styles.copy, compact && styles.copyCompact]}>
         <View style={styles.chips}>
           <Chip compact icon="rocket-launch-outline" style={styles.chip} textStyle={styles.chipText}>Launching {LAUNCH_DATE_LABEL}</Chip>
-          <Chip compact icon="shield-check-outline" style={styles.chip} textStyle={styles.chipText}>Introducing BuildPay</Chip>
+          <Chip compact icon="gift-outline" style={styles.chip} textStyle={styles.chipText}>Founding trade bonuses</Chip>
+          <Chip compact icon="shield-check-outline" style={styles.chip} textStyle={styles.chipText}>BuildPay available</Chip>
         </View>
-        <Text style={[styles.title, compact && styles.titleCompact]}>BuildPair is in its final release steps.</Text>
-        <Text style={[styles.body, compact && styles.bodyCompact]}>Explore the full public site now. New account registration is paused until launch, so join the waiting list and we’ll let you know the moment sign-up opens.</Text>
+        <Text style={[styles.title, compact && styles.titleCompact]}>Get in early. BuildPair is nearly ready.</Text>
+        <Text style={[styles.body, compact && styles.bodyCompact]}>A new way for homeowners and tradespeople to find each other, compare proper quotes and keep the job organised. Tradespeople should not have to keep buying dead-end leads or pay oversized fees regardless of whether any work actually lands.</Text>
         <View style={styles.offerBox}>
-          <Text style={styles.offer}><Text style={styles.strong}>Tradespeople:</Text> the first 50 eligible waiting-list trades who complete registration within 24 hours of launch get <Text style={styles.strong}>3 months of Pro free.</Text></Text>
+          <Text style={styles.offer}><Text style={styles.strong}>Trades launch offer:</Text> the first 100 eligible tradespeople to complete registration during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Pro free.</Text> Other eligible tradespeople joining during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Plus free.</Text></Text>
+          <Text style={styles.offerNote}>No pay-per-lead charges. Predictable membership options. Use BuildPair to win suitable work and keep using it to quote, manage and complete the job.</Text>
         </View>
-        <Text style={styles.small}>Real-world testers can also register interest for limited pre-launch testing places.</Text>
+        <Text style={styles.small}>Join the launch list now and, if you want to start sooner, request limited early access when you sign up.</Text>
       </View>
       <View style={[styles.actions, compact && styles.actionsCompact]}>
-        <Link href={waitlistHref(null, 'homepage-banner')} asChild><Button mode="contained" icon="account-clock-outline" style={compact ? styles.actionButtonCompact : undefined} contentStyle={styles.actionContent}>Join launch waitlist</Button></Link>
-        <Link href="/auth/sign-in" asChild><Button mode="outlined" style={compact ? styles.actionButtonCompact : undefined} contentStyle={styles.actionContent}>Existing member sign in</Button></Link>
+        <Link href={waitlistHref('trader', 'homepage-banner')} asChild><Button mode="contained" icon="account-clock-outline" style={compact ? styles.actionButtonCompact : undefined} contentStyle={styles.actionContent}>Join & request early access</Button></Link>
+        <Link href="/(public)/rewards" asChild><Button mode="outlined" style={compact ? styles.actionButtonCompact : undefined} contentStyle={styles.actionContent}>See launch rewards</Button></Link>
+        <Link href="/auth/sign-in" asChild><Button mode="text" style={compact ? styles.actionButtonCompact : undefined} contentStyle={styles.actionContent}>Existing member sign in</Button></Link>
       </View>
     </View>
   </View>;
@@ -43,11 +46,12 @@ const styles = StyleSheet.create({
   titleCompact: { fontSize: 26, lineHeight: 30, letterSpacing: -0.35 },
   body: { color: colors.text, lineHeight: 22, fontSize: 15 },
   bodyCompact: { lineHeight: 20, fontSize: 14 },
-  offerBox: { backgroundColor: 'rgba(255,255,255,0.58)', borderWidth: 1, borderColor: '#EDC6A7', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10 },
+  offerBox: { backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: '#EDC6A7', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 11, gap: 6 },
   offer: { color: colors.charcoalSoft, lineHeight: 20, fontSize: 14 },
+  offerNote: { color: colors.text, lineHeight: 19, fontSize: 13, fontWeight: '700' },
   strong: { color: colors.charcoal, fontWeight: '900' },
   small: { color: colors.muted, lineHeight: 17, fontSize: 12 },
-  actions: { minWidth: 210, gap: spacing.sm },
+  actions: { minWidth: 230, gap: spacing.sm },
   actionsCompact: { minWidth: 0, width: '100%', gap: 8 },
   actionButtonCompact: { width: '100%' },
   actionContent: { minHeight: 44 },
