@@ -13,6 +13,11 @@ function invoiceObject(value: string | Stripe.Invoice | null | undefined) {
   return value && typeof value !== 'string' ? value : null;
 }
 
+function activeCustomer(value: string | Stripe.Customer | Stripe.DeletedCustomer | null) {
+  if (!value || typeof value === 'string' || value.deleted) return null;
+  return value;
+}
+
 export async function GET(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
@@ -44,7 +49,7 @@ export async function GET(request: Request) {
       invoice = await stripe.invoices.retrieve(subscription.latest_invoice);
     }
 
-    const customer = session.customer && typeof session.customer !== 'string' ? session.customer : null;
+    const customer = activeCustomer(session.customer);
     const email = session.customer_details?.email || invoice?.customer_email || customer?.email || trader.email;
     const name = session.customer_details?.name || customer?.name || null;
 
