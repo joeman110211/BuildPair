@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { TRADE_CATEGORIES } from '@/constants/options';
 import { jobSchema, quoteSchema, traderProfileSchema } from '@/lib/validation';
 
 const validJob = {
@@ -102,22 +103,24 @@ describe('marketplace validation', () => {
     if (!result.success) expect(result.error.issues.some((issue) => issue.message.includes('at least one trade category'))).toBe(true);
   });
 
-  it('caps the stored profile at six main trade categories', () => {
+  it('allows profile setup with more than six main trade categories', () => {
     const result = traderProfileSchema.safeParse({
       ...validTraderProfile,
-      tradeCategories: [
-        'Tiling',
-        'Bathrooms',
-        'Kitchens',
-        'Plumbing',
-        'Heating & Gas',
-        'Electrical',
-        'Renewables & EV',
-      ],
+      tradeCategory: TRADE_CATEGORIES[0],
+      tradeCategories: TRADE_CATEGORIES.slice(0, 7),
+      serviceSelections: { Tiling: ['Bathroom tiling'] },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('caps the stored profile at the available trade taxonomy size', () => {
+    const result = traderProfileSchema.safeParse({
+      ...validTraderProfile,
+      tradeCategories: [...TRADE_CATEGORIES, 'Tiling'],
       serviceSelections: {},
     });
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.error.issues.some((issue) => issue.message.includes('no more than 6 trade categories'))).toBe(true);
+    if (!result.success) expect(result.error.issues.some((issue) => issue.message.includes(`no more than ${TRADE_CATEGORIES.length} trade categories`))).toBe(true);
   });
 
   it('rejects a service that does not belong to the selected category', () => {
