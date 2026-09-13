@@ -1,4 +1,5 @@
 import { and, eq, sql } from 'drizzle-orm';
+import { SUB_SKILLS, TRADE_CATEGORIES, type TradeCategory } from '@/constants/options';
 import { getDb } from '@/db/client';
 import { reviews, traderProfiles, users } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
@@ -17,6 +18,16 @@ const defaultShowcase = {
   beforeAfterProjects: [] as { before: string; after: string; caption?: string }[],
 };
 const PUBLIC_REFERENCE_TYPES = ['gas_safe', 'niceic', 'napit', 'trustmark'] as const;
+
+function normaliseServiceSelections(categories: string[], stored: Record<string, string[]> | null | undefined, legacy: string[]) {
+  const known = new Set<string>(TRADE_CATEGORIES);
+  return Object.fromEntries(categories.map((category) => {
+    const selected = Array.isArray(stored?.[category]) ? stored[category] : [];
+    if (selected.length) return [category, selected];
+    if (known.has(category)) return [category, [...SUB_SKILLS[category as TradeCategory]]];
+    return [category, legacy];
+  }));
+}
 
 export async function GET(request: Request, { id }: { id: string }) {
   try {
@@ -47,6 +58,11 @@ export async function GET(request: Request, { id }: { id: string }) {
 
     const paidProfile = profile.subscriptionTier !== 'free' && profile.isSubscriptionActive;
     const tradeCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
+    const serviceSelections = normaliseServiceSelections(
+      tradeCategories,
+      profile.serviceSelections as Record<string, string[]> | null,
+      profile.subSkills ?? [],
+    );
     const publicLatitude = Number.isFinite(profile.latitude) ? Math.round((profile.latitude as number) * 100) / 100 : null;
     const publicLongitude = Number.isFinite(profile.longitude) ? Math.round((profile.longitude as number) * 100) / 100 : null;
 
@@ -58,11 +74,22 @@ export async function GET(request: Request, { id }: { id: string }) {
       console.warn('[buildpair-profile] Optional showcase data unavailable', { profileId: profile.id });
     }
 
-    let verifiedReviews: { id: string; rating: number; comment: string; createdAt: Date }[] = [];
+    const sqlClient = getSql();
+    let verifiedReviews: { id: string; rating: number; comment: string; createdAt: Date | string }[] = [];
     if (paidProfile) {
       try {
-        verifiedReviews = await db.select({ id: reviews.id, rating: reviews.rating, comment: reviews.comment, createdAt: reviews.createdAt })
+        const projectReviews = await db.select({ id: reviews.id, rating: reviews.rating, comment: reviews.comment, createdAt: reviews.createdAt })
           .from(reviews).where(and(eq(reviews.traderId, profile.userId), eq(reviews.verifiedCompletion, true))).limit(50);
+        const externalReviews = await sqlClient`
+          SELECT id, rating, comment, created_at AS "createdAt"
+          FROM external_reviews
+          WHERE trader_id = ${profile.userId}
+          ORDER BY created_at DESC
+          LIMIT 50
+        ` as unknown as { id: string; rating: number; comment: string; createdAt: string }[];
+        verifiedReviews = [...projectReviews, ...externalReviews]
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 50);
       } catch {
         console.warn('[buildpair-profile] Verified reviews unavailable', { profileId: profile.id });
       }
@@ -70,7 +97,6 @@ export async function GET(request: Request, { id }: { id: string }) {
     const reviewCount = paidProfile ? verifiedReviews.length : 0;
     const averageRating = reviewCount ? verifiedReviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount : 0;
 
-    const sqlClient = getSql();
     const [credentials, availability, stories] = await Promise.all([
       sqlClient`
         SELECT id, credential_type AS "credentialType", name, issuer,
@@ -133,6 +159,7 @@ export async function GET(request: Request, { id }: { id: string }) {
       latitude: publicLatitude,
       longitude: publicLongitude,
       tradeCategories,
+      serviceSelections,
       externalLinks: paidProfile ? profile.externalLinks : {},
       isSubscriptionActive: paidProfile,
       isPreview: false,
