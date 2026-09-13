@@ -31,7 +31,7 @@ const customerItems: NavItem[] = [
 ];
 
 const traderItems: NavItem[] = [
-  { label: 'Home', glyph: '⌂', href: '/trader', match: (p) => p === '/trader' || p === '/trader/dashboard' },
+  { label: 'Home', glyph: '⌂', href: '/trader/dashboard', match: (p) => p === '/trader/dashboard' },
   { label: 'Find work', glyph: '⌕', href: '/trader/job-board', match: (p) => p.includes('/trader/job-board') },
   { label: 'Jobs', glyph: '▤', href: '/trader/my-jobs', match: (p) => p === '/trader/my-jobs' },
   { label: 'Messages', glyph: '●', href: '/trader/messages', match: (p) => p === '/trader/messages' },

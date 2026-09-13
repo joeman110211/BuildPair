@@ -42,17 +42,13 @@ export default function TraderAnalyticsScreen() {
       setLocked(false);
       setError('');
     } catch (e) {
-      if (e instanceof ApiError && (e.status === 404 || e.status === 409)) {
-        router.replace('/trader/dashboard');
-        return;
-      }
       if (e instanceof ApiError && e.status === 402) {
         setLocked(true);
         setMetrics(undefined);
         setError('');
       } else setError(errorMessage(e));
     } finally { setLoading(false); }
-  }, [router]);
+  }, []);
   useEffect(() => { void load(); }, [load]);
   if (loading) return <LoadingScreen label="Calculating business performance…" />;
   if (locked) return <Screen title="Business Analytics" subtitle="Advanced performance analytics are included with BuildPair Pro.">

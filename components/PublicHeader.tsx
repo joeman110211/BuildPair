@@ -101,23 +101,13 @@ function AuthenticatedHeader() {
       router.replace('/auth/choose-role');
       return;
     }
-    const target = dashboardHref(mode);
     try {
       await apiFetch('/api/me', { method: 'PATCH', body: JSON.stringify({ role: mode }) }, getToken);
     } catch {
       // The protected dashboard performs its own account check; still navigate so the
       // user gets a visible error/retry screen rather than being stranded on a public page.
     }
-
-    // Moving from the public shell into an authenticated Expo Router layout through a
-    // client-side replace can leave an already-open browser/PWA using stale route chunks
-    // after a deployment. A document navigation guarantees the protected dashboard starts
-    // against the current production bundle and also crosses the layout boundary cleanly.
-    if (typeof window !== 'undefined') {
-      window.location.assign(String(target));
-      return;
-    }
-    router.replace(target);
+    router.replace(dashboardHref(mode));
   };
 
   if (compact) return <CompactShell menu={<NavMenu dashboard={dashboard} signedIn={isSignedIn} onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} />} />;

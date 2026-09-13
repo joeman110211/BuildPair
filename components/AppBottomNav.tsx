@@ -35,9 +35,7 @@ export function AppBottomNav({ role }: { role: UserRole }) {
   const items = role === 'trader' ? traderItems : customerItems;
   return <View style={styles.wrap} accessibilityLabel={`${role === 'trader' ? 'Tradesperson' : 'Homeowner'} navigation`}>
     {items.map((item) => {
-      const active = role === 'trader' && item.label === 'Home'
-        ? pathname === '/trader' || pathname === '/trader/dashboard'
-        : item.matches.some((match) => pathname.includes(match));
+      const active = item.matches.some((match) => pathname.includes(match));
       const showUnread = item.label === 'Messages' && unreadMessages > 0;
       return <Pressable
         key={item.label}
