@@ -30,12 +30,14 @@ export function buildPayFeeModeForRequest(requestedBy: BuildPayRequestedBy, trad
 }
 
 /**
- * Price the BuildPay service by the agreed stage count and freeze that figure
- * before acceptance. Some stages can later be funded together in one card
- * payment; BuildPair does not re-price the fee at checkout in either direction.
+ * Price the BuildPay service from the planned number of card charges and freeze
+ * that figure before acceptance. Materials plus the first protected work stage
+ * are funded together, so that opening pair counts as one charge rather than two.
  */
 export function plannedBuildPayChargeCount(stages: { kind: string }[]) {
-  return Math.max(1, stages.length);
+  if (!stages.length) return 1;
+  const openingPairIsBundled = stages.length > 1 && stages[0]?.kind === 'materials';
+  return Math.max(1, stages.length - (openingPairIsBundled ? 1 : 0));
 }
 
 /**
