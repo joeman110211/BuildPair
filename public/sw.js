@@ -1,4 +1,4 @@
-const CACHE_NAME = 'buildpair-static-v6';
+const CACHE_NAME = 'buildpair-static-v7';
 const APP_SHELL = ['/', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
@@ -27,7 +27,7 @@ self.addEventListener('activate', (event) => {
 async function networkFirst(request) {
   try {
     // Revalidate against production rather than trusting Chrome's HTTP cache.
-    // This keeps an installed BuildPair PWA on the same deployed JS as the website.
+    // This keeps browser/PWA navigation on the same deployed JS as the website.
     const response = await fetch(request, { cache: 'no-cache' });
     if (response.ok) {
       const cache = await caches.open(CACHE_NAME);

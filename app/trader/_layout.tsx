@@ -5,11 +5,11 @@ import { NativeBottomNav } from '@/components/NativeBottomNav';
 import { RoleGate } from '@/components/RoleGate';
 
 export const unstable_settings = {
-  initialRouteName: 'index',
+  initialRouteName: 'dashboard',
 };
 
 export default function TraderLayout() {
-  return <RoleGate role="trader"><View style={{ flex: 1, minHeight: 0 }}><DashboardHeader home="/trader" /><Stack screenOptions={{ headerTintColor: '#D35400', headerShadowVisible: false }}>
+  return <RoleGate role="trader"><View style={{ flex: 1, minHeight: 0 }}><DashboardHeader home="/trader/dashboard" /><Stack screenOptions={{ headerTintColor: '#D35400', headerShadowVisible: false }}>
     <Stack.Screen name="index" options={{ headerShown: false }} />
     <Stack.Screen name="dashboard" options={{ headerShown: false }} />
     <Stack.Screen name="job-board" options={{ headerShown: false }} />
