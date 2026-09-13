@@ -4,10 +4,6 @@ import { DashboardHeader } from '@/components/DashboardHeader';
 import { NativeBottomNav } from '@/components/NativeBottomNav';
 import { RoleGate } from '@/components/RoleGate';
 
-export const unstable_settings = {
-  initialRouteName: 'dashboard',
-};
-
 export default function CustomerLayout() {
   return <RoleGate role="customer"><View style={{ flex: 1, minHeight: 0 }}><DashboardHeader home="/customer/dashboard" /><Stack screenOptions={{ headerTintColor: '#D35400', headerShadowVisible: false }}>
     <Stack.Screen name="dashboard" options={{ headerShown: false }} />
