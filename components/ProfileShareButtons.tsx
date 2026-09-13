@@ -14,6 +14,14 @@ const SHARE_ICONS = {
   share: `${MDI_BASE}/share-variant.svg`,
 } as const;
 
+type ShareAction = {
+  key: string;
+  source: string;
+  label: string;
+  onPress: () => void;
+  filled?: boolean;
+};
+
 function WebShareIconButton({
   source,
   label,
@@ -87,7 +95,7 @@ export function ProfileShareButtons({ profileId, businessName }: { profileId: st
     }
   }
 
-  const actions = [
+  const actions: ShareAction[] = [
     { key: 'whatsapp', source: SHARE_ICONS.whatsapp, label: 'Share on WhatsApp', onPress: () => void open(`https://wa.me/?text=${encodeURIComponent(text)}`) },
     { key: 'facebook', source: SHARE_ICONS.facebook, label: 'Share on Facebook', onPress: () => void open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`) },
     { key: 'messenger', source: SHARE_ICONS.messenger, label: 'Share with Messenger', onPress: () => void shareMessenger() },
@@ -95,7 +103,7 @@ export function ProfileShareButtons({ profileId, businessName }: { profileId: st
     { key: 'sms', source: SHARE_ICONS.sms, label: 'Share by SMS', onPress: () => void open(`sms:?body=${encodeURIComponent(text)}`) },
     { key: 'link', source: SHARE_ICONS.link, label: 'Copy profile link', onPress: () => void copyLink() },
     { key: 'share', source: SHARE_ICONS.share, label: 'More sharing options', onPress: () => void shareMore(), filled: true },
-  ] as const;
+  ];
 
   return <View style={styles.wrapper}>
     <Text variant="labelLarge" style={styles.label}>Share this BuildPair profile</Text>
