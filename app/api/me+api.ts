@@ -1,11 +1,12 @@
 import { eq } from 'drizzle-orm';
+import { TRADE_CATEGORIES } from '@/constants/options';
 import { getDb } from '@/db/client';
 import { traderProfiles } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
 import { InvalidPostcodeError, lookupPostcode } from '@/lib/postcode';
 import { getSql } from '@/lib/sql';
 import { accountAccess, accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
-import { categoryChangeAllowed, categoryChangeAvailableAt, traderWorkTypeLimit } from '@/lib/subscription';
+import { categoryChangeAllowed, categoryChangeAvailableAt } from '@/lib/subscription';
 import { roleSchema, traderProfileSchema } from '@/lib/validation';
 
 export async function GET(request: Request) {
@@ -120,9 +121,9 @@ export async function PUT(request: Request) {
       throw new HttpError(403, 'Your published service base is locked to keep BuildPair jobs genuinely local. If your home or business base has moved, contact info@buildpair.co.uk to request an update. We may ask for reasonable evidence of the new location.');
     }
 
-    const categoryLimit = traderWorkTypeLimit(existingProfile);
+    const categoryLimit = TRADE_CATEGORIES.length;
     if (tradeCategories.length > categoryLimit) {
-      throw new HttpError(403, `Your current BuildPair plan allows up to ${categoryLimit} main trade categories. Remove some selections or upgrade your plan.`);
+      throw new HttpError(403, `A profile can contain up to ${categoryLimit} main trade categories. Remove some selections before publishing.`);
     }
 
     const existingCategories = existingProfile?.tradeCategories?.length
