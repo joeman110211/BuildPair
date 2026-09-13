@@ -75,7 +75,7 @@ export async function GET(request: Request, { id }: { id: string }) {
     }
 
     const sqlClient = getSql();
-    let verifiedReviews: { id: string; rating: number; comment: string; createdAt: Date | string }[] = [];
+    let verifiedReviews: { id: string; rating: number; comment: string; createdAt: string }[] = [];
     if (paidProfile) {
       try {
         const projectReviews = await db.select({ id: reviews.id, rating: reviews.rating, comment: reviews.comment, createdAt: reviews.createdAt })
@@ -87,7 +87,11 @@ export async function GET(request: Request, { id }: { id: string }) {
           ORDER BY created_at DESC
           LIMIT 50
         ` as unknown as { id: string; rating: number; comment: string; createdAt: string }[];
-        verifiedReviews = [...projectReviews, ...externalReviews]
+        const normalisedProjectReviews = projectReviews.map((review) => ({
+          ...review,
+          createdAt: review.createdAt.toISOString(),
+        }));
+        verifiedReviews = [...normalisedProjectReviews, ...externalReviews]
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 50);
       } catch {
