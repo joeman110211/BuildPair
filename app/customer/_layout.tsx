@@ -5,9 +5,7 @@ import { NativeBottomNav } from '@/components/NativeBottomNav';
 import { RoleGate } from '@/components/RoleGate';
 
 export default function CustomerLayout() {
-  if (Platform.OS === 'web') {
-    return <RoleGate role="customer"><View style={{ flex: 1, minHeight: 0 }}><DashboardHeader home="/customer/dashboard" /><Slot /></View></RoleGate>;
-  }
+  if (Platform.OS === 'web') return <Slot />;
 
   return <RoleGate role="customer"><View style={{ flex: 1, minHeight: 0 }}><DashboardHeader home="/customer/dashboard" /><Stack screenOptions={{ headerTintColor: '#D35400', headerShadowVisible: false }}>
     <Stack.Screen name="dashboard" options={{ headerShown: false }} />
