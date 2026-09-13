@@ -67,6 +67,7 @@ export const traderProfiles = pgTable(
     stripeCustomerId: text('stripe_customer_id'),
     stripeAccountId: text('stripe_account_id'),
     stripeChargesEnabled: boolean('stripe_charges_enabled').notNull().default(false),
+    stripePayoutsEnabled: boolean('stripe_payouts_enabled').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },

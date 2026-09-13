@@ -14,7 +14,19 @@ describe('BuildPay funding flow', () => {
     expect(plannedBuildPayChargeCount(stages)).toBe(2);
   });
 
-  it('allows materials-only first funding when the homeowner chooses that simpler route', () => {
+  it('matches the planned live £3 smoke test: £1 materials plus £1 stage one opens as one £2 contract payment', () => {
+    const stages = [
+      { id: 'materials', amount: 100, kind: 'materials' as const, sortOrder: 1, status: 'pending' as const },
+      { id: 'stage-1', amount: 100, kind: 'stage' as const, sortOrder: 2, status: 'pending' as const },
+      { id: 'final', amount: 100, kind: 'final' as const, sortOrder: 3, status: 'pending' as const },
+    ];
+    const opening = openingFundingStages(stages);
+    expect(opening.map((stage) => stage.id)).toEqual(['materials', 'stage-1']);
+    expect(fundingTotal(opening)).toBe(200);
+    expect(plannedBuildPayChargeCount(stages)).toBe(2);
+  });
+
+  it('supports a materials-only job when there is no protected work stage to bundle', () => {
     const materialsOnly = [{ id: 'materials', amount: 5_000, kind: 'materials' as const, sortOrder: 1, status: 'pending' as const }];
     expect(openingFundingStages(materialsOnly).map((stage) => stage.id)).toEqual(['materials']);
     expect(fundingTotal(materialsOnly)).toBe(5_000);

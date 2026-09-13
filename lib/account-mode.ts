@@ -7,7 +7,7 @@ export function parseAccountMode(value: string | string[] | undefined): UserRole
   return candidate === 'customer' || candidate === 'trader' ? candidate : null;
 }
 
-export function safeInternalReturnTo(value: string | string[] | undefined): string | null {
+export function safeInternalReturnTo(value: string | string[] | null | undefined): string | null {
   const candidate = Array.isArray(value) ? value[0] : value;
   if (!candidate || !candidate.startsWith('/') || candidate.startsWith('//')) return null;
   if (/^[\s\S]*[\r\n]/.test(candidate)) return null;

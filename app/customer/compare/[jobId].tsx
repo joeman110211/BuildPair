@@ -27,7 +27,16 @@ export default function CompareQuotesScreen() {
   async function performAccept(quote: Quote, paymentPlanChoice: PaymentChoice) {
     try {
       setAccepting(quote.id); setError('');
-      await apiFetch(`/api/quotes/${quote.id}`, { method: 'PATCH', body: JSON.stringify({ action: 'accept', paymentPlanChoice, acknowledgedPaymentSchedule: true }) }, getToken);
+      const customerPaysBuildPay = Boolean(quote.buildPayRequestedBy && quote.buildPayFeeMode === 'customer_pays');
+      await apiFetch(`/api/quotes/${quote.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          action: 'accept',
+          paymentPlanChoice,
+          acknowledgedPaymentSchedule: true,
+          acknowledgedBuildPayFee: customerPaysBuildPay ? true : undefined,
+        }),
+      }, getToken);
       router.replace(`/customer/jobs/${jobId}/start` as Href);
     } catch (e) { setError(errorMessage(e)); }
     finally { setAccepting(undefined); }
@@ -37,7 +46,14 @@ export default function CompareQuotesScreen() {
     const paymentText = paymentPlanChoice === 'full'
       ? 'The agreed schedule is materials first, then one protected service balance.'
       : 'The agreed milestone schedule stays attached to the job.';
-    const message = `You are accepting the ${formatMoney(quote.totalAmount)} quote from ${quote.businessName ?? 'this tradesperson'}. ${paymentText} Accepting does not charge your card. Next you confirm the private job address and choose BuildPay or direct payment.`;
+    const buildPayFee = quote.buildPayFeeMode === 'customer_pays' ? Math.max(0, quote.buildPayCustomerFeeEstimate ?? 0) : 0;
+    const allIn = quote.totalAmount + buildPayFee;
+    const buildPayText = quote.buildPayRequestedBy
+      ? quote.buildPayFeeMode === 'customer_pays'
+        ? ` BuildPay is part of this proposal. Work price: ${formatMoney(quote.totalAmount)}. BuildPay service fee: ${formatMoney(buildPayFee)}. All-in total with BuildPay: ${formatMoney(allIn)}.`
+        : ` BuildPay is part of this proposal. The tradesperson is absorbing its agreed fees, so your all-in total remains ${formatMoney(quote.totalAmount)}.`
+      : ' Accepting does not charge your card. After acceptance you can choose direct payment or request BuildPay; choosing BuildPay later will show its service fee and all-in total before you commit.';
+    const message = `You are accepting the quote from ${quote.businessName ?? 'this tradesperson'}. ${paymentText}${buildPayText}`;
     if (typeof window !== 'undefined') {
       if (window.confirm(message)) void performAccept(quote, paymentPlanChoice);
       return;
