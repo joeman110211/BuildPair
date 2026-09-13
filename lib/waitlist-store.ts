@@ -20,6 +20,8 @@ export function ensureLaunchWaitlistTable() {
         marketing_opt_in boolean NOT NULL DEFAULT false,
         preferred_contact text NOT NULL DEFAULT 'email' CHECK (preferred_contact IN ('email', 'sms', 'both')),
         source text NOT NULL DEFAULT 'website',
+        referral_code text,
+        referred_by_id uuid REFERENCES launch_waitlist(id) ON DELETE SET NULL,
         status text NOT NULL DEFAULT 'waiting' CHECK (status IN ('waiting', 'invited', 'registered', 'rewarded', 'removed')),
         launch_notified_at timestamptz,
         registered_user_id text REFERENCES users(id) ON DELETE SET NULL,
@@ -38,10 +40,19 @@ export function ensureLaunchWaitlistTable() {
     await sql`ALTER TABLE launch_waitlist ALTER COLUMN email DROP NOT NULL`;
     await sql`ALTER TABLE launch_waitlist ALTER COLUMN phone DROP NOT NULL`;
     await sql`ALTER TABLE launch_waitlist ADD COLUMN IF NOT EXISTS preferred_contact text NOT NULL DEFAULT 'email'`;
+    await sql`ALTER TABLE launch_waitlist ADD COLUMN IF NOT EXISTS referral_code text`;
+    await sql`ALTER TABLE launch_waitlist ADD COLUMN IF NOT EXISTS referred_by_id uuid REFERENCES launch_waitlist(id) ON DELETE SET NULL`;
+    await sql`
+      UPDATE launch_waitlist
+      SET referral_code = 'BP' || upper(substr(replace(id::text, '-', ''), 1, 10))
+      WHERE referral_code IS NULL OR trim(referral_code) = ''
+    `;
     await sql`CREATE INDEX IF NOT EXISTS launch_waitlist_phone_idx ON launch_waitlist(phone) WHERE phone IS NOT NULL AND phone <> ''`;
     await sql`CREATE INDEX IF NOT EXISTS launch_waitlist_created_idx ON launch_waitlist(created_at)`;
     await sql`CREATE INDEX IF NOT EXISTS launch_waitlist_audience_idx ON launch_waitlist(audience, created_at)`;
     await sql`CREATE INDEX IF NOT EXISTS launch_waitlist_postcode_idx ON launch_waitlist(postcode)`;
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS launch_waitlist_referral_code_uidx ON launch_waitlist(referral_code) WHERE referral_code IS NOT NULL`;
+    await sql`CREATE INDEX IF NOT EXISTS launch_waitlist_referred_by_idx ON launch_waitlist(referred_by_id) WHERE referred_by_id IS NOT NULL`;
 
     await sql`
       DO $$
