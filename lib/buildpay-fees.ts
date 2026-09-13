@@ -30,6 +30,17 @@ export function buildPayFeeModeForRequest(requestedBy: BuildPayRequestedBy, trad
 }
 
 /**
+ * The recommended opening payment combines materials with the first protected
+ * service stage, so that pair normally creates one Stripe card charge rather
+ * than two. If a homeowner deliberately chooses materials-only first, BuildPair
+ * absorbs that extra transaction cost instead of changing the agreed fee later.
+ */
+export function plannedBuildPayChargeCount(stages: { kind: string }[]) {
+  const hasMaterials = stages.some((stage) => stage.kind === 'materials');
+  return Math.max(1, stages.length - (hasMaterials && stages.length > 1 ? 1 : 0));
+}
+
+/**
  * Customer-paid BuildPay pricing is fixed before funding starts. We gross up
  * the service-cost allowance because Stripe's percentage applies to the full
  * amount collected, including the BuildPay service fee itself.
