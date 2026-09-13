@@ -25,6 +25,15 @@ type Milestone = {
 
 type Detail = { job: Job; acceptedQuote: Quote | null; milestones: Milestone[]; trader: TraderProfile | null };
 type PrivateDetails = { addressLine1: string; addressLine2: string; townCity: string; postcode: string; accessNotes: string; complete: boolean };
+type PaymentArrangement = {
+  paymentMode: 'undecided' | 'buildpair' | 'external';
+  proposedAt: string | null;
+  proposedByMe: boolean;
+  proposedByOther: boolean;
+  myAgreed: boolean;
+  otherAgreed: boolean;
+  fullyAgreed: boolean;
+};
 type BuildPaySummary = {
   paymentMode: 'undecided' | 'buildpair' | 'external';
   buildPayRequestedBy: BuildPayRequestedBy | null;
@@ -44,6 +53,7 @@ export default function StartAwardedJobScreen() {
   const router = useRouter();
   const [data, setData] = useState<Detail>();
   const [buildPaySummary, setBuildPaySummary] = useState<BuildPaySummary>();
+  const [arrangement, setArrangement] = useState<PaymentArrangement>();
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [townCity, setTownCity] = useState('');
@@ -55,13 +65,15 @@ export default function StartAwardedJobScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [detail, privateDetails, feeSummary] = await Promise.all([
+      const [detail, privateDetails, feeSummary, paymentArrangement] = await Promise.all([
         apiFetch<Detail>(`/api/jobs/${id}`, {}, getToken),
         apiFetch<PrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
         apiFetch<BuildPaySummary>(`/api/buildpay/summary?jobId=${encodeURIComponent(id)}`, {}, getToken),
+        apiFetch<PaymentArrangement>(`/api/payment-arrangement?jobId=${encodeURIComponent(id)}`, {}, getToken),
       ]);
       setData(detail);
       setBuildPaySummary(feeSummary);
+      setArrangement(paymentArrangement);
       setAddressLine1(privateDetails.addressLine1);
       setAddressLine2(privateDetails.addressLine2);
       setTownCity(privateDetails.townCity);
@@ -91,26 +103,29 @@ export default function StartAwardedJobScreen() {
     finally { setBusy(false); }
   }
 
-  async function choosePaymentMode(mode: 'buildpair' | 'external') {
+  async function chooseBuildPay() {
     try {
       setBusy(true); setError('');
-      if (mode === 'buildpair') {
-        await apiFetch('/api/buildpay/select', {
-          method: 'POST',
-          body: JSON.stringify({ jobId: id, acknowledgedPaymentTerms: true, acknowledgedBuildPayFee: true }),
-        }, getToken);
-      } else {
-        await apiFetch(`/api/jobs/${id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ action: 'set_payment_mode', mode: 'external' }),
-        }, getToken);
-      }
+      await apiFetch('/api/buildpay/select', {
+        method: 'POST',
+        body: JSON.stringify({ jobId: id, acknowledgedPaymentTerms: true, acknowledgedBuildPayFee: true }),
+      }, getToken);
       await load();
     } catch (e) { setError(errorMessage(e)); }
     finally { setBusy(false); }
   }
 
-  if (!data || !buildPaySummary) return <LoadingScreen label="Preparing your project…" />;
+  async function directPaymentAction(action: 'propose_external' | 'confirm_external' | 'cancel_external') {
+    try {
+      setBusy(true); setError('');
+      const next = await apiFetch<PaymentArrangement>('/api/payment-arrangement', { method: 'POST', body: JSON.stringify({ jobId: id, action }) }, getToken);
+      setArrangement(next);
+      await load();
+    } catch (e) { setError(errorMessage(e)); }
+    finally { setBusy(false); }
+  }
+
+  if (!data || !buildPaySummary || !arrangement) return <LoadingScreen label="Preparing your project…" />;
   const paymentMode = data.job.paymentMode ?? 'undecided';
   const ordered = [...data.milestones].sort((a, b) => a.sortOrder - b.sortOrder);
   const current = ordered.find((stage) => stage.status !== 'paid');
@@ -170,7 +185,7 @@ export default function StartAwardedJobScreen() {
     </AppCard>
 
     <AppCard>
-      <Text variant="titleLarge">3. Choose how the money moves</Text>
+      <Text variant="titleLarge">3. Agree how the money moves</Text>
       {paymentMode === 'undecided' ? <>
         <AppCard elevated={false}>
           <Chip icon="shield-lock-outline">Optional BuildPay</Chip>
@@ -182,24 +197,31 @@ export default function StartAwardedJobScreen() {
             <Text variant="titleMedium">All-in with BuildPay: {formatMoney(buildPaySummary.previewAllInTotal)}</Text>
           </View>
           <Text variant="bodySmall">Because you are choosing BuildPay after accepting a quote that did not require it, you pay the disclosed BuildPay service fee. It is a BuildPay protection/administration fee, not a card surcharge. Your tradesperson's accepted work price is not reduced by this fee.</Text>
-          <Button mode="contained" icon="shield-check-outline" loading={busy} disabled={busy || !addressReady} onPress={() => void choosePaymentMode('buildpair')}>Use BuildPay · {formatMoney(buildPaySummary.previewAllInTotal)} all-in</Button>
+          <Button mode="contained" icon="shield-check-outline" loading={busy} disabled={busy || !addressReady} onPress={() => void chooseBuildPay()}>Use BuildPay · {formatMoney(buildPaySummary.previewAllInTotal)} all-in</Button>
           {!addressReady ? <HelperText type="info">Save the private job address first.</HelperText> : null}
         </AppCard>
 
         <AppCard elevated={false}>
-          <Chip icon="bank-transfer-out">Direct payment</Chip>
-          <Text variant="titleMedium">Pay the tradesperson directly · {formatMoney(buildPaySummary.contractAmount)}</Text>
-          <Text>You can pay by bank transfer, cash or another method agreed directly with the tradesperson. BuildPair remains the introduction and project-record platform, but does not receive, hold, protect, release, refund or recover that money.</Text>
-          <Text>Any direct-payment record in BuildPair is based on what you and the tradesperson confirm. It is not BuildPair verification of the payment or the work.</Text>
-          <Button mode="outlined" loading={busy} disabled={busy || !addressReady} onPress={() => void choosePaymentMode('external')}>Pay tradesperson directly</Button>
+          <Chip icon="bank-transfer-out">Pay outside BuildPair</Chip>
+          <Text variant="titleMedium">Direct payment · {formatMoney(buildPaySummary.contractAmount)} work price</Text>
+          <Text>Site visits, face-to-face discussions and in-person quotes are allowed. If you both decide to arrange payment privately, either of you can propose that here and the other person must explicitly agree before BuildPair switches the job to direct payment.</Text>
+          <Text>BuildPair keeps the structured quote, messages, variations and optional two-party payment records, but it does not receive, hold, protect, refund, recover or independently verify money paid outside BuildPair.</Text>
+          {arrangement.proposedByOther ? <>
+            <Chip icon="account-clock-outline">Tradesperson proposed direct payment</Chip>
+            <Text variant="bodySmall">Confirm only if you have both agreed to pay outside BuildPair. BuildPay protection will not apply.</Text>
+            <Button mode="contained-tonal" icon="check" loading={busy} disabled={busy || !addressReady} onPress={() => void directPaymentAction('confirm_external')}>Agree to pay outside BuildPair</Button>
+          </> : arrangement.proposedByMe ? <>
+            <Chip icon="clock-outline">Waiting for tradesperson to agree</Chip>
+            <Button mode="text" disabled={busy} onPress={() => void directPaymentAction('cancel_external')}>Cancel direct-payment proposal</Button>
+          </> : <Button mode="outlined" loading={busy} disabled={busy || !addressReady} onPress={() => void directPaymentAction('propose_external')}>Propose paying outside BuildPair</Button>}
         </AppCard>
       </> : paymentMode === 'buildpair' ? <>
         <Chip icon="shield-check-outline">BuildPay selected</Chip>
         <Text>BuildPay keeps the job simple: fund what is needed next, release work money only after the agreed point is reached, then move straight on to the next stage.</Text>
         {buildPaySummary.buildPayFeeMode === 'customer_pays' ? <Text>Work price {formatMoney(buildPaySummary.contractAmount)} + agreed BuildPay service fee {formatMoney(buildPaySummary.buildPayCustomerFeeTotal)} = {formatMoney(buildPaySummary.allInTotal)} all-in. The fee is allocated across the agreed card payments, so it does not suddenly appear at checkout.</Text> : <Text>The tradesperson chose to absorb the agreed BuildPay costs. Your total remains the {formatMoney(buildPaySummary.contractAmount)} work price.</Text>}
       </> : <>
-        <Chip icon="bank-transfer-out">Direct payment selected</Chip>
-        <Text>Payments are between you and the tradesperson. BuildPair keeps the quote, messages, variations and optional payment confirmations together, but BuildPay protection does not apply.</Text>
+        <Chip icon="bank-transfer-out">Direct payment agreed by both sides</Chip>
+        <Text>You and the tradesperson agreed to arrange payment outside BuildPair. BuildPair keeps the structured project record and optional two-party confirmations, but BuildPay protection does not apply.</Text>
       </>}
     </AppCard>
 
