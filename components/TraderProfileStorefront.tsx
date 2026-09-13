@@ -33,6 +33,8 @@ const SECTION_TABS: { key: SectionKey; label: string }[] = [
   { key: 'credentials', label: 'Credentials' },
 ];
 
+const COMPACT_LIST_LIMIT = 6;
+
 function SectionCard({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return <AppCard style={styles.panel}>
     <View style={styles.panelHeader}>
@@ -58,6 +60,8 @@ export default function TraderProfileStorefront() {
   const [error, setError] = useState('');
   const [activeSection, setActiveSection] = useState<SectionKey>('overview');
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [showAllServices, setShowAllServices] = useState(false);
 
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
 
@@ -75,6 +79,11 @@ export default function TraderProfileStorefront() {
     const timer = setTimeout(() => void load(), 0);
     return () => clearTimeout(timer);
   }, [load]);
+
+  useEffect(() => {
+    setShowAllCategories(false);
+    setShowAllServices(false);
+  }, [id]);
 
   async function toggleSaved() {
     if (!profile || profile.shareOnly || !user?.customerEnabled) return;
@@ -99,6 +108,11 @@ export default function TraderProfileStorefront() {
   const serviceAreas = profile.serviceAreas?.length ? profile.serviceAreas : profile.locationLabel ? [profile.locationLabel] : [];
   const selectedServices = categories.flatMap((category) => profile.serviceSelections?.[category] ?? []);
   const serviceList = selectedServices.length ? selectedServices : profile.subSkills;
+  const visibleCategories = showAllCategories ? categories : categories.slice(0, COMPACT_LIST_LIMIT);
+  const visibleServices = showAllServices ? serviceList : serviceList.slice(0, COMPACT_LIST_LIMIT);
+  const hiddenCategoryCount = Math.max(categories.length - COMPACT_LIST_LIMIT, 0);
+  const hiddenServiceCount = Math.max(serviceList.length - COMPACT_LIST_LIMIT, 0);
+  const identityCategories = categories.slice(0, COMPACT_LIST_LIMIT);
   const beforeAfter = profile.beforeAfterProjects ?? [];
   const memberSince = profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : 'Recently';
   const paidProfile = !profile.shareOnly && !profile.isPreview && profile.canRequestQuote !== false;
@@ -154,7 +168,7 @@ export default function TraderProfileStorefront() {
           <Text style={[styles.coverTitle, mobile && styles.coverTitleMobile]}>Professional local work, presented properly.</Text>
         </View>
         {desktop ? <View style={styles.coverServices}>
-          {serviceList.slice(0, 6).map((service) => <View key={service} style={styles.coverService}><Text style={styles.coverServiceText}>{service}</Text></View>)}
+          {serviceList.slice(0, COMPACT_LIST_LIMIT).map((service, index) => <View key={`${service}-${index}`} style={styles.coverService}><Text style={styles.coverServiceText}>{service}</Text></View>)}
         </View> : null}
       </View>
 
@@ -166,7 +180,7 @@ export default function TraderProfileStorefront() {
               <Text variant="headlineMedium" style={styles.businessName}>{profile.businessName}</Text>
               {!profile.isPreview && profile.verifiedCredentialCount ? <View style={styles.verifiedBadge}><Text style={styles.verifiedBadgeText}>✓</Text></View> : null}
             </View>
-            <Text style={styles.locationLine}>{profile.locationLabel || 'UK'}{categories.length ? ` · ${categories.join(' · ')}` : ''}</Text>
+            <Text style={styles.locationLine}>{profile.locationLabel || 'UK'}{identityCategories.length ? ` · ${identityCategories.join(' · ')}` : ''}{hiddenCategoryCount ? ` · +${hiddenCategoryCount} more` : ''}</Text>
             <View style={styles.ratingLine}>
               <Text style={styles.stars}>★★★★★</Text>
               <Text style={styles.ratingText}>{profile.averageRating.toFixed(1)} ({profile.reviewCount} review{profile.reviewCount === 1 ? '' : 's'})</Text>
@@ -233,9 +247,25 @@ export default function TraderProfileStorefront() {
 
         {showGallery && !profile.photos.length ? <SectionCard title="Gallery"><Text style={styles.muted}>No work photos have been added yet.</Text></SectionCard> : null}
 
-        {showServices ? <SectionCard title="Services">
-          <View style={styles.serviceTags}>
-            {serviceList.length ? serviceList.map((service) => <Chip key={service} icon="check-circle-outline" style={styles.serviceChip}>{service}</Chip>) : categories.map((category) => <Chip key={category} icon="check-circle-outline" style={styles.serviceChip}>{category}</Chip>)}
+        {showServices ? <SectionCard title="Trades & Services">
+          <View style={styles.listBlock}>
+            <Text variant="titleMedium" style={styles.listHeading}>Trade categories</Text>
+            <View style={styles.serviceTags}>
+              {visibleCategories.map((category) => <Chip key={category} icon="hammer-wrench" style={styles.serviceChip}>{category}</Chip>)}
+            </View>
+            {hiddenCategoryCount ? <Button compact mode="text" icon={showAllCategories ? 'chevron-up' : 'chevron-down'} onPress={() => setShowAllCategories((value) => !value)}>
+              {showAllCategories ? 'Show fewer categories' : `Show ${hiddenCategoryCount} more categor${hiddenCategoryCount === 1 ? 'y' : 'ies'}`}
+            </Button> : null}
+          </View>
+          <Divider />
+          <View style={styles.listBlock}>
+            <Text variant="titleMedium" style={styles.listHeading}>Services</Text>
+            <View style={styles.serviceTags}>
+              {visibleServices.length ? visibleServices.map((service, index) => <Chip key={`${service}-${index}`} icon="check-circle-outline" style={styles.serviceChip}>{service}</Chip>) : visibleCategories.map((category) => <Chip key={category} icon="check-circle-outline" style={styles.serviceChip}>{category}</Chip>)}
+            </View>
+            {hiddenServiceCount ? <Button compact mode="text" icon={showAllServices ? 'chevron-up' : 'chevron-down'} onPress={() => setShowAllServices((value) => !value)}>
+              {showAllServices ? 'Show fewer services' : `Show ${hiddenServiceCount} more services`}
+            </Button> : null}
           </View>
         </SectionCard> : null}
 
@@ -435,6 +465,8 @@ const styles = StyleSheet.create({
   morePhotos: { width: '47%', minHeight: 140, flexGrow: 1, borderRadius: 12, backgroundColor: colors.navy, alignItems: 'center', justifyContent: 'center' },
   morePhotosText: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
   linkText: { color: colors.primary, fontWeight: '800' },
+  listBlock: { gap: 8 },
+  listHeading: { color: colors.charcoal, fontWeight: '900' },
   serviceTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   serviceChip: { backgroundColor: '#FFFFFF' },
   reviewSummary: { paddingBottom: 4 },
