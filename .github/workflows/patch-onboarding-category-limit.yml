@@ -1,0 +1,39 @@
+name: Patch onboarding category-limit typing
+
+on:
+  push:
+    branches:
+      - fix/web-role-gate-20260913
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: fix/web-role-gate-20260913
+      - name: Apply narrow TypeScript fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('app/trader/onboarding.tsx')
+          text = path.read_text()
+          old = "const [categoryLimit, setCategoryLimit] = useState(TRADE_CATEGORIES.length);"
+          new = "const [categoryLimit, setCategoryLimit] = useState<number>(TRADE_CATEGORIES.length);"
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected exactly one categoryLimit declaration, found {text.count(old)}')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          rm .github/workflows/patch-onboarding-category-limit.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/trader/onboarding.tsx .github/workflows/patch-onboarding-category-limit.yml
+          git diff --cached --check
+          git commit -m "Widen trader category limit state typing"
+          git push origin HEAD:fix/web-role-gate-20260913
