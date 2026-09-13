@@ -1,7 +1,7 @@
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { jobs, quotes } from '@/db/schema';
-import { BUILDPAY_FEE_TERMS_VERSION, buildPayCustomerFee, type BuildPayFeeMode, type BuildPayRequestedBy } from '@/lib/buildpay-fees';
+import { BUILDPAY_FEE_TERMS_VERSION, buildPayCustomerFee, plannedBuildPayChargeCount, type BuildPayFeeMode, type BuildPayRequestedBy } from '@/lib/buildpay-fees';
 import { addJobEvent, createNotification } from '@/lib/notifications';
 import { fullFundingSchedule, paymentScheduleSchema, type PaymentStagePlan, validatePaymentSchedule } from '@/lib/payment-plan';
 import { validateProtectedPaymentEconomics } from '@/lib/payment-protection';
@@ -70,7 +70,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       const buildPayRequestedBy: BuildPayRequestedBy = existing?.buildPayRequestedBy === 'trader' ? 'trader' : 'customer';
       const buildPayFeeMode: BuildPayFeeMode = existing?.buildPayRequestedBy === 'trader' && existing.buildPayFeeMode === 'trader_absorbs' ? 'trader_absorbs' : 'customer_pays';
       const buildPayCustomerFeeEstimate = buildPayFeeMode === 'customer_pays'
-        ? buildPayCustomerFee({ contractAmount: candidate.quote.totalAmount, laborServiceAmount: candidate.quote.laborCost, plannedChargeCount: schedule.length }).customerFee
+        ? buildPayCustomerFee({ contractAmount: candidate.quote.totalAmount, laborServiceAmount: candidate.quote.laborCost, plannedChargeCount: plannedBuildPayChargeCount(schedule) }).customerFee
         : 0;
 
       await getSql()`
@@ -126,10 +126,11 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       catch (error) { throw new HttpError(409, error instanceof Error ? error.message : 'The staged payment plan needs to be revised before acceptance.'); }
     }
 
+    const plannedChargeCount = plannedBuildPayChargeCount(acceptedSchedule);
     const buildPayRequestedBy = quoteTerms?.buildPayRequestedBy ?? null;
     const buildPayFeeMode = buildPayRequestedBy ? (quoteTerms?.buildPayFeeMode ?? 'customer_pays') : null;
     const buildPayCustomerFeeTotal = buildPayRequestedBy && buildPayFeeMode === 'customer_pays'
-      ? buildPayCustomerFee({ contractAmount: candidate.quote.totalAmount, laborServiceAmount: candidate.quote.laborCost, plannedChargeCount: acceptedSchedule.length }).customerFee
+      ? buildPayCustomerFee({ contractAmount: candidate.quote.totalAmount, laborServiceAmount: candidate.quote.laborCost, plannedChargeCount }).customerFee
       : 0;
     if (buildPayRequestedBy && buildPayFeeMode === 'customer_pays' && payload.acknowledgedBuildPayFee !== true) {
       throw new HttpError(400, `Confirm the BuildPay service fee and all-in total before accepting this quote.`);
@@ -141,14 +142,14 @@ export async function PATCH(request: Request, { id }: { id: string }) {
         FROM trader_profiles WHERE user_id = ${candidate.quote.traderId} LIMIT 1
       ` as unknown as { stripeAccountId: string | null; stripeChargesEnabled: boolean; stripePayoutsEnabled: boolean }[];
       const payout = payoutRows[0];
-      if (!payout?.stripeAccountId || (!payout.stripePayoutsEnabled && !payout.stripeChargesEnabled)) throw new HttpError(409, 'The tradesperson must finish Stripe payout setup before a BuildPay quote can be accepted.');
+      if (!payout?.stripeAccountId || !payout.stripePayoutsEnabled) throw new HttpError(409, 'The tradesperson must finish Stripe payout setup before a BuildPay quote can be accepted.');
       if (buildPayFeeMode === 'trader_absorbs') {
         try {
           validateProtectedPaymentEconomics({
             totalAmount: candidate.quote.totalAmount,
             materialsAmount: candidate.quote.materialsCost,
             laborServiceAmount: candidate.quote.laborCost,
-            chargeCount: acceptedSchedule.length,
+            chargeCount: plannedChargeCount,
           });
         } catch (error) { throw new HttpError(409, error instanceof Error ? error.message : 'This BuildPay schedule cannot safely cover its processing costs.'); }
       }
