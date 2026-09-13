@@ -71,11 +71,9 @@ export async function GET(request: Request, { id }: { id: string }) {
     if (!paidProfile && !viewerIsOwner) {
       return Response.json({
         id: profile.id,
-        userId: profile.userId,
         businessName: profile.businessName,
         tradeCategory: profile.tradeCategory,
         tradeCategories,
-        subscriptionTier: profile.subscriptionTier,
         isSubscriptionActive: false,
         isPreview: false,
         publicLocked: true,
