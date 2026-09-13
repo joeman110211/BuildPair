@@ -50,7 +50,7 @@ export default function AdminGoogleReviewsScreen() {
     }
   }, [filter]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   async function review(traderId: string, action: 'approve' | 'reject') {
     try {

@@ -50,7 +50,7 @@ export default function GoogleReviewsPage() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   async function search() {
     if (query.trim().length < 3) return;
@@ -141,7 +141,7 @@ export default function GoogleReviewsPage() {
         </View>
         <Button mode="outlined" disabled={busy} onPress={() => void disconnect()}>Disconnect</Button>
       </View>
-      {verified ? <Text style={styles.good}>This listing passed BuildPair's matching checks and can appear publicly.</Text> : null}
+      {verified ? <Text style={styles.good}>This listing passed BuildPair matching checks and can appear publicly.</Text> : null}
       {pending ? <Text style={styles.warning}>The listing is connected but will not appear publicly until BuildPair reviews the match.</Text> : null}
       {rejected ? <Text style={styles.warning}>This listing was not approved. Disconnect it and choose the correct Google business listing.</Text> : null}
       {status.connection?.matchReasons?.length ? <View style={styles.reasonList}>{status.connection.matchReasons.map((reason) => <Text key={reason} style={styles.reason}>• {reason}</Text>)}</View> : null}

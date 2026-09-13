@@ -24,7 +24,7 @@ export function GoogleReviewsPublicCard({ profileId, visible }: { profileId: str
     }
   }, [profileId, visible]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   if (!visible || !data?.connected || !data.configured || !data.google) return null;
   const google = data.google;
