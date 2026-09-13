@@ -5,7 +5,7 @@ import { NativeBottomNav } from '@/components/NativeBottomNav';
 import { RoleGate } from '@/components/RoleGate';
 
 export default function TraderLayout() {
-  if (Platform.OS === 'web') return <Slot />;
+  if (Platform.OS === 'web') return <RoleGate role="trader"><Slot /></RoleGate>;
 
   return <RoleGate role="trader"><View style={{ flex: 1, minHeight: 0 }}><DashboardHeader home="/trader/dashboard" /><Stack screenOptions={{ headerTintColor: '#D35400', headerShadowVisible: false }}>
     <Stack.Screen name="dashboard" options={{ headerShown: false }} />
