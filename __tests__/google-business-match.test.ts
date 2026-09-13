@@ -41,7 +41,7 @@ describe('Google business verification matching', () => {
   });
 
   it('does not use a generic Gmail address as business identity evidence', () => {
-    const result = matchGoogleBusiness({ ...buildPair, email: 'smithbuilders@gmail.com', websiteUri: null }, { ...google, phone: undefined } as never);
+    const result = matchGoogleBusiness({ ...buildPair, email: 'smithbuilders@gmail.com', websiteUri: null }, google);
     expect(result.signals.emailDomain).toBe(false);
   });
 
