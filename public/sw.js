@@ -1,8 +1,19 @@
-const CACHE_NAME = 'buildpair-static-v5';
+const CACHE_NAME = 'buildpair-static-v6';
 const APP_SHELL = ['/', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(async (cache) => {
+      for (const url of APP_SHELL) {
+        try {
+          const response = await fetch(url, { cache: 'no-cache' });
+          if (response.ok) await cache.put(url, response.clone());
+        } catch {
+          // Installation should still complete if the network briefly drops.
+        }
+      }
+    }),
+  );
   self.skipWaiting();
 });
 
@@ -15,7 +26,9 @@ self.addEventListener('activate', (event) => {
 
 async function networkFirst(request) {
   try {
-    const response = await fetch(request);
+    // Revalidate against production rather than trusting Chrome's HTTP cache.
+    // This keeps an installed BuildPair PWA on the same deployed JS as the website.
+    const response = await fetch(request, { cache: 'no-cache' });
     if (response.ok) {
       const cache = await caches.open(CACHE_NAME);
       await cache.put(request, response.clone());
@@ -41,7 +54,5 @@ self.addEventListener('fetch', (event) => {
   const isStaticAsset = url.pathname.startsWith('/_expo/') || url.pathname === '/manifest.webmanifest';
   if (!isStaticAsset) return;
 
-  // Prefer the deployed asset so users do not get trapped on an old JS bundle.
-  // The cache is strictly an offline fallback, not the source of truth.
   event.respondWith(networkFirst(request));
 });
