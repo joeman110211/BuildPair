@@ -18,6 +18,7 @@ const waitlistSchema = z.object({
   marketingOptIn: z.boolean().optional().default(false),
   preferredContact: z.enum(['email', 'sms', 'both']).optional(),
   source: z.string().trim().max(80).optional().default('website'),
+  referralCode: z.string().trim().max(24).optional().default(''),
 });
 
 function normalizePostcode(input: string) {
@@ -61,6 +62,16 @@ export async function POST(request: Request) {
     await ensureLaunchWaitlistTable();
     const sql = getSql();
 
+    const normalizedReferralCode = input.referralCode.trim().toUpperCase();
+    const referrerRows = normalizedReferralCode ? await sql`
+      SELECT id
+      FROM launch_waitlist
+      WHERE upper(referral_code) = ${normalizedReferralCode}
+        AND status <> 'removed'
+      LIMIT 1
+    ` as unknown as { id: string }[] : [];
+    const referredById = referrerRows[0]?.id ?? null;
+
     const candidates = await sql`
       SELECT id, email, phone
       FROM launch_waitlist
@@ -100,6 +111,13 @@ export async function POST(request: Request) {
             ELSE preferred_contact
           END,
           source = ${input.source || 'website'},
+          referred_by_id = CASE
+            WHEN referred_by_id IS NULL
+              AND ${referredById}::uuid IS NOT NULL
+              AND id <> ${referredById}::uuid
+            THEN ${referredById}::uuid
+            ELSE referred_by_id
+          END,
           status = CASE WHEN status = 'removed' THEN 'waiting' ELSE status END,
           updated_at = now()
         WHERE id = ${existingId}::uuid
@@ -110,23 +128,40 @@ export async function POST(request: Request) {
       const rows = await sql`
         INSERT INTO launch_waitlist (
           name, email, phone, postcode, audience, trade, tester_interest,
-          sms_opt_in, marketing_opt_in, preferred_contact, source
+          sms_opt_in, marketing_opt_in, preferred_contact, source, referral_code, referred_by_id
         )
         VALUES (
           ${input.name}, ${email || null}, ${phone || null}, ${postcode}, ${input.audience},
           ${input.audience === 'trader' && input.trade ? input.trade : null}, ${input.testerInterest},
-          ${serviceSmsConsent || input.smsOptIn}, ${input.marketingOptIn}, ${effectivePreference}, ${input.source || 'website'}
+          ${serviceSmsConsent || input.smsOptIn}, ${input.marketingOptIn}, ${effectivePreference}, ${input.source || 'website'},
+          'BP' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 10)), ${referredById}::uuid
         )
         RETURNING id
       ` as unknown as { id: string }[];
       id = rows[0]?.id;
     }
 
+    const referralRows = id ? await sql`
+      SELECT
+        referral_code,
+        (
+          SELECT count(*)::int
+          FROM launch_waitlist referred
+          WHERE referred.referred_by_id = launch_waitlist.id
+            AND referred.status <> 'removed'
+        ) AS referral_count
+      FROM launch_waitlist
+      WHERE id = ${id}::uuid
+      LIMIT 1
+    ` as unknown as { referral_code: string | null; referral_count: number }[] : [];
+
     return Response.json({
       ok: true,
       id,
       alreadyJoined: Boolean(existingId),
       preferredContact: effectivePreference,
+      referralCode: referralRows[0]?.referral_code ?? undefined,
+      referralCount: referralRows[0]?.referral_count ?? 0,
     });
   } catch (error) {
     return jsonError(error);
