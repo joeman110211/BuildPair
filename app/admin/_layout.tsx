@@ -20,6 +20,7 @@ export default function AdminLayout() {
             <Stack.Screen name="presence" />
             <Stack.Screen name="jobs" />
             <Stack.Screen name="profiles" />
+            <Stack.Screen name="google-reviews" />
             <Stack.Screen name="messages" />
             <Stack.Screen name="media" />
             <Stack.Screen name="activity" />

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Image, Linking, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Divider, IconButton, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
+import { GoogleReviewsPublicCard } from '@/components/GoogleReviewsPublicCard';
 import { ProfileShareButtons } from '@/components/ProfileShareButtons';
 import { ServiceAreaMap } from '@/components/ServiceAreaMap';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
@@ -282,6 +283,8 @@ export default function TraderProfileStorefront() {
             </View>
           </View>) : <Text style={styles.muted}>No customer reviews yet.</Text>}
         </SectionCard> : null}
+
+        <GoogleReviewsPublicCard profileId={profile.id} visible={showReviews && paidProfile} />
 
         {showCredentials ? <SectionCard title="Credentials & Insurance">
           <View style={styles.credentialGrid}>

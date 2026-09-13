@@ -43,6 +43,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: '/admin/users', label: 'Users & access', shortLabel: 'Users', description: 'Find accounts, inspect account modes, subscriptions, suspensions and account history.' },
       { href: '/admin/presence', label: 'Live signed-in users', shortLabel: 'Live', description: 'See which registered accounts are active now or have been active recently.' },
       { href: '/admin/profiles', label: 'Trade profiles', shortLabel: 'Profiles', description: 'Review business profiles and the public marketplace information attached to them.' },
+      { href: '/admin/google-reviews', label: 'Google review checks', shortLabel: 'Google', description: 'Approve or reject Google business listings that did not pass automatic profile matching.' },
       { href: '/admin/credentials', label: 'Credentials', shortLabel: 'Credentials', description: 'Review uploaded qualifications, registrations and other submitted evidence.' },
     ],
   },
