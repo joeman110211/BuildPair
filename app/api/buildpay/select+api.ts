@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BUILDPAY_FEE_TERMS_VERSION, buildPayCustomerFee } from '@/lib/buildpay-fees';
+import { BUILDPAY_FEE_TERMS_VERSION, buildPayCustomerFee, plannedBuildPayChargeCount } from '@/lib/buildpay-fees';
 import { addJobEvent, createNotification } from '@/lib/notifications';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
@@ -27,6 +27,8 @@ type SelectionRow = {
   stripePayoutsEnabled: boolean;
 };
 
+type StageEconomicsRow = { kind: 'materials' | 'deposit' | 'stage' | 'final'; amount: number };
+
 export async function POST(request: Request) {
   try {
     const customer = await requireRole(request, 'customer');
@@ -51,14 +53,13 @@ export async function POST(request: Request) {
       throw new HttpError(409, 'The tradesperson must finish Stripe payout setup before this job can use BuildPay. They have been notified.');
     }
 
-    const economicsRows = await getSql()`
-      SELECT count(*)::int AS "stageCount",
-             COALESCE(SUM(CASE WHEN kind = 'materials' THEN amount ELSE 0 END), 0)::int AS "materialsStages"
-      FROM job_milestones WHERE job_id = ${input.jobId}
-    ` as unknown as { stageCount: number; materialsStages: number }[];
-    const economics = economicsRows[0] ?? { stageCount: 0, materialsStages: 0 };
-    if (economics.stageCount < 1) throw new HttpError(409, 'This job has no agreed payment schedule to use with BuildPay.');
-    if (economics.materialsStages !== row.materialsCost) throw new HttpError(409, 'The BuildPay schedule must preserve the exact quoted materials amount before BuildPay can be selected.');
+    const stageRows = await getSql()`
+      SELECT kind, amount FROM job_milestones WHERE job_id = ${input.jobId} ORDER BY sort_order ASC
+    ` as unknown as StageEconomicsRow[];
+    if (!stageRows.length) throw new HttpError(409, 'This job has no agreed payment schedule to use with BuildPay.');
+    const materialsStages = stageRows.reduce((sum, stage) => sum + (stage.kind === 'materials' ? stage.amount : 0), 0);
+    if (materialsStages !== row.materialsCost) throw new HttpError(409, 'The BuildPay schedule must preserve the exact quoted materials amount before BuildPay can be selected.');
+    const plannedChargeCount = plannedBuildPayChargeCount(stageRows);
 
     if (row.buildPayRequestedBy === 'trader' && row.paymentMode === 'buildpair') {
       return Response.json({
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
     const fee = buildPayCustomerFee({
       contractAmount: row.totalAmount,
       laborServiceAmount: row.laborCost,
-      plannedChargeCount: economics.stageCount,
+      plannedChargeCount,
     });
     await getSql()`
       UPDATE jobs
@@ -84,6 +85,7 @@ export async function POST(request: Request) {
     await addJobEvent(input.jobId, customer.id, 'buildpay_selected', 'BuildPay selected by homeowner', `The homeowner chose optional BuildPay protection after accepting the contract. The ${formatPence(fee.customerFee)} BuildPay service fee was shown separately, making the all-in BuildPay total ${formatPence(fee.customerTotal)}.`, {
       buildPayRequestedBy: 'customer', buildPayFeeMode: 'customer_pays', buildPayCustomerFeeTotal: fee.customerFee,
       contractAmount: row.totalAmount, allInTotal: fee.customerTotal, feeTermsVersion: BUILDPAY_FEE_TERMS_VERSION,
+      plannedChargeCount,
       homeownerAcknowledgedPaymentTerms: true, homeownerAcknowledgedBuildPayFee: true,
     });
     await createNotification(row.traderId, { type: 'payment_mode_selected', title: 'Homeowner selected BuildPay', body: `${row.title}: the homeowner requested BuildPay and is paying the disclosed BuildPay service fee. Your accepted contract amount is not reduced by that fee.`, href: `/trader/jobs/${input.jobId}`, email: true });
