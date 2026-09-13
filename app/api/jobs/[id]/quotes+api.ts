@@ -17,6 +17,8 @@ export async function GET(request: Request, { id }: { id: string }) {
              q.cost_items AS "costItems",
              q.payment_schedule AS "paymentSchedule", q.payment_schedule_status AS "paymentScheduleStatus",
              q.payment_schedule_revision AS "paymentScheduleRevision",
+             q.buildpay_requested_by AS "buildPayRequestedBy", q.buildpay_fee_mode AS "buildPayFeeMode",
+             q.buildpay_customer_fee_estimate AS "buildPayCustomerFeeEstimate",
              q.scope, q.exclusions, q.notes, q.duration_days AS "durationDays", q.warranty_months AS "warrantyMonths",
              q.proposed_start_at AS "proposedStartAt", q.valid_until AS "validUntil", q.status,
              tp.business_name AS "businessName"
