@@ -10,18 +10,18 @@ const plans = [
     price: '£0',
     suffix: '/ month',
     eyebrow: 'Get established',
-    summary: 'Build your business profile and explore the marketplace before moving onto a selling plan.',
+    summary: 'Build and prepare your business profile, explore the marketplace and upgrade when you are ready to be publicly visible.',
     compactFeatures: [
-      'Shareable business profile',
+      'Build and preview your business profile',
       'Up to 2 main trade categories',
       'Browse public marketplace jobs',
     ],
     features: [
       'Up to 2 main trade categories',
-      'Full business profile setup',
+      'Full business profile setup and private preview',
       'Choose services within your categories',
       'Browse public marketplace jobs',
-      'Share your profile externally',
+      'Prepare your profile before activating public visibility',
       '0 open-marketplace offers per month',
     ],
     cta: 'Create Starter profile',
@@ -32,15 +32,17 @@ const plans = [
     price: '£19.99',
     suffix: '/ month',
     eyebrow: 'Marketplace membership',
-    summary: 'For tradespeople who want to be found, receive direct opportunities and actively quote for local work.',
+    summary: 'For tradespeople who want to be found, bring their existing reputation with them and actively quote for local work.',
     compactFeatures: [
       'Searchable marketplace profile',
+      'Bring verified Google reviews with you',
       'Direct homeowner quote requests',
       '15 open-marketplace offers per month',
     ],
     features: [
       'Up to 4 main trade categories',
       'Public searchable BuildPair profile',
+      'Connect an approved Google business listing and display its reviews separately',
       '15 open-marketplace offers per month',
       'Direct homeowner quote requests',
       'BuildPair messaging',
@@ -101,7 +103,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
       })}
     </View>
     {!REGISTRATION_OPEN ? <Text style={styles.launchNote}>Registration opens at launch. Joining the list now only needs your email.</Text> : null}
-    <Text style={styles.note}>Category limits count broad trade categories, not every service inside them. Direct homeowner requests do not use the monthly open-marketplace offer allowance.</Text>
+    <Text style={styles.note}>Category limits count broad trade categories, not every service inside them. Direct homeowner requests do not use the monthly open-marketplace offer allowance. Google reviews remain clearly labelled as Google reviews and only appear after the business listing connection is approved.</Text>
   </View>;
 }
 

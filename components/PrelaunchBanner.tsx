@@ -14,10 +14,12 @@ export function PrelaunchBanner() {
         <View style={styles.chips}>
           <Chip compact icon="rocket-launch-outline" style={styles.chip} textStyle={styles.chipText}>Launching {LAUNCH_DATE_LABEL}</Chip>
           <Chip compact icon="gift-outline" style={styles.chip} textStyle={styles.chipText}>Founding trade bonuses</Chip>
+          <Chip compact icon="star-circle-outline" style={styles.chip} textStyle={styles.chipText}>Bring your Google reviews</Chip>
           <Chip compact icon="shield-check-outline" style={styles.chip} textStyle={styles.chipText}>BuildPay available</Chip>
         </View>
         <Text style={[styles.title, compact && styles.titleCompact]}>Get in early. BuildPair is nearly ready.</Text>
         <Text style={[styles.body, compact && styles.bodyCompact]}>A new way for homeowners and tradespeople to find each other, compare proper quotes and keep the job organised. Tradespeople should not have to keep buying dead-end leads or pay oversized fees regardless of whether any work actually lands.</Text>
+        <Text style={styles.reputation}><Text style={styles.strong}>Bring your reputation with you.</Text> Tradespeople can connect an approved Google business listing so existing Google reviews can appear separately on an active BuildPair profile.</Text>
         <View style={styles.offerBox}>
           <Text style={styles.offer}><Text style={styles.strong}>Trades launch offer:</Text> the first 100 eligible tradespeople to complete registration during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Pro free.</Text> Other eligible tradespeople joining during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Plus free.</Text></Text>
           <Text style={styles.offerNote}>No pay-per-lead charges. Predictable membership options. Use BuildPair to win suitable work and keep using it to quote, manage and complete the job.</Text>
@@ -46,6 +48,7 @@ const styles = StyleSheet.create({
   titleCompact: { fontSize: 26, lineHeight: 30, letterSpacing: -0.35 },
   body: { color: colors.text, lineHeight: 22, fontSize: 15 },
   bodyCompact: { lineHeight: 20, fontSize: 14 },
+  reputation: { color: colors.charcoalSoft, lineHeight: 20, fontSize: 14 },
   offerBox: { backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: '#EDC6A7', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 11, gap: 6 },
   offer: { color: colors.charcoalSoft, lineHeight: 20, fontSize: 14 },
   offerNote: { color: colors.text, lineHeight: 19, fontSize: 13, fontWeight: '700' },
