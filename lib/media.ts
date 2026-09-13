@@ -26,6 +26,10 @@ export type UploadBatchResult = {
   failed: number;
 };
 
+function isBrowser() {
+  return Platform.OS === 'web' || (typeof window !== 'undefined' && typeof document !== 'undefined');
+}
+
 async function signedUpload(kind: MediaKind, getToken: TokenGetter) {
   return apiFetch<UploadSignature>('/api/uploads/sign', {
     method: 'POST',
@@ -33,10 +37,23 @@ async function signedUpload(kind: MediaKind, getToken: TokenGetter) {
   }, getToken);
 }
 
+async function appendBrowserAsset(form: FormData, asset: ImagePicker.ImagePickerAsset, index: number) {
+  if (asset.file) {
+    form.append('file', asset.file);
+    return;
+  }
+
+  const response = await fetch(asset.uri);
+  if (!response.ok) throw new Error('BuildPair could not read the selected image. Please choose it again.');
+  const blob = await response.blob();
+  const fileName = asset.fileName ?? `buildpair-${Date.now()}-${index}.jpg`;
+  form.append('file', blob, fileName);
+}
+
 async function uploadAsset(asset: ImagePicker.ImagePickerAsset, signed: UploadSignature, index: number) {
   const form = new FormData();
-  if (Platform.OS === 'web' && asset.file) {
-    form.append('file', asset.file);
+  if (isBrowser()) {
+    await appendBrowserAsset(form, asset, index);
   } else {
     form.append('file', {
       uri: asset.uri,
@@ -59,7 +76,7 @@ async function uploadAsset(asset: ImagePicker.ImagePickerAsset, signed: UploadSi
 }
 
 async function ensurePhotoPermission() {
-  if (Platform.OS === 'web') return;
+  if (isBrowser()) return;
   const current = await ImagePicker.getMediaLibraryPermissionsAsync();
   if (current.granted || current.accessPrivileges === 'limited') return;
   const requested = await ImagePicker.requestMediaLibraryPermissionsAsync();
