@@ -5,7 +5,7 @@ import { traderProfiles } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
-import { categoryChangeAvailableAt, hasActiveLeadAccess, traderMonthlyQuoteLimit, traderWorkTypeLimit } from '@/lib/subscription';
+import { categoryChangeAvailableAt, hasActiveLeadAccess, traderMonthlyQuoteLimit } from '@/lib/subscription';
 
 function missingShowcaseTable(error: unknown) {
   const candidate = error as { code?: string; message?: string; cause?: { code?: string; message?: string } };
@@ -93,7 +93,7 @@ export async function GET(request: Request) {
       tradeCategories: normalisedCategories,
       serviceSelections,
       isSubscriptionActive: active,
-      categoryLimit: traderWorkTypeLimit(profile),
+      categoryLimit: TRADE_CATEGORIES.length,
       categoryChangeAvailableAt: categoryChangeAvailableAt(profile.categoriesChangedAt)?.toISOString() ?? null,
       monthlyQuotesUsed: usageRows[0]?.count ?? 0,
       monthlyQuoteLimit: traderMonthlyQuoteLimit(profile),
