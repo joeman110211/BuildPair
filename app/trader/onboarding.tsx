@@ -88,6 +88,7 @@ type OnboardingDraft = {
   qualificationsText: string;
   gasSafe: string;
   trustMark: string;
+  website: string;
   facebook: string;
   instagram: string;
   tiktok: string;
@@ -146,6 +147,7 @@ export default function TraderOnboarding() {
   const [qualificationsText, setQualificationsText] = useState('');
   const [gasSafe, setGasSafe] = useState('');
   const [trustMark, setTrustMark] = useState('');
+  const [website, setWebsite] = useState('');
   const [facebook, setFacebook] = useState('');
   const [instagram, setInstagram] = useState('');
   const [tiktok, setTiktok] = useState('');
@@ -161,6 +163,7 @@ export default function TraderOnboarding() {
   const [certified, setCertified] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loadingExisting, setLoadingExisting] = useState(true);
+  const [existingProfile, setExistingProfile] = useState(false);
   const [draftReady, setDraftReady] = useState(false);
   const [draftStatus, setDraftStatus] = useState('');
   const [error, setError] = useState('');
@@ -189,6 +192,7 @@ export default function TraderOnboarding() {
     setQualificationsText(draft.qualificationsText ?? '');
     setGasSafe(draft.gasSafe ?? '');
     setTrustMark(draft.trustMark ?? '');
+    setWebsite(draft.website ?? '');
     setFacebook(draft.facebook ?? '');
     setInstagram(draft.instagram ?? '');
     setTiktok(draft.tiktok ?? '');
@@ -220,6 +224,7 @@ export default function TraderOnboarding() {
       setQualificationsText((profile.qualifications ?? []).join('\n'));
       setGasSafe(profile.externalLinks?.gasSafe ?? '');
       setTrustMark(profile.externalLinks?.trustMark ?? '');
+      setWebsite(profile.externalLinks?.website ?? '');
       setFacebook(profile.externalLinks?.facebook ?? '');
       setInstagram(profile.externalLinks?.instagram ?? '');
       setTiktok(profile.externalLinks?.tiktok ?? '');
@@ -230,6 +235,7 @@ export default function TraderOnboarding() {
       setLogo(profile.logoUrl ? [profile.logoUrl] : []);
       setBeforeAfterProjects(profile.beforeAfterProjects ?? []);
       setCertified(true);
+      setExistingProfile(true);
       setDraftStatus('Profile loaded');
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) {
@@ -263,6 +269,7 @@ export default function TraderOnboarding() {
     qualificationsText,
     gasSafe,
     trustMark,
+    website,
     facebook,
     instagram,
     tiktok,
@@ -272,7 +279,7 @@ export default function TraderOnboarding() {
     profileImage,
     logo,
     beforeAfterProjects,
-  }), [beforeAfterProjects, bio, businessName, coverPhoto, facebook, gasSafe, instagram, logo, photos, postcode, profileImage, qualificationsText, radius, serviceAreasText, serviceSelections, step, tiktok, tradeCategories, tradeCategory, trustMark, whatsapp, yearEstablished, yearsExperience]);
+  }), [beforeAfterProjects, bio, businessName, coverPhoto, facebook, gasSafe, instagram, logo, photos, postcode, profileImage, qualificationsText, radius, serviceAreasText, serviceSelections, step, tiktok, tradeCategories, tradeCategory, trustMark, website, whatsapp, yearEstablished, yearsExperience]);
 
   useEffect(() => {
     if (!draftReady || certified) return;
@@ -306,7 +313,7 @@ export default function TraderOnboarding() {
     try {
       setBusy(true);
       setError('');
-      const links = { gasSafe, trustMark, facebook, instagram, tiktok, whatsapp };
+      const links = { gasSafe, trustMark, website, facebook, instagram, tiktok, whatsapp };
       const flattenedServices = [...new Set(Object.values(serviceSelections).flatMap((value) => value ?? []))];
       await apiFetch('/api/me', {
         method: 'PUT',
@@ -337,7 +344,7 @@ export default function TraderOnboarding() {
         }),
       }, getToken);
       await clearDraft(DRAFT_KEY);
-      router.replace('/trader/dashboard');
+      router.replace(existingProfile ? '/trader/dashboard' : '/trader/google-reviews?onboarding=1');
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -421,6 +428,7 @@ export default function TraderOnboarding() {
         <Text style={styles.muted}>Declared qualifications appear separately from BuildPair-verified credentials, so homeowners can clearly see what has actually been checked.</Text>
         <Text variant="titleMedium" style={styles.title}>Registers & social links</Text>
         {([
+          ['Business website URL', website, setWebsite],
           ['Gas Safe register URL', gasSafe, setGasSafe],
           ['TrustMark URL', trustMark, setTrustMark],
           ['Facebook URL', facebook, setFacebook],

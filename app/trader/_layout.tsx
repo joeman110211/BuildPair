@@ -15,6 +15,7 @@ export default function TraderLayout() {
     <Stack.Screen name="notifications" options={{ headerShown: false }} />
     <Stack.Screen name="settings" options={{ headerShown: false }} />
     <Stack.Screen name="trust" options={{ headerShown: false }} />
+    <Stack.Screen name="google-reviews" options={{ title: 'Google reviews' }} />
     <Stack.Screen name="analytics" options={{ headerShown: false }} />
     <Stack.Screen name="saved-searches" options={{ headerShown: false }} />
     <Stack.Screen name="stories" options={{ headerShown: false }} />

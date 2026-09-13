@@ -59,6 +59,12 @@ export default function TraderProfileHub() {
         <Text style={styles.muted}>Submit supporting evidence, review verification status and show when you may be available for work.</Text>
         <Link href="/trader/trust" asChild><Button mode="text">Open trust tools →</Button></Link>
       </AppCard>
+      <AppCard style={[styles.toolCard, styles.toolTrust]}>
+        <Text style={styles.eyebrow}>EXISTING REPUTATION</Text>
+        <Text variant="titleLarge" style={styles.title}>Google reviews</Text>
+        <Text style={styles.muted}>Connect the correct Google business listing. Strong matches are verified automatically; anything ambiguous waits for BuildPair admin review before appearing publicly.</Text>
+        <Link href="/trader/google-reviews" asChild><Button mode="text">Manage Google reviews →</Button></Link>
+      </AppCard>
       <AppCard style={[styles.toolCard, styles.toolPortfolio]}>
         <Text style={styles.eyebrow}>PORTFOLIO</Text>
         <Text variant="titleLarge" style={styles.title}>Project stories</Text>
