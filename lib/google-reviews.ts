@@ -140,7 +140,7 @@ function domainFromUrl(value: string | null | undefined) {
 
 function domainFromEmail(value: string | null | undefined) {
   const parts = value?.trim().toLowerCase().split('@') ?? [];
-  return parts.length === 2 ? parts[1].replace(/^www\./, '') : '';
+  return parts.length === 2 ? (parts[1]?.replace(/^www\./, '') ?? '') : '';
 }
 
 function hostMatches(left: string, right: string) {
@@ -194,7 +194,7 @@ export async function searchGooglePlaces(query: string): Promise<GooglePlaceCand
       'X-Goog-Api-Key': apiKey(),
       'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.googleMapsUri',
     },
-    body: JSON.stringify({ textQuery: query, regionCode: 'GB', maxResultCount: 5 }),
+    body: JSON.stringify({ textQuery: query, regionCode: 'GB', pageSize: 5 }),
   });
 
   const places = Array.isArray(payload.places) ? payload.places : [];
