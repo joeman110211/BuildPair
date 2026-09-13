@@ -87,6 +87,13 @@ export async function POST(request: Request) {
     if (!firstOutstanding || firstOutstanding.milestoneId !== orderedRequested[0]?.milestoneId) {
       throw new HttpError(409, `${firstOutstanding?.milestoneTitle ?? 'The next agreed stage'} must be dealt with before another BuildPay payment can be taken`);
     }
+    const nextOutstanding = firstOutstanding
+      ? allRows.find((stage) => stage.sortOrder > firstOutstanding.sortOrder && stage.milestoneStatus !== 'paid')
+      : undefined;
+    if (firstOutstanding.milestoneKind === 'materials' && nextOutstanding?.milestoneStatus === 'pending') {
+      const openingPairRequested = orderedRequested.length === 2 && orderedRequested[1]?.milestoneId === nextOutstanding.milestoneId;
+      if (!openingPairRequested) throw new HttpError(409, `The opening BuildPay payment must include ${firstOutstanding.milestoneTitle} and ${nextOutstanding.milestoneTitle} together`);
+    }
     for (let index = 1; index < orderedRequested.length; index += 1) {
       if (orderedRequested[index]!.sortOrder !== orderedRequested[index - 1]!.sortOrder + 1) throw new HttpError(409, 'BuildPay can only fund consecutive agreed stages together');
     }
