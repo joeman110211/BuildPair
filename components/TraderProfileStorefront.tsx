@@ -365,8 +365,8 @@ export default function TraderProfileStorefront() {
     <View style={styles.bottomCta}>
       <View style={styles.flex}>
         <Text style={styles.bottomEyebrow}>BUILDPAIR TRADES</Text>
-        <Text variant="headlineSmall" style={styles.bottomTitle}>Need a reliable {categories[0]?.toLowerCase() || 'tradesperson'}?</Text>
-        <Text style={styles.bottomText}>Keep the quote, messages and project record together from first contact to completion.</Text>
+        <Text variant="headlineSmall" style={styles.bottomTitle}>Planning a project?</Text>
+        <Text style={styles.bottomText}>Request a quote from this tradesperson and keep your quote, messages and project record together from first contact to completion.</Text>
       </View>
       {quoteButton}
     </View>
