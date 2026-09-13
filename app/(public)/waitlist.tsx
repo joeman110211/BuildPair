@@ -1,6 +1,6 @@
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Share, StyleSheet, View } from 'react-native';
 import { Button, Checkbox, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
@@ -10,11 +10,17 @@ import { LAUNCH_DATE_LABEL } from '@/lib/launch';
 
 type Audience = 'homeowner' | 'trader';
 type ContactPreference = 'email' | 'sms' | 'both';
-type WaitlistResponse = { ok: true; alreadyJoined: boolean; preferredContact?: ContactPreference };
+type WaitlistResponse = {
+  ok: true;
+  alreadyJoined: boolean;
+  preferredContact?: ContactPreference;
+  referralCode?: string;
+  referralCount?: number;
+};
 type ContactOptions = { emailEnabled: boolean; smsEnabled: boolean; smsProvider: string };
 
 export default function WaitlistPage() {
-  const params = useLocalSearchParams<{ audience?: string; source?: string }>();
+  const params = useLocalSearchParams<{ audience?: string; source?: string; ref?: string }>();
   const initialAudience: Audience = params.audience === 'trader' ? 'trader' : 'homeowner';
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -32,8 +38,10 @@ export default function WaitlistPage() {
   const [detailsSaved, setDetailsSaved] = useState(false);
   const [detailsBusy, setDetailsBusy] = useState(false);
   const [detailsError, setDetailsError] = useState('');
+  const [referralCopied, setReferralCopied] = useState(false);
 
   const source = typeof params.source === 'string' ? params.source : 'website';
+  const incomingReferralCode = typeof params.ref === 'string' ? params.ref.trim().toUpperCase() : '';
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const phoneLooksValid = phone.replace(/\D/g, '').length >= 10;
   const canJoin = useMemo(() => {
@@ -42,6 +50,10 @@ export default function WaitlistPage() {
     return contactOptions.smsEnabled && emailValid && phoneLooksValid;
   }, [contactOptions.smsEnabled, contactPreference, emailValid, phoneLooksValid]);
   const canSaveDetails = useMemo(() => name.trim().length >= 2 && postcode.trim().length >= 5 && (!phone.trim() || phoneLooksValid), [name, phone, phoneLooksValid, postcode]);
+  const referralLink = useMemo(() => {
+    if (!joined?.referralCode) return '';
+    return `https://buildpair.co.uk/waitlist?audience=${audience}&source=referral&ref=${encodeURIComponent(joined.referralCode)}`;
+  }, [audience, joined?.referralCode]);
 
   useEffect(() => {
     let alive = true;
@@ -74,6 +86,7 @@ export default function WaitlistPage() {
           preferredContact: contactPreference,
           smsOptIn: contactPreference === 'sms' || contactPreference === 'both',
           source,
+          referralCode: incomingReferralCode,
         }),
       });
       setJoined(result);
@@ -101,6 +114,7 @@ export default function WaitlistPage() {
           testerInterest: true,
           smsOptIn,
           source: `${source}-early-access`,
+          referralCode: incomingReferralCode,
         }),
       });
       setDetailsSaved(true);
@@ -109,6 +123,36 @@ export default function WaitlistPage() {
       setDetailsError(errorMessage(e));
     } finally {
       setDetailsBusy(false);
+    }
+  }
+
+  async function shareReferral() {
+    if (!referralLink) return;
+    const text = audience === 'trader'
+      ? 'I joined the BuildPair launch list. If you’re a builder or tradesperson, take a look:'
+      : 'I joined the BuildPair launch list. Take a look:';
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+        await navigator.share({ title: 'BuildPair', text, url: referralLink });
+        return;
+      }
+      await Share.share({ message: `${text} ${referralLink}` });
+    } catch {
+      // The user can cancel a native share sheet without turning it into an error state.
+    }
+  }
+
+  async function copyReferralLink() {
+    if (!referralLink) return;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(referralLink);
+        setReferralCopied(true);
+        return;
+      }
+      await Share.share({ message: referralLink });
+    } catch {
+      // Leave the selectable URL visible as the final fallback.
     }
   }
 
@@ -133,6 +177,22 @@ export default function WaitlistPage() {
         <Link href="/(public)/rewards" asChild><Button mode="text">See BuildPair Rewards →</Button></Link>
       </> : null}
     </AppCard>
+
+    {joined.referralCode ? <AppCard style={styles.referralCard}>
+      <Chip icon="account-multiple-plus-outline">Your personal BuildPair link</Chip>
+      <Text variant="titleLarge" style={styles.heading}>{audience === 'trader' ? 'Know another decent builder or trade?' : 'Know someone who should see BuildPair?'}</Text>
+      <Text style={styles.body}>Share your link. If someone joins the launch list through it, BuildPair records that as your referral so we can see which early members are actually helping the community grow.</Text>
+      <View style={styles.referralStat}>
+        <Text variant="headlineMedium" style={styles.referralNumber}>{joined.referralCount ?? 0}</Text>
+        <Text style={styles.referralStatLabel}>{(joined.referralCount ?? 0) === 1 ? 'confirmed referral' : 'confirmed referrals'}</Text>
+      </View>
+      <Text selectable style={styles.referralLink}>{referralLink}</Text>
+      <View style={styles.referralActions}>
+        <Button mode="contained" icon="share-variant-outline" onPress={() => void shareReferral()}>Share BuildPair</Button>
+        <Button mode="outlined" icon={referralCopied ? 'check' : 'content-copy'} onPress={() => void copyReferralLink()}>{referralCopied ? 'Copied' : 'Copy link'}</Button>
+      </View>
+      <Text style={styles.smsNote}>We’re counting genuine launch-list signups first. Any referral rewards will be clearly announced if we introduce them later.</Text>
+    </AppCard> : null}
 
     <AppCard>
       <Chip icon="key-plus">Optional</Chip>
@@ -167,6 +227,7 @@ export default function WaitlistPage() {
     </AppCard>
 
     <AppCard>
+      {incomingReferralCode ? <Chip icon="account-multiple-check-outline">You were invited by an early BuildPair member</Chip> : null}
       <Text variant="labelLarge" style={styles.label}>I’m joining as</Text>
       <SegmentedButtons value={audience} onValueChange={(value) => setAudience(value as Audience)} buttons={[{ value: 'homeowner', label: 'Homeowner', icon: 'home-outline' }, { value: 'trader', label: 'Tradesperson', icon: 'hammer-wrench' }]} />
 
@@ -240,6 +301,12 @@ const styles = StyleSheet.create({
   offerCard: { backgroundColor: colors.goldSoft, borderColor: colors.gold },
   earlyCard: { backgroundColor: '#F7FAFC', borderColor: colors.primary, gap: 2 },
   successCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+  referralCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  referralStat: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: spacing.sm },
+  referralNumber: { color: colors.primaryDark, fontWeight: '900' },
+  referralStatLabel: { color: colors.charcoal, fontWeight: '800' },
+  referralLink: { color: colors.accentDark, fontSize: 13, lineHeight: 19, fontWeight: '700' },
+  referralActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   earlySuccess: { gap: 6, marginTop: 4 },
   heading: { color: colors.charcoal, fontWeight: '900' },
   body: { color: colors.text, lineHeight: 22 },
