@@ -1,10 +1,14 @@
-import { Stack } from 'expo-router';
+import { Slot, Stack } from 'expo-router';
 import { Platform, View } from 'react-native';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { NativeBottomNav } from '@/components/NativeBottomNav';
 import { RoleGate } from '@/components/RoleGate';
 
 export default function CustomerLayout() {
+  if (Platform.OS === 'web') {
+    return <RoleGate role="customer"><View style={{ flex: 1, minHeight: 0 }}><DashboardHeader home="/customer/dashboard" /><Slot /></View></RoleGate>;
+  }
+
   return <RoleGate role="customer"><View style={{ flex: 1, minHeight: 0 }}><DashboardHeader home="/customer/dashboard" /><Stack screenOptions={{ headerTintColor: '#D35400', headerShadowVisible: false }}>
     <Stack.Screen name="dashboard" options={{ headerShown: false }} />
     <Stack.Screen name="jobs" options={{ headerShown: false }} />
@@ -17,5 +21,5 @@ export default function CustomerLayout() {
     <Stack.Screen name="compare/[jobId]" options={{ title: 'Compare quotes' }} />
     <Stack.Screen name="messages" options={{ headerShown: false }} />
     <Stack.Screen name="messages/[id]" options={{ title: 'Conversation' }} />
-  </Stack>{Platform.OS === 'web' ? null : <NativeBottomNav variant="customer" />}</View></RoleGate>;
+  </Stack><NativeBottomNav variant="customer" /></View></RoleGate>;
 }
