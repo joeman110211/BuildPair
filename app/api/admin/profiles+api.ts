@@ -18,6 +18,7 @@ export async function GET(request: Request) {
         tp.trade_category AS "tradeCategory",
         tp.trade_categories AS "tradeCategories",
         tp.sub_skills AS "subSkills",
+        tp.service_selections AS "serviceSelections",
         tp.bio,
         tp.radius_miles AS "radiusMiles",
         tp.postcode,
@@ -43,11 +44,31 @@ export async function GET(request: Request) {
         up.last_seen_at AS "lastSeenAt",
         up.last_path AS "lastPath",
         (up.last_seen_at >= now() - interval '2 minutes') AS "onlineNow",
-        (SELECT count(*)::int FROM reviews r WHERE r.trader_id = tp.user_id) AS "reviewsCount",
-        coalesce((SELECT round(avg(r.rating)::numeric, 2) FROM reviews r WHERE r.trader_id = tp.user_id), 0) AS "averageRating",
+        (SELECT count(*)::int FROM reviews r WHERE r.trader_id = tp.user_id AND r.verified_completion = true) AS "projectReviewsCount",
+        (SELECT count(*)::int FROM external_reviews er WHERE er.trader_id = tp.user_id) AS "externalReviewsCount",
+        (
+          (SELECT count(*)::int FROM reviews r WHERE r.trader_id = tp.user_id AND r.verified_completion = true)
+          + (SELECT count(*)::int FROM external_reviews er WHERE er.trader_id = tp.user_id)
+        ) AS "reviewsCount",
+        coalesce((
+          SELECT round(avg(review_rating)::numeric, 2)
+          FROM (
+            SELECT r.rating::numeric AS review_rating
+            FROM reviews r
+            WHERE r.trader_id = tp.user_id AND r.verified_completion = true
+            UNION ALL
+            SELECT er.rating::numeric AS review_rating
+            FROM external_reviews er
+            WHERE er.trader_id = tp.user_id
+          ) combined_reviews
+        ), 0) AS "averageRating",
         coalesce((SELECT sum(v.view_count)::int FROM trader_profile_view_daily v WHERE v.trader_id = tp.user_id), 0) AS "profileViews",
+        coalesce((SELECT sum(v.view_count)::int FROM trader_profile_view_daily v WHERE v.trader_id = tp.user_id AND v.view_day >= current_date - 29), 0) AS "profileViews30d",
         (SELECT count(*)::int FROM quotes q2 WHERE q2.trader_id = tp.user_id) AS "quotesCount",
-        (SELECT count(*)::int FROM trader_stories st WHERE st.trader_id = tp.user_id) AS "storiesCount"
+        (SELECT count(*)::int FROM jobs j JOIN quotes q3 ON q3.id = j.accepted_quote_id WHERE q3.trader_id = tp.user_id) AS "acceptedJobsCount",
+        (SELECT count(*)::int FROM jobs j JOIN quotes q4 ON q4.id = j.accepted_quote_id WHERE q4.trader_id = tp.user_id AND j.status = 'completed') AS "completedJobsCount",
+        (SELECT count(*)::int FROM trader_stories st WHERE st.trader_id = tp.user_id) AS "storiesCount",
+        (SELECT count(*)::int FROM trader_credentials tc WHERE tc.trader_id = tp.user_id AND tc.status = 'verified' AND (tc.expires_at IS NULL OR tc.expires_at > now())) AS "verifiedCredentialsCount"
       FROM trader_profiles tp
       JOIN users u ON u.id = tp.user_id
       LEFT JOIN trader_profile_showcase s ON s.user_id = tp.user_id
