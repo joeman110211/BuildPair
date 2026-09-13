@@ -1,11 +1,13 @@
-import { PublicInfoPage } from '@/components/PublicInfoPage';
+import { Linking, View } from 'react-native';
+import { Button, Text } from 'react-native-paper';
+import { PublicInfoPage, infoStyles } from '@/components/PublicInfoPage';
 
 export default function TermsPage() {
   return <PublicInfoPage
     eyebrow="Legal"
     title="BuildPair Terms of Use"
     intro="These terms apply to homeowners, tradespeople and visitors using BuildPair. Where BuildPay is used, the payment notices shown before a payment, issue action or release also form part of the relevant transaction workflow."
-    updated="11 September 2026"
+    updated="14 September 2026"
     sections={[
       { title: '1. The platform', body: 'BuildPair provides marketplace, introduction and project-workflow technology that helps homeowners and tradespeople find each other, communicate, arrange visits, quote, agree project stages, record variations and manage project records. BuildPair is not the contractor, employer or person carrying out the building work.' },
       { title: '2. Accounts and information', body: 'You must provide accurate information, keep your account secure and only make claims about identity, business status, qualifications, experience, insurance or work that you can support. One BuildPair login may enable separate homeowner and tradesperson modes.' },
@@ -26,8 +28,18 @@ export default function TermsPage() {
       { title: '17. Direct payments outside BuildPair', body: 'Users may choose to pay the tradesperson directly, including by bank transfer or another method they agree. BuildPair may keep the quote, messages, variations and project record and may allow each side to record that a direct payment was sent or received. Those confirmations are user declarations only. BuildPair does not receive, hold, process, protect, release, refund, recover or independently verify money paid directly between users.' },
       { title: '18. Responsibility for direct-payment jobs', body: 'For money paid directly, BuildPair’s role in relation to that payment is limited to the marketplace introduction and any project record the users choose to keep on the platform. The homeowner and tradesperson remain responsible for their own contract, work, invoices, taxes, payment conduct and disputes. Nothing in these terms removes statutory consumer rights, contractual rights, payment rights or any duty or liability that cannot lawfully be excluded or limited.' },
       { title: '19. Payment and workmanship limits', body: 'BuildPay is not described as a legal escrow account. BuildPair does not inspect the work, certify completion, guarantee a tradesperson or decide whether a stage complies with a contract, regulation or professional standard. The platform record is intended to improve clarity and evidence, not to replace professional inspection, legal advice or rights provided by law.' },
-      { title: '20. AI, reviews and availability', body: 'BuildPair may use automated systems for job drafting, trade matching, quote wording, message suggestions and safety signals. AI output may be inaccurate and users remain responsible for what they send and for real-world decisions. Reviews must reflect genuine experiences. Features may change and uninterrupted availability is not guaranteed.' },
-      { title: '21. Contact', body: 'Questions about these terms, service-area changes, private address handling or BuildPay can be sent to info@buildpair.co.uk.' },
+      { title: '20. AI, BuildPair reviews and availability', body: 'BuildPair may use automated systems for job drafting, trade matching, quote wording, message suggestions and safety signals. AI output may be inaccurate and users remain responsible for what they send and for real-world decisions. Reviews submitted through BuildPair must reflect genuine experiences. Features may change and uninterrupted availability is not guaranteed.' },
+      { title: '21. Google business listings and reviews', body: <View style={infoStyles.list}>
+        <Text style={infoStyles.item}>An eligible tradesperson may choose to connect a Google business listing. The tradesperson must select a listing that genuinely represents their business and must not attempt to connect another business’s listing or misrepresent Google-supplied ratings or reviews.</Text>
+        <Text style={infoStyles.item}>BuildPair may compare the selected listing with business details held on BuildPair and may either approve the connection automatically, place it into admin review or reject it. Google reviews remain separate from BuildPair job reviews. A connected Google listing does not mean that Google endorses BuildPair, that BuildPair endorses the tradesperson, or that BuildPair has independently verified the truth of each Google review.</Text>
+        <Text style={infoStyles.item}>Google-supplied listing and review content is displayed subject to Google Maps Platform requirements. By using BuildPair features that display Google Maps Platform content, users also agree to the applicable Google Maps and Google terms presented below.</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          <Button mode="outlined" compact onPress={() => Linking.openURL('https://cloud.google.com/maps-platform/terms')}>Google Maps Platform Terms</Button>
+          <Button mode="outlined" compact onPress={() => Linking.openURL('https://policies.google.com/terms')}>Google Terms of Service</Button>
+        </View>
+      </View> },
+      { title: '22. Public tradesperson profiles', body: 'Full public tradesperson profiles are available only while the relevant paid tradesperson membership is active. A free or inactive profile may be privately previewed by its owner, but an external shared link does not unlock the full public profile. Signing up or signing in as a homeowner does not override that restriction. BuildPair does not publish a tradesperson’s direct email address or phone number merely because their profile is publicly visible; contact details may become available through an appropriate project relationship such as an accepted job.' },
+      { title: '23. Contact', body: 'Questions about these terms, service-area changes, private address handling or BuildPay can be sent to info@buildpair.co.uk.' },
     ]}
   />;
 }
