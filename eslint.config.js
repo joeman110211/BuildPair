@@ -45,4 +45,20 @@ module.exports = defineConfig([
       'react-hooks/set-state-in-effect': 'off',
     },
   },
+  {
+    files: ['app/(public)/waitlist.tsx'],
+    rules: {
+      // The referral URL deliberately memoizes only the primitive referral code rather than
+      // the whole joined response object. Preserve that stable dependency contract.
+      'react-hooks/preserve-manual-memoization': 'off',
+    },
+  },
+  {
+    files: ['components/TraderProfileStorefront.tsx'],
+    rules: {
+      // When navigating directly between trader profiles, expanded category/service lists
+      // must collapse for the newly loaded profile instead of leaking UI state between traders.
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
 ]);
