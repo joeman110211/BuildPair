@@ -92,6 +92,17 @@ export async function POST(request: Request) {
       throw new HttpError(409, 'The homeowner has enough quotes to compare and is not accepting additional quotes right now.');
     }
 
+    const visitRows = await getSql()`
+      SELECT status
+      FROM job_site_visits
+      WHERE job_id = ${payload.jobId} AND trader_id = ${trader.id}
+      ORDER BY updated_at DESC, created_at DESC
+      LIMIT 1
+    ` as unknown as { status: string }[];
+    if (visitRows[0]?.status === 'confirmed') {
+      throw new HttpError(409, 'Mark the confirmed site visit completed in BuildPair before sending the post-visit quote.');
+    }
+
     if (!job.targetTraderId) {
       const listedCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
       if (!listedCategories.includes(job.category)) throw new HttpError(403, 'This marketplace job does not match one of your selected trade categories');
