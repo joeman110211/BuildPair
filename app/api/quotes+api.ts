@@ -1,7 +1,7 @@
 import { desc, eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { jobs, quotes, traderProfiles } from '@/db/schema';
-import { buildPayCustomerFee, buildPayFeeModeForRequest, type BuildPayFeeMode } from '@/lib/buildpay-fees';
+import { buildPayCustomerFee, buildPayFeeModeForRequest, plannedBuildPayChargeCount, type BuildPayFeeMode } from '@/lib/buildpay-fees';
 import { addJobEvent, createNotification } from '@/lib/notifications';
 import { normalizeMaterialsFirstSchedule, paymentScheduleSchema, type PaymentStagePlan, validatePaymentSchedule } from '@/lib/payment-plan';
 import { assertRateLimit } from '@/lib/rate-limit';
@@ -38,17 +38,11 @@ function fallbackSchedule(totalAmount: number, materialsAmount: number, depositA
   const stages: PaymentStagePlan[] = [];
   const materials = Math.max(0, Math.min(totalAmount, materialsAmount));
   const serviceBalance = Math.max(0, totalAmount - materials);
-  if (materials > 0) {
-    stages.push({ key: 'materials', title: 'Materials payment', amount: materials, kind: 'materials', trigger: 'Due after quote acceptance so agreed materials can be ordered.', sortOrder: stages.length + 1 });
-  }
+  if (materials > 0) stages.push({ key: 'materials', title: 'Materials payment', amount: materials, kind: 'materials', trigger: 'Due after quote acceptance so agreed materials can be ordered.', sortOrder: stages.length + 1 });
   const deposit = Math.max(0, Math.min(serviceBalance, depositAmount));
-  if (deposit > 0 && deposit < serviceBalance) {
-    stages.push({ key: 'deposit', title: 'Protected start deposit', amount: deposit, kind: 'deposit', trigger: 'Released after the agreed start/material-arrival point is confirmed.', sortOrder: stages.length + 1 });
-  }
+  if (deposit > 0 && deposit < serviceBalance) stages.push({ key: 'deposit', title: 'Protected start deposit', amount: deposit, kind: 'deposit', trigger: 'Released after the agreed start/material-arrival point is confirmed.', sortOrder: stages.length + 1 });
   const finalAmount = serviceBalance - (deposit > 0 && deposit < serviceBalance ? deposit : 0);
-  if (finalAmount > 0) {
-    stages.push({ key: 'final', title: 'Final payment', amount: finalAmount, kind: 'final', trigger: 'Released after the agreed work is complete and approved.', sortOrder: stages.length + 1 });
-  }
+  if (finalAmount > 0) stages.push({ key: 'final', title: 'Final payment', amount: finalAmount, kind: 'final', trigger: 'Released after the agreed work is complete and approved.', sortOrder: stages.length + 1 });
   return stages;
 }
 
@@ -95,9 +89,7 @@ export async function POST(request: Request) {
     const suppliedSchedule = raw.paymentSchedule == null ? fallbackSchedule(totalAmount, payload.materialsCost, payload.depositAmount) : paymentScheduleSchema.parse(raw.paymentSchedule);
     let paymentSchedule: PaymentStagePlan[];
     try {
-      paymentSchedule = raw.paymentSchedule == null
-        ? validatePaymentSchedule(suppliedSchedule, totalAmount, payload.materialsCost)
-        : normalizeMaterialsFirstSchedule(suppliedSchedule, totalAmount, payload.materialsCost);
+      paymentSchedule = raw.paymentSchedule == null ? validatePaymentSchedule(suppliedSchedule, totalAmount, payload.materialsCost) : normalizeMaterialsFirstSchedule(suppliedSchedule, totalAmount, payload.materialsCost);
     } catch (error) { throw new HttpError(400, error instanceof Error ? error.message : 'Invalid payment plan'); }
 
     const requestBuildPay = raw.requestBuildPay === true;
@@ -105,16 +97,10 @@ export async function POST(request: Request) {
     let buildPayFeeMode: BuildPayFeeMode | null = null;
     let buildPayCustomerFeeEstimate = 0;
     if (requestBuildPay) {
-      if (!profile.stripeAccountId || (!profile.stripePayoutsEnabled && !profile.stripeChargesEnabled)) {
-        throw new HttpError(409, 'Finish Stripe payout setup before sending a quote that requires BuildPay.');
-      }
+      if (!profile.stripeAccountId || (!profile.stripePayoutsEnabled && !profile.stripeChargesEnabled)) throw new HttpError(409, 'Finish Stripe payout setup before sending a quote that requires BuildPay.');
       buildPayFeeMode = buildPayFeeModeForRequest('trader', requestedFeeMode);
       if (buildPayFeeMode === 'customer_pays') {
-        buildPayCustomerFeeEstimate = buildPayCustomerFee({
-          contractAmount: totalAmount,
-          laborServiceAmount: payload.laborCost,
-          plannedChargeCount: paymentSchedule.length,
-        }).customerFee;
+        buildPayCustomerFeeEstimate = buildPayCustomerFee({ contractAmount: totalAmount, laborServiceAmount: payload.laborCost, plannedChargeCount: plannedBuildPayChargeCount(paymentSchedule) }).customerFee;
       }
     }
 
@@ -138,18 +124,13 @@ export async function POST(request: Request) {
           payment_schedule_updated_by = ${trader.id},
           buildpay_requested_by = ${requestBuildPay ? 'trader' : null},
           buildpay_fee_mode = ${buildPayFeeMode},
-          buildpay_customer_fee_estimate = ${buildPayCustomerFeeEstimate},
-          updated_at = now()
+          buildpay_customer_fee_estimate = ${buildPayCustomerFeeEstimate}, updated_at = now()
       WHERE id = ${quote.id}
     `;
     await db.update(jobs).set({ status: 'quoted', updatedAt: new Date() }).where(eq(jobs.id, payload.jobId));
     const conversations = await getSql()`INSERT INTO conversations(job_id, customer_id, trader_id) VALUES (${payload.jobId}, ${job.customerId}, ${trader.id}) ON CONFLICT (job_id, customer_id, trader_id) DO UPDATE SET updated_at = now() RETURNING id` as unknown as { id: string }[];
 
-    const buildPayCopy = requestBuildPay
-      ? buildPayFeeMode === 'trader_absorbs'
-        ? ' BuildPay is requested and the tradesperson has chosen to absorb the BuildPay fee.'
-        : ` BuildPay is requested with an estimated ${formatPence(buildPayCustomerFeeEstimate)} service fee shown separately to the homeowner.`
-      : '';
+    const buildPayCopy = requestBuildPay ? buildPayFeeMode === 'trader_absorbs' ? ' BuildPay is requested and the tradesperson has chosen to absorb the BuildPay fee.' : ` BuildPay is requested with an estimated ${formatPence(buildPayCustomerFeeEstimate)} service fee shown separately to the homeowner.` : '';
     await addJobEvent(payload.jobId, trader.id, 'quote_received', 'Quote received', `${profile.businessName} submitted a quote with ${paymentSchedule.length} payment stage${paymentSchedule.length === 1 ? '' : 's'}.${buildPayCopy}`, { quoteId: quote.id, totalAmount, materialsAmount: payload.materialsCost, laborServiceAmount: payload.laborCost, buildPayRequestedBy: requestBuildPay ? 'trader' : null, buildPayFeeMode, buildPayCustomerFeeEstimate });
     await createNotification(job.customerId, { type: 'quote_received', title: `New quote from ${profile.businessName}`, body: `A quote for ${job.title} is ready to review, including its payment schedule${requestBuildPay ? ' and BuildPay terms' : ''}.`, href: `/customer/compare/${job.id}`, email: true });
     return Response.json({ ...quote, costItems, paymentSchedule, paymentScheduleStatus: 'proposed', buildPayRequestedBy: requestBuildPay ? 'trader' : null, buildPayFeeMode, buildPayCustomerFeeEstimate, conversationId: conversations[0]?.id ?? null }, { status: 201 });
