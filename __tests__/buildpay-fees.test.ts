@@ -3,6 +3,7 @@ import {
   allocateCustomerBuildPayFee,
   buildPayCustomerFee,
   buildPayFeeModeForRequest,
+  plannedBuildPayChargeCount,
 } from '@/lib/buildpay-fees';
 
 const originalPlatformFeePercent = process.env.PLATFORM_FEE_PERCENT;
@@ -39,13 +40,25 @@ describe('BuildPay fee responsibility', () => {
     });
   });
 
-  it('accounts for the fixed service-cost allowance across a staged job', () => {
+  it('counts materials plus the first protected stage as one opening card charge', () => {
+    expect(plannedBuildPayChargeCount([
+      { kind: 'materials' },
+      { kind: 'stage' },
+      { kind: 'final' },
+    ])).toBe(2);
+    expect(plannedBuildPayChargeCount([
+      { kind: 'deposit' },
+      { kind: 'final' },
+    ])).toBe(2);
+  });
+
+  it('accounts for the fixed service-cost allowance across the actual staged charges', () => {
     process.env.PLATFORM_FEE_PERCENT = '1';
     process.env.BUILDPAY_SERVICE_COST_PERCENT = '1.5';
     process.env.BUILDPAY_SERVICE_COST_FIXED_PENCE = '20';
-    const result = buildPayCustomerFee({ contractAmount: 200_000, laborServiceAmount: 200_000, plannedChargeCount: 3 });
-    expect(result.customerFee).toBe(5_138);
-    expect(result.customerTotal).toBe(205_138);
+    const result = buildPayCustomerFee({ contractAmount: 200_000, laborServiceAmount: 200_000, plannedChargeCount: 2 });
+    expect(result.customerFee).toBe(5_117);
+    expect(result.customerTotal).toBe(205_117);
     expect(result.platformFee).toBe(2_000);
   });
 
@@ -53,10 +66,30 @@ describe('BuildPay fee responsibility', () => {
     process.env.PLATFORM_FEE_PERCENT = '1';
     process.env.BUILDPAY_SERVICE_COST_PERCENT = '1.5';
     process.env.BUILDPAY_SERVICE_COST_FIXED_PENCE = '20';
-    const result = buildPayCustomerFee({ contractAmount: 200_000, laborServiceAmount: 150_000, plannedChargeCount: 3 });
+    const result = buildPayCustomerFee({ contractAmount: 200_000, laborServiceAmount: 150_000, plannedChargeCount: 2 });
     expect(result.platformFee).toBe(1_500);
-    expect(result.customerFee).toBe(4_630);
-    expect(result.customerTotal).toBe(204_630);
+    expect(result.customerFee).toBe(4_610);
+    expect(result.customerTotal).toBe(204_610);
+  });
+
+  it('prices the planned £1 materials + £1 stage + £1 final live smoke test from two charges', () => {
+    process.env.PLATFORM_FEE_PERCENT = '1';
+    process.env.BUILDPAY_SERVICE_COST_PERCENT = '1.5';
+    process.env.BUILDPAY_SERVICE_COST_FIXED_PENCE = '20';
+    const chargeCount = plannedBuildPayChargeCount([
+      { kind: 'materials' },
+      { kind: 'stage' },
+      { kind: 'final' },
+    ]);
+    expect(chargeCount).toBe(2);
+    expect(buildPayCustomerFee({ contractAmount: 300, laborServiceAmount: 200, plannedChargeCount: chargeCount })).toEqual({
+      contractAmount: 300,
+      customerFee: 48,
+      customerTotal: 348,
+      platformFee: 2,
+      serviceCostAllowance: 46,
+      plannedChargeCount: 2,
+    });
   });
 
   it('allocates the frozen customer fee exactly across stages with no rounding loss', () => {
@@ -64,10 +97,10 @@ describe('BuildPay fee responsibility', () => {
       { id: 'materials', amount: 50_000, sortOrder: 1 },
       { id: 'stage', amount: 75_000, sortOrder: 2 },
       { id: 'final', amount: 75_000, sortOrder: 3 },
-    ], 5_138);
-    expect([...allocations.values()].reduce((sum, value) => sum + value, 0)).toBe(5_138);
-    expect(allocations.get('materials')).toBe(1_284);
-    expect(allocations.get('stage')).toBe(1_926);
-    expect(allocations.get('final')).toBe(1_928);
+    ], 5_117);
+    expect([...allocations.values()].reduce((sum, value) => sum + value, 0)).toBe(5_117);
+    expect(allocations.get('materials')).toBe(1_279);
+    expect(allocations.get('stage')).toBe(1_918);
+    expect(allocations.get('final')).toBe(1_920);
   });
 });
