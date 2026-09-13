@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /customer/
+Disallow: /trader/
+Disallow: /settings
+Disallow: /quote/
+Disallow: /report
+Disallow: /delete-account
+
+Sitemap: https://buildpair.co.uk/sitemap.xml
