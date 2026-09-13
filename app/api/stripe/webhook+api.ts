@@ -71,6 +71,8 @@ type FundingBatch = {
   customerId: string;
   traderId: string;
   totalAmount: number;
+  customerFeeAmount: number;
+  checkoutAmount: number;
   status: string;
 };
 type FundingAllocation = {
@@ -79,13 +81,15 @@ type FundingAllocation = {
   amount: number;
   kind: 'materials' | 'deposit' | 'stage' | 'final';
   platformFee: number;
+  customerFee: number;
   sortOrder: number;
 };
 
 async function handleFundingBatchSucceeded(intent: Stripe.PaymentIntent, batchId: string) {
   const batches = await getSql()`
     SELECT b.id, b.job_id AS "jobId", j.title AS "jobTitle", b.quote_id AS "quoteId",
-           b.customer_id AS "customerId", b.trader_id AS "traderId", b.total_amount AS "totalAmount", b.status
+           b.customer_id AS "customerId", b.trader_id AS "traderId", b.total_amount AS "totalAmount",
+           b.customer_fee_amount AS "customerFeeAmount", b.checkout_amount AS "checkoutAmount", b.status
     FROM buildpay_funding_batches b
     JOIN jobs j ON j.id = b.job_id
     WHERE b.id = ${batchId}
@@ -96,7 +100,7 @@ async function handleFundingBatchSucceeded(intent: Stripe.PaymentIntent, batchId
 
   const allocations = await getSql()`
     SELECT a.milestone_id AS "milestoneId", m.title, a.amount, m.kind,
-           a.platform_fee AS "platformFee", m.sort_order AS "sortOrder"
+           a.platform_fee AS "platformFee", a.customer_fee AS "customerFee", m.sort_order AS "sortOrder"
     FROM buildpay_funding_allocations a
     JOIN job_milestones m ON m.id = a.milestone_id
     WHERE a.batch_id = ${batch.id}
@@ -105,7 +109,7 @@ async function handleFundingBatchSucceeded(intent: Stripe.PaymentIntent, batchId
   if (!allocations.length) return;
 
   const chargeAmount = intent.amount_received || intent.amount;
-  if (chargeAmount !== batch.totalAmount) throw new Error(`BuildPay funding batch ${batch.id} amount mismatch`);
+  if (chargeAmount !== batch.checkoutAmount) throw new Error(`BuildPay funding batch ${batch.id} amount mismatch`);
   const chargeId = await resolveChargeId(intent);
   if (!chargeId) throw new Error(`BuildPay funding batch ${batch.id} has no Stripe charge`);
   const platformFee = allocations.reduce((sum, allocation) => sum + Math.max(0, allocation.platformFee), 0);
@@ -124,11 +128,12 @@ async function handleFundingBatchSucceeded(intent: Stripe.PaymentIntent, batchId
       AND m.status = 'pending'
   `;
   await getSql()`
-    INSERT INTO payments(job_id, milestone_id, customer_id, trader_id, amount, platform_fee, stripe_payment_intent_id, stripe_charge_id, funding_batch_id, status, funded_at, paid_at)
-    VALUES (${batch.jobId}, NULL, ${batch.customerId}, ${batch.traderId}, ${batch.totalAmount}, ${platformFee}, ${intent.id}, ${chargeId}, ${batch.id}, 'funded', now(), now())
+    INSERT INTO payments(job_id, milestone_id, customer_id, trader_id, amount, platform_fee, customer_fee_amount, stripe_payment_intent_id, stripe_charge_id, funding_batch_id, status, funded_at, paid_at)
+    VALUES (${batch.jobId}, NULL, ${batch.customerId}, ${batch.traderId}, ${batch.totalAmount}, ${platformFee}, ${batch.customerFeeAmount}, ${intent.id}, ${chargeId}, ${batch.id}, 'funded', now(), now())
     ON CONFLICT (stripe_payment_intent_id) DO UPDATE SET
       amount = EXCLUDED.amount,
       platform_fee = EXCLUDED.platform_fee,
+      customer_fee_amount = EXCLUDED.customer_fee_amount,
       stripe_charge_id = COALESCE(EXCLUDED.stripe_charge_id, payments.stripe_charge_id),
       funding_batch_id = EXCLUDED.funding_batch_id,
       status = CASE WHEN payments.status = 'released' THEN payments.status ELSE 'funded'::payment_status END,
@@ -139,31 +144,35 @@ async function handleFundingBatchSucceeded(intent: Stripe.PaymentIntent, batchId
   const materials = allocations.find((allocation) => allocation.kind === 'materials');
   const controlled = allocations.filter((allocation) => allocation.kind !== 'materials');
   const allocationSummary = allocations.map((allocation) => `${allocation.title} ${formatPence(allocation.amount)}`).join(' + ');
+  const feeCopy = batch.customerFeeAmount > 0 ? ` BuildPay service fee collected with this payment: ${formatPence(batch.customerFeeAmount)}.` : '';
   const nextCopy = materials
-    ? `${allocationSummary} is paid into BuildPay. ${formatPence(materials.amount)} for materials is waiting for your acknowledgement before release; ${controlled.map((stage) => `${stage.title} stays protected at ${formatPence(stage.amount)}`).join(' and ')}.`
-    : `${allocationSummary} is funded in BuildPay and stays protected until the agreed release step.`;
+    ? `${allocationSummary} is funded in BuildPay.${feeCopy} ${formatPence(materials.amount)} for materials is waiting for your acknowledgement before release; ${controlled.map((stage) => `${stage.title} stays protected at ${formatPence(stage.amount)}`).join(' and ')}.`
+    : `${allocationSummary} is funded in BuildPay and stays protected until the agreed release step.${feeCopy}`;
 
-  await addJobEvent(batch.jobId, batch.customerId, 'buildpay_funding_received', `BuildPay received ${formatPence(batch.totalAmount)}`, nextCopy, {
+  await addJobEvent(batch.jobId, batch.customerId, 'buildpay_funding_received', `BuildPay received ${formatPence(batch.checkoutAmount)}`, nextCopy, {
     fundingBatchId: batch.id,
     stripePaymentIntentId: intent.id,
-    allocations: allocations.map((allocation) => ({ milestoneId: allocation.milestoneId, title: allocation.title, amount: allocation.amount, kind: allocation.kind })),
+    contractAmount: batch.totalAmount,
+    buildPayServiceFee: batch.customerFeeAmount,
+    checkoutAmount: batch.checkoutAmount,
+    allocations: allocations.map((allocation) => ({ milestoneId: allocation.milestoneId, title: allocation.title, amount: allocation.amount, customerFee: allocation.customerFee, kind: allocation.kind })),
   });
   await Promise.allSettled([
     createNotification(batch.traderId, {
       type: materials ? 'buildpay_first_payment_received' : 'payment_stage_funded',
-      title: materials ? `First BuildPay payment received · ${formatPence(batch.totalAmount)}` : `BuildPay stage funded · ${formatPence(batch.totalAmount)}`,
+      title: materials ? `First BuildPay contract payment funded · ${formatPence(batch.totalAmount)}` : `BuildPay contract stage funded · ${formatPence(batch.totalAmount)}`,
       body: materials
-        ? `${batch.jobTitle}: the homeowner has paid ${allocationSummary}. Open the job and acknowledge the payment when you are ready to order the quoted materials and start the job. The materials amount will then be released; work-stage money stays protected.`
+        ? `${batch.jobTitle}: the homeowner funded ${allocationSummary}. Open the job and acknowledge the payment when you are ready to order the quoted materials and start the job. The materials amount will then be released; work-stage money stays protected.`
         : `${batch.jobTitle}: ${allocationSummary} is funded. Reach the agreed completion point before requesting release.`,
       href: `/trader/jobs/${batch.jobId}`,
       email: true,
     }),
     createNotification(batch.customerId, {
       type: 'buildpay_payment_confirmed',
-      title: `BuildPay payment confirmed · ${formatPence(batch.totalAmount)}`,
+      title: `BuildPay payment confirmed · ${formatPence(batch.checkoutAmount)}`,
       body: materials
-        ? `${batch.jobTitle}: ${allocationSummary} is funded. Materials are not released until the tradesperson acknowledges the first payment; the work-stage money remains protected.`
-        : `${batch.jobTitle}: ${allocationSummary} is funded and protected until the agreed release step.`,
+        ? `${batch.jobTitle}: ${allocationSummary} is funded${batch.customerFeeAmount > 0 ? ` plus ${formatPence(batch.customerFeeAmount)} of the agreed BuildPay service fee` : ''}. Materials are not released until the tradesperson acknowledges the first payment; the work-stage money remains protected.`
+        : `${batch.jobTitle}: ${allocationSummary} is funded and protected until the agreed release step${batch.customerFeeAmount > 0 ? `; this payment also included ${formatPence(batch.customerFeeAmount)} of the agreed BuildPay service fee` : ''}.`,
       href: `/customer/jobs/${batch.jobId}`,
     }),
   ]);
