@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TRADE_CATEGORIES } from '@/constants/options';
+import { SUB_SKILLS, TRADE_CATEGORIES } from '@/constants/options';
 import { jobSchema, quoteSchema, traderProfileSchema } from '@/lib/validation';
 
 const validJob = {
@@ -109,6 +109,18 @@ describe('marketplace validation', () => {
       tradeCategory: TRADE_CATEGORIES[0],
       tradeCategories: TRADE_CATEGORIES.slice(0, 7),
       serviceSelections: { Tiling: ['Bathroom tiling'] },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('allows broad renovation profiles with more than 100 selected service labels', () => {
+    const manyServices = TRADE_CATEGORIES.flatMap((category) => SUB_SKILLS[category]).slice(0, 120);
+    const result = traderProfileSchema.safeParse({
+      ...validTraderProfile,
+      tradeCategory: TRADE_CATEGORIES[0],
+      tradeCategories: TRADE_CATEGORIES.slice(0, 10),
+      serviceSelections: { Tiling: ['Bathroom tiling'] },
+      subSkills: manyServices,
     });
     expect(result.success).toBe(true);
   });
