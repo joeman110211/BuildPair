@@ -9,7 +9,7 @@ export const unstable_settings = {
 };
 
 export default function TraderLayout() {
-  return <RoleGate role="trader"><View style={{ flex: 1, minHeight: 0 }}><DashboardHeader home="/trader/dashboard" /><Stack screenOptions={{ headerTintColor: '#D35400', headerShadowVisible: false }}>
+  return <RoleGate role="trader"><View style={{ flex: 1, minHeight: 0 }}><DashboardHeader home="/trader" /><Stack screenOptions={{ headerTintColor: '#D35400', headerShadowVisible: false }}>
     <Stack.Screen name="index" options={{ headerShown: false }} />
     <Stack.Screen name="dashboard" options={{ headerShown: false }} />
     <Stack.Screen name="job-board" options={{ headerShown: false }} />
