@@ -42,13 +42,16 @@ export function TradeCategorySelector({
       : [...selectedCategories, category];
     onCategoriesChange(nextCategories);
 
+    const nextServices = { ...serviceSelections };
     if (selected) {
-      const nextServices = { ...serviceSelections };
       delete nextServices[category];
-      onServicesChange(nextServices);
     } else {
+      // Choosing one main trade category means choosing the whole category.
+      // Traders can then untick individual services they genuinely do not offer.
+      nextServices[category] = [...SUB_SKILLS[category]];
       setExpanded(category);
     }
+    onServicesChange(nextServices);
   }
 
   function toggleService(category: TradeCategory, service: string) {
@@ -59,13 +62,18 @@ export function TradeCategorySelector({
     onServicesChange({ ...serviceSelections, [category]: next });
   }
 
+  function selectWholeCategory(category: TradeCategory) {
+    if (!selectedCategories.includes(category)) return;
+    onServicesChange({ ...serviceSelections, [category]: [...SUB_SKILLS[category]] });
+  }
+
   return <View style={styles.wrapper}>
     <View style={styles.summary}>
       <View style={styles.summaryText}>
-        <Text variant="titleMedium" style={styles.summaryTitle}>{selectedCategories.length} of {categoryLimit} trade categories selected</Text>
-        <Text style={styles.muted}>Categories use your plan allowance. Services inside each category do not.</Text>
+        <Text variant="titleMedium" style={styles.summaryTitle}>{selectedCategories.length} of {categoryLimit} main trade categories selected</Text>
+        <Text style={styles.muted}>Each main category counts as one plan choice. Selecting it includes every service in that category by default. Untick only the services you do not offer.</Text>
       </View>
-      <Chip icon="briefcase-outline">Starter 2 · Plus 4 · Pro 6</Chip>
+      <Chip icon="briefcase-outline">Starter 2 · Plus 4 · Pro 6 main categories</Chip>
     </View>
 
     {changeLockedUntil ? <View style={styles.lockNotice}>
@@ -77,6 +85,8 @@ export function TradeCategorySelector({
       {TRADE_CATEGORIES.map((category) => {
         const selected = selectedCategories.includes(category);
         const services = serviceSelections[category] ?? [];
+        const allServices = SUB_SKILLS[category];
+        const wholeCategorySelected = selected && services.length === allServices.length;
         const open = expanded === category;
         const categoryDisabled = categoryChangesLocked || (!selected && maxReached);
 
@@ -94,7 +104,13 @@ export function TradeCategorySelector({
               <View pointerEvents="none"><Checkbox status={selected ? 'checked' : 'unchecked'} disabled={categoryDisabled} /></View>
               <View style={styles.categoryText} pointerEvents="none">
                 <Text variant="titleMedium" style={[styles.categoryTitle, categoryDisabled && !selected && styles.disabledText]}>{category}</Text>
-                <Text style={styles.muted}>{selected ? `${services.length} service${services.length === 1 ? '' : 's'} selected` : categoryDisabled && maxReached ? 'Plan category limit reached' : 'Tap the box to add this trade'}</Text>
+                <Text style={styles.muted}>{selected
+                  ? wholeCategorySelected
+                    ? `Whole category selected · ${services.length} services`
+                    : `${services.length} of ${allServices.length} services selected`
+                  : categoryDisabled && maxReached
+                    ? 'Plan main-category limit reached'
+                    : 'Select this whole trade category'}</Text>
               </View>
             </Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel={`${open ? 'Hide' : 'Show'} ${category} services`} onPress={() => setExpanded(open ? null : category)} style={styles.expandButton}>
@@ -103,9 +119,14 @@ export function TradeCategorySelector({
           </View>
 
           {open ? <View style={styles.servicesBlock}>
-            {!selected ? <Text style={styles.serviceHint}>Select {category} first, then tick every service you genuinely offer.</Text> : null}
+            {!selected ? <Text style={styles.serviceHint}>Select {category} to include the whole category. You can then untick anything you do not offer.</Text> : <View style={styles.serviceControls}>
+              <Text style={styles.serviceHint}>{wholeCategorySelected ? 'All services in this category are included.' : 'You have excluded some services from this category.'}</Text>
+              {!wholeCategorySelected ? <Pressable accessibilityRole="button" onPress={() => selectWholeCategory(category)} style={styles.selectAllButton}>
+                <Text style={styles.selectAllText}>Select whole category</Text>
+              </Pressable> : null}
+            </View>}
             <View style={styles.servicesGrid}>
-              {SUB_SKILLS[category].map((service) => {
+              {allServices.map((service) => {
                 const checked = services.includes(service);
                 return <Pressable
                   key={service}
@@ -154,7 +175,10 @@ const styles = StyleSheet.create({
   expandText: { color: colors.primary, fontWeight: '800' },
   disabledText: { color: '#9B9B9B' },
   servicesBlock: { borderTopWidth: 1, borderTopColor: colors.border, padding: 10, gap: 9, backgroundColor: colors.surfaceSoft },
+  serviceControls: { gap: 7 },
   serviceHint: { color: colors.muted, lineHeight: 20, paddingHorizontal: 3 },
+  selectAllButton: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.surfaceRaised },
+  selectAllText: { color: colors.primary, fontWeight: '800' },
   servicesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   service: { flexDirection: 'row', alignItems: 'center', minWidth: 190, flexGrow: 1, flexBasis: '45%', borderWidth: 1, borderColor: colors.border, borderRadius: 13, backgroundColor: colors.surfaceRaised, paddingRight: 10 },
   serviceSelected: { borderColor: colors.primary, backgroundColor: '#FFF4EF' },
