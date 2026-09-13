@@ -94,6 +94,7 @@ export default function TraderProfileStorefront() {
   if (error && !profile) return <Screen><EmptyState title="Profile unavailable" body={error} /></Screen>;
   if (!profile) return <LoadingScreen />;
 
+  const galleryPhotos = profile.photos;
   const categories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
   const serviceAreas = profile.serviceAreas?.length ? profile.serviceAreas : profile.locationLabel ? [profile.locationLabel] : [];
   const selectedServices = categories.flatMap((category) => profile.serviceSelections?.[category] ?? []);
@@ -128,13 +129,13 @@ export default function TraderProfileStorefront() {
   const showReviews = showOverview || activeSection === 'reviews';
   const showCredentials = showOverview || activeSection === 'credentials';
   const showAbout = showOverview;
-  const selectedGalleryPhoto = galleryIndex === null ? null : profile.photos[galleryIndex];
+  const selectedGalleryPhoto = galleryIndex === null ? null : galleryPhotos[galleryIndex];
 
   function changeGalleryPhoto(delta: number) {
-    if (!profile.photos.length) return;
+    if (!galleryPhotos.length) return;
     setGalleryIndex((current) => {
       const index = current ?? 0;
-      return (index + delta + profile.photos.length) % profile.photos.length;
+      return (index + delta + galleryPhotos.length) % galleryPhotos.length;
     });
   }
 
