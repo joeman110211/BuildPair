@@ -111,13 +111,6 @@ export async function POST(request: Request) {
             ELSE preferred_contact
           END,
           source = ${input.source || 'website'},
-          referred_by_id = CASE
-            WHEN referred_by_id IS NULL
-              AND ${referredById}::uuid IS NOT NULL
-              AND id <> ${referredById}::uuid
-            THEN ${referredById}::uuid
-            ELSE referred_by_id
-          END,
           status = CASE WHEN status = 'removed' THEN 'waiting' ELSE status END,
           updated_at = now()
         WHERE id = ${existingId}::uuid
