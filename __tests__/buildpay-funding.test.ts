@@ -26,7 +26,7 @@ describe('BuildPay funding flow', () => {
     expect(plannedBuildPayChargeCount(stages)).toBe(2);
   });
 
-  it('allows materials-only first funding when the homeowner chooses that simpler route', () => {
+  it('supports a materials-only job when there is no protected work stage to bundle', () => {
     const materialsOnly = [{ id: 'materials', amount: 5_000, kind: 'materials' as const, sortOrder: 1, status: 'pending' as const }];
     expect(openingFundingStages(materialsOnly).map((stage) => stage.id)).toEqual(['materials']);
     expect(fundingTotal(materialsOnly)).toBe(5_000);
