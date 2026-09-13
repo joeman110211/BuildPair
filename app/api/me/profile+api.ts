@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm';
+import { SUB_SKILLS, TRADE_CATEGORIES, type TradeCategory } from '@/constants/options';
 import { getDb } from '@/db/client';
 import { traderProfiles } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
@@ -12,6 +13,16 @@ function missingShowcaseTable(error: unknown) {
     || candidate?.cause?.code === '42P01'
     || candidate?.message?.includes('trader_profile_showcase')
     || candidate?.cause?.message?.includes('trader_profile_showcase');
+}
+
+function normaliseServiceSelections(categories: string[], stored: Record<string, string[]> | null | undefined, legacy: string[]) {
+  const known = new Set<string>(TRADE_CATEGORIES);
+  return Object.fromEntries(categories.map((category) => {
+    const selected = Array.isArray(stored?.[category]) ? stored[category] : [];
+    if (selected.length) return [category, selected];
+    if (known.has(category)) return [category, [...SUB_SKILLS[category as TradeCategory]]];
+    return [category, legacy];
+  }));
 }
 
 export async function GET(request: Request) {
@@ -69,12 +80,18 @@ export async function GET(request: Request) {
     const payoutRows = await getSql()`SELECT stripe_payouts_enabled AS "stripePayoutsEnabled" FROM trader_profiles WHERE user_id = ${trader.id} LIMIT 1` as unknown as { stripePayoutsEnabled: boolean }[];
 
     const normalisedCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
+    const serviceSelections = normaliseServiceSelections(
+      normalisedCategories,
+      profile.serviceSelections as Record<string, string[]> | null,
+      profile.subSkills ?? [],
+    );
     const active = hasActiveLeadAccess(profile);
     return Response.json({
       ...profile,
       ...(showcase ?? {}),
       stripePayoutsEnabled: payoutRows[0]?.stripePayoutsEnabled ?? false,
       tradeCategories: normalisedCategories,
+      serviceSelections,
       isSubscriptionActive: active,
       categoryLimit: traderWorkTypeLimit(profile),
       categoryChangeAvailableAt: categoryChangeAvailableAt(profile.categoriesChangedAt)?.toISOString() ?? null,
