@@ -3,6 +3,7 @@ import { BUDGET_OPTIONS, PROPERTY_TYPES, SUB_SKILLS, TRADE_CATEGORIES, TRADER_BI
 import { QUOTE_DURATION_VALUES, QUOTE_SCOPE_MIN_LENGTH } from '@/lib/quote-options';
 
 const postcodeSchema = z.string().trim().min(5, 'Enter a UK postcode').max(8, 'Enter a UK postcode');
+const MAX_TRADER_SERVICE_LABELS = Object.values(SUB_SKILLS).reduce((total, services) => total + services.length, 0);
 
 export const roleSchema = z.object({ role: z.enum(['customer', 'trader']) });
 
@@ -32,7 +33,7 @@ export const traderProfileSchema = z.object({
   tradeCategories: z.array(z.enum(TRADE_CATEGORIES)).min(1, 'Select at least one trade category').max(TRADE_CATEGORIES.length, `A trader profile can contain no more than ${TRADE_CATEGORIES.length} trade categories`).optional(),
   serviceSelections: serviceSelectionsSchema,
   tradeCategory: z.enum(TRADE_CATEGORIES).optional(),
-  subSkills: z.array(z.string().trim().min(1).max(80)).max(100).optional(),
+  subSkills: z.array(z.string().trim().min(1).max(80)).max(MAX_TRADER_SERVICE_LABELS).optional(),
   bio: z.string().trim().min(TRADER_BIO_MIN_LENGTH, `Business bio must be at least ${TRADER_BIO_MIN_LENGTH} characters`).max(1500),
   radiusMiles: z.number().int().min(1).max(150),
   postcode: postcodeSchema,
