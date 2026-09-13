@@ -120,7 +120,11 @@ export default function WaitlistPage() {
       <Chip icon="check-circle">Launch list confirmed</Chip>
       <Text variant="headlineSmall" style={styles.heading}>{joined.alreadyJoined ? 'You’re already on the list.' : 'That’s it. You’re in.'}</Text>
       <Text style={styles.body}>{chosenContactCopy} No account has been created and you do not need to do anything else.</Text>
-      {audience === 'trader' ? <Text style={styles.body}><Text style={styles.strong}>Founding Trades:</Text> the first 50 eligible waiting-list tradespeople who complete registration within 24 hours of launch get 3 months of Pro free.</Text> : null}
+      {audience === 'trader' ? <>
+        <Text style={styles.body}><Text style={styles.strong}>Founding Trades:</Text> the first 100 eligible tradespeople to complete BuildPair registration during the launch offer receive 3 months of Pro free. Other eligible tradespeople joining during the launch offer receive 3 months of Plus free.</Text>
+        <Text style={styles.body}>After launch, genuine completed jobs, BuildPay completions and other qualifying activity can unlock further membership rewards.</Text>
+        <Link href="/(public)/rewards" asChild><Button mode="text">See BuildPair Rewards →</Button></Link>
+      </> : null}
     </AppCard>
 
     <AppCard>
@@ -194,7 +198,9 @@ export default function WaitlistPage() {
         <TextInput mode="outlined" label="Main trade (optional)" value={trade} onChangeText={setTrade} placeholder="e.g. Plumber, electrician, tiler" />
         <AppCard elevated={false} style={styles.offerCard}>
           <Text variant="titleMedium" style={styles.heading}>Founding Trades offer</Text>
-          <Text style={styles.body}>The first 50 eligible waiting-list tradespeople who complete registration within 24 hours of launch get <Text style={styles.strong}>3 months of BuildPair Pro free</Text>.</Text>
+          <Text style={styles.body}>The first 100 eligible tradespeople to complete BuildPair registration during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Pro free</Text>. Other eligible tradespeople joining during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Plus free</Text>.</Text>
+          <Text variant="bodySmall" style={styles.smsNote}>BuildPair Rewards can add further Pro time for genuine completed jobs, BuildPay completions and qualifying member activity. Promotional eligibility and fair-use rules apply.</Text>
+          <Link href="/(public)/rewards" asChild><Button mode="text">View BuildPair Rewards</Button></Link>
         </AppCard>
       </> : null}
 
