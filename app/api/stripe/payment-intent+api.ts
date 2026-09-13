@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     if (!first || first.customerId !== customer.id) throw new HttpError(404, 'Payment stage not found');
     if (first.paymentMode !== 'buildpair') throw new HttpError(409, 'Choose BuildPay on the job before making this payment');
     if (!first.startAgreedAt) throw new HttpError(409, 'Confirm the agreed job start date and time before making the first BuildPay payment');
-    if (!first.stripeAccountId || (!first.stripePayoutsEnabled && !first.stripeChargesEnabled)) throw new HttpError(409, 'The tradesperson must complete Stripe payout setup before BuildPay can take this payment');
+    if (!first.stripeAccountId || !first.stripePayoutsEnabled) throw new HttpError(409, 'The tradesperson must complete Stripe payout setup before BuildPay can take this payment');
 
     const allRows = await getSql()`
       SELECT m.id AS "milestoneId", m.title AS "milestoneTitle", m.amount AS "milestoneAmount", m.status AS "milestoneStatus", m.kind AS "milestoneKind", m.sort_order AS "sortOrder",
