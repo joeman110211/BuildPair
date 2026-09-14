@@ -117,6 +117,14 @@ async function pemForSessionToken(token: string, publishableKey: string) {
   return { pem, authorizedParties: payload.azp ? authorizedParties : undefined };
 }
 
+function withBuildPairUserId<T extends { sub?: string | null }>(payload: T) {
+  const claimedUserId = (payload as T & { userId?: unknown }).userId;
+  if (typeof claimedUserId === 'string' && claimedUserId.trim()) {
+    return { ...payload, sub: claimedUserId.trim() };
+  }
+  return payload;
+}
+
 export async function verifyBuildPairClerkSession(token: string) {
   const secretKey = process.env.CLERK_SECRET_KEY?.trim();
   const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim();
@@ -124,14 +132,14 @@ export async function verifyBuildPairClerkSession(token: string) {
   if (!publishableKey) throw new Error('EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY is not configured');
 
   try {
-    return await verifyToken(token, { secretKey });
+    return withBuildPairUserId(await verifyToken(token, { secretKey }));
   } catch (primaryError) {
     const { pem, authorizedParties } = await pemForSessionToken(token, publishableKey);
     try {
-      return await verifyToken(token, {
+      return withBuildPairUserId(await verifyToken(token, {
         jwtKey: pem,
         authorizedParties,
-      });
+      }));
     } catch (fallbackError) {
       const primaryName = primaryError instanceof Error ? primaryError.name : typeof primaryError;
       const fallbackName = fallbackError instanceof Error ? fallbackError.name : typeof fallbackError;
