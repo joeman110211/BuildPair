@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
+import { assertRateLimit } from '@/lib/rate-limit';
+import { jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
 const text = (max: number) => z.string().trim().max(max).optional().nullable();
@@ -86,6 +88,11 @@ function missingAnalyticsStorage(error: unknown) {
 
 export async function POST(request: Request) {
   try {
+    // Analytics is intentionally high-volume compared with ordinary public forms,
+    // but it still needs an abuse ceiling. 300 requests per minute per network
+    // comfortably covers normal browsing and shared household/office connections
+    // while preventing unbounded synthetic event floods from one source.
+    await assertRateLimit(request, 'visitor-analytics', 300, 60);
     const payload = requestSchema.parse(await request.json());
     const sql = getSql();
 
@@ -217,7 +224,6 @@ export async function POST(request: Request) {
   } catch (error) {
     if (missingAnalyticsStorage(error)) return Response.json({ accepted: false, storageReady: false }, { status: 202 });
     if (error && typeof error === 'object' && 'issues' in error) return Response.json({ error: 'Invalid analytics event' }, { status: 400 });
-    console.error('[visitor-analytics]', error instanceof Error ? error.message : String(error));
-    return Response.json({ error: 'Analytics event could not be recorded' }, { status: 500 });
+    return jsonError(error);
   }
 }
