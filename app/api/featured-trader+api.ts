@@ -97,14 +97,15 @@ export async function GET() {
                  AND tc.status = 'verified'
                  AND (tc.expires_at IS NULL OR tc.expires_at > now())) AS "verifiedCredentialCount"
       FROM trader_profiles tp
-      WHERE NOT EXISTS (
-        SELECT 1 FROM users u
-        WHERE u.id = tp.user_id
-          AND (
-            coalesce(u.is_suspended, false) = true
-            OR coalesce(u.is_deleted, false) = true
-            OR coalesce(u.email, '') LIKE '%@buildpair.test'
-          )
+      WHERE tp.user_id NOT LIKE 'seed_demo_trader_%'
+        AND NOT EXISTS (
+          SELECT 1 FROM users u
+          WHERE u.id = tp.user_id
+            AND (
+              coalesce(u.is_suspended, false) = true
+              OR coalesce(u.is_deleted, false) = true
+              OR coalesce(u.email, '') LIKE '%@buildpair.test'
+            )
       )
       ORDER BY tp.user_id ASC
       LIMIT 250

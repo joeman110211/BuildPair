@@ -80,6 +80,7 @@ export async function GET(request: Request) {
         ON r.trader_id = tp.user_id AND r.verified_completion = true
       WHERE tp.subscription_tier <> 'free'
         AND tp.is_subscription_active = true
+        AND tp.user_id NOT LIKE 'seed_demo_trader_%'
         AND NOT EXISTS (
           SELECT 1 FROM users u
           WHERE u.id = tp.user_id
