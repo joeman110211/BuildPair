@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android Production APK
 
 on:
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
       EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
       EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME: qrrcn7ma
       EXPO_EAS_PROJECT_ID: ${{ vars.EXPO_EAS_PROJECT_ID }}
-      EXPO_UPDATES_CHANNEL: preview
+      EXPO_UPDATES_CHANNEL: production
 
     steps:
       - uses: actions/checkout@v5
@@ -96,7 +96,7 @@ jobs:
           set -euo pipefail
           test -n "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY" || { echo "::error::Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in GitHub Actions and target client config"; exit 1; }
           test -n "$EXPO_PUBLIC_API_URL" || { echo "::error::Missing EXPO_PUBLIC_API_URL"; exit 1; }
-          test -n "$EXPO_EAS_PROJECT_ID" || { echo "::error::BuildPair is not linked to an Expo/EAS project. Link it before producing the OTA-enabled test APK."; exit 1; }
+          test -n "$EXPO_EAS_PROJECT_ID" || { echo "::error::BuildPair is not linked to an Expo/EAS project. Link it before producing the OTA-enabled production APK."; exit 1; }
           if [ -z "$EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY" ]; then
             echo "::warning::Stripe publishable key is not set; Android payments will remain disabled until production client config or GitHub Actions is populated."
           fi
@@ -114,8 +114,8 @@ jobs:
           config=$(npx expo config --type public --json)
           printf '%s' "$config" | jq -e '.updates.enabled == true' >/dev/null
           printf '%s' "$config" | jq -e --arg id "$EXPO_EAS_PROJECT_ID" '.extra.eas.projectId == $id and .updates.url == ("https://u.expo.dev/" + $id)' >/dev/null
-          printf '%s' "$config" | jq -e '.updates.requestHeaders["expo-channel-name"] == "preview"' >/dev/null
-          echo "BuildPair preview OTA configuration verified."
+          printf '%s' "$config" | jq -e '.updates.requestHeaders["expo-channel-name"] == "production"' >/dev/null
+          echo "BuildPair production OTA configuration verified."
 
       - name: Generate native Android project
         run: npx expo prebuild --platform android --clean
@@ -156,7 +156,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: buildpair-android-apk
+          name: buildpair-android-production-apk
           path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 30
