@@ -86,6 +86,9 @@ const shellCss = `
 
 const favicon = 'https://res.cloudinary.com/qrrcn7ma/image/upload/c_crop,h_221,w_221,x_858,y_712/c_scale,w_64/f_png/v1789145219/file_000000003d24820b9445ddc0225f908a.png';
 const appleTouchIcon = 'https://res.cloudinary.com/qrrcn7ma/image/upload/c_crop,h_221,w_221,x_858,y_712/c_scale,w_180/f_png/v1789145219/file_000000003d24820b9445ddc0225f908a.png';
+const socialImage = 'https://res.cloudinary.com/qrrcn7ma/image/upload/c_crop,h_221,w_221,x_858,y_712/c_scale,w_512/f_png/v1789145219/file_000000003d24820b9445ddc0225f908a.png';
+const pageTitle = 'BuildPair | Find Local Trades & Manage Building Work';
+const pageDescription = 'Find trusted local tradespeople, compare clear quotes and keep messages, changes, payments and project records together with BuildPair.';
 
 export default function Root({ children }: PropsWithChildren) {
   return (
@@ -94,16 +97,26 @@ export default function Root({ children }: PropsWithChildren) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="application-name" content="BuildPair" />
-        <meta name="description" content="Find trusted local tradespeople, compare quotes and manage building work." />
+        <meta name="description" content={pageDescription} />
         <meta name="theme-color" content="#D35400" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="BuildPair" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="BuildPair" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:image" content={socialImage} />
+        <meta property="og:image:alt" content="BuildPair" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={socialImage} />
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="icon" href={favicon} type="image/png" />
         <link rel="apple-touch-icon" href={appleTouchIcon} />
-        <title>BuildPair</title>
+        <title>{pageTitle}</title>
         <style dangerouslySetInnerHTML={{ __html: shellCss }} />
         <ScrollViewStyleReset />
       </head>
