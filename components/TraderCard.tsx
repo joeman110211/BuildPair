@@ -1,6 +1,6 @@
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { colors } from '@/constants/theme';
@@ -8,11 +8,13 @@ import type { TraderProfile } from '@/types';
 
 export function TraderCard({ trader }: { trader: TraderProfile }) {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const narrow = width < 640;
   const rating = Number(trader.averageRating || 0);
   const isPro = trader.subscriptionTier === 'featured';
   const membership = isPro ? 'BuildPair Pro' : trader.subscriptionTier === 'basic' ? 'BuildPair Plus' : null;
 
-  return <AppCard style={styles.card}>
+  return <AppCard style={[styles.card, narrow && styles.cardNarrow]}>
     <View style={styles.media}>
       {trader.photos[0]
         ? <Image source={{ uri: trader.photos[0] }} style={styles.image} accessibilityLabel={`${trader.businessName} work example`} />
@@ -39,7 +41,8 @@ export function TraderCard({ trader }: { trader: TraderProfile }) {
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 0, overflow: 'hidden', flexGrow: 1, flexBasis: 310, minWidth: 280, maxWidth: 540 },
+  card: { padding: 0, overflow: 'hidden', flexGrow: 1, flexShrink: 1, flexBasis: 310, minWidth: 0, maxWidth: 540 },
+  cardNarrow: { width: '100%', maxWidth: '100%', flexGrow: 0, flexBasis: 'auto' },
   media: { position: 'relative', minHeight: 200, backgroundColor: colors.navySoft },
   image: { width: '100%', height: 205, backgroundColor: colors.border },
   placeholder: { height: 205, backgroundColor: colors.navySoft, justifyContent: 'center', alignItems: 'center', gap: 9 },
@@ -50,16 +53,16 @@ const styles = StyleSheet.create({
   proBadge: { backgroundColor: 'rgba(24,53,78,0.96)' },
   membershipText: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
   proMembershipText: { color: '#FFFFFF' },
-  content: { padding: 18, gap: 11 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' },
-  flex: { flex: 1, minWidth: 180, gap: 3 },
+  content: { minWidth: 0, padding: 18, gap: 11 },
+  row: { minWidth: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' },
+  flex: { flex: 1, minWidth: 0, gap: 3 },
   title: { fontWeight: '900', color: colors.text, letterSpacing: -0.35 },
   muted: { color: colors.muted, lineHeight: 21 },
   bio: { color: colors.charcoalSoft, lineHeight: 22 },
-  metaRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  metaPill: { flexGrow: 1, minWidth: 120, borderRadius: 16, backgroundColor: colors.surfaceSoft, paddingHorizontal: 12, paddingVertical: 9, gap: 1 },
+  metaRow: { minWidth: 0, flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  metaPill: { flexGrow: 1, flexShrink: 1, minWidth: 110, borderRadius: 16, backgroundColor: colors.surfaceSoft, paddingHorizontal: 12, paddingVertical: 9, gap: 1 },
   metaStrong: { color: colors.charcoal, fontWeight: '900' },
   metaText: { color: colors.muted, fontSize: 10 },
-  skills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  skills: { minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   button: { minHeight: 48 },
 });
