@@ -36,4 +36,21 @@ describe('public surface hardening', () => {
     expect(renderConfig).toContain('value: "false"');
     expect(renderConfig).not.toContain('BUILDPAIR_NOINDEX\n        value: "true"');
   });
+
+  it('rate limits anonymous analytics ingestion', () => {
+    const analytics = source('app/api/visitor-analytics+api.ts');
+    expect(analytics).toContain("assertRateLimit(request, 'visitor-analytics', 300, 60)");
+  });
+
+  it('keeps production readiness diagnostics high level', () => {
+    const readiness = source('app/api/readiness+api.ts');
+    expect(readiness).toContain("process.env.NODE_ENV === 'production'");
+    expect(readiness).toContain('publicStatus');
+  });
+
+  it('includes social sharing metadata for public links', () => {
+    const html = source('app/+html.tsx');
+    expect(html).toContain('property="og:title"');
+    expect(html).toContain('name="twitter:card"');
+  });
 });
