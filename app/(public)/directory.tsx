@@ -128,10 +128,14 @@ export default function DirectoryScreen() {
           mode="outlined"
           style={styles.searchInput}
           outlineStyle={styles.searchOutline}
+          left={<TextInput.Icon icon="magnify" />}
           placeholder="Try ‘camera’, ‘water leak’, ‘wood’, ‘boiler’ or describe the problem"
           value={query}
           onChangeText={setQuery}
+          returnKeyType="search"
+          accessibilityLabel="Search trades and job types"
         />
+        <Text variant="bodySmall" style={styles.liveSearchHint}>Results update as you type.</Text>
       </View>
       <View style={styles.select}>
         <FormSelect
@@ -183,19 +187,20 @@ export default function DirectoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  searchPanel: { backgroundColor: '#FFFCF8', borderWidth: 1, borderTopWidth: 3, borderColor: '#E9D4C2', borderTopColor: colors.primary, borderRadius: 26, padding: 16, flexDirection: 'row', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' },
-  search: { flex: 2, minWidth: 250 },
-  searchInput: { backgroundColor: colors.surfaceRaised },
+  searchPanel: { width: '100%', minWidth: 0, maxWidth: '100%', backgroundColor: '#FFFCF8', borderWidth: 1, borderTopWidth: 3, borderColor: '#E9D4C2', borderTopColor: colors.primary, borderRadius: 26, padding: 16, flexDirection: 'row', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' },
+  search: { flexGrow: 2, flexShrink: 1, flexBasis: 250, minWidth: 0, maxWidth: '100%', gap: 4 },
+  searchInput: { minWidth: 0, backgroundColor: colors.surfaceRaised },
   searchOutline: { borderRadius: 18 },
-  select: { flex: 1, minWidth: 220 },
-  examples: { gap: 8, alignItems: 'center' },
-  exampleChips: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
-  filterChips: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
-  resultsHeader: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
-  resultsCopy: { alignItems: 'center', gap: 3 },
-  title: { fontWeight: '900', color: colors.charcoal, textAlign: 'center' },
-  muted: { color: colors.muted, textAlign: 'center' },
-  intentText: { color: colors.primary, textAlign: 'center', fontWeight: '700' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
-  disclaimer: { textAlign: 'center', color: colors.muted, marginTop: 8, lineHeight: 19 },
+  liveSearchHint: { color: colors.muted, paddingHorizontal: 4 },
+  select: { flexGrow: 1, flexShrink: 1, flexBasis: 220, minWidth: 0, maxWidth: '100%' },
+  examples: { minWidth: 0, gap: 8, alignItems: 'center' },
+  exampleChips: { minWidth: 0, flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
+  filterChips: { minWidth: 0, flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
+  resultsHeader: { minWidth: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
+  resultsCopy: { minWidth: 0, maxWidth: '100%', alignItems: 'center', gap: 3 },
+  title: { maxWidth: '100%', fontWeight: '900', color: colors.charcoal, textAlign: 'center' },
+  muted: { maxWidth: '100%', color: colors.muted, textAlign: 'center' },
+  intentText: { maxWidth: '100%', color: colors.primary, textAlign: 'center', fontWeight: '700' },
+  grid: { width: '100%', minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
+  disclaimer: { maxWidth: '100%', textAlign: 'center', color: colors.muted, marginTop: 8, lineHeight: 19 },
 });

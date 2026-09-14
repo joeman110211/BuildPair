@@ -4,6 +4,7 @@ import { assertRateLimit } from '@/lib/rate-limit';
 import { jsonError, HttpError } from '@/lib/server';
 import { smsConfigured } from '@/lib/sms';
 import { getSql } from '@/lib/sql';
+import { issueWaitlistUpdateToken, verifyWaitlistUpdateToken } from '@/lib/waitlist-token';
 import { ensureLaunchWaitlistTable } from '@/lib/waitlist-store';
 
 const waitlistSchema = z.object({
@@ -19,6 +20,7 @@ const waitlistSchema = z.object({
   preferredContact: z.enum(['email', 'sms', 'both']).optional(),
   source: z.string().trim().max(80).optional().default('website'),
   referralCode: z.string().trim().max(24).optional().default(''),
+  updateToken: z.string().trim().max(256).optional().default(''),
 });
 
 function normalizePostcode(input: string) {
@@ -32,6 +34,25 @@ function normalizeEmail(input: string) {
   if (!email) return '';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, 'Enter a valid email address');
   return email;
+}
+
+function waitlistCookieToken(request: Request) {
+  const cookies = request.headers.get('cookie') ?? '';
+  for (const part of cookies.split(';')) {
+    const [name, ...rest] = part.trim().split('=');
+    if (name !== 'bp_waitlist_update') continue;
+    try { return decodeURIComponent(rest.join('=')); }
+    catch { return ''; }
+  }
+  return '';
+}
+
+function waitlistResponse(payload: Record<string, unknown>, updateToken?: string) {
+  const headers = new Headers({ 'Cache-Control': 'no-store' });
+  if (updateToken) {
+    headers.set('Set-Cookie', `bp_waitlist_update=${encodeURIComponent(updateToken)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`);
+  }
+  return Response.json(payload, { headers });
 }
 
 export async function POST(request: Request) {
@@ -88,6 +109,16 @@ export async function POST(request: Request) {
     }
 
     const existingId = distinctIds[0] ?? null;
+    const presentedUpdateToken = input.updateToken || waitlistCookieToken(request);
+    const mayUpdateExisting = existingId ? verifyWaitlistUpdateToken(presentedUpdateToken, existingId) : false;
+
+    // A repeat public submission must not reveal or change an existing person's
+    // launch-list record. The browser that created the record receives a signed,
+    // HttpOnly capability used only for the immediate optional details step.
+    if (existingId && !mayUpdateExisting) {
+      return waitlistResponse({ ok: true, alreadyJoined: true });
+    }
+
     let id: string | undefined;
 
     if (existingId) {
@@ -148,14 +179,14 @@ export async function POST(request: Request) {
       LIMIT 1
     ` as unknown as { referral_code: string | null; referral_count: number }[] : [];
 
-    return Response.json({
+    const updateToken = id ? issueWaitlistUpdateToken(id) : undefined;
+    return waitlistResponse({
       ok: true,
-      id,
       alreadyJoined: Boolean(existingId),
       preferredContact: effectivePreference,
       referralCode: referralRows[0]?.referral_code ?? undefined,
       referralCount: referralRows[0]?.referral_count ?? 0,
-    });
+    }, updateToken);
   } catch (error) {
     return jsonError(error);
   }

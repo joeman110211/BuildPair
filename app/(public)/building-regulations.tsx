@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { PublicFooter } from '@/components/PublicFooter';
@@ -64,9 +65,13 @@ const COMMON_CHECKS = [
 ] as const;
 
 export default function BuildingRegulationsHub() {
+  const router = useRouter();
+  const goBack = () => router.canGoBack() ? router.back() : router.replace('/');
+
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
     <View style={styles.hero}>
       <View style={styles.heroInner}>
+        <Button mode="text" textColor="#FFFFFF" compact style={styles.back} onPress={goBack}>← Back</Button>
         <Chip style={styles.chip} textStyle={styles.chipText}>Free public reference</Chip>
         <Text variant="displaySmall" style={styles.heroTitle}>Official UK building-rule starting points in one place.</Text>
         <Text variant="bodyLarge" style={styles.heroBody}>BuildPair brings together the official sources for England, Wales, Scotland and Northern Ireland. We link to current source material rather than copying technical guidance that may change.</Text>
@@ -115,26 +120,27 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
   hero: { backgroundColor: colors.charcoal, paddingHorizontal: 20, paddingVertical: 62 },
-  heroInner: { width: '100%', maxWidth: 1120, alignSelf: 'center', gap: 13 },
-  chip: { alignSelf: 'flex-start', backgroundColor: '#3A4148' },
+  heroInner: { width: '100%', maxWidth: 1120, minWidth: 0, alignSelf: 'center', gap: 13 },
+  back: { alignSelf: 'flex-start', marginLeft: -8 },
+  chip: { alignSelf: 'flex-start', backgroundColor: '#3A4148', maxWidth: '100%' },
   chipText: { color: '#FFFFFF', fontWeight: '800' },
   heroTitle: { color: '#FFFFFF', fontWeight: '900', maxWidth: 850, letterSpacing: -1 },
   heroBody: { color: '#DDE1E3', maxWidth: 840, lineHeight: 27 },
-  content: { width: '100%', maxWidth: 1120, alignSelf: 'center', padding: 20, gap: 24 },
+  content: { width: '100%', maxWidth: 1120, minWidth: 0, alignSelf: 'center', padding: 20, gap: 24 },
   warning: { backgroundColor: colors.goldSoft, borderWidth: 1, borderColor: '#E5C98F', borderRadius: 24, padding: 20, gap: 7 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
-  card: { flexGrow: 1, flexBasis: 460, backgroundColor: colors.surfaceRaised, borderRadius: 26, padding: 22, borderWidth: 1, borderColor: colors.border, gap: 12 },
-  cardTop: { gap: 8, alignItems: 'flex-start' },
+  grid: { width: '100%', minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
+  card: { flexGrow: 1, flexShrink: 1, flexBasis: 460, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: 26, padding: 22, borderWidth: 1, borderColor: colors.border, gap: 12 },
+  cardTop: { gap: 8, alignItems: 'flex-start', minWidth: 0 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 2 },
   title: { color: colors.charcoal, fontWeight: '900' },
   body: { color: colors.muted, lineHeight: 23 },
   sectionHeader: { gap: 6, marginTop: 10 },
   eyebrow: { color: colors.primary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.1 },
   sectionTitle: { color: colors.charcoal, fontWeight: '900' },
-  checkGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  checkCard: { flexGrow: 1, flexBasis: 240, backgroundColor: colors.surfaceSoft, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: colors.border, gap: 5 },
-  actionStrip: { backgroundColor: colors.charcoal, borderRadius: 26, padding: 22, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 16 },
-  flex: { flex: 1, minWidth: 260, gap: 6 },
+  checkGrid: { width: '100%', minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  checkCard: { flexGrow: 1, flexShrink: 1, flexBasis: 240, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceSoft, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: colors.border, gap: 5 },
+  actionStrip: { width: '100%', minWidth: 0, backgroundColor: colors.charcoal, borderRadius: 26, padding: 22, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 16 },
+  flex: { flex: 1, minWidth: 0, maxWidth: '100%', gap: 6 },
   lightTitle: { color: '#FFFFFF', fontWeight: '900' },
   lightBody: { color: '#DDE1E3', lineHeight: 23 },
   disclaimer: { color: colors.muted, textAlign: 'center', lineHeight: 20, paddingHorizontal: 12 },
