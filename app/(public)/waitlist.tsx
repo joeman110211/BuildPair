@@ -161,17 +161,20 @@ export default function WaitlistPage() {
     : contactPreference === 'both'
       ? 'We’ll email and text you when BuildPair registration opens.'
       : 'We’ll email you when BuildPair registration opens.';
+  const privateRepeat = Boolean(joined?.alreadyJoined && !joined.referralCode);
 
   if (joined) return <Screen title="Welcome to the BuildPair launch list" subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
     <AppCard style={styles.successCard}>
       <Chip icon="check-circle">Launch list confirmed</Chip>
       <Text variant="headlineSmall" style={styles.heading}>{joined.alreadyJoined ? 'You’re already on the list.' : 'You’re in. Welcome to BuildPair.'}</Text>
-      <Text style={styles.body}>{chosenContactCopy} No account has been created yet and there is nothing else you have to do.</Text>
-      {requestEarlyAccess ? <View style={styles.earlySuccess}>
+      <Text style={styles.body}>{privateRepeat
+        ? 'Your existing launch-list entry is still in place. For privacy, a repeat submission does not display or alter the contact details, preferences or referral information already saved.'
+        : `${chosenContactCopy} No account has been created yet and there is nothing else you have to do.`}</Text>
+      {requestEarlyAccess && !privateRepeat ? <View style={styles.earlySuccess}>
         <Chip icon="key-clock-outline">Early access requested</Chip>
         <Text style={styles.body}>You’ve asked to start before the public launch. We’ll invite selected early users in manageable batches while we finish real-world testing. Requesting a place does not guarantee an invitation, but your interest is now recorded.</Text>
       </View> : null}
-      {audience === 'trader' ? <>
+      {audience === 'trader' && !privateRepeat ? <>
         <Text style={styles.body}><Text style={styles.strong}>Founding Trades:</Text> the first 100 eligible tradespeople to complete BuildPair registration during the launch offer receive 3 months of Pro free. Other eligible tradespeople joining during the launch offer receive 3 months of Plus free.</Text>
         <Text style={styles.body}>No pay-per-lead charges. Keep using BuildPair for genuine jobs and BuildPay completions and you can unlock further membership rewards.</Text>
         <Link href="/(public)/rewards" asChild><Button mode="text">See BuildPair Rewards →</Button></Link>
@@ -194,7 +197,11 @@ export default function WaitlistPage() {
       <Text style={styles.smsNote}>We’re counting genuine launch-list signups first. Any referral rewards will be clearly announced if we introduce them later.</Text>
     </AppCard> : null}
 
-    <AppCard>
+    {privateRepeat ? <AppCard>
+      <Chip icon="shield-lock-outline">Privacy protected</Chip>
+      <Text variant="titleLarge" style={styles.heading}>Need to change something?</Text>
+      <Text style={styles.body}>To change details on an existing launch-list entry, contact info@buildpair.co.uk from the address already registered. That prevents somebody who merely knows your email or phone number from changing your preferences.</Text>
+    </AppCard> : <AppCard>
       <Chip icon="key-plus">Optional</Chip>
       <Text variant="titleLarge" style={styles.heading}>{requestEarlyAccess ? 'Help us prioritise your early-access request' : 'Want to request early access?'}</Text>
       <Text style={styles.body}>{requestEarlyAccess ? 'Add your name and postcode so we have a little more context when selecting early users. Your launch-list place and early-access request are already saved.' : 'If you would like to try BuildPair before public launch, add a few details here. Your launch-list place is already saved.'}</Text>
@@ -214,7 +221,7 @@ export default function WaitlistPage() {
         <HelperText type="error" visible={Boolean(detailsError)}>{detailsError}</HelperText>
         <Button mode="outlined" icon="key-plus" loading={detailsBusy} disabled={detailsBusy || !canSaveDetails} onPress={() => void saveTestingDetails()}>{requestEarlyAccess ? 'Save early-access details' : 'Request early access'}</Button>
       </>}
-    </AppCard>
+    </AppCard>}
 
     <Link href="/" asChild><Button mode="text">Back to BuildPair</Button></Link>
   </Screen>;
