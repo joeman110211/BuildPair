@@ -1,4 +1,4 @@
-import { ClerkLoaded, ClerkProvider } from '@clerk/expo';
+import { ClerkProvider } from '@clerk/expo';
 import { Stack } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -53,9 +53,7 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <AuthAvailabilityProvider value>
-        <ClerkLoaded>
-          <AppShell trackPresence />
-        </ClerkLoaded>
+        <AppShell trackPresence />
       </AuthAvailabilityProvider>
     </ClerkProvider>
   );
