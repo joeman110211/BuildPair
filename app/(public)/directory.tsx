@@ -12,6 +12,7 @@ import { searchTraders, searchTradersWithFallback } from '@/lib/trade-search';
 import type { TraderProfile } from '@/types';
 
 const EXAMPLE_SEARCHES = ['tiler', 'bathroom', 'camera', 'security', 'water leak', 'wood', 'boiler', 'roof leak', 'kitchen', 'driveway'];
+const SEARCH_CAPABILITIES = ['Understands intent', 'Handles typos', 'Related services', 'AI-assisted fallback'] as const;
 
 type TradeSearchIntent = {
   matched?: boolean;
@@ -152,12 +153,11 @@ export default function DirectoryScreen() {
       </View>
     </View>
 
-    <View style={styles.filterChips}>
-      <Chip>Smart intent matching</Chip>
-      <Chip>Typo tolerant</Chip>
-      <Chip>Related services</Chip>
-      <Chip>AI fallback</Chip>
-      <Chip>Never dead-ends</Chip>
+    <View style={styles.capabilities}>
+      <Text variant="bodySmall" style={styles.capabilityLabel}>BuildPair search</Text>
+      <View style={styles.capabilityPills}>
+        {SEARCH_CAPABILITIES.map((capability) => <View key={capability} style={styles.capabilityPill}><Text style={styles.capabilityText}>✓ {capability}</Text></View>)}
+      </View>
     </View>
 
     <View style={styles.resultsHeader}>
@@ -190,7 +190,11 @@ const styles = StyleSheet.create({
   select: { flex: 1, minWidth: 220 },
   examples: { gap: 8, alignItems: 'center' },
   exampleChips: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
-  filterChips: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
+  capabilities: { gap: 7, alignItems: 'center' },
+  capabilityLabel: { color: colors.muted, textAlign: 'center', fontWeight: '700' },
+  capabilityPills: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
+  capabilityPill: { borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSoft, paddingHorizontal: 10, paddingVertical: 6 },
+  capabilityText: { color: colors.charcoalSoft, fontSize: 11, fontWeight: '700' },
   resultsHeader: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
   resultsCopy: { alignItems: 'center', gap: 3 },
   title: { fontWeight: '900', color: colors.charcoal, textAlign: 'center' },
