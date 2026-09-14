@@ -29,4 +29,11 @@ describe('public surface hardening', () => {
     expect(map).toContain('export/embed.html?bbox=${bbox}&layer=mapnik`');
     expect(map).not.toContain('export/embed.html?bbox=${bbox}&layer=mapnik&marker=');
   });
+
+  it('does not ship the public production blueprint with site-wide noindex enabled', () => {
+    const renderConfig = source('render.yaml');
+    expect(renderConfig).toContain('BUILDPAIR_NOINDEX');
+    expect(renderConfig).toContain('value: "false"');
+    expect(renderConfig).not.toContain('BUILDPAIR_NOINDEX\n        value: "true"');
+  });
 });
