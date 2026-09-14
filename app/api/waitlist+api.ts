@@ -4,6 +4,7 @@ import { assertRateLimit } from '@/lib/rate-limit';
 import { jsonError, HttpError } from '@/lib/server';
 import { smsConfigured } from '@/lib/sms';
 import { getSql } from '@/lib/sql';
+import { issueWaitlistUpdateToken, verifyWaitlistUpdateToken } from '@/lib/waitlist-token';
 import { ensureLaunchWaitlistTable } from '@/lib/waitlist-store';
 
 const waitlistSchema = z.object({
@@ -19,6 +20,7 @@ const waitlistSchema = z.object({
   preferredContact: z.enum(['email', 'sms', 'both']).optional(),
   source: z.string().trim().max(80).optional().default('website'),
   referralCode: z.string().trim().max(24).optional().default(''),
+  updateToken: z.string().trim().max(256).optional().default(''),
 });
 
 function normalizePostcode(input: string) {
@@ -88,6 +90,15 @@ export async function POST(request: Request) {
     }
 
     const existingId = distinctIds[0] ?? null;
+    const mayUpdateExisting = existingId ? verifyWaitlistUpdateToken(input.updateToken, existingId) : false;
+
+    // A repeat public submission must not reveal or change an existing person's
+    // launch-list record. Only the page that created the record receives the signed
+    // update capability used by the optional second-step details form.
+    if (existingId && !mayUpdateExisting) {
+      return Response.json({ ok: true, alreadyJoined: true });
+    }
+
     let id: string | undefined;
 
     if (existingId) {
@@ -150,9 +161,9 @@ export async function POST(request: Request) {
 
     return Response.json({
       ok: true,
-      id,
       alreadyJoined: Boolean(existingId),
       preferredContact: effectivePreference,
+      updateToken: id ? issueWaitlistUpdateToken(id) : undefined,
       referralCode: referralRows[0]?.referral_code ?? undefined,
       referralCount: referralRows[0]?.referral_count ?? 0,
     });
