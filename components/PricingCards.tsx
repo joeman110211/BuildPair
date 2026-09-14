@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
@@ -76,19 +76,22 @@ const plans = [
 ];
 
 export function PricingCards({ compact = false }: { compact?: boolean }) {
+  const { width } = useWindowDimensions();
+  const narrow = width < 640;
+
   return <View style={styles.wrap}>
-    <View style={styles.grid}>
+    <View style={[styles.grid, narrow && styles.gridNarrow]}>
       {plans.map((plan) => {
         const featured = plan.tone === 'plus';
         const pro = plan.tone === 'pro';
         const features = compact ? plan.compactFeatures : plan.features;
         const href = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', `pricing-${plan.tone}`);
         const cta = REGISTRATION_OPEN ? plan.cta : (pro ? 'Join Founding Trades list' : 'Join tradesperson launch list');
-        return <View key={plan.name} style={[styles.card, compact && styles.cardCompact, featured && styles.cardFeatured, pro && styles.cardPro]}>
+        return <View key={plan.name} style={[styles.card, compact && styles.cardCompact, narrow && styles.cardNarrow, featured && styles.cardFeatured, pro && styles.cardPro]}>
           <Text style={[styles.eyebrow, featured && styles.eyebrowFeatured, pro && styles.eyebrowPro]}>{plan.eyebrow}</Text>
           <Text variant="titleLarge" style={styles.name}>{plan.name}</Text>
           <View style={styles.priceRow}><Text style={styles.price}>{plan.price}</Text><Text style={styles.suffix}>{plan.suffix}</Text></View>
-          <Text style={[styles.summary, compact && styles.summaryCompact]}>{plan.summary}</Text>
+          <Text style={[styles.summary, compact && styles.summaryCompact, narrow && styles.summaryNarrow]}>{plan.summary}</Text>
           <View style={styles.divider} />
           <View style={styles.features}>
             {features.map((feature) => <View key={feature} style={styles.featureRow}>
@@ -108,10 +111,12 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: spacing.lg },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, alignItems: 'stretch' },
+  wrap: { width: '100%', minWidth: 0, gap: spacing.lg },
+  grid: { width: '100%', minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, alignItems: 'stretch' },
+  gridNarrow: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
   card: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, padding: spacing.xl, gap: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: colors.charcoal, shadowOpacity: 0.04, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 2 },
   cardCompact: { flexBasis: 280, padding: spacing.lg, gap: spacing.sm },
+  cardNarrow: { width: '100%', flexGrow: 0, flexBasis: 'auto' },
   cardFeatured: { borderColor: colors.primary, borderWidth: 2, backgroundColor: '#FFFCF9' },
   cardPro: { borderColor: '#CAD6E0', backgroundColor: '#FAFCFE' },
   eyebrow: { color: colors.muted, fontSize: 11, lineHeight: 16, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1 },
@@ -123,6 +128,7 @@ const styles = StyleSheet.create({
   suffix: { color: colors.muted, paddingBottom: spacing.xs },
   summary: { color: colors.muted, lineHeight: 22, minHeight: 66 },
   summaryCompact: { minHeight: 0 },
+  summaryNarrow: { minHeight: 0 },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.xxs },
   features: { gap: spacing.sm, flexGrow: 1 },
   featureRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
