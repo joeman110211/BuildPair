@@ -90,7 +90,7 @@ async function signIn(page, email, role) {
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ role }),
   });
-  if (!response.ok) throw new Error(`Could not enable ${role}: HTTP ${response.status()} ${await response.text()}`);
+  if (!response.ok) throw new Error(`Could not enable ${role}: HTTP ${response.status} ${await response.text()}`);
 }
 
 async function assertMobileLayout(page, label) {
