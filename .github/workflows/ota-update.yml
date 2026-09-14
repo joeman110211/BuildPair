@@ -1,4 +1,4 @@
-name: Publish Preview OTA Update
+name: Publish Production OTA Update
 
 on:
   workflow_run:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: buildpair-preview-ota
+  group: buildpair-production-ota
   cancel-in-progress: true
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
       EXPO_NO_TELEMETRY: '1'
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       EXPO_EAS_PROJECT_ID: ${{ vars.EXPO_EAS_PROJECT_ID }}
-      EXPO_UPDATES_CHANNEL: preview
+      EXPO_UPDATES_CHANNEL: production
       EXPO_PUBLIC_API_URL: https://www.buildpair.co.uk
       EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
       EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
@@ -135,8 +135,8 @@ jobs:
           config=$(npx expo config --type public --json)
           printf '%s' "$config" | jq -e '.updates.enabled == true' >/dev/null
           printf '%s' "$config" | jq -e --arg id "$EXPO_EAS_PROJECT_ID" '.extra.eas.projectId == $id and .updates.url == ("https://u.expo.dev/" + $id)' >/dev/null
-          printf '%s' "$config" | jq -e '.updates.requestHeaders["expo-channel-name"] == "preview"' >/dev/null
+          printf '%s' "$config" | jq -e '.updates.requestHeaders["expo-channel-name"] == "production"' >/dev/null
 
-      - name: Publish preview OTA update
+      - name: Publish production OTA update
         if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'
-        run: npx eas-cli@latest update --channel preview --platform all --non-interactive --message "BuildPair ${GITHUB_SHA::12}"
+        run: npx eas-cli@latest update --channel production --platform all --non-interactive --message "BuildPair ${GITHUB_SHA::12}"
