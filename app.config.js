@@ -2,14 +2,14 @@ const appJson = require('./app.json');
 
 const committedProjectId = appJson.expo.extra?.eas?.projectId || '';
 const projectId = (process.env.EXPO_EAS_PROJECT_ID || committedProjectId).trim();
-const updateChannel = (process.env.EXPO_UPDATES_CHANNEL || 'production').trim();
+const updateChannel = (process.env.EXPO_UPDATES_CHANNEL || '').trim();
 
 const expo = {
   ...appJson.expo,
   runtimeVersion: { policy: 'appVersion' },
 };
 
-if (projectId) {
+if (projectId && updateChannel) {
   expo.updates = {
     enabled: true,
     url: `https://u.expo.dev/${projectId}`,
