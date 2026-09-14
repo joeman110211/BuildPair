@@ -36,6 +36,25 @@ function normalizeEmail(input: string) {
   return email;
 }
 
+function waitlistCookieToken(request: Request) {
+  const cookies = request.headers.get('cookie') ?? '';
+  for (const part of cookies.split(';')) {
+    const [name, ...rest] = part.trim().split('=');
+    if (name !== 'bp_waitlist_update') continue;
+    try { return decodeURIComponent(rest.join('=')); }
+    catch { return ''; }
+  }
+  return '';
+}
+
+function waitlistResponse(payload: Record<string, unknown>, updateToken?: string) {
+  const headers = new Headers({ 'Cache-Control': 'no-store' });
+  if (updateToken) {
+    headers.set('Set-Cookie', `bp_waitlist_update=${encodeURIComponent(updateToken)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`);
+  }
+  return Response.json(payload, { headers });
+}
+
 export async function POST(request: Request) {
   try {
     await assertRateLimit(request, 'launch-waitlist', 12, 60 * 60);
@@ -90,13 +109,14 @@ export async function POST(request: Request) {
     }
 
     const existingId = distinctIds[0] ?? null;
-    const mayUpdateExisting = existingId ? verifyWaitlistUpdateToken(input.updateToken, existingId) : false;
+    const presentedUpdateToken = input.updateToken || waitlistCookieToken(request);
+    const mayUpdateExisting = existingId ? verifyWaitlistUpdateToken(presentedUpdateToken, existingId) : false;
 
     // A repeat public submission must not reveal or change an existing person's
-    // launch-list record. Only the page that created the record receives the signed
-    // update capability used by the optional second-step details form.
+    // launch-list record. The browser that created the record receives a signed,
+    // HttpOnly capability used only for the immediate optional details step.
     if (existingId && !mayUpdateExisting) {
-      return Response.json({ ok: true, alreadyJoined: true });
+      return waitlistResponse({ ok: true, alreadyJoined: true });
     }
 
     let id: string | undefined;
@@ -159,14 +179,14 @@ export async function POST(request: Request) {
       LIMIT 1
     ` as unknown as { referral_code: string | null; referral_count: number }[] : [];
 
-    return Response.json({
+    const updateToken = id ? issueWaitlistUpdateToken(id) : undefined;
+    return waitlistResponse({
       ok: true,
       alreadyJoined: Boolean(existingId),
       preferredContact: effectivePreference,
-      updateToken: id ? issueWaitlistUpdateToken(id) : undefined,
       referralCode: referralRows[0]?.referral_code ?? undefined,
       referralCount: referralRows[0]?.referral_count ?? 0,
-    });
+    }, updateToken);
   } catch (error) {
     return jsonError(error);
   }
