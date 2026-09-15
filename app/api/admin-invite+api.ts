@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
+import { ensureAdminAccessInviteTable } from '@/lib/admin-access-store';
 import { authenticatedUserId, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
@@ -24,6 +25,7 @@ async function clerkEmails(userId: string) {
 
 export async function GET(request: Request) {
   try {
+    await ensureAdminAccessInviteTable();
     const token = new URL(request.url).searchParams.get('token')?.trim() ?? '';
     if (!token) return Response.json({ valid: false });
     const rows = await getSql()`
@@ -44,6 +46,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    await ensureAdminAccessInviteTable();
     const { token } = acceptSchema.parse(await request.json());
     const userId = await authenticatedUserId(request);
     const hash = tokenHash(token);
