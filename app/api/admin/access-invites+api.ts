@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
+import { ensureAdminAccessInviteTable } from '@/lib/admin-access-store';
 import { sendAdminInviteEmail } from '@/lib/admin-invite-email';
 import { buildPairOwnerUserId, requireOwnerAdmin } from '@/lib/admin-owner';
 import { HttpError, jsonError } from '@/lib/server';
@@ -16,6 +17,7 @@ function tokenHash(token: string) {
 export async function GET(request: Request) {
   try {
     await requireOwnerAdmin(request);
+    await ensureAdminAccessInviteTable();
     const sql = getSql();
     const [admins, invites] = await Promise.all([
       sql`
@@ -42,6 +44,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const { user: owner } = await requireOwnerAdmin(request);
+    await ensureAdminAccessInviteTable();
     const { email } = createSchema.parse(await request.json());
     const normalizedEmail = email.toLowerCase();
     const sql = getSql();
@@ -89,6 +92,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     await requireOwnerAdmin(request);
+    await ensureAdminAccessInviteTable();
     const { inviteId } = revokeSchema.parse(await request.json());
     const rows = await getSql()`
       UPDATE admin_access_invites
@@ -106,6 +110,7 @@ export async function DELETE(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const { user: owner } = await requireOwnerAdmin(request);
+    await ensureAdminAccessInviteTable();
     const { userId } = removeSchema.parse(await request.json());
     if (userId === owner.id || userId === buildPairOwnerUserId()) {
       throw new HttpError(400, 'The BuildPair owner cannot remove their own administrator access');
