@@ -38,8 +38,9 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     title: 'People',
-    description: 'Accounts, live signed-in activity, trade businesses and evidence used for trust checks.',
+    description: 'Accounts, administrator permissions, live signed-in activity, trade businesses and evidence used for trust checks.',
     items: [
+      { href: '/admin/access', label: 'Administrator access', shortLabel: 'Admins', description: 'Owner-only controls for inviting, approving and removing administrator accounts.' },
       { href: '/admin/users', label: 'Users & access', shortLabel: 'Users', description: 'Find accounts, inspect account modes, subscriptions, suspensions and account history.' },
       { href: '/admin/presence', label: 'Live signed-in users', shortLabel: 'Live', description: 'See which registered accounts are active now or have been active recently.' },
       { href: '/admin/profiles', label: 'Trade profiles', shortLabel: 'Profiles', description: 'Review business profiles and the public marketplace information attached to them.' },
