@@ -8,28 +8,22 @@ import { getStripe, providerReturnUrl } from '@/lib/stripe';
 async function createHostedOnboardingLink(request: Request) {
   const trader = await requireRole(request, 'trader');
   const db = getDb();
-  const stripe = getStripe();
-
-  // Serialize Stripe Connect account creation per BuildPair user. Without this,
-  // two near-simultaneous onboarding requests can both observe an empty
-  // stripe_account_id and create duplicate live connected accounts.
-  await getSql()`SELECT pg_advisory_xact_lock(hashtext(${`buildpair-connect:${trader.id}`}))`;
-
-  // Re-read after acquiring the lock so a concurrent request that created the
-  // account first is observed here instead of creating another account.
   const profile = await db.query.traderProfiles.findFirst({ where: eq(traderProfiles.userId, trader.id) });
   if (!profile) throw new HttpError(409, 'Complete your profile first');
-
+  const stripe = getStripe();
   let accountId = profile.stripeAccountId;
 
   if (!accountId) {
+    // Stripe idempotency is the source-of-truth guard here. If two requests race
+    // before stripe_account_id is saved, both calls use the same key and Stripe
+    // returns the same connected account instead of creating duplicates.
     const account = await stripe.accounts.create({
       type: 'express',
       country: 'GB',
       email: trader.email ?? undefined,
       capabilities: { transfers: { requested: true } },
       metadata: { buildpairUserId: trader.id, buildpairRole: 'tradesperson_recipient' },
-    });
+    }, { idempotencyKey: `buildpair-connect-v1-${trader.id}` });
     accountId = account.id;
     await db.update(traderProfiles).set({ stripeAccountId: accountId }).where(eq(traderProfiles.userId, trader.id));
   }
