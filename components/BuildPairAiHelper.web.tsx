@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { ActivityIndicator, IconButton, Portal, Text, TextInput } from 'react-native-paper';
+import { ActivityIndicator, Portal, Text, TextInput } from 'react-native-paper';
 import { usePathname } from 'expo-router';
 import { colors } from '@/constants/theme';
 
@@ -61,8 +61,8 @@ export function BuildPairAiHelper() {
   const scrollRef = useRef<ScrollView>(null);
 
   const hidden = pathname.startsWith('/admin') || pathname.startsWith('/api');
-  const panelWidth = Math.min(390, Math.max(310, width - 24));
-  const panelHeight = Math.min(610, Math.max(430, height - 100));
+  const panelWidth = Math.min(390, Math.max(300, width - 24));
+  const panelHeight = Math.min(610, Math.max(390, height - 100));
 
   useEffect(() => {
     if (hidden || open) return;
@@ -79,6 +79,11 @@ export function BuildPairAiHelper() {
   function openHelper() {
     setShowNudge(false);
     setOpen(true);
+  }
+
+  function closeHelper() {
+    Keyboard.dismiss();
+    setOpen(false);
   }
 
   async function sendMessage(text: string) {
@@ -145,7 +150,15 @@ export function BuildPairAiHelper() {
               <Text variant="titleMedium" style={styles.headerTitle}>BuildPair AI</Text>
               <Text variant="bodySmall" style={styles.headerSubtitle}>Your on-site helper</Text>
             </View>
-            <IconButton icon="minus" size={21} onPress={() => setOpen(false)} accessibilityLabel="Minimise BuildPair AI" />
+            <Pressable
+              style={styles.closeButton}
+              hitSlop={10}
+              onPress={closeHelper}
+              accessibilityRole="button"
+              accessibilityLabel="Close BuildPair AI"
+            >
+              <Text style={styles.closeButtonText}>×</Text>
+            </Pressable>
           </View>
 
           <ScrollView ref={scrollRef} style={styles.messages} contentContainerStyle={styles.messagesContent} keyboardShouldPersistTaps="handled">
@@ -247,8 +260,8 @@ const styles = StyleSheet.create({
   nudgeClose: { color: '#7B7F86', fontSize: 19, paddingLeft: 2 },
   panel: {
     position: 'absolute',
-    right: 16,
-    bottom: 16,
+    right: 12,
+    bottom: 12,
     borderRadius: 22,
     overflow: 'hidden',
     backgroundColor: '#fff',
@@ -263,7 +276,7 @@ const styles = StyleSheet.create({
   header: {
     minHeight: 70,
     paddingLeft: 15,
-    paddingRight: 5,
+    paddingRight: 10,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
@@ -279,9 +292,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandMarkText: { color: '#fff', fontSize: 19, fontWeight: '900' },
-  headerCopy: { flex: 1, marginLeft: 10 },
+  headerCopy: { flex: 1, marginLeft: 10, minWidth: 0 },
   headerTitle: { color: '#15171A', fontWeight: '800' },
   headerSubtitle: { color: '#747981', marginTop: 1 },
+  closeButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E1E4E8',
+  },
+  closeButtonText: { color: '#34383D', fontSize: 28, lineHeight: 30, fontWeight: '500', marginTop: -2 },
   messages: { flex: 1, backgroundColor: '#F7F8FA' },
   messagesContent: { padding: 14, gap: 10 },
   bubble: { maxWidth: '86%', paddingHorizontal: 13, paddingVertical: 10, borderRadius: 16 },
