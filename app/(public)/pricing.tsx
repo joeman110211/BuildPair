@@ -4,8 +4,12 @@ import { Button, Text } from 'react-native-paper';
 import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
 import { colors } from '@/constants/theme';
+import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 export default function PricingPage() {
+  const primaryHref = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', 'pricing-hero');
+  const primaryLabel = REGISTRATION_OPEN ? 'Create trade account' : 'Join tradesperson launch list';
+
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
     <View style={styles.hero}>
       <View style={styles.heroInner}>
@@ -13,7 +17,7 @@ export default function PricingPage() {
         <Text variant="displaySmall" style={styles.title}>Simple monthly plans, built around how much of the marketplace you actually use.</Text>
         <Text variant="bodyLarge" style={styles.intro}>BuildPair keeps the free Starter plan useful while reserving marketplace selling tools, searchable visibility and higher offer capacity for Plus and Pro members.</Text>
         <View style={styles.heroActions}>
-          <Link href="/auth/account" asChild><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.primary}>Create trade account</Button></Link>
+          <Link href={primaryHref} asChild><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.primary}>{primaryLabel}</Button></Link>
           <Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.outline}>See trade features</Button></Link>
         </View>
       </View>
