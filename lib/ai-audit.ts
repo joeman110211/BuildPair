@@ -48,10 +48,10 @@ export async function recordAiRequest(input: {
   providerCalled?: boolean;
   latencyMs?: number | null;
   metadata?: Record<string, unknown>;
-}) {
+}): Promise<number | null> {
   const sql = getSql();
   try {
-    await sql`
+    const rows = await sql`
       INSERT INTO ai_request_logs(
         user_id, endpoint, request_text, response_text, status, model,
         provider_called, latency_ms, metadata
@@ -67,12 +67,16 @@ export async function recordAiRequest(input: {
         ${input.latencyMs ?? null},
         ${JSON.stringify(input.metadata ?? {})}::jsonb
       )
-    `;
+      RETURNING id
+    ` as unknown as { id: number }[];
     await sql`DELETE FROM ai_request_logs WHERE created_at < now() - interval '90 days'`;
+    return rows[0]?.id ?? null;
   } catch (error) {
-    // Audit logging must never take the product down if its table/service has a
-    // temporary problem. The request still succeeds and Render logs the failure.
+    // Audit logging must never take ordinary product AI down if its table/service
+    // has a temporary problem. Privileged Admin Assistant actions separately fail
+    // closed if their proposal cannot be bound to a stored audit record.
     console.warn('BuildPair AI audit write failed', error instanceof Error ? error.message : 'unknown error');
+    return null;
   }
 }
 

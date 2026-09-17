@@ -28,18 +28,20 @@ export default function AdminInviteScreen() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!inviteToken) return;
     let active = true;
-    if (!inviteToken) {
-      setInvite({ valid: false });
-      setLoading(false);
-      return;
-    }
     apiFetch<InviteStatus>(`/api/admin-invite?token=${encodeURIComponent(inviteToken)}`)
       .then((result) => { if (active) setInvite(result); })
       .catch(() => { if (active) setInvite({ valid: false }); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [inviteToken]);
+
+  if (!inviteToken) {
+    return <Screen title="Administrator invitation unavailable" subtitle="This link has expired, has already been used, or has been withdrawn.">
+      <Button mode="contained" onPress={() => router.replace('/auth/sign-in?admin=1')}>Administrator sign in</Button>
+    </Screen>;
+  }
 
   if (loading || !invite) return <LoadingScreen label="Checking your BuildPair administrator invitation…" />;
 
@@ -123,7 +125,7 @@ export default function AdminInviteScreen() {
     }
   }
 
-  if (isSignedIn && signUp.status === 'idle') {
+  if (isSignedIn && !signUp.emailAddress) {
     return <Screen title="Administrator invitation" subtitle="This invitation needs its own administrator account session.">
       <AppCard style={styles.inviteCard}>
         <Text style={styles.body}>The invitation is for <Text style={styles.strong}>{email}</Text>. Sign out of the current account before creating the administrator login.</Text>

@@ -28,6 +28,7 @@ export default function AdminAccessScreen() {
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   const [data, setData] = useState<AccessData | null>(null);
+  const [loadedAt, setLoadedAt] = useState(0);
   const [email, setEmail] = useState('');
   const [inviteUrl, setInviteUrl] = useState('');
   const [loading, setLoading] = useState(true);
@@ -40,7 +41,9 @@ export default function AdminAccessScreen() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      setData(await apiFetch<AccessData>('/api/admin/access-invites', {}, () => getTokenRef.current()));
+      const nextData = await apiFetch<AccessData>('/api/admin/access-invites', {}, () => getTokenRef.current());
+      setData(nextData);
+      setLoadedAt(Date.now());
       setError('');
     } catch (e) {
       setError(errorMessage(e));
@@ -119,7 +122,7 @@ export default function AdminAccessScreen() {
 
   if (loading && !data && !error) return <LoadingScreen label="Loading administrator access…" />;
 
-  const pending = data?.invites.filter((invite) => !invite.acceptedAt && !invite.revokedAt && new Date(invite.expiresAt).getTime() > Date.now()) ?? [];
+  const pending = data?.invites.filter((invite) => !invite.acceptedAt && !invite.revokedAt && new Date(invite.expiresAt).getTime() > loadedAt) ?? [];
 
   return <Screen title="Administrator Access" subtitle="Only the BuildPair owner can invite, approve or remove administrator accounts. Invitees create a separate admin password and do not go through the normal marketplace signup.">
     {error ? <HelperText type="error" visible>{error}</HelperText> : null}
