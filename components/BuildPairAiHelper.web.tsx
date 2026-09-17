@@ -154,7 +154,8 @@ export function BuildPairAiHelper() {
 
     Keyboard.dismiss();
     setDraft('');
-    const nextMessages: ChatMessage[] = [...messages, { role: 'user', content: clean }].slice(-11);
+    const userMessage: ChatMessage = { role: 'user', content: clean };
+    const nextMessages: ChatMessage[] = [...messages, userMessage].slice(-11);
     setMessages(nextMessages);
     setSending(true);
 
@@ -184,12 +185,11 @@ export function BuildPairAiHelper() {
               : [];
           }).slice(0, 3)
         : [];
-      setMessages((current) => [...current, { role: 'assistant', content: reply, navigation }].slice(-12));
+      const assistantMessage: ChatMessage = { role: 'assistant', content: reply, navigation };
+      setMessages((current) => [...current, assistantMessage].slice(-12));
     } catch {
-      setMessages((current) => [
-        ...current,
-        { role: 'assistant', content: 'I’m having trouble connecting right now. Try again in a moment.' },
-      ].slice(-12));
+      const connectionError: ChatMessage = { role: 'assistant', content: 'I’m having trouble connecting right now. Try again in a moment.' };
+      setMessages((current) => [...current, connectionError].slice(-12));
     } finally {
       setSending(false);
     }
