@@ -1,12 +1,19 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Keyboard, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { ActivityIndicator, Portal, Text, TextInput } from 'react-native-paper';
-import { usePathname } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { colors } from '@/constants/theme';
+
+type AiNavigationAction = {
+  key: string;
+  label: string;
+  href: string;
+};
 
 type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
+  navigation?: AiNavigationAction[];
 };
 
 type Audience = 'homeowner' | 'tradesperson' | 'public';
@@ -104,6 +111,7 @@ function openingMessage(audience: Audience) {
 
 export function BuildPairAiHelper() {
   const pathname = usePathname();
+  const router = useRouter();
   const reactId = useId();
   const conversationId = `bp-${reactId}`;
   const { width, height } = useWindowDimensions();
@@ -134,6 +142,12 @@ export function BuildPairAiHelper() {
     setOpen(false);
   }
 
+  function openNavigation(action: AiNavigationAction) {
+    Keyboard.dismiss();
+    setOpen(false);
+    router.push(action.href as never);
+  }
+
   async function sendMessage(text: string) {
     const clean = text.trim();
     if (!clean || sending) return;
@@ -148,15 +162,29 @@ export function BuildPairAiHelper() {
       const response = await fetch('/api/ai/site-helper', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationId, pathname, audience, messages: nextMessages }),
+        body: JSON.stringify({
+          conversationId,
+          pathname,
+          audience,
+          messages: nextMessages.map(({ role, content }) => ({ role, content })),
+        }),
       });
 
       if (!response.ok) throw new Error(`Helper request failed (${response.status})`);
-      const data = await response.json() as { reply?: unknown };
+      const data = await response.json() as { reply?: unknown; navigation?: unknown };
       const reply = typeof data.reply === 'string' && data.reply.trim()
         ? data.reply.trim()
         : 'I couldn’t get a useful answer just then. Try asking that another way.';
-      setMessages((current) => [...current, { role: 'assistant', content: reply }].slice(-12));
+      const navigation = Array.isArray(data.navigation)
+        ? data.navigation.flatMap((item): AiNavigationAction[] => {
+            if (!item || typeof item !== 'object') return [];
+            const candidate = item as Record<string, unknown>;
+            return typeof candidate.key === 'string' && typeof candidate.label === 'string' && typeof candidate.href === 'string'
+              ? [{ key: candidate.key, label: candidate.label, href: candidate.href }]
+              : [];
+          }).slice(0, 3)
+        : [];
+      setMessages((current) => [...current, { role: 'assistant', content: reply, navigation }].slice(-12));
     } catch {
       setMessages((current) => [
         ...current,
@@ -190,8 +218,25 @@ export function BuildPairAiHelper() {
 
           <ScrollView ref={scrollRef} style={styles.messages} contentContainerStyle={styles.messagesContent} keyboardShouldPersistTaps="handled">
             {messages.map((message, index) => (
-              <View key={`${message.role}-${index}`} style={[styles.bubble, message.role === 'user' ? styles.userBubble : styles.assistantBubble]}>
-                <Text style={message.role === 'user' ? styles.userText : styles.assistantText}>{message.content}</Text>
+              <View key={`${message.role}-${index}`} style={styles.messageGroup}>
+                <View style={[styles.bubble, message.role === 'user' ? styles.userBubble : styles.assistantBubble]}>
+                  <Text style={message.role === 'user' ? styles.userText : styles.assistantText}>{message.content}</Text>
+                </View>
+                {message.role === 'assistant' && message.navigation?.length ? (
+                  <View style={styles.navigationRow}>
+                    {message.navigation.map((action) => (
+                      <Pressable
+                        key={`${index}-${action.key}`}
+                        style={styles.navigationButton}
+                        onPress={() => openNavigation(action)}
+                        accessibilityRole="link"
+                        accessibilityLabel={action.label}
+                      >
+                        <Text style={styles.navigationButtonText}>{action.label} →</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
               </View>
             ))}
             {sending ? (
@@ -319,11 +364,15 @@ const styles = StyleSheet.create({
   closeButtonText: { color: '#34383D', fontSize: 28, lineHeight: 30, fontWeight: '500', marginTop: -2 },
   messages: { flex: 1, backgroundColor: '#F7F8FA' },
   messagesContent: { padding: 14, gap: 10 },
+  messageGroup: { gap: 6 },
   bubble: { maxWidth: '86%', paddingHorizontal: 13, paddingVertical: 10, borderRadius: 16 },
   assistantBubble: { alignSelf: 'flex-start', backgroundColor: '#fff', borderWidth: 1, borderColor: '#E7E9ED', borderBottomLeftRadius: 5 },
   userBubble: { alignSelf: 'flex-end', backgroundColor: colors.primary, borderBottomRightRadius: 5 },
   assistantText: { color: '#23262A', lineHeight: 20 },
   userText: { color: '#fff', lineHeight: 20 },
+  navigationRow: { flexDirection: 'row', flexWrap: 'wrap', alignSelf: 'flex-start', gap: 7, maxWidth: '94%' },
+  navigationButton: { paddingHorizontal: 11, paddingVertical: 8, borderRadius: 15, backgroundColor: '#FFF4EA', borderWidth: 1, borderColor: '#F0C7A6' },
+  navigationButtonText: { color: colors.primary, fontWeight: '800', fontSize: 12 },
   loadingBubble: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   thinkingText: { color: '#777B82' },
   promptRow: { paddingHorizontal: 12, paddingVertical: 9, gap: 8, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#EEF0F2' },
