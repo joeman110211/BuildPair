@@ -96,7 +96,17 @@ export function LatestJobsShowcase({ wide }: { wide: boolean }) {
   }
 
   if (!loaded) {
-    return <View style={styles.loading}><Text style={styles.muted}>Loading latest jobs…</Text></View>;
+    return <View style={[styles.section, wide && styles.sectionWide]}>
+      <View style={styles.headingRow}>
+        <View style={styles.headingCopy}>
+          <Text style={styles.eyebrow}>LATEST JOBS</Text>
+          <Text variant="headlineSmall" style={styles.title}>Local work posted through BuildPair.</Text>
+          <Text style={styles.muted}>Live customer requests appear here when available. The current marketplace is checked when the page opens.</Text>
+        </View>
+        <Button mode="text" onPress={() => router.push('/(public)/jobs')}>Browse jobs →</Button>
+      </View>
+      <View style={styles.preloadCard}><Text style={styles.preloadText}>Checking current BuildPair job requests…</Text></View>
+    </View>;
   }
 
   if (!jobs.length) return null;
@@ -178,7 +188,8 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 20 },
-  loading: { minHeight: 120, alignItems: 'center', justifyContent: 'center', borderTopWidth: 1, borderTopColor: colors.border, marginTop: 18 },
+  preloadCard: { minHeight: 110, alignItems: 'center', justifyContent: 'center', borderRadius: 18, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSoft, padding: 16 },
+  preloadText: { color: colors.muted, fontWeight: '800', textAlign: 'center' },
   carousel: { width: '100%', maxWidth: 1140 },
   carouselContent: { alignItems: 'stretch' },
   page: { flexDirection: 'row', gap: 10, paddingHorizontal: 1 },
