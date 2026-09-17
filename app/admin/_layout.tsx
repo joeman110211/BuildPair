@@ -12,6 +12,7 @@ export default function AdminLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="dashboard" />
             <Stack.Screen name="assistant" />
+            <Stack.Screen name="ai-conversations" />
             <Stack.Screen name="access" />
             <Stack.Screen name="users" />
             <Stack.Screen name="waitlist" />
