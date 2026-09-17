@@ -103,7 +103,14 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
   const visibleActivePage = Math.min(activePage, Math.max(0, pages.length - 1));
 
   if (!loaded) {
-    return <View style={[styles.loadingCard, wide && styles.wrapperWide]}><Text style={styles.loadingLabel}>Loading featured tradespeople…</Text></View>;
+    return <View style={[styles.wrapper, wide && styles.wrapperWide]}>
+      <View style={[styles.preloadCard, wide && styles.wrapperWide]}>
+        <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
+        <Text style={styles.preloadTitle}>Featured BuildPair profiles.</Text>
+        <Text style={styles.preloadText}>Live local trade profiles appear here as they become available. BuildPair checks the current directory when the page opens rather than filling the site with made-up listings.</Text>
+      </View>
+      <LatestJobsShowcase wide={wide} />
+    </View>;
   }
 
   if (!traders.length) {
@@ -191,13 +198,14 @@ const styles = StyleSheet.create({
   dots: { flexDirection: 'row', gap: 5, alignItems: 'center' },
   dot: { width: 7, height: 7, borderRadius: 999, backgroundColor: '#CBD4D9' },
   dotActive: { width: 20, backgroundColor: colors.primary },
-  loadingCard: { width: '100%', maxWidth: 1140, minHeight: 260, alignItems: 'center', justifyContent: 'center', borderRadius: 24, backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border },
-  loadingLabel: { color: colors.muted, fontWeight: '800' },
+  preloadCard: { width: '100%', maxWidth: 1140, minHeight: 260, alignItems: 'center', justifyContent: 'center', gap: 7, padding: 24, borderRadius: 24, backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border },
+  preloadTitle: { color: colors.charcoal, fontSize: 22, lineHeight: 27, fontWeight: '900', textAlign: 'center' },
+  preloadText: { color: colors.muted, lineHeight: 20, maxWidth: 620, textAlign: 'center' },
   emptyState: { width: '100%', maxWidth: 1140, minHeight: 300, justifyContent: 'flex-end', padding: 18, overflow: 'hidden', borderRadius: 24 },
   emptyImage: { borderRadius: 24 },
   emptyShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(8,21,31,0.46)', borderRadius: 24 },
   emptyCopy: { maxWidth: 560, gap: 6, padding: 16, borderRadius: 18, backgroundColor: 'rgba(10,24,36,0.86)' },
-  emptyEyebrow: { color: '#FFD0AE', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+  emptyEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
   emptyTitle: { color: '#FFFFFF', fontSize: 22, lineHeight: 27, fontWeight: '900' },
   emptyText: { color: '#DCE7EE', lineHeight: 20 },
 });
