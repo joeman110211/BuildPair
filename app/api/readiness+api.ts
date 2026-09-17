@@ -97,18 +97,18 @@ export async function GET() {
   }
 
   const ready = missing.length === 0 && missingSchema.length === 0;
-  return Response.json(
-    {
-      status: ready ? 'ready' : 'configuration_required',
-      ready,
-      missing,
-      missingSchema,
-      optionalMissing,
-      timestamp: new Date().toISOString(),
-    },
-    {
-      status: ready ? 200 : 503,
-      headers: { 'Cache-Control': 'no-store' },
-    },
-  );
+  const timestamp = new Date().toISOString();
+  const publicStatus = {
+    status: ready ? 'ready' : 'configuration_required',
+    ready,
+    timestamp,
+  };
+  const body = process.env.NODE_ENV === 'production'
+    ? publicStatus
+    : { ...publicStatus, missing, missingSchema, optionalMissing };
+
+  return Response.json(body, {
+    status: ready ? 200 : 503,
+    headers: { 'Cache-Control': 'no-store' },
+  });
 }
