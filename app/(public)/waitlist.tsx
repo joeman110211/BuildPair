@@ -210,7 +210,7 @@ export default function WaitlistPage() {
           position="leading"
           labelStyle={styles.checkboxLabel}
         />
-        {!contactOptions.smsEnabled && phone.trim() ? <Text style={styles.smsNote}>Texting is not switched on yet. Your number can still be saved, but no SMS will be sent until BuildPair enables the service.</Text> : null}
+        {!contactOptions.smsEnabled && phone.trim() ? <Text style={styles.smsNote}>SMS updates are coming soon. Your number can still be saved now if you want to use text updates later.</Text> : null}
         <HelperText type="error" visible={Boolean(detailsError)}>{detailsError}</HelperText>
         <Button mode="outlined" icon="key-plus" loading={detailsBusy} disabled={detailsBusy || !canSaveDetails} onPress={() => void saveTestingDetails()}>{requestEarlyAccess ? 'Save early-access details' : 'Request early access'}</Button>
       </>}
@@ -241,7 +241,7 @@ export default function WaitlistPage() {
           { value: 'both', label: 'Both', icon: 'email-multiple-outline', disabled: !contactOptions.smsEnabled },
         ]}
       />
-      {!contactOptions.smsEnabled ? <Text style={styles.smsNote}>Text alerts are ready in BuildPair but not connected to the SMS provider yet. Email works now; mobile is optional and can still be saved.</Text> : null}
+      {!contactOptions.smsEnabled ? <Text style={styles.smsNote}>SMS updates are coming soon. Email updates are available now; adding a mobile number is optional.</Text> : null}
 
       <TextInput
         mode="outlined"
