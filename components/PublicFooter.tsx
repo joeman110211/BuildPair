@@ -23,7 +23,6 @@ const linkGroups = [
       ['Report a user', '/(public)/report'],
       ['Trust & Safety', '/(public)/trust-safety'],
       ['Contact us', '/(public)/contact'],
-      ['Admin sign in', '/auth/sign-in?admin=1'],
     ],
   },
   {
