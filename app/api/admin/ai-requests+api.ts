@@ -39,7 +39,7 @@ export async function GET(request: Request) {
         FROM ai_request_logs a
         LEFT JOIN users u ON u.id = a.user_id
         ORDER BY a.created_at DESC
-        LIMIT 30
+        LIMIT 250
       ` as Promise<AiRequestRow[]>,
       sql`
         SELECT
