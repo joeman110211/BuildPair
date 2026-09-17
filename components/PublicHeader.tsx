@@ -26,9 +26,8 @@ const NAV_ITEMS: { label: string; href: Href }[] = [
 const QUICK_NAV: { label: string; href: Href }[] = [
   { label: 'Home', href: '/' },
   { label: 'Find Trades', href: '/(public)/directory' },
-  { label: 'How It Works', href: '/(public)/how-it-works' },
-  { label: 'Membership', href: '/(public)/pricing' as Href },
-  { label: 'Launch list', href: waitlistHref(null, 'quick-nav') },
+  { label: 'Advice Hub', href: '/(public)/advice' as Href },
+  { label: 'For Trades', href: '/(public)/for-tradespeople' },
 ];
 
 function HeaderBrand({ compact = false }: { compact?: boolean }) {
