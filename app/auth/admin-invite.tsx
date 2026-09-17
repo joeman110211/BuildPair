@@ -125,7 +125,7 @@ export default function AdminInviteScreen() {
     }
   }
 
-  if (isSignedIn && signUp.status === 'idle') {
+  if (isSignedIn && !signUp.emailAddress) {
     return <Screen title="Administrator invitation" subtitle="This invitation needs its own administrator account session.">
       <AppCard style={styles.inviteCard}>
         <Text style={styles.body}>The invitation is for <Text style={styles.strong}>{email}</Text>. Sign out of the current account before creating the administrator login.</Text>
