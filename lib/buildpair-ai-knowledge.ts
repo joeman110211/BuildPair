@@ -81,7 +81,7 @@ const pageContexts: { test: (path: string) => boolean; context: PageContext }[] 
 ];
 
 export function buildPairPageContext(pathname: string, audience: BuildPairAudience) {
-  const path = pathname.toLowerCase().split('?')[0].replace(/\/$/, '') || '/';
+  const path = ((pathname.toLowerCase().split('?')[0] ?? '').replace(/\/$/, '')) || '/';
   const match = pageContexts.find((item) => item.test(path));
   if (match) {
     return `Current page: ${match.context.name}. Purpose: ${match.context.purpose} Helpful topics here: ${match.context.usefulFor.join(', ')}.`;
