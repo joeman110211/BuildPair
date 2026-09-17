@@ -19,6 +19,57 @@ function audienceFromPath(pathname: string): Audience {
 
 function promptsFor(pathname: string, audience: Audience) {
   const path = pathname.toLowerCase();
+
+  if (path.includes('/customer/new-job')) {
+    return ['Help me write this job', 'What trade do I need?', 'What photos should I add?'];
+  }
+  if (path.includes('/customer/compare')) {
+    return ['Help me compare these quotes', 'What should I check?', 'Explain staged payments'];
+  }
+  if (path.includes('/customer/messages')) {
+    return ['Help me write a message', 'What should I ask the tradesperson?', 'How should I confirm changes?'];
+  }
+  if (path.includes('/customer/jobs')) {
+    return ['What happens next with this job?', 'Help me understand my quotes', 'Explain BuildPay'];
+  }
+  if (path.includes('/directory')) {
+    return ['What trade do I need?', 'What should I check before hiring?', 'How does BuildPair work?'];
+  }
+  if (path.includes('/for-homeowners')) {
+    return ['How do I post a job?', 'How do I compare quotes?', 'How does BuildPay work?'];
+  }
+  if (path.includes('/for-tradespeople')) {
+    return ['How do jobs work?', 'What tools do trades get?', 'How do quotes and invoices work?'];
+  }
+
+  if (path.includes('/trader/job-board')) {
+    return ['Help me understand this job', 'What should I ask the customer?', 'Help me prepare a quote'];
+  }
+  if (path.includes('/trader/quotes')) {
+    return ['Help me improve my quote', 'What should my quote include?', 'Explain payment stages'];
+  }
+  if (path.includes('/trader/invoices')) {
+    return ['What should my invoice include?', 'Help me improve the wording', 'How does this fit the job flow?'];
+  }
+  if (path.includes('/trader/messages')) {
+    return ['Help me reply to the customer', 'What should I clarify?', 'Help me keep this professional'];
+  }
+  if (path.includes('/trader/profile')) {
+    return ['Help improve my profile', 'What should customers see?', 'How can I build trust?'];
+  }
+  if (path.includes('/trader/analytics')) {
+    return ['Explain these metrics', 'What should I improve?', 'How can I get more from BuildPair?'];
+  }
+  if (path.includes('/trader/google-reviews')) {
+    return ['How do Google Reviews work here?', 'Why connect my reviews?', 'Help improve my profile'];
+  }
+  if (path.includes('/trader/saved-searches')) {
+    return ['How do saved searches work?', 'Help refine my job search', 'How do I find better-fit jobs?'];
+  }
+  if (path.includes('/trader/my-jobs') || path.includes('/trader/jobs')) {
+    return ['What happens next with this job?', 'Help me message the customer', 'Explain the payment stages'];
+  }
+
   if (path.includes('payment') || path.includes('buildpay')) {
     return ['Explain staged payments', 'Who pays the fees?', 'What happens next?'];
   }
@@ -33,19 +84,22 @@ function promptsFor(pathname: string, audience: Audience) {
       : ['What trade do I need?', 'Help me describe my job', 'What photos should I add?'];
   }
   if (audience === 'tradesperson') {
-    return ['How does BuildPair work?', 'Help improve my profile', 'How do I find jobs?'];
+    return ['How does BuildPair work for trades?', 'Help improve my profile', 'How do I find jobs?'];
   }
-  return ['How does BuildPair work?', 'What trade do I need?', 'How do protected payments work?'];
+  if (audience === 'homeowner') {
+    return ['How does BuildPair work for homeowners?', 'What trade do I need?', 'How do protected payments work?'];
+  }
+  return ['How does BuildPair work?', 'What trade do I need?', 'What can BuildPair help me with?'];
 }
 
 function openingMessage(audience: Audience) {
   if (audience === 'tradesperson') {
-    return 'Hi, I’m BuildPair AI. I can help with jobs, quotes, profiles, messages and payments. What are you working on?';
+    return 'Hi, I’m BuildPair AI. I can help with jobs, quotes, invoices, profiles, messages, reviews, analytics and payments. What are you working on?';
   }
   if (audience === 'homeowner') {
-    return 'Hi, I’m BuildPair AI. I can help you choose the right trade, describe a job, understand quotes and navigate payments.';
+    return 'Hi, I’m BuildPair AI. I can help you choose the right trade, post a clearer job, compare quotes, message tradespeople and understand BuildPair payments.';
   }
-  return 'Hi, I’m BuildPair AI. I can explain how BuildPair works and help you find the right next step.';
+  return 'Hi, I’m BuildPair AI. I know the main BuildPair journeys and can help you find the right trade, understand the site or work out what to do next.';
 }
 
 export function BuildPairAiHelper() {
@@ -54,7 +108,6 @@ export function BuildPairAiHelper() {
   const audience = audienceFromPath(pathname);
   const suggestedPrompts = useMemo(() => promptsFor(pathname, audience), [pathname, audience]);
   const [open, setOpen] = useState(false);
-  const [showNudge, setShowNudge] = useState(false);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: openingMessage(audience) }]);
@@ -65,19 +118,12 @@ export function BuildPairAiHelper() {
   const panelHeight = Math.min(610, Math.max(390, height - 100));
 
   useEffect(() => {
-    if (hidden || open) return;
-    const timer = setTimeout(() => setShowNudge(true), 10000);
-    return () => clearTimeout(timer);
-  }, [hidden, open]);
-
-  useEffect(() => {
     if (open) setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
   }, [messages, open, sending]);
 
   if (hidden) return null;
 
   function openHelper() {
-    setShowNudge(false);
     setOpen(true);
   }
 
@@ -112,7 +158,7 @@ export function BuildPairAiHelper() {
     } catch {
       setMessages((current) => [
         ...current,
-        { role: 'assistant', content: 'I’m having trouble connecting right now. You can still use the suggested options, or try again in a moment.' },
+        { role: 'assistant', content: 'I’m having trouble connecting right now. Try again in a moment.' },
       ].slice(-12));
     } finally {
       setSending(false);
@@ -121,34 +167,13 @@ export function BuildPairAiHelper() {
 
   return (
     <Portal>
-      {showNudge && !open ? (
-        <Pressable style={styles.nudge} onPress={openHelper} accessibilityRole="button" accessibilityLabel="Open BuildPair AI">
-          <Text style={styles.nudgeSpark}>✦</Text>
-          <View style={styles.nudgeCopy}>
-            <Text variant="labelLarge" style={styles.nudgeTitle}>Need a hand?</Text>
-            <Text variant="bodySmall" style={styles.nudgeText}>Ask BuildPair AI</Text>
-          </View>
-          <Pressable
-            hitSlop={8}
-            onPress={(event) => {
-              event.stopPropagation();
-              setShowNudge(false);
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Dismiss BuildPair AI suggestion"
-          >
-            <Text style={styles.nudgeClose}>×</Text>
-          </Pressable>
-        </Pressable>
-      ) : null}
-
       {open ? (
         <View style={[styles.panel, { width: panelWidth, height: panelHeight }]} accessibilityViewIsModal>
           <View style={styles.header}>
             <View style={styles.brandMark}><Text style={styles.brandMarkText}>✦</Text></View>
             <View style={styles.headerCopy}>
               <Text variant="titleMedium" style={styles.headerTitle}>BuildPair AI</Text>
-              <Text variant="bodySmall" style={styles.headerSubtitle}>Your on-site helper</Text>
+              <Text variant="bodySmall" style={styles.headerSubtitle}>Your BuildPair helper</Text>
             </View>
             <Pressable
               style={styles.closeButton}
@@ -203,9 +228,9 @@ export function BuildPairAiHelper() {
           </View>
         </View>
       ) : (
-        <Pressable style={styles.launcher} onPress={openHelper} accessibilityRole="button" accessibilityLabel="Open BuildPair AI">
-          <Text style={styles.launcherSpark}>✦</Text>
-          <Text variant="labelLarge" style={styles.launcherText}>AI</Text>
+        <Pressable style={styles.launcher} onPress={openHelper} accessibilityRole="button" accessibilityLabel="Open BuildPair AI helper">
+          <View style={styles.launcherIcon}><Text style={styles.launcherSpark}>✦</Text></View>
+          <Text variant="labelLarge" style={styles.launcherText}>BuildPair AI</Text>
         </Pressable>
       )}
     </Portal>
@@ -218,46 +243,29 @@ const styles = StyleSheet.create({
     right: 20,
     bottom: 20,
     height: 58,
-    minWidth: 58,
-    paddingHorizontal: 17,
+    paddingHorizontal: 14,
     borderRadius: 29,
     backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 7,
+    gap: 9,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 7 },
     shadowOpacity: 0.22,
     shadowRadius: 16,
     elevation: 9,
   },
-  launcherSpark: { color: '#fff', fontSize: 19, fontWeight: '800' },
-  launcherText: { color: '#fff', fontWeight: '800', letterSpacing: 0.3 },
-  nudge: {
-    position: 'absolute',
-    right: 20,
-    bottom: 88,
-    backgroundColor: '#fff',
+  launcherIcon: {
+    width: 32,
+    height: 32,
     borderRadius: 16,
-    paddingVertical: 11,
-    paddingHorizontal: 13,
-    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.17)',
     alignItems: 'center',
-    gap: 9,
-    borderWidth: 1,
-    borderColor: '#E6E8EC',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.14,
-    shadowRadius: 14,
-    elevation: 7,
+    justifyContent: 'center',
   },
-  nudgeSpark: { color: colors.primary, fontWeight: '900', fontSize: 18 },
-  nudgeCopy: { paddingRight: 5 },
-  nudgeTitle: { color: '#15171A', fontWeight: '800' },
-  nudgeText: { color: '#62666D', marginTop: 1 },
-  nudgeClose: { color: '#7B7F86', fontSize: 19, paddingLeft: 2 },
+  launcherSpark: { color: '#fff', fontSize: 17, fontWeight: '900' },
+  launcherText: { color: '#fff', fontWeight: '900', letterSpacing: 0.2, paddingRight: 3 },
   panel: {
     position: 'absolute',
     right: 12,
