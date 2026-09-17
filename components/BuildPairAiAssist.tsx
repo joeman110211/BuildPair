@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { colors } from '@/constants/theme';
 
@@ -8,10 +8,13 @@ type Props = {
 };
 
 export function BuildPairAiAssist({ title, body }: Props) {
+  if (Platform.OS !== 'web') return null;
+
   function openHelper() {
-    if (typeof document === 'undefined') return;
-    const launcher = document.querySelector('[aria-label="Open BuildPair AI helper"]') as HTMLElement | null;
-    launcher?.click();
+    const doc = (globalThis as typeof globalThis & {
+      document?: { querySelector: (selector: string) => { click?: () => void } | null };
+    }).document;
+    doc?.querySelector('[aria-label="Open BuildPair AI helper"]')?.click?.();
   }
 
   return <Pressable
