@@ -22,7 +22,6 @@ const plans = [
       'Choose services within your categories',
       'Browse public marketplace jobs',
       'Prepare your profile before activating public visibility',
-      '0 open-marketplace offers per month',
     ],
     cta: 'Create Starter profile',
     tone: 'starter' as const,
@@ -81,6 +80,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
       {plans.map((plan) => {
         const featured = plan.tone === 'plus';
         const pro = plan.tone === 'pro';
+        const starter = plan.tone === 'starter';
         const features = compact ? plan.compactFeatures : plan.features;
         const href = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', `pricing-${plan.tone}`);
         const cta = REGISTRATION_OPEN ? plan.cta : (pro ? 'Join Founding Trades list' : 'Join tradesperson launch list');
@@ -95,6 +95,10 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
               <View style={[styles.tick, featured && styles.tickFeatured, pro && styles.tickPro]}><Text style={styles.tickText}>✓</Text></View>
               <Text style={styles.featureText}>{feature}</Text>
             </View>)}
+            {starter && !compact ? <View style={styles.limitRow}>
+              <View style={styles.limitMark}><Text style={styles.limitMarkText}>−</Text></View>
+              <Text style={styles.limitText}>Open-marketplace offers are not included on Starter.</Text>
+            </View> : null}
           </View>
           <Link href={href} asChild>
             <Button mode={featured || pro ? 'contained' : 'outlined'} contentStyle={styles.buttonContent}>{cta}</Button>
@@ -131,6 +135,10 @@ const styles = StyleSheet.create({
   tickPro: { backgroundColor: colors.blueSoft },
   tickText: { color: colors.charcoal, fontWeight: '900', fontSize: 11 },
   featureText: { color: colors.charcoalSoft, lineHeight: 21, flex: 1, minWidth: 0 },
+  limitRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginTop: spacing.xxs },
+  limitMark: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  limitMarkText: { color: colors.muted, fontWeight: '900', fontSize: 13 },
+  limitText: { color: colors.muted, lineHeight: 21, flex: 1, minWidth: 0 },
   buttonContent: { minHeight: controlHeights.standard },
   launchNote: { color: colors.primaryDark, fontSize: 13, lineHeight: 20, textAlign: 'center', fontWeight: '800', maxWidth: 820, alignSelf: 'center' },
   note: { color: colors.muted, fontSize: 12, lineHeight: 19, textAlign: 'center', maxWidth: 820, alignSelf: 'center' },
