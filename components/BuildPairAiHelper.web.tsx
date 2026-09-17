@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Keyboard, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { ActivityIndicator, Portal, Text, TextInput } from 'react-native-paper';
 import { usePathname } from 'expo-router';
@@ -104,6 +104,8 @@ function openingMessage(audience: Audience) {
 
 export function BuildPairAiHelper() {
   const pathname = usePathname();
+  const reactId = useId();
+  const conversationId = `bp-${reactId}`;
   const { width, height } = useWindowDimensions();
   const audience = audienceFromPath(pathname);
   const suggestedPrompts = useMemo(() => promptsFor(pathname, audience), [pathname, audience]);
@@ -112,7 +114,6 @@ export function BuildPairAiHelper() {
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: openingMessage(audience) }]);
   const scrollRef = useRef<ScrollView>(null);
-  const conversationIdRef = useRef<string | null>(null);
 
   const hidden = pathname.startsWith('/admin') || pathname.startsWith('/api');
   const panelWidth = Math.min(390, Math.max(300, width - 24));
@@ -133,13 +134,6 @@ export function BuildPairAiHelper() {
     setOpen(false);
   }
 
-  function conversationId() {
-    if (!conversationIdRef.current) {
-      conversationIdRef.current = `bp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-    }
-    return conversationIdRef.current;
-  }
-
   async function sendMessage(text: string) {
     const clean = text.trim();
     if (!clean || sending) return;
@@ -154,7 +148,7 @@ export function BuildPairAiHelper() {
       const response = await fetch('/api/ai/site-helper', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationId: conversationId(), pathname, audience, messages: nextMessages }),
+        body: JSON.stringify({ conversationId, pathname, audience, messages: nextMessages }),
       });
 
       if (!response.ok) throw new Error(`Helper request failed (${response.status})`);
