@@ -15,7 +15,6 @@ import { waitlistHref } from '@/lib/launch';
 import type { UserRole } from '@/types';
 
 const NAV_ITEMS: { label: string; href: Href }[] = [
-  { label: 'Home', href: '/' },
   { label: 'Find Trades', href: '/(public)/directory' },
   { label: 'How It Works', href: '/(public)/how-it-works' },
   { label: 'Membership', href: '/(public)/pricing' as Href },
@@ -24,7 +23,6 @@ const NAV_ITEMS: { label: string; href: Href }[] = [
 ];
 
 const QUICK_NAV: { label: string; href: Href }[] = [
-  { label: 'Home', href: '/' },
   { label: 'Find Trades', href: '/(public)/directory' },
   { label: 'Advice Hub', href: '/(public)/advice' as Href },
   { label: 'For Trades', href: '/(public)/for-tradespeople' },
@@ -41,6 +39,7 @@ function accountItems(mode: UserRole | null, go: (href: Href) => void): CompactN
       { label: 'My jobs', onPress: () => go('/customer/jobs') },
       { label: 'Messages', onPress: () => go('/customer/messages') },
       { label: 'Saved trades', onPress: () => go('/customer/saved-trades') },
+      { label: 'Notifications', onPress: () => go('/customer/notifications') },
       { label: 'Profile', onPress: () => go('/customer/profile') },
       { label: 'Settings', onPress: () => go('/customer/settings') },
     ];
@@ -50,10 +49,14 @@ function accountItems(mode: UserRole | null, go: (href: Href) => void): CompactN
     return [
       { label: 'Job board', onPress: () => go('/trader/job-board') },
       { label: 'My jobs', onPress: () => go('/trader/my-jobs') },
+      { label: 'My quotes', onPress: () => go('/trader/quotes') },
       { label: 'Messages', onPress: () => go('/trader/messages') },
+      { label: 'Saved searches', onPress: () => go('/trader/saved-searches') },
       { label: 'Profile', onPress: () => go('/trader/profile') },
       { label: 'Google reviews', onPress: () => go('/trader/google-reviews') },
       { label: 'Analytics', onPress: () => go('/trader/analytics') },
+      { label: 'Membership', onPress: () => go('/trader/subscription') },
+      { label: 'Notifications', onPress: () => go('/trader/notifications') },
       { label: 'Settings', onPress: () => go('/trader/settings') },
     ];
   }
@@ -65,22 +68,22 @@ function NavMenu({ dashboard, signedIn, mode = null, onDashboard, onSignOut, pre
   const router = useRouter();
   const go = (href: Href) => router.push(href);
   const items: CompactNavItem[] = [
-    { label: 'Home', sectionLabel: 'Explore', onPress: () => go('/') },
-    { label: 'Find Trades', onPress: () => go('/(public)/directory') },
-    { label: 'How It Works', onPress: () => go('/(public)/how-it-works') },
-    { label: 'Membership', onPress: () => go('/(public)/pricing') },
-    { label: 'For Homeowners', sectionLabel: 'Guides', dividerBefore: true, onPress: () => go('/(public)/for-homeowners') },
-    { label: 'For Tradespeople', onPress: () => go('/(public)/for-tradespeople') },
+    { label: 'Find Trades', sectionLabel: 'Explore', onPress: () => go('/(public)/directory') },
+    { label: 'Post a job', onPress: () => go('/customer/new-job') },
     { label: 'Advice Hub', onPress: () => go('/(public)/advice') },
+    { label: 'How It Works', onPress: () => go('/(public)/how-it-works') },
+    { label: 'For Homeowners', sectionLabel: 'For You', dividerBefore: true, onPress: () => go('/(public)/for-homeowners') },
+    { label: 'For Tradespeople', onPress: () => go('/(public)/for-tradespeople') },
+    { label: 'Membership', onPress: () => go('/(public)/pricing') },
     { label: 'How payments work', onPress: () => go('/(public)/payments') },
+    { label: 'Trust & Safety', sectionLabel: 'Trust & Help', dividerBefore: true, onPress: () => go('/(public)/trust-safety') },
     { label: 'UK building rules', onPress: () => go('/(public)/building-regulations') },
     { label: 'About us', onPress: () => go('/(public)/about') },
-    { label: 'Trust & Safety', sectionLabel: 'Support', dividerBefore: true, onPress: () => go('/(public)/trust-safety') },
     { label: 'Contact Us', onPress: () => go('/(public)/contact') },
   ];
 
   if (preview) {
-    items.push({ label: 'Join launch waitlist', sectionLabel: 'Launch', dividerBefore: true, onPress: () => go(waitlistHref(null, 'header-menu')) });
+    items.push({ label: 'Join launch waitlist', sectionLabel: 'Account', dividerBefore: true, onPress: () => go(waitlistHref(null, 'header-menu')) });
   } else if (signedIn && dashboard) {
     items.push({ label: 'Dashboard', sectionLabel: 'Account', dividerBefore: true, onPress: () => onDashboard ? onDashboard() : go(dashboard) });
     items.push(...accountItems(mode, go));
@@ -95,7 +98,7 @@ function NavMenu({ dashboard, signedIn, mode = null, onDashboard, onSignOut, pre
 
 function DesktopNav() {
   return <View style={styles.desktopNav}>
-    {NAV_ITEMS.slice(1).map((item) => <Link href={item.href} asChild key={item.label}><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{item.label}</Button></Link>)}
+    {NAV_ITEMS.map((item) => <Link href={item.href} asChild key={item.label}><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{item.label}</Button></Link>)}
   </View>;
 }
 
@@ -166,18 +169,18 @@ const baseHeader = { minHeight: 68, paddingHorizontal: spacing.xxl, backgroundCo
 
 const styles = StyleSheet.create({
   shell: { backgroundColor: 'rgba(255,255,255,0.985)', borderBottomWidth: 1, borderColor: colors.border, zIndex: 200, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4, overflow: 'visible', flexShrink: 0 },
-  compactHeader: { ...baseHeader, minHeight: 60, paddingHorizontal: spacing.md, zIndex: 200, overflow: 'visible', flexShrink: 0 },
+  compactHeader: { ...baseHeader, minHeight: 56, paddingHorizontal: spacing.md, zIndex: 200, overflow: 'visible', flexShrink: 0 },
   header: { ...baseHeader, borderBottomWidth: 1, borderColor: colors.border, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1, zIndex: 20 },
-  brandPressable: { minHeight: 56, justifyContent: 'center', paddingHorizontal: spacing.xxs },
+  brandPressable: { minHeight: 52, justifyContent: 'center', paddingHorizontal: spacing.xxs },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs, justifyContent: 'flex-end' },
   desktopNav: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
   navButtonContent: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xxs },
   primaryAction: { minHeight: controlHeights.standard, paddingHorizontal: spacing.sm },
   preview: { opacity: 0.62, marginLeft: spacing.xxs },
-  quickNavShell: { height: 42, minHeight: 42, flexShrink: 0, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5', overflow: 'hidden' },
-  quickNav: { flexGrow: 0, height: 42 },
-  quickNavContent: { minHeight: 42, minWidth: '100%', paddingHorizontal: 4, gap: 0, alignItems: 'center', justifyContent: 'space-around' },
+  quickNavShell: { height: 38, minHeight: 38, flexShrink: 0, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5', overflow: 'hidden' },
+  quickNav: { flexGrow: 0, height: 38 },
+  quickNavContent: { minHeight: 38, minWidth: '100%', paddingHorizontal: 8, gap: 4, alignItems: 'center', justifyContent: 'space-around' },
   quickButton: { borderRadius: radii.pill },
-  quickButtonContent: { minHeight: 32, paddingHorizontal: 2 },
+  quickButtonContent: { minHeight: 30, paddingHorizontal: 4 },
   quickButtonLabel: { fontSize: 11.5, marginHorizontal: 0 },
 });
