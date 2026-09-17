@@ -23,7 +23,6 @@ const linkGroups = [
       ['Report a user', '/(public)/report'],
       ['Trust & Safety', '/(public)/trust-safety'],
       ['Contact us', '/(public)/contact'],
-      ['Admin sign in', '/auth/sign-in?admin=1'],
     ],
   },
   {
@@ -56,7 +55,7 @@ export function PublicFooter() {
       <View style={styles.flowCopy}>
         <Text style={styles.flowEyebrow}>A FLEXIBLE JOB FLOW</Text>
         <Text style={styles.flowTitle}>Visit in person. Compare structured quotes. Choose how you pay.</Text>
-        <Text style={styles.flowText}>A tradesperson can visit before quoting. Homeowners can compare active quotes and stop new ones when they have enough. After one quote is accepted, use BuildPay for protected staged payments or, if both sides explicitly agree, arrange payment outside BuildPair while keeping the project record.</Text>
+        <Text style={styles.flowText}>A tradesperson can visit before quoting. Homeowners can compare active quotes and stop new ones when they have enough. After one quote is accepted, use BuildPay for supported staged payments or, if both sides agree, arrange payment privately while keeping the project record.</Text>
       </View>
       <View style={styles.flowLinks}>
         <Link href="/(public)/how-it-works" asChild><Pressable style={styles.flowButton}><Text style={styles.flowButtonText}>How it works</Text></Pressable></Link>
@@ -72,7 +71,7 @@ export function PublicFooter() {
         </Link>
         <Text style={styles.tagline}>Find the trade. Manage the job. Keep the record.</Text>
         <Text style={styles.description}>A UK marketplace and project platform connecting homeowners with local tradespeople. Search, quotes, messages, agreed changes, payment stages and project history stay connected.</Text>
-        <Text style={styles.description}>Supported BuildPay payments are processed through Stripe. Users can also mutually agree to arrange payment privately, in which case BuildPair cannot process, hold, protect, refund or recover that payment.</Text>
+        <Text style={styles.description}>Supported BuildPay payments are processed through Stripe. Private payment arrangements sit outside BuildPay and its in-platform payment workflow.</Text>
         <View style={styles.contactPill}><Text style={styles.contactText}>info@buildpair.co.uk</Text></View>
       </View>
       {linkGroups.map((group) => <View key={group.title} style={styles.group}>
@@ -82,7 +81,7 @@ export function PublicFooter() {
     </View>
     <View style={styles.bottom}>
       <Text style={styles.small}>© {new Date().getFullYear()} BuildPair. All rights reserved.</Text>
-      <Text style={styles.small}>BuildPair provides marketplace, project-management and payment-workflow technology. It does not carry out building work, provide building-control approval, inspect or guarantee workmanship, or describe its payment service as escrow.</Text>
+      <Text style={styles.small}>BuildPair is a marketplace and project platform, not a building contractor or building-control body. See Payments, Terms and Disclaimer for full details.</Text>
     </View>
   </View>;
 }
