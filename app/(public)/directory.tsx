@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, Text, TextInput } from 'react-native-paper';
 import { FormSelect } from '@/components/FormSelect';
-import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
+import { EmptyState, Screen } from '@/components/Screen';
 import { TraderCard } from '@/components/TraderCard';
 import { TRADE_CATEGORIES } from '@/constants/options';
 import { colors } from '@/constants/theme';
@@ -119,8 +119,6 @@ export default function DirectoryScreen() {
     };
   }, [trade, trimmedQuery, localFiltered.length]);
 
-  if (loading) return <LoadingScreen label="Finding local trades…" />;
-
   return <Screen title="Find the right trade" subtitle="Search by trade, job, material, brand, symptom or problem. BuildPair understands related work, common wording and likely intent, so you do not need to know the exact trade name first.">
     <View style={styles.searchPanel}>
       <View style={styles.search}>
@@ -162,21 +160,26 @@ export default function DirectoryScreen() {
 
     <View style={styles.resultsHeader}>
       <View style={styles.resultsCopy}>
-        <Text variant="titleLarge" style={styles.title}>{filtered.length} trade{filtered.length === 1 ? '' : 's'} found</Text>
-        {query && !fallbackActive ? <Text style={styles.muted}>Best matches for “{query}” are shown first.</Text> : null}
-        {fallbackActive ? <Text style={styles.muted}>No exact wording match, so BuildPair is showing the closest available trades instead of leaving you at a dead end.</Text> : null}
-        {aiChecking ? <Text style={styles.muted}>Checking the likely trade behind your search…</Text> : null}
-        {!aiChecking && activeIntent?.matched && activeIntent.primaryTrade && exactFiltered.length > 0
+        <Text variant="titleLarge" style={styles.title}>{loading ? 'Finding local trades' : `${filtered.length} trade${filtered.length === 1 ? '' : 's'} found`}</Text>
+        {loading ? <Text style={styles.muted}>Checking active BuildPair trade profiles. This page will always resolve to live results, a clear empty state or an error with a retry option.</Text> : null}
+        {!loading && query && !fallbackActive ? <Text style={styles.muted}>Best matches for “{query}” are shown first.</Text> : null}
+        {!loading && fallbackActive ? <Text style={styles.muted}>No exact wording match, so BuildPair is showing the closest available trades instead of leaving you at a dead end.</Text> : null}
+        {!loading && aiChecking ? <Text style={styles.muted}>Checking the likely trade behind your search…</Text> : null}
+        {!loading && !aiChecking && activeIntent?.matched && activeIntent.primaryTrade && exactFiltered.length > 0
           ? <Text style={styles.intentText}>BuildPair matched this to {activeIntent.primaryTrade}{activeIntent.source === 'ai' ? ' using AI intent matching' : ''}.</Text>
           : null}
       </View>
       {trade ? <Chip>{trade}</Chip> : null}
     </View>
 
-    {error ? <EmptyState title="Directory unavailable" body={error} action={<Button onPress={() => load()}>Try again</Button>} /> : null}
-    {!error && !filtered.length
-      ? <EmptyState title="Trades are being added" body="There are no active paid trade profiles available to show yet." />
-      : <View style={styles.grid}>{filtered.map((trader) => <TraderCard key={trader.id} trader={trader} />)}</View>}
+    {loading ? <View style={styles.loadingState} accessibilityLiveRegion="polite"><Text style={styles.loadingTitle}>Checking the directory…</Text><Text style={styles.muted}>Active local trade profiles will appear here as soon as the directory check completes.</Text></View> : null}
+    {!loading && error ? <EmptyState title="Directory unavailable" body={error} action={<Button onPress={() => load()}>Try again</Button>} /> : null}
+    {!loading && !error && !filtered.length
+      ? <EmptyState title="Trades are being added" body="There are no active paid trade profiles available to show yet. New BuildPair profiles will appear here automatically as they go live." />
+      : null}
+    {!loading && !error && filtered.length
+      ? <View style={styles.grid}>{filtered.map((trader) => <TraderCard key={trader.id} trader={trader} />)}</View>
+      : null}
 
     <Text variant="bodySmall" style={styles.disclaimer}>BuildPair distinguishes verified reviews from information supplied by tradespeople. Check qualifications, registrations and insurance that matter for your particular job before appointing anyone.</Text>
   </Screen>;
@@ -192,10 +195,12 @@ const styles = StyleSheet.create({
   exampleChips: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
   filterChips: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
   resultsHeader: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
-  resultsCopy: { alignItems: 'center', gap: 3 },
+  resultsCopy: { alignItems: 'center', gap: 3, maxWidth: 760 },
   title: { fontWeight: '900', color: colors.charcoal, textAlign: 'center' },
   muted: { color: colors.muted, textAlign: 'center' },
   intentText: { color: colors.primary, textAlign: 'center', fontWeight: '700' },
+  loadingState: { minHeight: 150, alignItems: 'center', justifyContent: 'center', gap: 6, padding: 20, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSoft },
+  loadingTitle: { color: colors.charcoal, fontWeight: '900', fontSize: 18 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
   disclaimer: { textAlign: 'center', color: colors.muted, marginTop: 8, lineHeight: 19 },
 });
