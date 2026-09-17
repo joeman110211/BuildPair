@@ -34,7 +34,7 @@ function requestDetails(item: AiRequestRow) {
   const meta = asRecord(item.metadata);
   const audience = String(parsed.audience ?? meta.audience ?? '').toLowerCase();
   const pathname = String(parsed.pathname ?? meta.pathname ?? '');
-  const messages = Array.isArray(parsed.messages) ? parsed.messages as Array<Record<string, unknown>> : [];
+  const messages = Array.isArray(parsed.messages) ? parsed.messages as Record<string, unknown>[] : [];
   const latest = [...messages].reverse().find((entry) => entry.role === 'user' && typeof entry.content === 'string');
   const asked = typeof latest?.content === 'string' ? latest.content : (typeof parsed.message === 'string' ? parsed.message : item.requestText);
   const parsedResponse = parseMaybeJson(item.responseText);
@@ -43,7 +43,7 @@ function requestDetails(item: AiRequestRow) {
 }
 function pageName(pathname: string) {
   if (!pathname || pathname === '/') return 'Home page';
-  const clean = pathname.split('?')[0].replace(/^\/+|\/+$/g, '');
+  const clean = (pathname.split('?')[0] ?? '').replace(/^\/+|\/+$/g, '');
   if (!clean) return 'Home page';
   const last = clean.split('/').filter(Boolean).pop() ?? clean;
   return last.replace(/[()_-]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
