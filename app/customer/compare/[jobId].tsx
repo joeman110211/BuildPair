@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
+import { BuildPairAiAssist } from '@/components/BuildPairAiAssist';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { QuoteComparison } from '@/components/QuoteComparison';
 import { QuoteComparisonOverview } from '@/components/QuoteComparisonOverview';
@@ -134,6 +135,8 @@ export default function CompareQuotesScreen() {
   if (!data || !intake) return <LoadingScreen />;
   return <Screen title="Compare quotes" subtitle={data.job.title}>
     {error ? <EmptyState title="Something needs attention" body={error} /> : null}
+
+    <BuildPairAiAssist title="Want help comparing these quotes?" body="Open BuildPair AI for a plain-English explanation of what to compare, staged payments and useful questions to ask." />
 
     {!acceptedQuotes.length ? <AppCard>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
