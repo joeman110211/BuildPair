@@ -41,6 +41,10 @@ function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
   const reputation = trader.reviewCount > 0
     ? `${rating.toFixed(1)} ★ · ${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}`
     : 'New to BuildPair';
+  const activity = trader.completedJobs > 0 ? `${trader.completedJobs} completed` : `${trader.galleryCount} work photos`;
+  const trustSignal = trader.verifiedCredentialCount > 0
+    ? `${trader.verifiedCredentialCount} credential${trader.verifiedCredentialCount === 1 ? '' : 's'} reviewed · ${activity}`
+    : activity;
 
   return <Pressable
     style={({ pressed }) => [styles.cardPressable, pressed && styles.cardPressed]}
@@ -64,7 +68,7 @@ function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
         <Text numberOfLines={2} style={styles.tradeLine}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
         <Text numberOfLines={1} style={styles.metaLine}>{reputation}</Text>
         <View style={styles.cardFoot}>
-          <Text style={styles.activityText}>{trader.completedJobs > 0 ? `${trader.completedJobs} completed` : `${trader.galleryCount} work photos`}</Text>
+          <Text numberOfLines={2} style={styles.activityText}>{trustSignal}</Text>
           <Text style={styles.viewText}>View →</Text>
         </View>
       </View>
@@ -183,8 +187,8 @@ const styles = StyleSheet.create({
   businessName: { color: '#FFFFFF', fontSize: 18, lineHeight: 21, fontWeight: '900', letterSpacing: -0.3 },
   tradeLine: { color: '#F3F7F9', fontSize: 12, lineHeight: 17, fontWeight: '700' },
   metaLine: { color: '#D6E1E8', fontSize: 11, lineHeight: 15 },
-  cardFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginTop: 2 },
-  activityText: { flexShrink: 1, color: '#B7C8D2', fontSize: 10, fontWeight: '700' },
+  cardFoot: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 6, marginTop: 2 },
+  activityText: { flex: 1, color: '#B7C8D2', fontSize: 10, lineHeight: 14, fontWeight: '700' },
   viewText: { flexShrink: 0, color: '#FFD0AE', fontSize: 11, fontWeight: '900' },
   carouselFooter: { minHeight: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingHorizontal: 2 },
   swipeHint: { flexShrink: 1, color: colors.muted, fontSize: 11, fontWeight: '700' },
