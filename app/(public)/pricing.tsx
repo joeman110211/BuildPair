@@ -43,7 +43,7 @@ export default function PricingPage() {
 
       <View style={styles.notice}>
         <Text variant="titleMedium" style={styles.noticeTitle}>BuildPair job payment fee</Text>
-        <Text style={styles.noticeText}>For jobs using BuildPair payments, the current BuildPair service fee is 1% of the accepted quote total after agreed deposit stages are excluded. BuildPair also recovers the actual Stripe processing fees recorded for that job. Under the current payment workflow, these amounts are deducted from the final tradesperson payout. The final release record shows the gross stage amount, deductions and net transfer.</Text>
+        <Text style={styles.noticeText}>For jobs using BuildPay, the fee responsibility and exact amount are shown before the payment arrangement is confirmed. Customer-paid BuildPay fees are added to the amount collected. Where a tradesperson chooses to absorb the fee, the relevant deduction is shown in the payout record. BuildPair keeps the contract amount and payment-fee breakdown visible so both sides can see what was agreed.</Text>
         <Link href="/(public)/payments" asChild><Button mode="text">Read how BuildPair payments work</Button></Link>
       </View>
 
