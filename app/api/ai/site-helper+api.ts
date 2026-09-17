@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { assertAiDailyBudget, recordAiRequest } from '@/lib/ai-audit';
 import { BUILDPAIR_SITE_KNOWLEDGE, buildPairPageContext } from '@/lib/buildpair-ai-knowledge';
 import { assertRateLimit } from '@/lib/rate-limit';
-import { jsonError } from '@/lib/server';
+import { authenticatedUserId, jsonError } from '@/lib/server';
 
 const messageSchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -11,6 +11,7 @@ const messageSchema = z.object({
 });
 
 const inputSchema = z.object({
+  conversationId: z.string().trim().min(6).max(120).optional(),
   pathname: z.string().trim().max(300).default('/'),
   audience: z.enum(['homeowner', 'tradesperson', 'public']).default('public'),
   messages: z.array(messageSchema).min(1).max(12),
@@ -45,33 +46,42 @@ function tidyReply(value: string | undefined) {
   return lastSentence >= 200 ? clipped.slice(0, lastSentence + 1).trim() : clipped.trim();
 }
 
+async function optionalUserId(request: Request) {
+  const hasSession = Boolean(request.headers.get('authorization') || request.headers.get('cookie')?.includes('__session='));
+  if (!hasSession) return null;
+  try { return await authenticatedUserId(request); } catch { return null; }
+}
+
 export async function POST(request: Request) {
   try {
     await assertRateLimit(request, 'ai-site-helper', 30, 3600);
     const input = inputSchema.parse(await request.json());
+    const userId = await optionalUserId(request);
     const lastUserMessage = [...input.messages].reverse().find((message) => message.role === 'user')?.content ?? '';
     const pageContext = buildPairPageContext(input.pathname, input.audience);
     const base = { reply: fallback(input.pathname, input.audience), source: 'rules' as const };
     const auditRequest = {
+      conversationId: input.conversationId ?? null,
       pathname: input.pathname,
       audience: input.audience,
       pageContext,
       messages: input.messages,
     };
+    const auditMetadata = input.conversationId ? { conversationId: input.conversationId } : undefined;
 
     const key = process.env.GEMINI_API_KEY;
     const model = process.env.GEMINI_MODEL?.trim() || 'gemini-3.5-flash';
     const startedAt = Date.now();
 
     if (!key) {
-      await recordAiRequest({ endpoint: 'site-helper', request: auditRequest, response: base, status: 'fallback', model, providerCalled: false, latencyMs: Date.now() - startedAt });
+      await recordAiRequest({ userId, endpoint: 'site-helper', request: auditRequest, response: base, status: 'fallback', model, providerCalled: false, latencyMs: Date.now() - startedAt, metadata: auditMetadata });
       return Response.json(base);
     }
 
     try {
       await assertAiDailyBudget();
     } catch (error) {
-      await recordAiRequest({ endpoint: 'site-helper', request: auditRequest, response: base, status: 'blocked', model, providerCalled: false, latencyMs: Date.now() - startedAt, metadata: { reason: error instanceof Error ? error.message : 'Global AI limit reached' } });
+      await recordAiRequest({ userId, endpoint: 'site-helper', request: auditRequest, response: base, status: 'blocked', model, providerCalled: false, latencyMs: Date.now() - startedAt, metadata: { ...auditMetadata, reason: error instanceof Error ? error.message : 'Global AI limit reached' } });
       return Response.json(base);
     }
 
@@ -125,15 +135,15 @@ ${lastUserMessage}
 
       const reply = tidyReply(response.text);
       if (!reply) {
-        await recordAiRequest({ endpoint: 'site-helper', request: auditRequest, response: base, status: 'fallback', model, providerCalled: true, latencyMs: Date.now() - startedAt, metadata: { reason: 'Empty Gemini response' } });
+        await recordAiRequest({ userId, endpoint: 'site-helper', request: auditRequest, response: base, status: 'fallback', model, providerCalled: true, latencyMs: Date.now() - startedAt, metadata: { ...auditMetadata, reason: 'Empty Gemini response' } });
         return Response.json(base);
       }
 
       const result = { reply, source: 'ai' as const };
-      await recordAiRequest({ endpoint: 'site-helper', request: auditRequest, response: result, status: 'success', model, providerCalled: true, latencyMs: Date.now() - startedAt });
+      await recordAiRequest({ userId, endpoint: 'site-helper', request: auditRequest, response: result, status: 'success', model, providerCalled: true, latencyMs: Date.now() - startedAt, metadata: auditMetadata });
       return Response.json(result);
     } catch (error) {
-      await recordAiRequest({ endpoint: 'site-helper', request: auditRequest, response: base, status: 'error', model, providerCalled: true, latencyMs: Date.now() - startedAt, metadata: { reason: error instanceof Error ? error.message : 'Gemini request failed' } });
+      await recordAiRequest({ userId, endpoint: 'site-helper', request: auditRequest, response: base, status: 'error', model, providerCalled: true, latencyMs: Date.now() - startedAt, metadata: { ...auditMetadata, reason: error instanceof Error ? error.message : 'Gemini request failed' } });
       return Response.json(base);
     }
   } catch (error) {

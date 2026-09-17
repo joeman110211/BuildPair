@@ -112,6 +112,7 @@ export function BuildPairAiHelper() {
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: openingMessage(audience) }]);
   const scrollRef = useRef<ScrollView>(null);
+  const conversationIdRef = useRef<string | null>(null);
 
   const hidden = pathname.startsWith('/admin') || pathname.startsWith('/api');
   const panelWidth = Math.min(390, Math.max(300, width - 24));
@@ -132,6 +133,13 @@ export function BuildPairAiHelper() {
     setOpen(false);
   }
 
+  function conversationId() {
+    if (!conversationIdRef.current) {
+      conversationIdRef.current = `bp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+    return conversationIdRef.current;
+  }
+
   async function sendMessage(text: string) {
     const clean = text.trim();
     if (!clean || sending) return;
@@ -146,7 +154,7 @@ export function BuildPairAiHelper() {
       const response = await fetch('/api/ai/site-helper', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pathname, audience, messages: nextMessages }),
+        body: JSON.stringify({ conversationId: conversationId(), pathname, audience, messages: nextMessages }),
       });
 
       if (!response.ok) throw new Error(`Helper request failed (${response.status})`);
