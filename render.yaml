@@ -24,7 +24,7 @@ services:
       - key: BUILDPAIR_PREVIEW_DATA_ENABLED
         value: "false"
       - key: BUILDPAIR_NOINDEX
-        value: "true"
+        value: "false"
       - key: PLATFORM_FEE_PERCENT
         value: "1"
       - key: INVOICE_FROM_EMAIL
