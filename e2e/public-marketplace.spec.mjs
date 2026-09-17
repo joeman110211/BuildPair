@@ -38,3 +38,44 @@ test('public job cards open details and preserve job context when joining to quo
   const preview = page.getByRole('button', { name: 'Example only' }).first();
   await expect(preview, 'When no real jobs exist, preview jobs should be clearly non-actionable').toBeDisabled();
 });
+
+test('public marketplace routes return useful indexable copy before client data settles', async ({ request }) => {
+  const [directoryResponse, jobsResponse] = await Promise.all([
+    request.get(`${baseURL}/directory`),
+    request.get(`${baseURL}/jobs`),
+  ]);
+
+  expect(directoryResponse.ok()).toBeTruthy();
+  expect(jobsResponse.ok()).toBeTruthy();
+
+  const [directoryHtml, jobsHtml] = await Promise.all([
+    directoryResponse.text(),
+    jobsResponse.text(),
+  ]);
+
+  expect(directoryHtml).toContain('Find the right trade');
+  expect(directoryHtml).toContain('Checking active BuildPair trade profiles');
+  expect(jobsHtml).toContain('Latest job requests');
+  expect(jobsHtml).toContain('Browse open customer jobs');
+});
+
+test('prelaunch public copy stays consistent and does not expose internal controls', async ({ request }) => {
+  const [pricingResponse, waitlistResponse, homeResponse] = await Promise.all([
+    request.get(`${baseURL}/pricing`),
+    request.get(`${baseURL}/waitlist`),
+    request.get(`${baseURL}/`),
+  ]);
+
+  const [pricingHtml, waitlistHtml, homeHtml] = await Promise.all([
+    pricingResponse.text(),
+    waitlistResponse.text(),
+    homeResponse.text(),
+  ]);
+
+  expect(pricingHtml).toContain('Join tradesperson launch list');
+  expect(pricingHtml).toContain('Open-marketplace offers are not included on Starter');
+  expect(pricingHtml).not.toContain('0 open-marketplace offers per month');
+  expect(waitlistHtml).toContain('SMS updates are coming soon');
+  expect(waitlistHtml).not.toContain('not connected to the SMS provider yet');
+  expect(homeHtml).not.toContain('/auth/sign-in?admin=1');
+});
