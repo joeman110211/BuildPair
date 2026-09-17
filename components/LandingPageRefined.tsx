@@ -22,6 +22,12 @@ const FAQS = [
   ['What memberships are available to tradespeople?', 'Starter is £0/month, BuildPair Plus is £19.99/month and BuildPair Pro is £29.99/month. Paid plans add searchable marketplace access, more quoting capacity and additional business tools.'],
 ] as const;
 
+const PRODUCT_PREVIEWS = [
+  { eyebrow: 'JOB', title: 'Bathroom renovation', lines: ['Guildford · Homeowner project', '3 structured quotes received', 'Messages and changes kept together'] },
+  { eyebrow: 'QUOTE', title: 'Clear scope and stages', lines: ['Labour and materials separated', 'Timing, exclusions and warranty recorded', 'Payment stages attached to the quote'] },
+  { eyebrow: 'BUILDPAY', title: 'Track each payment stage', lines: ['Materials acknowledged', 'Protected work stage funded', 'Release decisions recorded'] },
+] as const;
+
 function SectionHeading({ eyebrow, title, body }: { eyebrow?: string; title: string; body?: string }) {
   return <View style={styles.sectionHeading}>
     {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
@@ -34,6 +40,7 @@ export default function LandingPageRefined() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const wide = width >= 920;
+  const compact = width < 720;
   const [search, setSearch] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -46,11 +53,11 @@ export default function LandingPageRefined() {
   return <ScrollView style={styles.page} contentContainerStyle={styles.pageContent}>
     <PrelaunchBanner />
 
-    <View style={[styles.hero, wide && styles.heroWide]}>
-      <View style={[styles.heroCopy, wide && styles.heroCopyWide]} testID="home-hero-copy">
+    <View style={[styles.hero, wide && styles.heroWide, compact && styles.heroCompact]}>
+      <View style={[styles.heroCopy, wide && styles.heroCopyWide, compact && styles.heroCopyCompact]} testID="home-hero-copy">
         <View style={styles.heroBadge}><View style={styles.liveDot} /><Text style={styles.heroBadgeText}>Built for UK homeowners and tradespeople</Text></View>
-        <Text style={[styles.heroTitle, !wide && styles.heroTitleCompact]}>Find the right trade. Compare properly. Keep the whole job together.</Text>
-        <Text variant="titleMedium" style={styles.heroSubtitle}>BuildPair connects homeowners with local tradespeople and keeps the project organised from first search to final review. Plan the work, compare structured quotes, message, agree changes and manage payments in one place.</Text>
+        <Text style={[styles.heroTitle, !wide && styles.heroTitleCompact, compact && styles.heroTitleMobile]}>Find the right trade. Compare properly. Keep the whole job together.</Text>
+        <Text variant="titleMedium" style={[styles.heroSubtitle, compact && styles.heroSubtitleCompact]}>{compact ? 'Find local tradespeople, compare structured quotes and keep the project organised in one place.' : 'BuildPair connects homeowners with local tradespeople and keeps the project organised from first search to final review. Plan the work, compare structured quotes, message, agree changes and manage payments in one place.'}</Text>
         <View style={styles.heroBenefits}>
           {HERO_BENEFITS.map((item) => <View key={item} style={styles.heroBenefit}><Text style={styles.heroBenefitMark}>✓</Text><Text style={styles.heroBenefitText}>{item}</Text></View>)}
         </View>
@@ -66,15 +73,29 @@ export default function LandingPageRefined() {
       </View>
     </View>
 
+    <View style={styles.productPreviewBand}>
+      <View style={[styles.section, compact && styles.sectionCompact]}>
+        <SectionHeading eyebrow="One connected project" title="See what BuildPair keeps together." body={compact ? 'Jobs, quotes, messages and payment stages stay connected instead of being scattered across different apps.' : 'BuildPair is more than a directory. The job, structured quotes, messages, agreed changes, payment stages and project history stay connected around the same project.'} />
+        <View style={styles.previewGrid}>
+          {PRODUCT_PREVIEWS.map((preview) => <View key={preview.eyebrow} style={styles.previewCard}>
+            <View style={styles.previewTop}><Text style={styles.previewEyebrow}>{preview.eyebrow}</Text><View style={styles.previewStatus}><Text style={styles.previewStatusText}>LIVE FLOW</Text></View></View>
+            <Text variant="titleMedium" style={styles.previewTitle}>{preview.title}</Text>
+            <View style={styles.previewLines}>{preview.lines.map((line) => <View key={line} style={styles.previewLine}><View style={styles.previewDot} /><Text style={styles.previewLineText}>{line}</Text></View>)}</View>
+          </View>)}
+        </View>
+        <Text style={styles.aiNote}><Text style={styles.aiNoteStrong}>BuildPair AI:</Text> page-aware help is available across the public site for job planning, trade guidance, quotes and BuildPay explanations.</Text>
+      </View>
+    </View>
+
     <View style={styles.featuredBand}>
-      <View style={styles.featuredSection}>
-        <SectionHeading eyebrow="Featured tradespeople" title="Meet trades already on BuildPair." body="Swipe or scroll through real BuildPair profiles and open any card to see the tradesperson in more detail." />
+      <View style={[styles.featuredSection, compact && styles.sectionCompact]}>
+        <SectionHeading eyebrow="Featured tradespeople" title="Meet trades already on BuildPair." body={compact ? 'Swipe through real BuildPair profiles and open any card for more detail.' : 'Swipe or scroll through real BuildPair profiles and open any card to see the tradesperson in more detail.'} />
         <FeaturedTraderHero wide={wide} />
       </View>
     </View>
 
     <View style={styles.tradeBand}>
-      <View style={styles.section}>
+      <View style={[styles.section, compact && styles.sectionCompact]}>
         <SectionHeading eyebrow="Find a trade" title="Search by the work, not the terminology." body="Choose a trade if you know it, or describe the job and let BuildPair narrow the starting point." />
         <View style={styles.tradeGrid}>
           {POPULAR_TRADES.map((trade) => <Pressable key={trade} style={styles.tradeCard} onPress={() => goTrade(trade)} accessibilityRole="button"><Text style={styles.tradeName}>{trade}</Text><Text style={styles.tradeArrow}>→</Text></Pressable>)}
@@ -84,63 +105,63 @@ export default function LandingPageRefined() {
     </View>
 
     <View style={styles.audienceBand}>
-      <View style={styles.section}>
-        <SectionHeading eyebrow="Built for both sides" title="One project. Two clear experiences." body="Homeowners get a clearer way to find, compare and manage work. Tradespeople get a professional route to win suitable jobs and run them properly." />
+      <View style={[styles.section, compact && styles.sectionCompact]}>
+        <SectionHeading eyebrow="Built for both sides" title="One project. Two clear experiences." body={compact ? 'A clear homeowner journey and practical business tools for tradespeople.' : 'Homeowners get a clearer way to find, compare and manage work. Tradespeople get a professional route to win suitable jobs and run them properly.'} />
         <View style={styles.audienceGrid}>
-          <View style={[styles.audienceCard, styles.homeownerCard]}>
+          <View style={[styles.audienceCard, styles.homeownerCard, compact && styles.cardCompact]}>
             <Text style={styles.audienceEyebrow}>FOR HOMEOWNERS</Text>
             <Text variant="headlineSmall" style={styles.cardTitle}>Find the right person and stay in control of the job.</Text>
-            <Text style={styles.cardText}>Describe what needs doing, compare suitable trades and structured quotes, stop new quotes when you have enough, then keep messages, changes and payment stages attached to the project.</Text>
+            <Text style={styles.cardText}>{compact ? 'Describe the job, compare suitable trades and structured quotes, then keep the project record together.' : 'Describe what needs doing, compare suitable trades and structured quotes, stop new quotes when you have enough, then keep messages, changes and payment stages attached to the project.'}</Text>
             <View style={styles.audienceActions}><Button mode="contained" onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('customer', 'homepage-audience')} asChild><Button mode="text">Join homeowner list</Button></Link></View>
           </View>
-          <View style={[styles.audienceCard, styles.tradeAudienceCard]}>
+          <View style={[styles.audienceCard, styles.tradeAudienceCard, compact && styles.cardCompact]}>
             <Text style={[styles.audienceEyebrow, styles.tradeAudienceEyebrow]}>FOR TRADESPEOPLE</Text>
             <Text variant="headlineSmall" style={styles.cardTitle}>Present your business well, quote clearly and manage work in one place.</Text>
-            <Text style={styles.cardText}>Build your profile, find relevant local opportunities, arrange a site visit where needed, respond with structured quotes and keep the project record organised after the work is won.</Text>
-            <View style={styles.audienceActions}><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined">See trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="text">View membership</Button></Link></View>
+            <Text style={styles.cardText}>{compact ? 'Build your profile, find suitable local work, send structured quotes and keep jobs organised after you win them.' : 'Build your profile, find relevant local opportunities, arrange a site visit where needed, respond with structured quotes and keep the project record organised after the work is won.'}</Text>
+            <View style={styles.audienceActions}><Link href="/(public)/for-tradespeople" asChild><Button mode="contained">See trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="text">View membership</Button></Link></View>
           </View>
         </View>
       </View>
     </View>
 
-    <View style={styles.section}>
-      <SectionHeading eyebrow="How it works" title="From first search to finished job." body="Some work can be quoted remotely and some needs a site visit. BuildPair supports both while keeping the important decisions connected." />
+    <View style={[styles.section, compact && styles.sectionCompact]}>
+      <SectionHeading eyebrow="How it works" title="From first search to finished job." body={compact ? 'Quote remotely or arrange a site visit first. The important decisions stay connected to the project.' : 'Some work can be quoted remotely and some needs a site visit. BuildPair supports both while keeping the important decisions connected.'} />
       <View style={styles.routeGrid}>
         {[
           ['01', 'Describe the job', 'Search directly or explain the problem in ordinary language. Add useful details and photos where they help.'],
           ['02', 'Find and compare', 'Browse suitable local tradespeople, request quotes directly or post the job to the marketplace. Compare active structured quotes and pause new responses when you have enough.'],
           ['03', 'Visit, quote and agree', 'The tradesperson can quote from the information supplied or arrange a site visit first. After a confirmed visit is completed, scope, exclusions, timing and payment stages are recorded in the structured quote.'],
           ['04', 'Run the project', 'After one quote is accepted, use BuildPay or mutually agree direct payment. Messages, agreed changes, payment records, timeline events and completion stay attached to the same job.'],
-        ].map(([number, title, copy]) => <View key={number} style={styles.routeCard}><Text style={styles.routeNumber}>{number}</Text><Text variant="titleLarge" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
+        ].map(([number, title, copy]) => <View key={number} style={[styles.routeCard, compact && styles.cardCompact]}><Text style={styles.routeNumber}>{number}</Text><Text variant="titleLarge" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{compact ? copy.split('. ')[0] + '.' : copy}</Text></View>)}
       </View>
       <Link href="/(public)/how-it-works" asChild><Button mode="text">See the full process →</Button></Link>
     </View>
 
-    <View style={styles.section}>
-      <SectionHeading eyebrow="Built around the project" title="Useful before, during and after the hire." body="BuildPair is designed to keep the important parts of a job connected instead of stopping once a homeowner and tradesperson find each other." />
+    <View style={[styles.section, compact && styles.sectionCompact]}>
+      <SectionHeading eyebrow="Built around the project" title="Useful before, during and after the hire." body={compact ? 'Practical tools stay attached to the work rather than ending once a match is made.' : 'BuildPair is designed to keep the important parts of a job connected instead of stopping once a homeowner and tradesperson find each other.'} />
       <View style={styles.featureGrid}>
         {[
           ['AI-assisted planning', 'Turn a plain-English problem into a clearer starting brief and more relevant trade suggestions.'],
           ['Structured quotes', 'Compare labour, materials, VAT, scope, exclusions, timing, warranty and proposed payment stages clearly.'],
           ['Job-linked messages', 'Keep the conversation and next actions attached to the project rather than scattered across separate channels.'],
           ['Variations and timeline', 'Record agreed scope or price changes and keep important project events easier to follow later.'],
-        ].map(([title, copy]) => <View key={title} style={styles.featureCard}><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
+        ].map(([title, copy]) => <View key={title} style={[styles.featureCard, compact && styles.cardCompact]}><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
       </View>
     </View>
 
     <View style={styles.paymentBand}>
-      <View style={styles.section}>
-        <SectionHeading eyebrow="Payments" title="Choose the payment route that suits the job." body="Use BuildPay for supported protected stages and recorded release decisions, or mutually agree to arrange payment privately. The project can stay organised either way, but BuildPair can only manage payments made through BuildPay." />
+      <View style={[styles.section, compact && styles.sectionCompact]}>
+        <SectionHeading eyebrow="Payments" title="Choose the payment route that suits the job." body={compact ? 'Use BuildPay for supported protected stages, or mutually agree to arrange payment privately.' : 'Use BuildPay for supported protected stages and recorded release decisions, or mutually agree to arrange payment privately. The project can stay organised either way, but BuildPair can only manage payments made through BuildPay.'} />
         <View style={styles.paymentGrid}>
-          <View style={[styles.paymentCard, styles.protectedCard]}>
+          <View style={[styles.paymentCard, styles.protectedCard, compact && styles.cardCompact]}>
             <Chip icon="credit-card-check-outline" style={styles.cardChip}>BuildPay</Chip>
             <Text variant="titleLarge" style={styles.cardTitle}>Protected stages follow the accepted quote.</Text>
-            <Text style={styles.cardText}>When a staged schedule begins with materials, the opening payment can fund the materials and first protected work stage together. Only the materials allocation releases after the tradesperson acknowledges it; protected work stages release later after their agreed completion point and approval.</Text>
+            <Text style={styles.cardText}>{compact ? 'Materials and protected work stages follow the accepted quote, with release decisions recorded in the project.' : 'When a staged schedule begins with materials, the opening payment can fund the materials and first protected work stage together. Only the materials allocation releases after the tradesperson acknowledges it; protected work stages release later after their agreed completion point and approval.'}</Text>
           </View>
-          <View style={[styles.paymentCard, styles.privateCard]}>
+          <View style={[styles.paymentCard, styles.privateCard, compact && styles.cardCompact]}>
             <Chip icon="account-arrow-right-outline" style={styles.cardChip}>Private payment arrangement</Chip>
             <Text variant="titleLarge" style={styles.cardTitle}>Pay directly if both sides agree.</Text>
-            <Text style={styles.cardText}>Either side can propose payment outside BuildPair and the other must confirm. The project record can remain in BuildPair, but BuildPair cannot process, hold, protect, pause, refund or recover money paid privately.</Text>
+            <Text style={styles.cardText}>{compact ? 'Both sides must agree. BuildPair can keep the project record, but cannot protect or recover money paid privately.' : 'Either side can propose payment outside BuildPair and the other must confirm. The project record can remain in BuildPair, but BuildPair cannot process, hold, protect, pause, refund or recover money paid privately.'}</Text>
           </View>
         </View>
         <Link href="/(public)/payments" asChild><Button mode="outlined">How BuildPay works</Button></Link>
@@ -148,8 +169,8 @@ export default function LandingPageRefined() {
     </View>
 
     <View style={styles.trustBand}>
-      <View style={styles.section}>
-        <SectionHeading eyebrow="Trust & safety" title="Clearer evidence, records and reporting." body="BuildPair can organise useful trust signals and project history while keeping the limits clear. Users should still make the checks appropriate to the work being commissioned." />
+      <View style={[styles.section, compact && styles.sectionCompact]}>
+        <SectionHeading eyebrow="Trust & safety" title="Clearer evidence, records and reporting." body={compact ? 'Useful trust signals and project history stay visible while BuildPair keeps its limits clear.' : 'BuildPair can organise useful trust signals and project history while keeping the limits clear. Users should still make the checks appropriate to the work being commissioned.'} />
         <View style={styles.trustGrid}>
           {[
             ['Local by design', 'Marketplace jobs are matched to a tradesperson’s genuine service base and working radius, helping homeowners hear from people who actually work in their area.'],
@@ -157,22 +178,22 @@ export default function LandingPageRefined() {
             ['Project-linked reviews', 'Reviews can be connected to completed BuildPair activity where applicable, giving useful context behind the rating.'],
             ['Two-way reporting', 'Homeowners and tradespeople can report concerns for human review and proportionate moderation.'],
             ['Location privacy', 'Public jobs use outward location information while more precise matching data stays server-side.'],
-          ].map(([title, copy]) => <View key={title} style={styles.trustCard}><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
+          ].map(([title, copy]) => <View key={title} style={[styles.trustCard, compact && styles.cardCompact]}><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{compact ? copy.split('. ')[0] + '.' : copy}</Text></View>)}
         </View>
         <Link href="/(public)/trust-safety" asChild><Button mode="outlined">Read about trust & safety</Button></Link>
       </View>
     </View>
 
     <View style={styles.pricingBand}>
-      <View style={styles.section}>
-        <SectionHeading eyebrow="Tradesperson membership" title="Start free. Upgrade when you need more marketplace reach." body="Starter provides the core profile. Plus adds searchable marketplace access and direct quote requests. Pro adds more quoting capacity, analytics and priority tools." />
+      <View style={[styles.section, compact && styles.sectionCompact]}>
+        <SectionHeading eyebrow="Tradesperson membership" title="Start free. Upgrade when you need more marketplace reach." body={compact ? 'Starter covers the core profile. Paid plans add marketplace reach and more business tools.' : 'Starter provides the core profile. Plus adds searchable marketplace access and direct quote requests. Pro adds more quoting capacity, analytics and priority tools.'} />
         <PricingCards compact />
         <Link href="/(public)/pricing" asChild><Button mode="text">Compare membership plans →</Button></Link>
       </View>
     </View>
 
     <View style={styles.faqBand}>
-      <View style={styles.section}>
+      <View style={[styles.section, compact && styles.sectionCompact]}>
         <SectionHeading eyebrow="Questions" title="The essentials before you create an account." />
         <View style={styles.faqList}>
           {FAQS.map(([question, answer], index) => {
@@ -186,8 +207,8 @@ export default function LandingPageRefined() {
       </View>
     </View>
 
-    <View style={styles.section}>
-      <View style={styles.finalCta}>
+    <View style={[styles.section, compact && styles.sectionCompact]}>
+      <View style={[styles.finalCta, compact && styles.finalCtaCompact]}>
         <View style={styles.finalCopy}><Text style={styles.finalEyebrow}>BUILDPAIR UK</Text><Text variant="headlineSmall" style={styles.finalTitle}>Find the trade. Agree the job. Keep everything connected.</Text><Text style={styles.finalText}>Search, compare structured quotes, message, manage changes, choose the payment route and complete the project in one place.</Text></View>
         <View style={styles.finalButtons}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref(null, 'homepage-final')} asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.finalOutline}>Join launch list</Button></Link></View>
       </View>
@@ -202,14 +223,18 @@ const styles = StyleSheet.create({
   pageContent: { flexGrow: 1, width: '100%', maxWidth: '100%' },
   hero: { width: '100%', maxWidth: 1240, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 32, gap: 24 },
   heroWide: { paddingVertical: 42 },
+  heroCompact: { paddingVertical: 24 },
   heroCopy: { width: '100%', maxWidth: '100%', minWidth: 0, flexShrink: 1, justifyContent: 'center', alignItems: 'center', gap: 15 },
   heroCopyWide: { width: '100%', maxWidth: 900, alignSelf: 'center' },
+  heroCopyCompact: { gap: 12 },
   heroBadge: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: colors.primarySoft, borderRadius: 999, borderWidth: 1, borderColor: '#F2D7C3' },
   liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
   heroBadgeText: { color: colors.primaryDark, fontWeight: '800', fontSize: 12, textAlign: 'center' },
   heroTitle: { color: colors.charcoal, fontSize: 50, lineHeight: 55, fontWeight: '900', letterSpacing: -1.8, textAlign: 'center' },
   heroTitleCompact: { fontSize: 36, lineHeight: 41 },
+  heroTitleMobile: { fontSize: 32, lineHeight: 36, letterSpacing: -1.1 },
   heroSubtitle: { color: colors.charcoalSoft, lineHeight: 27, maxWidth: 660, textAlign: 'center' },
+  heroSubtitleCompact: { lineHeight: 22, fontSize: 15 },
   heroBenefits: { width: '100%', maxWidth: 700, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
   heroBenefit: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 999 },
   heroBenefitMark: { color: colors.accent, fontWeight: '900' },
@@ -219,9 +244,24 @@ const styles = StyleSheet.create({
   searchButton: { minHeight: 50 },
   heroActions: { width: '100%', maxWidth: '100%', minWidth: 0, minHeight: 44, flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', alignItems: 'center' },
   heroActionButton: { borderRadius: 999, maxWidth: '100%' },
+  productPreviewBand: { backgroundColor: '#F5F8FA', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#E4EAEE' },
+  previewGrid: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  previewCard: { flexGrow: 1, flexShrink: 1, flexBasis: 270, minWidth: 0, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DDE5EA', borderRadius: 18, padding: 16, gap: 10, shadowColor: colors.charcoal, shadowOpacity: 0.035, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
+  previewTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  previewEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.1 },
+  previewStatus: { borderRadius: 999, backgroundColor: '#EDF7F5', paddingHorizontal: 7, paddingVertical: 4 },
+  previewStatusText: { color: '#356C61', fontSize: 8.5, fontWeight: '900', letterSpacing: 0.5 },
+  previewTitle: { color: colors.charcoal, fontWeight: '900' },
+  previewLines: { gap: 7 },
+  previewLine: { flexDirection: 'row', alignItems: 'flex-start', gap: 7 },
+  previewDot: { width: 6, height: 6, borderRadius: 3, marginTop: 7, backgroundColor: colors.primary },
+  previewLineText: { flex: 1, color: colors.charcoalSoft, lineHeight: 19, fontSize: 13 },
+  aiNote: { alignSelf: 'center', maxWidth: 820, color: colors.muted, textAlign: 'center', lineHeight: 20, fontSize: 13 },
+  aiNoteStrong: { color: colors.charcoal, fontWeight: '900' },
   featuredBand: { backgroundColor: '#FFFFFF' },
-  featuredSection: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingTop: 20, paddingBottom: 38, gap: 16 },
-  section: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 38, gap: 20 },
+  featuredSection: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingTop: 24, paddingBottom: 38, gap: 16 },
+  section: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 40, gap: 20 },
+  sectionCompact: { paddingVertical: 28, gap: 16 },
   sectionHeading: { width: '100%', maxWidth: 820, minWidth: 0, alignSelf: 'center', alignItems: 'center', gap: 7 },
   eyebrow: { color: colors.primary, fontWeight: '900', fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', textAlign: 'center' },
   sectionTitle: { color: colors.charcoal, fontWeight: '900', letterSpacing: -0.5, textAlign: 'center' },
@@ -239,7 +279,8 @@ const styles = StyleSheet.create({
   routeNumber: { color: colors.primary, fontWeight: '900', letterSpacing: 1 },
   cardTitle: { minWidth: 0, maxWidth: '100%', color: colors.charcoal, fontWeight: '900' },
   cardText: { minWidth: 0, maxWidth: '100%', color: colors.muted, lineHeight: 22 },
-  tradeBand: { backgroundColor: colors.surfaceSoft },
+  cardCompact: { padding: 16 },
+  tradeBand: { backgroundColor: '#F8F6F3' },
   tradeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tradeCard: { flexGrow: 1, flexShrink: 1, flexBasis: 230, minWidth: 0, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   tradeName: { flexShrink: 1, minWidth: 0, color: colors.charcoal, fontWeight: '800' },
@@ -252,16 +293,17 @@ const styles = StyleSheet.create({
   protectedCard: { backgroundColor: '#F6FBFA', borderColor: '#CDE2DE' },
   privateCard: { backgroundColor: '#FFFFFF', borderColor: '#E8D7C7' },
   cardChip: { alignSelf: 'flex-start', maxWidth: '100%' },
-  trustBand: { backgroundColor: '#F6FBFA' },
+  trustBand: { backgroundColor: '#F2F7F8' },
   trustGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   trustCard: { flexGrow: 1, flexShrink: 1, flexBasis: 240, minWidth: 0, backgroundColor: '#FFFFFF', borderRadius: 18, padding: 17, gap: 7, borderWidth: 1, borderColor: '#CDE2DE' },
   pricingBand: { backgroundColor: '#FBF8F5' },
-  faqBand: { backgroundColor: colors.surfaceSoft },
+  faqBand: { backgroundColor: '#F5F5F4' },
   faqList: { gap: 9, maxWidth: 900, width: '100%', minWidth: 0, alignSelf: 'center' },
   faqCard: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 15, gap: 8 },
   faqRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   faqToggle: { flexShrink: 0, color: colors.primary, fontSize: 24, fontWeight: '900' },
   finalCta: { width: '100%', backgroundColor: colors.navy, borderRadius: 26, padding: 24, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 18 },
+  finalCtaCompact: { borderRadius: 20, padding: 20 },
   finalCopy: { flex: 1, minWidth: 240, maxWidth: '100%', gap: 6 },
   finalEyebrow: { color: '#FFD7BA', fontSize: 11, fontWeight: '900', letterSpacing: 1.2 },
   finalTitle: { color: '#FFFFFF', fontWeight: '900' },
