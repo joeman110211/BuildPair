@@ -34,7 +34,34 @@ function HeaderBrand({ compact = false }: { compact?: boolean }) {
   return <Link href="/" asChild><Pressable style={styles.brandPressable} accessibilityLabel="BuildPair home"><BuildPairLogo compact={compact} /></Pressable></Link>;
 }
 
-function NavMenu({ dashboard, signedIn, onDashboard, onSignOut, preview = false }: { dashboard?: Href; signedIn?: boolean; onDashboard?: () => void; onSignOut?: () => void; preview?: boolean }) {
+function accountItems(mode: UserRole | null, go: (href: Href) => void): CompactNavItem[] {
+  if (mode === 'customer') {
+    return [
+      { label: 'Post a job', onPress: () => go('/customer/new-job') },
+      { label: 'My jobs', onPress: () => go('/customer/jobs') },
+      { label: 'Messages', onPress: () => go('/customer/messages') },
+      { label: 'Saved trades', onPress: () => go('/customer/saved-trades') },
+      { label: 'Profile', onPress: () => go('/customer/profile') },
+      { label: 'Settings', onPress: () => go('/customer/settings') },
+    ];
+  }
+
+  if (mode === 'trader') {
+    return [
+      { label: 'Job board', onPress: () => go('/trader/job-board') },
+      { label: 'My jobs', onPress: () => go('/trader/my-jobs') },
+      { label: 'Messages', onPress: () => go('/trader/messages') },
+      { label: 'Profile', onPress: () => go('/trader/profile') },
+      { label: 'Google reviews', onPress: () => go('/trader/google-reviews') },
+      { label: 'Analytics', onPress: () => go('/trader/analytics') },
+      { label: 'Settings', onPress: () => go('/trader/settings') },
+    ];
+  }
+
+  return [];
+}
+
+function NavMenu({ dashboard, signedIn, mode = null, onDashboard, onSignOut, preview = false }: { dashboard?: Href; signedIn?: boolean; mode?: UserRole | null; onDashboard?: () => void; onSignOut?: () => void; preview?: boolean }) {
   const router = useRouter();
   const go = (href: Href) => router.push(href);
   const items: CompactNavItem[] = [
@@ -45,6 +72,9 @@ function NavMenu({ dashboard, signedIn, onDashboard, onSignOut, preview = false 
     { label: 'For Homeowners', sectionLabel: 'Guides', dividerBefore: true, onPress: () => go('/(public)/for-homeowners') },
     { label: 'For Tradespeople', onPress: () => go('/(public)/for-tradespeople') },
     { label: 'Advice Hub', onPress: () => go('/(public)/advice') },
+    { label: 'How payments work', onPress: () => go('/(public)/payments') },
+    { label: 'UK building rules', onPress: () => go('/(public)/building-regulations') },
+    { label: 'About us', onPress: () => go('/(public)/about') },
     { label: 'Trust & Safety', sectionLabel: 'Support', dividerBefore: true, onPress: () => go('/(public)/trust-safety') },
     { label: 'Contact Us', onPress: () => go('/(public)/contact') },
   ];
@@ -53,6 +83,7 @@ function NavMenu({ dashboard, signedIn, onDashboard, onSignOut, preview = false 
     items.push({ label: 'Join launch waitlist', sectionLabel: 'Launch', dividerBefore: true, onPress: () => go(waitlistHref(null, 'header-menu')) });
   } else if (signedIn && dashboard) {
     items.push({ label: 'Dashboard', sectionLabel: 'Account', dividerBefore: true, onPress: () => onDashboard ? onDashboard() : go(dashboard) });
+    items.push(...accountItems(mode, go));
     items.push({ label: 'Sign out', onPress: () => onSignOut?.() });
   } else {
     items.push({ label: 'Sign in', sectionLabel: 'Account', dividerBefore: true, onPress: () => go('/auth/account') });
@@ -109,12 +140,12 @@ function AuthenticatedHeader() {
     router.replace(dashboardHref(mode));
   };
 
-  if (compact) return <CompactShell menu={<NavMenu dashboard={dashboard} signedIn={isSignedIn} onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} />} />;
+  if (compact) return <CompactShell menu={<NavMenu dashboard={dashboard} signedIn={isSignedIn} mode={mode} onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} />} />;
   return <View style={styles.header}>
     <HeaderBrand />
     <View style={styles.actions}>
       <DesktopNav />
-      {isSignedIn ? <><Button mode="contained" contentStyle={styles.primaryAction} onPress={() => void openDashboard()}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href={waitlistHref(null, 'header')} asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join Waitlist</Button></Link><NavMenu /></>}
+      {isSignedIn ? <><Button mode="contained" contentStyle={styles.primaryAction} onPress={() => void openDashboard()}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn mode={mode} onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href={waitlistHref(null, 'header')} asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join Waitlist</Button></Link><NavMenu /></>}
     </View>
   </View>;
 }
@@ -131,22 +162,22 @@ export function PublicHeader() {
   return authAvailable ? <AuthenticatedHeader /> : <PreviewHeader />;
 }
 
-const baseHeader = { minHeight: 72, paddingHorizontal: spacing.xxl, backgroundColor: 'rgba(255,255,255,0.985)', flexDirection: 'row' as const, justifyContent: 'space-between' as const, alignItems: 'center' as const };
+const baseHeader = { minHeight: 68, paddingHorizontal: spacing.xxl, backgroundColor: 'rgba(255,255,255,0.985)', flexDirection: 'row' as const, justifyContent: 'space-between' as const, alignItems: 'center' as const };
 
 const styles = StyleSheet.create({
   shell: { backgroundColor: 'rgba(255,255,255,0.985)', borderBottomWidth: 1, borderColor: colors.border, zIndex: 200, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4, overflow: 'visible', flexShrink: 0 },
-  compactHeader: { ...baseHeader, paddingHorizontal: spacing.md, zIndex: 200, overflow: 'visible', flexShrink: 0 },
+  compactHeader: { ...baseHeader, minHeight: 60, paddingHorizontal: spacing.md, zIndex: 200, overflow: 'visible', flexShrink: 0 },
   header: { ...baseHeader, borderBottomWidth: 1, borderColor: colors.border, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1, zIndex: 20 },
-  brandPressable: { minHeight: 64, justifyContent: 'center', paddingHorizontal: spacing.xxs },
+  brandPressable: { minHeight: 56, justifyContent: 'center', paddingHorizontal: spacing.xxs },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs, justifyContent: 'flex-end' },
   desktopNav: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
   navButtonContent: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xxs },
   primaryAction: { minHeight: controlHeights.standard, paddingHorizontal: spacing.sm },
   preview: { opacity: 0.62, marginLeft: spacing.xxs },
-  quickNavShell: { height: 48, minHeight: 48, flexShrink: 0, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5', overflow: 'hidden' },
-  quickNav: { flexGrow: 0, height: 48 },
-  quickNavContent: { minHeight: 48, minWidth: '100%', paddingHorizontal: 4, gap: 0, alignItems: 'center', justifyContent: 'space-around' },
+  quickNavShell: { height: 42, minHeight: 42, flexShrink: 0, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5', overflow: 'hidden' },
+  quickNav: { flexGrow: 0, height: 42 },
+  quickNavContent: { minHeight: 42, minWidth: '100%', paddingHorizontal: 4, gap: 0, alignItems: 'center', justifyContent: 'space-around' },
   quickButton: { borderRadius: radii.pill },
-  quickButtonContent: { minHeight: 36, paddingHorizontal: 2 },
-  quickButtonLabel: { fontSize: 12, marginHorizontal: 0 },
+  quickButtonContent: { minHeight: 32, paddingHorizontal: 2 },
+  quickButtonLabel: { fontSize: 11.5, marginHorizontal: 0 },
 });
