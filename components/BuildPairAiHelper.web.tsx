@@ -71,21 +71,15 @@ export function BuildPairAiHelper() {
   }, [hidden, open]);
 
   useEffect(() => {
-    if (!open) return;
-    setShowNudge(false);
-  }, [open]);
-
-  useEffect(() => {
-    if (messages.length <= 1) {
-      setMessages([{ role: 'assistant', content: openingMessage(audience) }]);
-    }
-  }, [audience, messages.length]);
-
-  useEffect(() => {
     if (open) setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
   }, [messages, open, sending]);
 
   if (hidden) return null;
+
+  function openHelper() {
+    setShowNudge(false);
+    setOpen(true);
+  }
 
   async function sendMessage(text: string) {
     const clean = text.trim();
@@ -123,7 +117,7 @@ export function BuildPairAiHelper() {
   return (
     <Portal>
       {showNudge && !open ? (
-        <Pressable style={styles.nudge} onPress={() => setOpen(true)} accessibilityRole="button" accessibilityLabel="Open BuildPair AI">
+        <Pressable style={styles.nudge} onPress={openHelper} accessibilityRole="button" accessibilityLabel="Open BuildPair AI">
           <Text style={styles.nudgeSpark}>✦</Text>
           <View style={styles.nudgeCopy}>
             <Text variant="labelLarge" style={styles.nudgeTitle}>Need a hand?</Text>
@@ -196,7 +190,7 @@ export function BuildPairAiHelper() {
           </View>
         </View>
       ) : (
-        <Pressable style={styles.launcher} onPress={() => setOpen(true)} accessibilityRole="button" accessibilityLabel="Open BuildPair AI">
+        <Pressable style={styles.launcher} onPress={openHelper} accessibilityRole="button" accessibilityLabel="Open BuildPair AI">
           <Text style={styles.launcherSpark}>✦</Text>
           <Text variant="labelLarge" style={styles.launcherText}>AI</Text>
         </Pressable>
