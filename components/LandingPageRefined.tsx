@@ -132,7 +132,7 @@ export default function LandingPageRefined() {
           ['02', 'Find and compare', 'Browse suitable local tradespeople, request quotes directly or post the job to the marketplace. Compare active structured quotes and pause new responses when you have enough.'],
           ['03', 'Visit, quote and agree', 'The tradesperson can quote from the information supplied or arrange a site visit first. After a confirmed visit is completed, scope, exclusions, timing and payment stages are recorded in the structured quote.'],
           ['04', 'Run the project', 'After one quote is accepted, use BuildPay or mutually agree direct payment. Messages, agreed changes, payment records, timeline events and completion stay attached to the same job.'],
-        ].map(([number, title, copy]) => <View key={number} style={[styles.routeCard, compact && styles.cardCompact]}><Text style={styles.routeNumber}>{number}</Text><Text variant="titleLarge" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{compact ? copy.split('. ')[0] + '.' : copy}</Text></View>)}
+        ].map(([number, title, copy = '']) => <View key={number} style={[styles.routeCard, compact && styles.cardCompact]}><Text style={styles.routeNumber}>{number}</Text><Text variant="titleLarge" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{compact ? copy.split('. ')[0] + '.' : copy}</Text></View>)}
       </View>
       <Link href="/(public)/how-it-works" asChild><Button mode="text">See the full process →</Button></Link>
     </View>
@@ -178,7 +178,7 @@ export default function LandingPageRefined() {
             ['Project-linked reviews', 'Reviews can be connected to completed BuildPair activity where applicable, giving useful context behind the rating.'],
             ['Two-way reporting', 'Homeowners and tradespeople can report concerns for human review and proportionate moderation.'],
             ['Location privacy', 'Public jobs use outward location information while more precise matching data stays server-side.'],
-          ].map(([title, copy]) => <View key={title} style={[styles.trustCard, compact && styles.cardCompact]}><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{compact ? copy.split('. ')[0] + '.' : copy}</Text></View>)}
+          ].map(([title, copy = '']) => <View key={title} style={[styles.trustCard, compact && styles.cardCompact]}><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{compact ? copy.split('. ')[0] + '.' : copy}</Text></View>)}
         </View>
         <Link href="/(public)/trust-safety" asChild><Button mode="outlined">Read about trust & safety</Button></Link>
       </View>
