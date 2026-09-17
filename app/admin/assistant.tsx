@@ -8,7 +8,7 @@ import { Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 
-type AdminActionProposal = { action: Record<string, unknown>; title: string; summary: string; impact: string[]; risk: 'medium' | 'high'; confirmLabel: string };
+type AdminActionProposal = { action: Record<string, unknown>; title: string; summary: string; impact: string[]; risk: 'medium' | 'high'; confirmLabel: string; proposalNonce: string };
 type ChatTurn = { role: 'user' | 'assistant'; content: string; actionProposal?: AdminActionProposal | null; actionStatus?: 'pending' | 'completed' | 'cancelled' | 'failed'; actionMessage?: string };
 type AssistantResponse = { answer: string; actionProposal: AdminActionProposal | null };
 type AiRequestRow = { id: number; userId: string | null; userEmail: string | null; endpoint: string; requestText: string; responseText: string | null; status: string; model: string | null; providerCalled: boolean; latencyMs: number | null; metadata: Record<string, unknown>; createdAt: string };
@@ -107,7 +107,7 @@ export default function AdminAssistant() {
   const executeAction = async (index: number, proposal: AdminActionProposal) => {
     if (executingIndex != null) return; setExecutingIndex(index);
     try {
-      await apiFetch('/api/admin/assistant-action', { method: 'POST', body: JSON.stringify({ confirmed: true, action: proposal.action }) }, () => getTokenRef.current());
+      await apiFetch('/api/admin/assistant-action', { method: 'POST', body: JSON.stringify({ confirmed: true, proposalNonce: proposal.proposalNonce, action: proposal.action }) }, () => getTokenRef.current());
       setTurns((current) => current.map((turn, i) => i === index ? { ...turn, actionStatus: 'completed', actionMessage: 'Confirmed action completed successfully.' } : turn)); void loadAudit();
     } catch (e) { setTurns((current) => current.map((turn, i) => i === index ? { ...turn, actionStatus: 'failed', actionMessage: errorMessage(e) } : turn)); }
     finally { setExecutingIndex(null); }
