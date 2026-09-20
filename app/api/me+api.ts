@@ -4,6 +4,7 @@ import { getDb } from '@/db/client';
 import { traderProfiles } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
 import { InvalidPostcodeError, lookupPostcode } from '@/lib/postcode';
+import { FOUNDING_TRADER_LIMIT, LAUNCH_DATE_ISO, MARKETPLACE_LIVE } from '@/lib/launch-config';
 import { getSql } from '@/lib/sql';
 import { accountAccess, accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { categoryChangeAllowed, categoryChangeAvailableAt } from '@/lib/subscription';
@@ -23,6 +24,10 @@ export async function PATCH(request: Request) {
     const userId = await authenticatedUserId(request);
     await ensureDbUser(userId);
     const payload = roleSchema.parse(await request.json());
+    const access = await accountAccess(userId);
+    if (!MARKETPLACE_LIVE && payload.role === 'customer' && !access.isAdmin) {
+      throw new HttpError(423, 'Homeowner accounts are not open yet. Tradespeople can prepare a launch-ready profile before the marketplace opens.');
+    }
     const before = await accountModes(userId);
     const wasEnabled = payload.role === 'customer' ? before.customerEnabled : before.traderEnabled;
 
@@ -112,6 +117,7 @@ export async function PUT(request: Request) {
         subscriptionTier: true,
         isSubscriptionActive: true,
         stripeSubscriptionId: true,
+        trialEndsAt: true,
         postcode: true,
         createdAt: true,
       },
@@ -139,6 +145,22 @@ export async function PUT(request: Request) {
       ? categoriesChanged ? new Date() : existingProfile.categoriesChangedAt
       : new Date();
 
+    const foundingRows = !MARKETPLACE_LIVE && !existingProfile
+      ? await getSql()`
+          SELECT count(*)::int AS count
+          FROM trader_profiles
+          WHERE subscription_tier = 'featured'
+            AND is_subscription_active = false
+            AND trial_ends_at IS NOT NULL
+            AND stripe_subscription_id IS NULL
+            AND user_id NOT LIKE 'seed_demo_trader_%'
+        ` as unknown as { count: number }[]
+      : [];
+    const foundingProEligible = !MARKETPLACE_LIVE
+      && !existingProfile
+      && (foundingRows[0]?.count ?? 0) < FOUNDING_TRADER_LIMIT;
+    const plannedFoundingTrialEnd = new Date(new Date(LAUNCH_DATE_ISO).getTime() + 92 * 24 * 60 * 60 * 1000);
+
     const values = {
       businessName: payload.businessName,
       tradeCategory: primaryTradeCategory,
@@ -156,6 +178,11 @@ export async function PUT(request: Request) {
       externalLinks: payload.externalLinks,
       photos: payload.photos,
       selfCertified: payload.selfCertified,
+      ...(foundingProEligible ? {
+        subscriptionTier: 'featured' as const,
+        isSubscriptionActive: false,
+        trialEndsAt: plannedFoundingTrialEnd,
+      } : {}),
     };
 
     const [profile] = await db.insert(traderProfiles).values({ userId, ...values }).onConflictDoUpdate({
