@@ -147,7 +147,6 @@ export async function PUT(request: Request) {
 
     const foundingOffer = Date.now() < new Date(LAUNCH_DATE_ISO).getTime()
       && !existingProfile?.stripeSubscriptionId
-      && !existingProfile?.isSubscriptionActive
       && !existingProfile?.trialEndsAt;
 
     const values = {
