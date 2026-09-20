@@ -20,9 +20,9 @@ type WaitlistResponse = {
 };
 type ContactOptions = { emailEnabled: boolean; smsEnabled: boolean; smsProvider: string };
 
-export default function WaitlistPage() {
+export function WaitlistPageContent({ fixedAudience }: { fixedAudience?: Audience } = {}) {
   const params = useLocalSearchParams<{ audience?: string; source?: string; ref?: string }>();
-  const initialAudience: Audience = params.audience === 'trader' ? 'trader' : 'homeowner';
+  const initialAudience: Audience = fixedAudience ?? (params.audience === 'trader' ? 'trader' : 'homeowner');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [contactPreference, setContactPreference] = useState<ContactPreference>('email');
@@ -53,10 +53,17 @@ export default function WaitlistPage() {
   const canSaveDetails = useMemo(() => name.trim().length >= 2 && postcode.trim().length >= 5 && (!phone.trim() || phoneLooksValid), [name, phone, phoneLooksValid, postcode]);
   const referralLink = useMemo(() => {
     if (!joined?.referralCode) return '';
-    return `https://buildpair.co.uk/waitlist?audience=${audience}&source=referral&ref=${encodeURIComponent(joined.referralCode)}`;
+    return audience === 'trader'
+      ? `https://buildpair.co.uk/founding-trades?source=referral&ref=${encodeURIComponent(joined.referralCode)}`
+      : `https://buildpair.co.uk/waitlist?audience=homeowner&source=referral&ref=${encodeURIComponent(joined.referralCode)}`;
   }, [audience, joined?.referralCode]);
 
   useEffect(() => {
+    if (fixedAudience) {
+      setAudience(fixedAudience);
+      setRequestEarlyAccess(fixedAudience === 'trader');
+      return;
+    }
     if (params.audience === 'trader') {
       setAudience('trader');
       setRequestEarlyAccess(true);
@@ -64,7 +71,7 @@ export default function WaitlistPage() {
       setAudience('homeowner');
       setRequestEarlyAccess(false);
     }
-  }, [params.audience]);
+  }, [fixedAudience, params.audience]);
 
   useEffect(() => {
     let alive = true;
@@ -240,8 +247,10 @@ export default function WaitlistPage() {
 
     <AppCard>
       {incomingReferralCode ? <Chip icon="account-multiple-check-outline">You were invited by an early BuildPair member</Chip> : null}
-      <Text variant="labelLarge" style={styles.label}>I’m joining as</Text>
-      <SegmentedButtons value={audience} onValueChange={(value) => setAudience(value as Audience)} buttons={[{ value: 'homeowner', label: 'Homeowner', icon: 'home-outline' }, { value: 'trader', label: 'Tradesperson', icon: 'hammer-wrench' }]} />
+      {fixedAudience ? <Chip icon="hammer-wrench">Tradesperson</Chip> : <>
+        <Text variant="labelLarge" style={styles.label}>I’m joining as</Text>
+        <SegmentedButtons value={audience} onValueChange={(value) => setAudience(value as Audience)} buttons={[{ value: 'homeowner', label: 'Homeowner', icon: 'home-outline' }, { value: 'trader', label: 'Tradesperson', icon: 'hammer-wrench' }]} />
+      </>}
 
       {audience === 'homeowner' ? <>
         <Text variant="labelLarge" style={styles.label}>Contact me by</Text>
@@ -310,6 +319,10 @@ export default function WaitlistPage() {
       <View style={styles.links}><Link href="/(public)/privacy" asChild><Button mode="text">Privacy</Button></Link><Link href="/auth/sign-in" asChild><Button mode="text">Existing member? Sign in</Button></Link></View>
     </AppCard>
   </Screen>;
+}
+
+export default function WaitlistPage() {
+  return <WaitlistPageContent />;
 }
 
 const styles = StyleSheet.create({
