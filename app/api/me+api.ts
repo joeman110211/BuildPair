@@ -226,7 +226,7 @@ export async function PUT(request: Request) {
 
     return Response.json({
       ...profile,
-      foundingProStartsAt: profile.trialEndsAt ? LAUNCH_DATE_ISO : null,
+      foundingProStartsAt: profile?.trialEndsAt ? LAUNCH_DATE_ISO : null,
       categoryLimit,
       categoryChangeAvailableAt: categoryChangeAvailableAt(profile?.categoriesChangedAt)?.toISOString() ?? null,
     });
