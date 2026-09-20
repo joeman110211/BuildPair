@@ -1,4 +1,4 @@
-import { Link, useLocalSearchParams } from 'expo-router';
+import { Link, Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 import { Button, Checkbox, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
@@ -41,7 +41,15 @@ export function WaitlistPageContent({ fixedAudience }: { fixedAudience?: Audienc
   const [detailsError, setDetailsError] = useState('');
   const [referralCopied, setReferralCopied] = useState(false);
 
-  const source = typeof params.source === 'string' ? params.source : 'website';
+  if (params.audience === 'trader') {
+    const query = new URLSearchParams();
+    if (typeof params.source === 'string') query.set('source', params.source);
+    if (typeof params.ref === 'string') query.set('ref', params.ref);
+    const suffix = query.toString();
+    return <Redirect href={`/(public)/founding-trades${suffix ? `?${suffix}` : ''}` as never} />;
+  }
+
+    const source = typeof params.source === 'string' ? params.source : 'website';
   const incomingReferralCode = typeof params.ref === 'string' ? params.ref.trim().toUpperCase() : '';
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const phoneLooksValid = phone.replace(/\D/g, '').length >= 10;
