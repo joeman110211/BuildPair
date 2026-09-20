@@ -8,7 +8,7 @@ import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { modeSetupHref, parseAccountMode, signInHref } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { LAUNCH_DATE_LABEL, TRADER_PRELAUNCH_REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
+import { HOMEOWNER_REGISTRATION_OPEN, LAUNCH_DATE_LABEL, TRADER_PRELAUNCH_REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 type InviteStatus = {
   valid: boolean;
@@ -66,6 +66,8 @@ export default function SignUpScreen() {
     && signUp.missingFields.length === 0;
   const verificationEmail = signUp.emailAddress ?? email;
   const title = mode === 'customer' ? 'Create Homeowner Account' : directTraderPrelaunch ? 'Create your Founding Trade account' : 'Create Tradesperson Account';
+
+  if (mode === 'customer' && !HOMEOWNER_REGISTRATION_OPEN) return <Redirect href={waitlistHref('customer', 'homeowner-signup-closed')} />;
 
   if (inviteToken && (!inviteStatus?.valid || !email)) {
     return <Screen title="This early-access invite is no longer available" subtitle={inviteStatus.claimed ? 'This invite has already been used.' : 'The link may have expired, been replaced or been withdrawn.'}>
