@@ -1,3 +1,4 @@
+import { MARKETPLACE_LIVE } from '@/lib/launch-config';
 import { jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
@@ -39,6 +40,7 @@ function toPublicTrader(trader: FeaturedTraderRow, overrideUserId?: string) {
 }
 
 export async function GET() {
+  if (!MARKETPLACE_LIVE) return Response.json({ trader: null, traders: [] });
   try {
     const sql = getSql();
     const weekStart = currentWeekStart();
