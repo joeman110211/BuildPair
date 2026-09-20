@@ -205,7 +205,7 @@ export default function EarlyAccessSignup() {
     <AppCard style={styles.inviteCard}>
       <Chip icon="rocket-launch-outline">Early access approved</Chip>
       <Text variant="titleLarge" style={styles.heading}>Your account is ready to set up</Text>
-      <Text style={styles.body}>This invitation is locked to <Text style={styles.strong}>{email}</Text>. Once registered, use BuildPair normally and send us any feedback at info@buildpair.co.uk.</Text>
+      <Text style={styles.body}>This invitation is locked to <Text style={styles.strong}>{email}</Text>. Once registered, complete your real trade profile and trust information. Jobs, quotes, messaging and payments remain locked until BuildPair launches.</Text>
     </AppCard>
     <TextInput mode="outlined" label="Approved email address" value={email} editable={false} autoCapitalize="none" keyboardType="email-address" />
     <TextInput mode="outlined" label="Choose a password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" />
