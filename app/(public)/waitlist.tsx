@@ -28,7 +28,7 @@ export default function WaitlistPage() {
   const [contactOptions, setContactOptions] = useState<ContactOptions>({ emailEnabled: true, smsEnabled: false, smsProvider: 'disabled' });
   const [audience, setAudience] = useState<Audience>(initialAudience);
   const [trade, setTrade] = useState('');
-  const [requestEarlyAccess, setRequestEarlyAccess] = useState(false);
+  const [requestEarlyAccess, setRequestEarlyAccess] = useState(initialAudience === 'trader');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [joined, setJoined] = useState<WaitlistResponse>();
@@ -162,11 +162,11 @@ export default function WaitlistPage() {
       ? 'We’ll email and text you when BuildPair registration opens.'
       : 'We’ll email you when BuildPair registration opens.';
 
-  if (joined) return <Screen title="Welcome to the BuildPair launch list" subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
+  if (joined) return <Screen title={audience === 'trader' ? 'Your Founding Trade place is reserved' : 'Welcome to BuildPair early access'} subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
     <AppCard style={styles.successCard}>
       <Chip icon="check-circle">Launch list confirmed</Chip>
-      <Text variant="headlineSmall" style={styles.heading}>{joined.alreadyJoined ? 'You’re already on the list.' : 'You’re in. Welcome to BuildPair.'}</Text>
-      <Text style={styles.body}>{chosenContactCopy} No account has been created yet and there is nothing else you have to do.</Text>
+      <Text variant="headlineSmall" style={styles.heading}>{joined.alreadyJoined ? (audience === 'trader' ? 'Your founding place is already reserved.' : 'You’re already registered for early access.') : (audience === 'trader' ? 'You’re in the Surrey Founding 50 group.' : 'You’re in. Welcome to BuildPair early access.')}</Text>
+      <Text style={styles.body}>{chosenContactCopy} No account has been created yet. {audience === 'trader' ? 'We can help you finish the business profile when your early-access invite is ready.' : 'There is nothing else you have to do.'}</Text>
       {requestEarlyAccess ? <View style={styles.earlySuccess}>
         <Chip icon="key-clock-outline">Early access requested</Chip>
         <Text style={styles.body}>You’ve asked to start before the public launch. We’ll invite selected early users in manageable batches while we finish real-world testing. Requesting a place does not guarantee an invitation, but your interest is now recorded.</Text>
@@ -219,11 +219,11 @@ export default function WaitlistPage() {
     <Link href="/" asChild><Button mode="text">Back to BuildPair</Button></Link>
   </Screen>;
 
-  return <Screen title="Join the BuildPair launch list" subtitle={`Launching ${LAUNCH_DATE_LABEL}. Get your place and choose whether you want early access.`}>
+  return <Screen title={audience === 'trader' ? 'Become a BuildPair Founding Trade' : 'Get BuildPair early access'} subtitle={audience === 'trader' ? `Surrey Founding 50 • launching ${LAUNCH_DATE_LABEL}` : `Launching ${LAUNCH_DATE_LABEL}. Get notified and request early access.`}>
     <AppCard style={styles.heroCard}>
       <Chip icon="rocket-launch-outline">You’re early. That’s a good thing.</Chip>
-      <Text variant="headlineSmall" style={styles.heading}>Join now. Start at launch, or ask to get in sooner.</Text>
-      <Text style={styles.body}>BuildPair is being built for homeowners who want a clearer job process and tradespeople who are tired of paying just to chase leads. Joining takes less than a minute.</Text>
+      <Text variant="headlineSmall" style={styles.heading}>{audience === 'trader' ? 'Claim a Surrey Founding 50 place.' : 'Get notified at launch, or ask to get in sooner.'}</Text>
+      <Text style={styles.body}>{audience === 'trader' ? 'For established Surrey trades who want local opportunities without buying individual leads. Reserve a place with your email now; we can help with the full profile afterwards.' : 'BuildPair gives homeowners a clearer way to find, compare and manage work. Early access takes less than a minute.'}</Text>
     </AppCard>
 
     <AppCard>
@@ -265,15 +265,15 @@ export default function WaitlistPage() {
       {audience === 'trader' ? <>
         <TextInput mode="outlined" label="Main trade (optional)" value={trade} onChangeText={setTrade} placeholder="e.g. Plumber, electrician, tiler" />
         <AppCard elevated={false} style={styles.offerCard}>
-          <Text variant="titleMedium" style={styles.heading}>A better launch deal for trades</Text>
-          <Text style={styles.body}>The first 100 eligible tradespeople to complete BuildPair registration during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Pro free</Text>. Other eligible tradespeople joining during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Plus free</Text>.</Text>
+          <Text variant="titleMedium" style={styles.heading}>Founding 50: Surrey launch group</Text>
+          <Text style={styles.body}>We’re personally onboarding the first 50 Surrey trades with early setup support and founding-member recognition. Separately, the first 100 eligible tradespeople to complete BuildPair registration during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Pro free</Text>.</Text>
           <Text style={styles.tradePromise}>No paying for a lead that goes nowhere. No giant bill just for sitting in a directory. BuildPair uses straightforward membership options and gives you tools to quote, manage and complete the work once you win it.</Text>
           <Text variant="bodySmall" style={styles.smsNote}>BuildPair Rewards can add further Pro time for genuine completed jobs, BuildPay completions and qualifying member activity. Promotional eligibility and fair-use rules apply.</Text>
           <Link href="/(public)/rewards" asChild><Button mode="text">View BuildPair Rewards</Button></Link>
         </AppCard>
       </> : null}
 
-      <AppCard elevated={false} style={styles.earlyCard}>
+      {audience === 'homeowner' ? <AppCard elevated={false} style={styles.earlyCard}>
         <Checkbox.Item
           label="I’d like early access before the public launch"
           status={requestEarlyAccess ? 'checked' : 'unchecked'}
@@ -281,16 +281,18 @@ export default function WaitlistPage() {
           position="leading"
           labelStyle={styles.earlyLabel}
         />
-        <Text style={styles.earlyHelp}>We’re inviting a limited number of homeowners and tradespeople in batches for real-world testing. Tick this if you want to be considered. Your normal launch-list place is still secured either way.</Text>
-      </AppCard>
+        <Text style={styles.earlyHelp}>We’re inviting a limited number of homeowners in batches for real-world testing. Tick this if you want to be considered.</Text>
+      </AppCard> : null}
 
       <Text style={styles.privacy}>{contactPreference === 'sms'
         ? 'You’re asking BuildPair to send service texts about the launch and your requested early access. We will not use this as consent for marketing texts.'
         : contactPreference === 'both'
           ? 'You’re asking BuildPair to contact you by email and service text about the launch and requested early access. Marketing messages require separate consent.'
-          : `We’ll use your email for the launch list${requestEarlyAccess ? ' and your early-access request' : ''}. If you add an optional mobile number, we will not text it unless you later choose text updates or separately opt in.`} See our Privacy Policy for details.</Text>
+          : audience === 'trader'
+            ? 'We’ll use your email to reserve your Founding Trade place and contact you about onboarding or launch access. If you add an optional mobile number, we will not text it unless you later opt in.'
+            : `We’ll use your email for launch and early-access updates${requestEarlyAccess ? ' including your early-access request' : ''}. If you add an optional mobile number, we will not text it unless you later choose text updates or separately opt in.`} See our Privacy Policy for details.</Text>
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
-      <Button mode="contained" icon={requestEarlyAccess ? 'key-plus' : 'account-clock-outline'} loading={busy} disabled={busy || !canJoin} onPress={() => void join()}>{requestEarlyAccess ? 'Join list & request early access' : audience === 'trader' ? 'Join the Founding Trades list' : 'Join the launch list'}</Button>
+      <Button mode="contained" icon={audience === 'trader' ? 'hammer-wrench' : requestEarlyAccess ? 'key-plus' : 'account-clock-outline'} loading={busy} disabled={busy || !canJoin} onPress={() => void join()}>{audience === 'trader' ? 'Claim my Founding 50 place' : requestEarlyAccess ? 'Get early access' : 'Get launch updates'}</Button>
       <View style={styles.links}><Link href="/(public)/privacy" asChild><Button mode="text">Privacy</Button></Link><Link href="/auth/sign-in" asChild><Button mode="text">Existing member? Sign in</Button></Link></View>
     </AppCard>
   </Screen>;

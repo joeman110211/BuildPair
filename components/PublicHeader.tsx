@@ -50,13 +50,13 @@ function NavMenu({ dashboard, signedIn, onDashboard, onSignOut, preview = false 
   ];
 
   if (preview) {
-    items.push({ label: 'Join launch waitlist', sectionLabel: 'Launch', dividerBefore: true, onPress: () => go(waitlistHref(null, 'header-menu')) });
+    items.push({ label: 'Get early access', sectionLabel: 'Launch', dividerBefore: true, onPress: () => go(waitlistHref(null, 'header-menu')) });
   } else if (signedIn && dashboard) {
     items.push({ label: 'Dashboard', sectionLabel: 'Account', dividerBefore: true, onPress: () => onDashboard ? onDashboard() : go(dashboard) });
     items.push({ label: 'Sign out', onPress: () => onSignOut?.() });
   } else {
     items.push({ label: 'Sign in', sectionLabel: 'Account', dividerBefore: true, onPress: () => go('/auth/account') });
-    items.push({ label: 'Join launch waitlist', onPress: () => go(waitlistHref(null, 'header-menu')) });
+    items.push({ label: 'Get early access', onPress: () => go(waitlistHref(null, 'header-menu')) });
   }
 
   return <CompactNavMenu items={items} accessibilityLabel="Menu" />;
@@ -114,7 +114,7 @@ function AuthenticatedHeader() {
     <HeaderBrand />
     <View style={styles.actions}>
       <DesktopNav />
-      {isSignedIn ? <><Button mode="contained" contentStyle={styles.primaryAction} onPress={() => void openDashboard()}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href={waitlistHref(null, 'header')} asChild><Button mode="contained" contentStyle={styles.primaryAction}>Join Waitlist</Button></Link><NavMenu /></>}
+      {isSignedIn ? <><Button mode="contained" contentStyle={styles.primaryAction} onPress={() => void openDashboard()}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href={waitlistHref(null, 'header')} asChild><Button mode="contained" contentStyle={styles.primaryAction}>Early access</Button></Link><NavMenu /></>}
     </View>
   </View>;
 }
