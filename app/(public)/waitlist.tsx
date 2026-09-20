@@ -4,6 +4,7 @@ import { Share, StyleSheet, View } from 'react-native';
 import { Button, Checkbox, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
+import { trackPublicWaitlistSuccess } from '@/components/VisitorAnalytics';
 import { colors, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { LAUNCH_DATE_LABEL } from '@/lib/launch';
@@ -56,6 +57,16 @@ export default function WaitlistPage() {
   }, [audience, joined?.referralCode]);
 
   useEffect(() => {
+    if (params.audience === 'trader') {
+      setAudience('trader');
+      setRequestEarlyAccess(true);
+    } else if (params.audience === 'homeowner') {
+      setAudience('homeowner');
+      setRequestEarlyAccess(false);
+    }
+  }, [params.audience]);
+
+  useEffect(() => {
     let alive = true;
     void apiFetch<ContactOptions>('/api/contact-options')
       .then((options) => {
@@ -68,8 +79,8 @@ export default function WaitlistPage() {
   }, []);
 
   useEffect(() => {
-    if (!contactOptions.smsEnabled && contactPreference !== 'email') setContactPreference('email');
-  }, [contactOptions.smsEnabled, contactPreference]);
+    if (audience === 'trader' || (!contactOptions.smsEnabled && contactPreference !== 'email')) setContactPreference('email');
+  }, [audience, contactOptions.smsEnabled, contactPreference]);
 
   async function join() {
     try {
@@ -90,6 +101,7 @@ export default function WaitlistPage() {
         }),
       });
       setJoined(result);
+      trackPublicWaitlistSuccess(audience, source, result.alreadyJoined);
       setSmsOptIn(contactPreference === 'sms' || contactPreference === 'both');
     } catch (e) {
       setError(errorMessage(e));
@@ -231,28 +243,30 @@ export default function WaitlistPage() {
       <Text variant="labelLarge" style={styles.label}>I’m joining as</Text>
       <SegmentedButtons value={audience} onValueChange={(value) => setAudience(value as Audience)} buttons={[{ value: 'homeowner', label: 'Homeowner', icon: 'home-outline' }, { value: 'trader', label: 'Tradesperson', icon: 'hammer-wrench' }]} />
 
-      <Text variant="labelLarge" style={styles.label}>Contact me by</Text>
-      <SegmentedButtons
-        value={contactPreference}
-        onValueChange={(value) => setContactPreference(value as ContactPreference)}
-        buttons={[
-          { value: 'email', label: 'Email', icon: 'email-outline' },
-          { value: 'sms', label: 'Text', icon: 'message-text-outline', disabled: !contactOptions.smsEnabled },
-          { value: 'both', label: 'Both', icon: 'email-multiple-outline', disabled: !contactOptions.smsEnabled },
-        ]}
-      />
-      {!contactOptions.smsEnabled ? <Text style={styles.smsNote}>SMS updates are coming soon. Email updates are available now; adding a mobile number is optional.</Text> : null}
+      {audience === 'homeowner' ? <>
+        <Text variant="labelLarge" style={styles.label}>Contact me by</Text>
+        <SegmentedButtons
+          value={contactPreference}
+          onValueChange={(value) => setContactPreference(value as ContactPreference)}
+          buttons={[
+            { value: 'email', label: 'Email', icon: 'email-outline' },
+            { value: 'sms', label: 'Text', icon: 'message-text-outline', disabled: !contactOptions.smsEnabled },
+            { value: 'both', label: 'Both', icon: 'email-multiple-outline', disabled: !contactOptions.smsEnabled },
+          ]}
+        />
+        {!contactOptions.smsEnabled ? <Text style={styles.smsNote}>SMS updates are coming soon. Email updates are available now; adding a mobile number is optional.</Text> : null}
+      </> : null}
 
       <TextInput
         mode="outlined"
-        label={contactPreference === 'sms' ? 'Email address (optional)' : `Email address${contactPreference === 'both' ? '' : ' (required)'}`}
+        label={audience === 'trader' ? 'Business email address' : contactPreference === 'sms' ? 'Email address (optional)' : `Email address${contactPreference === 'both' ? '' : ' (required)'}`}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
       />
-      <TextInput
+      {audience === 'homeowner' ? <TextInput
         mode="outlined"
         label={contactPreference === 'email' ? 'Mobile (optional)' : 'UK mobile number'}
         value={phone}
@@ -260,7 +274,7 @@ export default function WaitlistPage() {
         keyboardType="phone-pad"
         autoComplete="tel"
         placeholder="07911 123456"
-      />
+      /> : null}
 
       {audience === 'trader' ? <>
         <TextInput mode="outlined" label="Main trade (optional)" value={trade} onChangeText={setTrade} placeholder="e.g. Plumber, electrician, tiler" />
