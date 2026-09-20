@@ -1,4 +1,4 @@
-import { MARKETPLACE_LIVE } from '@/lib/launch-config';
+import { LAUNCH_DATE_ISO, MARKETPLACE_LIVE } from '@/lib/launch-config';
 import { jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
@@ -15,6 +15,7 @@ type FeaturedTraderRow = {
   subscriptionTier: 'free' | 'basic' | 'featured';
   isSubscriptionActive: boolean;
   createdAt: string;
+  trialEndsAt: string | null;
   averageRating: number;
   reviewCount: number;
   completedJobs: number;
@@ -59,6 +60,7 @@ export async function GET() {
              tp.qualifications,
              tp.subscription_tier AS "subscriptionTier",
              tp.is_subscription_active AS "isSubscriptionActive",
+             tp.trial_ends_at AS "trialEndsAt",
              tp.created_at AS "createdAt",
              coalesce((
                SELECT avg(review_data.rating)::float
@@ -121,7 +123,14 @@ export async function GET() {
       || a.userId.localeCompare(b.userId)
     ));
 
-    const paid = ranked.filter((trader) => trader.subscriptionTier !== 'free' && trader.isSubscriptionActive);
+    const launch = new Date(LAUNCH_DATE_ISO);
+    const foundingEnd = new Date(launch);
+    foundingEnd.setMonth(foundingEnd.getMonth() + 3);
+    const now = new Date();
+    const paid = ranked.filter((trader) => trader.subscriptionTier !== 'free' && (
+      trader.isSubscriptionActive
+      || (trader.subscriptionTier === 'featured' && Boolean(trader.trialEndsAt) && now >= launch && now < foundingEnd)
+    ));
     const paidEligible = paid.filter((trader) => new Date(trader.createdAt).getTime() < weekStart.getTime());
 
     const overrideWeek = process.env.FEATURED_TRADER_OVERRIDE_WEEK?.trim();
