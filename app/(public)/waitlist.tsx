@@ -42,15 +42,16 @@ export function WaitlistPageContent({ fixedAudience }: { fixedAudience?: Audienc
   const [detailsError, setDetailsError] = useState('');
   const [referralCopied, setReferralCopied] = useState(false);
 
-  if (params.audience === 'trader') {
+  const legacyTraderRedirectHref = (() => {
+    if (params.audience !== 'trader') return null;
     const query = new URLSearchParams();
     if (typeof params.source === 'string') query.set('source', params.source);
     if (typeof params.ref === 'string') query.set('ref', params.ref);
     const suffix = query.toString();
-    return <Redirect href={`/(public)/founding-trades${suffix ? `?${suffix}` : ''}` as Href} />;
-  }
+    return `/(public)/founding-trades${suffix ? `?${suffix}` : ''}` as Href;
+  })();
 
-    const source = typeof params.source === 'string' ? params.source : 'website';
+  const source = typeof params.source === 'string' ? params.source : 'website';
   const incomingReferralCode = typeof params.ref === 'string' ? params.ref.trim().toUpperCase() : '';
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const phoneLooksValid = phone.replace(/\D/g, '').length >= 10;
@@ -189,6 +190,8 @@ export function WaitlistPageContent({ fixedAudience }: { fixedAudience?: Audienc
     : contactPreference === 'both'
       ? 'We’ll email and text you when BuildPair registration opens.'
       : 'We’ll email you when BuildPair registration opens.';
+
+  if (legacyTraderRedirectHref) return <Redirect href={legacyTraderRedirectHref} />;
 
   if (joined) return <Screen title={audience === 'trader' ? 'Your Founding Trade place is reserved' : 'Welcome to BuildPair early access'} subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
     <AppCard style={styles.successCard}>
