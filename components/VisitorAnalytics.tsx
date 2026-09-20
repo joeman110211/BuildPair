@@ -158,6 +158,8 @@ function acquisitionInfo() {
     utmCampaign: (params.get('utm_campaign') || '').slice(0, 200),
     utmContent: (params.get('utm_content') || '').slice(0, 200),
     utmTerm: (params.get('utm_term') || '').slice(0, 200),
+    sourceParam: (params.get('source') || '').slice(0, 150),
+    referralCode: (params.get('ref') || '').slice(0, 40),
   };
 }
 
