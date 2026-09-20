@@ -1,4 +1,5 @@
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
+import { LAUNCH_DATE_LABEL, MARKETPLACE_LIVE } from '@/lib/launch-config';
 import { getSql } from '@/lib/sql';
 
 type AccountMode = 'customer' | 'trader';
@@ -168,6 +169,12 @@ export async function sendWelcomeEmailOnce(args: {
 
   if (args.mode === 'trader') {
     const profileUrl = `${base}/trader/onboarding`;
+    if (!MARKETPLACE_LIVE) {
+      const subject = 'Welcome to BuildPair Founding Trades — build your profile now';
+      const text = `${hello}\n\nYour BuildPair trade account is ready for pre-launch setup. Complete your business profile, service area, work photos, qualifications and reputation details now so you are ready when the marketplace opens.\n\nFinish your profile: ${profileUrl}\n\nYour profile stays private before launch. Live jobs, homeowner requests, quotes, messaging, paid membership checkout, Stripe payout onboarding and BuildPay are locked for now. If your profile qualifies for the Founding 50 Pro offer, the three-month Pro period starts when the marketplace launches, not today.\n\nPlanned launch: ${LAUNCH_DATE_LABEL}. Marketplace access will only be enabled when BuildPair is ready to operate it.\n\nBuildPair\n${base}`;
+      const html = shell(`<p style="font-size:16px;line-height:24px;margin:0 0 14px">${escapeHtml(hello)}</p><h1 style="font-size:28px;line-height:34px;margin:0 0 16px">Your trade account is ready for launch setup</h1><p style="font-size:16px;line-height:24px;color:#425466;margin:0">Complete your business profile, service area, work photos, qualifications and reputation details now so you are ready when BuildPair opens.</p>${button('Finish your profile', profileUrl)}<div style="background:#FFF7F0;border-radius:12px;padding:18px"><strong>Pre-launch means pre-launch</strong><p style="font-size:15px;line-height:23px;color:#425466;margin:8px 0 0">Your profile stays private. Live jobs, homeowner requests, quoting, marketplace messaging, membership billing, payout setup and BuildPay remain locked until launch. Eligible Founding 50 Pro time starts when the marketplace opens, not today.</p></div><p style="font-size:13px;line-height:20px;color:#667085">Planned launch: ${escapeHtml(LAUNCH_DATE_LABEL)}. Marketplace access will only be enabled when BuildPair is ready to operate it.</p>`);
+      return sendOnce(`welcome:${args.userId}`, 'welcome_trader_prelaunch', { to: args.email, subject, text, html });
+    }
     const jobsUrl = `${base}/trader/job-board`;
     const membershipUrl = `${base}/trader/subscription`;
     const subject = 'Welcome to BuildPair — finish your profile and start finding work';
