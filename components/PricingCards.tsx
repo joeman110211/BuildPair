@@ -2,7 +2,7 @@ import { Link } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
-import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
+import { REGISTRATION_OPEN, TRADER_PRELAUNCH_REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 const plans = [
   {
@@ -83,7 +83,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
         const starter = plan.tone === 'starter';
         const features = compact ? plan.compactFeatures : plan.features;
         const href = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', `pricing-${plan.tone}`);
-        const cta = REGISTRATION_OPEN ? plan.cta : (pro ? 'Join Founding Trades list' : 'Join tradesperson launch list');
+        const cta = REGISTRATION_OPEN ? plan.cta : TRADER_PRELAUNCH_REGISTRATION_OPEN ? 'Create launch-ready profile' : (pro ? 'Join Founding Trades list' : 'Join tradesperson launch list');
         return <View key={plan.name} style={[styles.card, compact && styles.cardCompact, featured && styles.cardFeatured, pro && styles.cardPro]}>
           <Text style={[styles.eyebrow, featured && styles.eyebrowFeatured, pro && styles.eyebrowPro]}>{plan.eyebrow}</Text>
           <Text variant="titleLarge" style={styles.name}>{plan.name}</Text>
@@ -106,7 +106,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
         </View>;
       })}
     </View>
-    {!REGISTRATION_OPEN ? <Text style={styles.launchNote}>Registration opens at launch. Joining the list now only needs your email.</Text> : null}
+    {!REGISTRATION_OPEN ? <Text style={styles.launchNote}>{TRADER_PRELAUNCH_REGISTRATION_OPEN ? 'Trade account registration is open now for private profile setup. Paid memberships, public visibility and marketplace access remain off until launch.' : 'Registration opens at launch.'}</Text> : null}
     <Text style={styles.note}>Category limits count broad trade categories, not every service inside them. Direct homeowner requests do not use the monthly open-marketplace offer allowance. Google reviews remain clearly labelled as Google reviews and only appear after the business listing connection is approved.</Text>
   </View>;
 }
