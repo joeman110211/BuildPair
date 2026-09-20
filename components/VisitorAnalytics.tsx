@@ -185,6 +185,27 @@ function post(payload: object) {
   void fetch('/api/visitor-analytics', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => undefined);
 }
 
+export function trackPublicWaitlistSuccess(audience: 'homeowner' | 'trader', source: string, alreadyJoined: boolean) {
+  if (!onWeb() || trackingMode() === 'off') return;
+  const mode = trackingMode();
+  const identity = mode === 'anonymous' ? anonymousIdentity() : null;
+  post({
+    action: 'event',
+    mode: identity ? 'anonymous' : 'aggregate',
+    eventType: 'form_submit',
+    path: window.location.pathname,
+    target: 'waitlist_success',
+    device: deviceInfo(),
+    acquisition: acquisitionInfo(),
+    ...(identity ?? {}),
+    details: {
+      audience,
+      source: source.slice(0, 150),
+      alreadyJoined,
+    },
+  });
+}
+
 export function VisitorAnalytics() {
   const { isSignedIn } = useAuth();
   const pathname = usePathname();
