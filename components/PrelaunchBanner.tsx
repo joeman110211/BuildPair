@@ -17,18 +17,18 @@ export function PrelaunchBanner() {
           <Chip compact icon="star-circle-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Bring your Google reviews</Chip>
           <Chip compact icon="shield-check-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>BuildPay available</Chip>
         </View>
-        <Text style={[styles.title, compact && styles.titleCompact]}>Get in early. BuildPair is nearly ready.</Text>
-        <Text style={[styles.body, compact && styles.bodyCompact]}>A new way for homeowners and tradespeople to find each other, compare proper quotes and keep the job organised. Tradespeople should not have to keep buying dead-end leads or pay oversized fees regardless of whether any work actually lands.</Text>
-        <Text style={[styles.reputation, compact && styles.reputationCompact]}><Text style={styles.strong}>Bring your reputation with you.</Text> Tradespeople can connect an approved Google business listing so existing Google reviews can appear separately on an active BuildPair profile.</Text>
+        <Text style={[styles.title, compact && styles.titleCompact]}>Founding 50: Surrey trades wanted.</Text>
+        <Text style={[styles.body, compact && styles.bodyCompact]}>We’re personally onboarding the first 50 Surrey trades before public launch. Build a strong profile, get early access to local opportunities, quote properly and keep the job organised without paying for individual leads.</Text>
+        <Text style={[styles.reputation, compact && styles.reputationCompact]}><Text style={styles.strong}>We’ll help you get set up.</Text> Founding trades can bring their existing reputation, including an approved Google business listing, and shape BuildPair while the Surrey launch group is still small.</Text>
         <View style={[styles.offerBox, compact && styles.offerBoxCompact]}>
-          <Text style={[styles.offer, compact && styles.offerCompact]}><Text style={styles.strong}>Trades launch offer:</Text> the first 100 eligible tradespeople to complete registration during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Pro free.</Text> Other eligible tradespeople joining during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Plus free.</Text></Text>
-          <Text style={[styles.offerNote, compact && styles.offerNoteCompact]}>No pay-per-lead charges. Predictable membership options. Use BuildPair to win suitable work and keep using it to quote, manage and complete the job.</Text>
+          <Text style={[styles.offer, compact && styles.offerCompact]}><Text style={styles.strong}>Founding 50 Surrey group:</Text> free early onboarding, founding-member recognition and priority launch support. The existing launch reward also gives the first 100 eligible completed registrations <Text style={styles.strong}>3 months of BuildPair Pro free.</Text></Text>
+          <Text style={[styles.offerNote, compact && styles.offerNoteCompact]}>No pay-per-lead charges. No obligation to stay on a paid plan. We want useful Surrey supply first, not a giant fake signup number.</Text>
         </View>
-        <Text style={[styles.small, compact && styles.smallCompact]}>Join the launch list now and, if you want to start sooner, request limited early access when you sign up.</Text>
+        <Text style={[styles.small, compact && styles.smallCompact]}>Claim a founding place now. It takes under a minute and we can help finish the business profile afterwards.</Text>
       </View>
       <View style={[styles.actions, compact && styles.actionsCompact]}>
         <Link href={waitlistHref('trader', 'homepage-banner')} asChild>
-          <Button mode="contained" icon="account-clock-outline" style={compact ? styles.primaryActionCompact : undefined} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>Join & request early access</Button>
+          <Button mode="contained" icon="account-clock-outline" style={compact ? styles.primaryActionCompact : undefined} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>Claim a Founding 50 place</Button>
         </Link>
         <Link href="/(public)/rewards" asChild>
           <Button mode="outlined" style={compact ? styles.secondaryActionCompact : undefined} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>See launch rewards</Button>
