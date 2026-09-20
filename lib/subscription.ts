@@ -1,4 +1,5 @@
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
+import { FOUNDING_PRO_START_ISO } from '@/lib/launch-config';
 
 export const CATEGORY_CHANGE_COOLDOWN_DAYS = 14;
 
@@ -32,13 +33,22 @@ export function traderMonthlyQuoteLimit(profile?: { subscriptionTier?: TraderWor
 export function hasActiveLeadAccess(profile: {
   subscriptionTier?: TraderWorkTypeTier | null;
   isSubscriptionActive?: boolean | null;
-}) {
-  return profile.subscriptionTier !== 'free' && profile.isSubscriptionActive === true;
+  trialEndsAt?: Date | string | null;
+}, now = new Date()) {
+  if (!profile.subscriptionTier || profile.subscriptionTier === 'free') return false;
+  if (profile.isSubscriptionActive === true) return true;
+  if (!profile.trialEndsAt) return false;
+
+  const startsAt = new Date(FOUNDING_PRO_START_ISO).getTime();
+  const endsAt = profile.trialEndsAt instanceof Date ? profile.trialEndsAt.getTime() : new Date(profile.trialEndsAt).getTime();
+  const current = now.getTime();
+  return Number.isFinite(endsAt) && current >= startsAt && current < endsAt;
 }
 
 export function isPubliclySearchable(profile: {
   subscriptionTier?: TraderWorkTypeTier | null;
   isSubscriptionActive?: boolean | null;
+  trialEndsAt?: Date | string | null;
 }) {
   return hasActiveLeadAccess(profile);
 }
@@ -46,6 +56,7 @@ export function isPubliclySearchable(profile: {
 export function canShowPaidProfileExtras(profile: {
   subscriptionTier?: TraderWorkTypeTier | null;
   isSubscriptionActive?: boolean | null;
+  trialEndsAt?: Date | string | null;
 }) {
   return hasActiveLeadAccess(profile);
 }
