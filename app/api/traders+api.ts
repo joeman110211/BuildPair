@@ -1,3 +1,4 @@
+import { MARKETPLACE_LIVE } from '@/lib/launch-config';
 import { jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
@@ -24,6 +25,7 @@ type DirectoryTrader = {
 };
 
 export async function GET(request: Request) {
+  if (!MARKETPLACE_LIVE) return Response.json([]);
   const url = new URL(request.url);
   const trade = url.searchParams.get('trade');
 
