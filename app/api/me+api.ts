@@ -5,6 +5,7 @@ import { traderProfiles } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
 import { InvalidPostcodeError, lookupPostcode } from '@/lib/postcode';
 import { getSql } from '@/lib/sql';
+import { FOUNDING_PRO_END_ISO, LAUNCH_DATE_ISO, HOMEOWNER_REGISTRATION_OPEN } from '@/lib/launch-config';
 import { accountAccess, accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { categoryChangeAllowed, categoryChangeAvailableAt } from '@/lib/subscription';
 import { roleSchema, traderProfileSchema } from '@/lib/validation';
@@ -25,6 +26,10 @@ export async function PATCH(request: Request) {
     const payload = roleSchema.parse(await request.json());
     const before = await accountModes(userId);
     const wasEnabled = payload.role === 'customer' ? before.customerEnabled : before.traderEnabled;
+
+    if (payload.role === 'customer' && !HOMEOWNER_REGISTRATION_OPEN) {
+      throw new HttpError(403, 'Homeowner account creation is closed until BuildPair launches.');
+    }
 
     if (payload.role === 'customer') {
       await getSql()`
@@ -139,6 +144,8 @@ export async function PUT(request: Request) {
       ? categoriesChanged ? new Date() : existingProfile.categoriesChangedAt
       : new Date();
 
+    const foundingOffer = !existingProfile && Date.now() < new Date(LAUNCH_DATE_ISO).getTime();
+
     const values = {
       businessName: payload.businessName,
       tradeCategory: primaryTradeCategory,
@@ -158,7 +165,15 @@ export async function PUT(request: Request) {
       selfCertified: payload.selfCertified,
     };
 
-    const [profile] = await db.insert(traderProfiles).values({ userId, ...values }).onConflictDoUpdate({
+    const [profile] = await db.insert(traderProfiles).values({
+      userId,
+      ...values,
+      ...(foundingOffer ? {
+        subscriptionTier: 'featured' as const,
+        isSubscriptionActive: false,
+        trialEndsAt: new Date(FOUNDING_PRO_END_ISO),
+      } : {}),
+    }).onConflictDoUpdate({
       target: traderProfiles.userId,
       set: { ...values, updatedAt: new Date() },
     }).returning({
@@ -171,6 +186,7 @@ export async function PUT(request: Request) {
       categoriesChangedAt: traderProfiles.categoriesChangedAt,
       subscriptionTier: traderProfiles.subscriptionTier,
       isSubscriptionActive: traderProfiles.isSubscriptionActive,
+      trialEndsAt: traderProfiles.trialEndsAt,
       createdAt: traderProfiles.createdAt,
       updatedAt: traderProfiles.updatedAt,
     });
@@ -199,6 +215,7 @@ export async function PUT(request: Request) {
 
     return Response.json({
       ...profile,
+      foundingProStartsAt: profile.trialEndsAt ? LAUNCH_DATE_ISO : null,
       categoryLimit,
       categoryChangeAvailableAt: categoryChangeAvailableAt(profile?.categoriesChangedAt)?.toISOString() ?? null,
     });
