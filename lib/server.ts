@@ -3,7 +3,7 @@ import { getDb } from '@/db/client';
 import { users } from '@/db/schema';
 import { verifyBuildPairClerkSession } from '@/lib/clerk-session';
 import { ensureEarlyAccessInviteTable } from '@/lib/early-access-store';
-import { REGISTRATION_OPEN } from '@/lib/launch-config';
+import { MARKETPLACE_LIVE, REGISTRATION_OPEN, TRADER_PRELAUNCH_REGISTRATION_OPEN } from '@/lib/launch-config';
 import { getSql } from '@/lib/sql';
 import { sendWelcomeEmailOnce } from '@/lib/transactional-email';
 
@@ -167,10 +167,11 @@ export async function ensureDbUser(userId: string) {
 
   const identity = await clerkSignupIdentity(userId);
   let earlyAccessEmail: string | null = null;
-  if (!REGISTRATION_OPEN && !bootstrapAdminIds().has(userId)) {
+  const directTraderPrelaunch = !MARKETPLACE_LIVE && TRADER_PRELAUNCH_REGISTRATION_OPEN && identity.mode === 'trader';
+  if (!REGISTRATION_OPEN && !bootstrapAdminIds().has(userId) && !directTraderPrelaunch) {
     earlyAccessEmail = await activeEarlyAccessEmail(identity.email);
     if (!earlyAccessEmail) {
-      throw new HttpError(403, 'New BuildPair registrations are paused until 1 October 2026. Join the launch waiting list to be notified when sign-up opens.');
+      throw new HttpError(403, 'Homeowner registration is not open yet. Tradespeople can create a launch-ready profile before the marketplace opens.');
     }
   }
 
@@ -221,6 +222,27 @@ export async function requireRole(request: Request, role: AccountMode) {
   const modes = await accountModes(id);
   const enabled = role === 'customer' ? modes.customerEnabled : modes.traderEnabled;
   if (!enabled) throw new HttpError(403, `${role} account required`);
+
+  if (!MARKETPLACE_LIVE) {
+    const access = await accountAccess(id);
+    if (!access.isAdmin) {
+      const pathname = new URL(request.url).pathname;
+      const traderSetupAllowed = role === 'trader' && [
+        '/api/me/profile',
+        '/api/google-reviews/',
+        '/api/uploads/',
+        '/api/credentials',
+        '/api/trader/credentials',
+        '/api/trader/profile',
+      ].some((prefix) => pathname === prefix || pathname.startsWith(prefix));
+      if (!traderSetupAllowed) {
+        throw new HttpError(423, role === 'trader'
+          ? 'BuildPair is in pre-launch profile setup mode. You can create and edit your trade profile now, but jobs, quotes, messaging, subscriptions, payouts and payments stay locked until the marketplace launches.'
+          : 'Homeowner marketplace access is not open yet.');
+      }
+    }
+  }
+
   return { ...user, ...modes };
 }
 
