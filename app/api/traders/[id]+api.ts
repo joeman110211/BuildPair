@@ -3,6 +3,7 @@ import { SUB_SKILLS, TRADE_CATEGORIES, type TradeCategory } from '@/constants/op
 import { getDb } from '@/db/client';
 import { reviews, traderProfiles, users } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
+import { MARKETPLACE_LIVE } from '@/lib/launch-config';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
@@ -56,7 +57,7 @@ export async function GET(request: Request, { id }: { id: string }) {
       .limit(1);
     if (!profile) throw new HttpError(404, 'Trader profile not found');
 
-    const paidProfile = profile.subscriptionTier !== 'free' && profile.isSubscriptionActive;
+    const paidProfile = MARKETPLACE_LIVE && profile.subscriptionTier !== 'free' && profile.isSubscriptionActive;
     const tradeCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
 
     let viewerId: string | null = null;
