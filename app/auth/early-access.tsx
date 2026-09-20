@@ -8,6 +8,7 @@ import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { modeSetupHref, signInHref } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { HOMEOWNER_REGISTRATION_OPEN, LAUNCH_DATE_LABEL } from '@/lib/launch';
 
 type InviteState = {
   valid: boolean;
@@ -157,6 +158,17 @@ export default function EarlyAccessSignup() {
         <Text style={styles.body}>If you already created your BuildPair account, sign in normally. Otherwise, your place on the launch list is unaffected.</Text>
         <Link href={signInHref(accountMode)} asChild><Button mode="contained">Sign in</Button></Link>
         <Link href={`/(public)/waitlist?audience=${accountMode === 'trader' ? 'trader' : 'homeowner'}&source=early-access`} asChild><Button mode="outlined">Back to the launch list</Button></Link>
+      </AppCard>
+    </Screen>;
+  }
+
+  if (accountMode === 'customer' && !HOMEOWNER_REGISTRATION_OPEN) {
+    return <Screen title="Homeowner registration is not open yet" subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
+      <AppCard style={styles.inviteCard}>
+        <Chip icon="lock-clock">Pre-launch</Chip>
+        <Text variant="titleLarge" style={styles.heading}>Your invite is safe, but homeowner accounts stay closed for now.</Text>
+        <Text style={styles.body}>We’re letting tradespeople prepare their business profiles before launch. Homeowner job posting, messaging and payments will open with the marketplace.</Text>
+        <Link href="/(public)/waitlist?audience=homeowner&source=homeowner-invite-paused" asChild><Button mode="contained">Keep me updated for launch</Button></Link>
       </AppCard>
     </Screen>;
   }
