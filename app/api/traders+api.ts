@@ -1,6 +1,6 @@
 import { jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
-import { FOUNDING_PRO_START_ISO } from '@/lib/launch-config';
+import { FOUNDING_PRO_START_ISO, MARKETPLACE_OPEN } from '@/lib/launch-config';
 
 type DirectoryTrader = {
   id: string;
@@ -25,6 +25,7 @@ type DirectoryTrader = {
 };
 
 export async function GET(request: Request) {
+  if (!MARKETPLACE_OPEN) return Response.json([]);
   const url = new URL(request.url);
   const trade = url.searchParams.get('trade');
 
