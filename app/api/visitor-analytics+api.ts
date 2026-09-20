@@ -22,6 +22,8 @@ const acquisitionSchema = z.object({
   utmCampaign: text(200),
   utmContent: text(200),
   utmTerm: text(200),
+  sourceParam: text(150),
+  referralCode: text(40),
 }).default({});
 
 const eventSchema = z.object({
@@ -117,6 +119,8 @@ export async function POST(request: Request) {
       utmSource: safe(payload.acquisition.utmSource, 150),
       utmMedium: safe(payload.acquisition.utmMedium, 150),
       utmCampaign: safe(payload.acquisition.utmCampaign, 200),
+      sourceParam: safe(payload.acquisition.sourceParam, 150),
+      referralCode: safe(payload.acquisition.referralCode, 40),
       deviceType: safe(payload.device.deviceType, 40),
       browser: safe(payload.device.browser, 80),
       os: safe(payload.device.os, 80),
@@ -153,6 +157,8 @@ export async function POST(request: Request) {
         utmCampaign: safe(payload.acquisition.utmCampaign, 200),
         utmContent: safe(payload.acquisition.utmContent, 200),
         utmTerm: safe(payload.acquisition.utmTerm, 200),
+        sourceParam: safe(payload.acquisition.sourceParam, 150),
+        referralCode: safe(payload.acquisition.referralCode, 40),
       };
       const device = {
         deviceType: safe(payload.device.deviceType, 40),
