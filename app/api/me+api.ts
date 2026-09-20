@@ -159,7 +159,8 @@ export async function PUT(request: Request) {
     const foundingProEligible = !MARKETPLACE_LIVE
       && !existingProfile
       && (foundingRows[0]?.count ?? 0) < FOUNDING_TRADER_LIMIT;
-    const plannedFoundingTrialEnd = new Date(new Date(LAUNCH_DATE_ISO).getTime() + 92 * 24 * 60 * 60 * 1000);
+    const plannedFoundingTrialEnd = new Date(LAUNCH_DATE_ISO);
+    plannedFoundingTrialEnd.setMonth(plannedFoundingTrialEnd.getMonth() + 3);
 
     const values = {
       businessName: payload.businessName,
