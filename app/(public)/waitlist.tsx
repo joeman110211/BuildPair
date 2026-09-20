@@ -322,7 +322,7 @@ export function WaitlistPageContent({ fixedAudience }: { fixedAudience?: Audienc
 }
 
 export default function WaitlistPage() {
-  return <WaitlistPageContent />;
+  return <WaitlistPageContent fixedAudience="homeowner" />;
 }
 
 const styles = StyleSheet.create({
