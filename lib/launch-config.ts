@@ -1,4 +1,9 @@
 export const LAUNCH_DATE_ISO = '2026-10-15T00:00:00+01:00';
 export const LAUNCH_DATE_LABEL = '15 October 2026';
-export const REGISTRATION_OPEN = false;
+export const MARKETPLACE_LIVE = false;
+export const TRADER_PRELAUNCH_REGISTRATION_OPEN = true;
+export const HOMEOWNER_REGISTRATION_OPEN = false;
+export const FOUNDING_TRADER_LIMIT = 50;
+export const FOUNDING_TRADER_PRO_MONTHS = 3;
+export const REGISTRATION_OPEN = MARKETPLACE_LIVE;
 export const PUBLIC_CONTACT_EMAIL = 'info@buildpair.co.uk';
