@@ -1,10 +1,12 @@
 import { and, desc, inArray, isNull, notLike } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { jobs } from '@/db/schema';
+import { MARKETPLACE_LIVE } from '@/lib/launch-config';
 import { outwardCode } from '@/lib/postcode';
 import { jsonError } from '@/lib/server';
 
 export async function GET() {
+  if (!MARKETPLACE_LIVE) return Response.json([]);
   try {
     const rows = await getDb().select().from(jobs)
       .where(and(
