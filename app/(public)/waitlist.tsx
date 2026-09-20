@@ -4,6 +4,7 @@ import { Share, StyleSheet, View } from 'react-native';
 import { Button, Checkbox, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
+import { trackPublicWaitlistSuccess } from '@/components/VisitorAnalytics';
 import { colors, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { LAUNCH_DATE_LABEL } from '@/lib/launch';
@@ -90,6 +91,7 @@ export default function WaitlistPage() {
         }),
       });
       setJoined(result);
+      trackPublicWaitlistSuccess(audience, source, result.alreadyJoined);
       setSmsOptIn(contactPreference === 'sms' || contactPreference === 'both');
     } catch (e) {
       setError(errorMessage(e));
