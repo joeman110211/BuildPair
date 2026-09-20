@@ -1,5 +1,5 @@
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
-import { MARKETPLACE_LIVE } from '@/lib/launch-config';
+import { LAUNCH_DATE_ISO, MARKETPLACE_LIVE } from '@/lib/launch-config';
 
 export const CATEGORY_CHANGE_COOLDOWN_DAYS = 14;
 
@@ -39,8 +39,11 @@ export function hasActiveLeadAccess(profile: {
   if (profile.subscriptionTier === 'free') return false;
   if (profile.isSubscriptionActive === true) return true;
   if (profile.subscriptionTier !== 'featured' || !profile.trialEndsAt) return false;
-  const trialEnd = profile.trialEndsAt instanceof Date ? profile.trialEndsAt : new Date(profile.trialEndsAt);
-  return Number.isFinite(trialEnd.getTime()) && trialEnd.getTime() > Date.now();
+  const launch = new Date(LAUNCH_DATE_ISO);
+  if (!Number.isFinite(launch.getTime()) || Date.now() < launch.getTime()) return false;
+  const foundingEnd = new Date(launch);
+  foundingEnd.setMonth(foundingEnd.getMonth() + 3);
+  return Date.now() < foundingEnd.getTime();
 }
 
 export function isPubliclySearchable(profile: {
