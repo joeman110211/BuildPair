@@ -24,8 +24,8 @@ export async function PATCH(request: Request) {
     const userId = await authenticatedUserId(request);
     await ensureDbUser(userId);
     const payload = roleSchema.parse(await request.json());
-    const access = await accountAccess(userId);
-    if (!MARKETPLACE_LIVE && payload.role === 'customer' && !access.isAdmin) {
+    const currentAccess = await accountAccess(userId);
+    if (!MARKETPLACE_LIVE && payload.role === 'customer' && !currentAccess.isAdmin) {
       throw new HttpError(423, 'Homeowner accounts are not open yet. Tradespeople can prepare a launch-ready profile before the marketplace opens.');
     }
     const before = await accountModes(userId);
