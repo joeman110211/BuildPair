@@ -1,3 +1,4 @@
+import type { Href } from 'expo-router';
 import { Link, Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
@@ -46,7 +47,7 @@ export function WaitlistPageContent({ fixedAudience }: { fixedAudience?: Audienc
     if (typeof params.source === 'string') query.set('source', params.source);
     if (typeof params.ref === 'string') query.set('ref', params.ref);
     const suffix = query.toString();
-    return <Redirect href={`/(public)/founding-trades${suffix ? `?${suffix}` : ''}` as never} />;
+    return <Redirect href={`/(public)/founding-trades${suffix ? `?${suffix}` : ''}` as Href} />;
   }
 
     const source = typeof params.source === 'string' ? params.source : 'website';
