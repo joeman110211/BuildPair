@@ -1,6 +1,6 @@
 import type { Href } from 'expo-router';
 import type { UserRole } from '@/types';
-import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
+import { HOMEOWNER_REGISTRATION_OPEN, REGISTRATION_OPEN, TRADER_PRELAUNCH_REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 export function parseAccountMode(value: string | string[] | undefined): UserRole | null {
   const candidate = Array.isArray(value) ? value[0] : value;
@@ -31,6 +31,8 @@ export function signInHref(mode: UserRole, returnTo?: string | null): Href {
 }
 
 export function signUpHref(mode: UserRole, returnTo?: string | null): Href {
+  if (mode === 'trader' && TRADER_PRELAUNCH_REGISTRATION_OPEN) return withReturnTo('/auth/sign-up?mode=trader', returnTo);
+  if (mode === 'customer' && !HOMEOWNER_REGISTRATION_OPEN) return waitlistHref('customer', 'homeowner-registration-closed');
   if (!REGISTRATION_OPEN) return waitlistHref(mode, 'signup-click');
   return withReturnTo(`/auth/sign-up?mode=${mode}`, returnTo);
 }
