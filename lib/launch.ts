@@ -1,6 +1,6 @@
 import type { Href } from 'expo-router';
 import type { UserRole } from '@/types';
-export { LAUNCH_DATE_ISO, LAUNCH_DATE_LABEL, REGISTRATION_OPEN, PUBLIC_CONTACT_EMAIL } from '@/lib/launch-config';
+export { LAUNCH_DATE_ISO, LAUNCH_DATE_LABEL, MARKETPLACE_LIVE, TRADER_PRELAUNCH_REGISTRATION_OPEN, HOMEOWNER_REGISTRATION_OPEN, FOUNDING_TRADER_LIMIT, FOUNDING_TRADER_PRO_MONTHS, REGISTRATION_OPEN, PUBLIC_CONTACT_EMAIL } from '@/lib/launch-config';
 
 export function waitlistHref(mode?: UserRole | null, source = 'website'): Href {
   const params = new URLSearchParams();
