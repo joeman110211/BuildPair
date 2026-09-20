@@ -57,6 +57,16 @@ export default function WaitlistPage() {
   }, [audience, joined?.referralCode]);
 
   useEffect(() => {
+    if (params.audience === 'trader') {
+      setAudience('trader');
+      setRequestEarlyAccess(true);
+    } else if (params.audience === 'homeowner') {
+      setAudience('homeowner');
+      setRequestEarlyAccess(false);
+    }
+  }, [params.audience]);
+
+  useEffect(() => {
     let alive = true;
     void apiFetch<ContactOptions>('/api/contact-options')
       .then((options) => {
