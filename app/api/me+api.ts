@@ -117,6 +117,7 @@ export async function PUT(request: Request) {
         subscriptionTier: true,
         isSubscriptionActive: true,
         stripeSubscriptionId: true,
+        trialEndsAt: true,
         postcode: true,
         createdAt: true,
       },
@@ -144,7 +145,10 @@ export async function PUT(request: Request) {
       ? categoriesChanged ? new Date() : existingProfile.categoriesChangedAt
       : new Date();
 
-    const foundingOffer = !existingProfile && Date.now() < new Date(LAUNCH_DATE_ISO).getTime();
+    const foundingOffer = Date.now() < new Date(LAUNCH_DATE_ISO).getTime()
+      && !existingProfile?.stripeSubscriptionId
+      && !existingProfile?.isSubscriptionActive
+      && !existingProfile?.trialEndsAt;
 
     const values = {
       businessName: payload.businessName,
@@ -175,7 +179,15 @@ export async function PUT(request: Request) {
       } : {}),
     }).onConflictDoUpdate({
       target: traderProfiles.userId,
-      set: { ...values, updatedAt: new Date() },
+      set: {
+        ...values,
+        ...(foundingOffer ? {
+          subscriptionTier: 'featured' as const,
+          isSubscriptionActive: false,
+          trialEndsAt: new Date(FOUNDING_PRO_END_ISO),
+        } : {}),
+        updatedAt: new Date(),
+      },
     }).returning({
       id: traderProfiles.id,
       userId: traderProfiles.userId,
