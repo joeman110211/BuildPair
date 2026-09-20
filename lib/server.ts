@@ -3,7 +3,7 @@ import { getDb } from '@/db/client';
 import { users } from '@/db/schema';
 import { verifyBuildPairClerkSession } from '@/lib/clerk-session';
 import { ensureEarlyAccessInviteTable } from '@/lib/early-access-store';
-import { MARKETPLACE_LIVE, REGISTRATION_OPEN, TRADER_PRELAUNCH_REGISTRATION_OPEN } from '@/lib/launch-config';
+import { HOMEOWNER_REGISTRATION_OPEN, MARKETPLACE_LIVE, REGISTRATION_OPEN, TRADER_PRELAUNCH_REGISTRATION_OPEN } from '@/lib/launch-config';
 import { getSql } from '@/lib/sql';
 import { sendWelcomeEmailOnce } from '@/lib/transactional-email';
 
@@ -167,8 +167,12 @@ export async function ensureDbUser(userId: string) {
 
   const identity = await clerkSignupIdentity(userId);
   let earlyAccessEmail: string | null = null;
+  const isBootstrapAdmin = bootstrapAdminIds().has(userId);
+  if (!MARKETPLACE_LIVE && !HOMEOWNER_REGISTRATION_OPEN && identity.mode === 'customer' && !isBootstrapAdmin) {
+    throw new HttpError(423, 'Homeowner account creation is not open yet.');
+  }
   const directTraderPrelaunch = !MARKETPLACE_LIVE && TRADER_PRELAUNCH_REGISTRATION_OPEN && identity.mode === 'trader';
-  if (!REGISTRATION_OPEN && !bootstrapAdminIds().has(userId) && !directTraderPrelaunch) {
+  if (!REGISTRATION_OPEN && !isBootstrapAdmin && !directTraderPrelaunch) {
     earlyAccessEmail = await activeEarlyAccessEmail(identity.email);
     if (!earlyAccessEmail) {
       throw new HttpError(403, 'Homeowner registration is not open yet. Tradespeople can create a launch-ready profile before the marketplace opens.');
