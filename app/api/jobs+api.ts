@@ -3,9 +3,10 @@ import { getDb } from '@/db/client';
 import { jobs, traderProfiles } from '@/db/schema';
 import { addJobEvent, createNotification } from '@/lib/notifications';
 import { InvalidPostcodeError, lookupPostcode, outwardCode } from '@/lib/postcode';
+import { LAUNCH_DATE_ISO, MARKETPLACE_LIVE } from '@/lib/launch-config';
 import { MAX_ACTIVE_QUOTES_PER_JOB } from '@/lib/quote-marketplace';
 import { assertRateLimit } from '@/lib/rate-limit';
-import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError, requireRole } from '@/lib/server';
+import { accountAccess, accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { jobSchema } from '@/lib/validation';
 
@@ -23,6 +24,10 @@ export async function GET(request: Request) {
   try {
     const userId = await authenticatedUserId(request);
     const user = await ensureDbUser(userId);
+    if (!MARKETPLACE_LIVE) {
+      const access = await accountAccess(userId);
+      if (!access.isAdmin) throw new HttpError(423, 'The BuildPair job marketplace is not open yet. Your pre-launch trade account can be used to prepare your profile only.');
+    }
     const modes = await accountModes(userId);
     const activeMode = modes.activeMode ?? user.role;
     const db = getDb();
@@ -115,6 +120,7 @@ export async function POST(request: Request) {
                CASE WHEN cardinality(tp.trade_categories) > 0 THEN tp.trade_categories ELSE ARRAY[tp.trade_category]::text[] END AS "tradeCategories",
                tp.subscription_tier AS "subscriptionTier",
                tp.is_subscription_active AS "isSubscriptionActive",
+               tp.trial_ends_at AS "trialEndsAt",
                tp.latitude,
                tp.longitude,
                tp.radius_miles AS "radiusMiles"
@@ -129,12 +135,14 @@ export async function POST(request: Request) {
         tradeCategories: string[];
         subscriptionTier: string;
         isSubscriptionActive: boolean;
+        trialEndsAt: string | null;
         latitude: number | null;
         longitude: number | null;
         radiusMiles: number;
       }[];
       const target = targets[0];
-      if (!target || !target.isSubscriptionActive || target.subscriptionTier === 'free') throw new HttpError(409, 'This tradesperson is not currently accepting direct BuildPair leads');
+      const foundingTrialActive = Boolean(target?.subscriptionTier === 'featured' && target?.trialEndsAt && new Date() >= new Date(LAUNCH_DATE_ISO) && new Date() < new Date(new Date(LAUNCH_DATE_ISO).setMonth(new Date(LAUNCH_DATE_ISO).getMonth() + 3)));
+      if (!target || target.subscriptionTier === 'free' || (!target.isSubscriptionActive && !foundingTrialActive)) throw new HttpError(409, 'This tradesperson is not currently accepting direct BuildPair leads');
       if (!target.tradeCategories.includes(payload.category)) throw new HttpError(400, `This direct request must use one of the tradesperson's listed trade categories.`);
       if (target.latitude == null || target.longitude == null) throw new HttpError(409, 'This tradesperson does not currently have a valid service location');
       if (distanceMiles(target.latitude, target.longitude, location.latitude, location.longitude) > target.radiusMiles) {
@@ -189,7 +197,15 @@ export async function POST(request: Request) {
         JOIN users u ON u.id = tp.user_id
         WHERE ${payload.category} = ANY(CASE WHEN cardinality(tp.trade_categories) > 0 THEN tp.trade_categories ELSE ARRAY[tp.trade_category]::text[] END)
           AND tp.subscription_tier <> 'free'
-          AND tp.is_subscription_active = true
+          AND (
+            tp.is_subscription_active = true
+            OR (
+              tp.subscription_tier = 'featured'
+              AND tp.trial_ends_at IS NOT NULL
+              AND now() >= ${LAUNCH_DATE_ISO}::timestamptz
+              AND now() < ${LAUNCH_DATE_ISO}::timestamptz + interval '3 months'
+            )
+          )
           AND coalesce(u.is_suspended, false) = false
           AND coalesce(u.is_deleted, false) = false
           AND tp.latitude IS NOT NULL AND tp.longitude IS NOT NULL
