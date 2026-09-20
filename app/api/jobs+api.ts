@@ -7,6 +7,7 @@ import { MAX_ACTIVE_QUOTES_PER_JOB } from '@/lib/quote-marketplace';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { FOUNDING_PRO_START_ISO } from '@/lib/launch-config';
 import { jobSchema } from '@/lib/validation';
 
 function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -114,7 +115,7 @@ export async function POST(request: Request) {
         SELECT tp.trade_category AS "tradeCategory",
                CASE WHEN cardinality(tp.trade_categories) > 0 THEN tp.trade_categories ELSE ARRAY[tp.trade_category]::text[] END AS "tradeCategories",
                tp.subscription_tier AS "subscriptionTier",
-               tp.is_subscription_active AS "isSubscriptionActive",
+               (tp.is_subscription_active = true OR (tp.trial_ends_at IS NOT NULL AND now() >= ${FOUNDING_PRO_START_ISO}::timestamptz AND tp.trial_ends_at > now())) AS "isSubscriptionActive",
                tp.latitude,
                tp.longitude,
                tp.radius_miles AS "radiusMiles"
@@ -189,7 +190,7 @@ export async function POST(request: Request) {
         JOIN users u ON u.id = tp.user_id
         WHERE ${payload.category} = ANY(CASE WHEN cardinality(tp.trade_categories) > 0 THEN tp.trade_categories ELSE ARRAY[tp.trade_category]::text[] END)
           AND tp.subscription_tier <> 'free'
-          AND tp.is_subscription_active = true
+          AND (tp.is_subscription_active = true OR (tp.trial_ends_at IS NOT NULL AND now() >= ${FOUNDING_PRO_START_ISO}::timestamptz AND tp.trial_ends_at > now()))
           AND coalesce(u.is_suspended, false) = false
           AND coalesce(u.is_deleted, false) = false
           AND tp.latitude IS NOT NULL AND tp.longitude IS NOT NULL

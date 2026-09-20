@@ -56,6 +56,45 @@ const CLIENT_BUILD_DIR = path.resolve(process.cwd(), 'dist/client');
 const SERVER_BUILD_DIR = path.resolve(process.cwd(), 'dist/server');
 const NOINDEX = /^(1|true|yes)$/i.test(process.env.BUILDPAIR_NOINDEX || '');
 const ADMIN_HOST = String(process.env.BUILDPAIR_ADMIN_HOST || 'admin.buildpair.co.uk').trim().toLowerCase();
+const MARKETPLACE_OPEN = /^(1|true|yes)$/i.test(process.env.BUILDPAIR_MARKETPLACE_OPEN || 'false');
+const PRELAUNCH_BLOCKED_API_PREFIXES = [
+  '/api/jobs',
+  '/api/public/jobs',
+  '/api/quotes',
+  '/api/business-quotes',
+  '/api/buildpay',
+  '/api/payment-arrangement',
+  '/api/payment-disputes',
+  '/api/payment-settings',
+  '/api/payments',
+  '/api/external-payments',
+  '/api/conversations',
+  '/api/invoices',
+  '/api/milestones',
+  '/api/variations',
+  '/api/site-visits',
+  '/api/availability',
+  '/api/reviews',
+  '/api/saved-searches',
+  '/api/stripe/subscription',
+  '/api/stripe/payment-intent',
+  '/api/stripe/connect',
+];
+
+function isBlockedPrelaunchApi(pathName) {
+  if (MARKETPLACE_OPEN) return false;
+  return PRELAUNCH_BLOCKED_API_PREFIXES.some((prefix) => pathName === prefix || pathName.startsWith(`${prefix}/`));
+}
+
+function sendPrelaunchLocked(res) {
+  res.statusCode = 423;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.end(JSON.stringify({
+    error: 'BuildPair marketplace is in pre-launch. Trade profile setup is open; jobs, quotes, messaging, payments and paid plans unlock at launch.',
+    code: 'marketplace_prelaunch',
+  }));
+}
 
 const expoHandler = createRequestHandler({
   build: SERVER_BUILD_DIR,
@@ -262,6 +301,12 @@ const server = http.createServer(async (req, res) => {
   try {
     applySecurityHeaders(res);
     if (handleAdminHostRouting(req, res)) return;
+
+    const pathName = requestPathname(req);
+    if (isBlockedPrelaunchApi(pathName)) {
+      sendPrelaunchLocked(res);
+      return;
+    }
 
     if (await serveStatic(req, res)) return;
 

@@ -8,6 +8,7 @@ import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { modeSetupHref, signInHref } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { HOMEOWNER_REGISTRATION_OPEN, LAUNCH_DATE_LABEL } from '@/lib/launch';
 
 type InviteState = {
   valid: boolean;
@@ -161,6 +162,17 @@ export default function EarlyAccessSignup() {
     </Screen>;
   }
 
+  if (accountMode === 'customer' && !HOMEOWNER_REGISTRATION_OPEN) {
+    return <Screen title="Homeowner registration is not open yet" subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
+      <AppCard style={styles.inviteCard}>
+        <Chip icon="lock-clock">Pre-launch</Chip>
+        <Text variant="titleLarge" style={styles.heading}>Your invite is safe, but homeowner accounts stay closed for now.</Text>
+        <Text style={styles.body}>We’re letting tradespeople prepare their business profiles before launch. Homeowner job posting, messaging and payments will open with the marketplace.</Text>
+        <Link href="/(public)/waitlist?audience=homeowner&source=homeowner-invite-paused" asChild><Button mode="contained">Keep me updated for launch</Button></Link>
+      </AppCard>
+    </Screen>;
+  }
+
   if (inviteState.needsEmail || !email) {
     return <Screen title="Set up your BuildPair account" subtitle="Your text invite is valid. Add the email address you want to use to sign in.">
       <AppCard style={styles.inviteCard}>
@@ -193,7 +205,7 @@ export default function EarlyAccessSignup() {
     <AppCard style={styles.inviteCard}>
       <Chip icon="rocket-launch-outline">Early access approved</Chip>
       <Text variant="titleLarge" style={styles.heading}>Your account is ready to set up</Text>
-      <Text style={styles.body}>This invitation is locked to <Text style={styles.strong}>{email}</Text>. Once registered, use BuildPair normally and send us any feedback at info@buildpair.co.uk.</Text>
+      <Text style={styles.body}>This invitation is locked to <Text style={styles.strong}>{email}</Text>. Once registered, complete your real trade profile and trust information. Jobs, quotes, messaging and payments remain locked until BuildPair launches.</Text>
     </AppCard>
     <TextInput mode="outlined" label="Approved email address" value={email} editable={false} autoCapitalize="none" keyboardType="email-address" />
     <TextInput mode="outlined" label="Choose a password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" />

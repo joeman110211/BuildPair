@@ -35,6 +35,18 @@ describe('BuildPair trade plan entitlements', () => {
     expect(hasActiveLeadAccess({ subscriptionTier: 'basic', isSubscriptionActive: false })).toBe(false);
     expect(hasActiveLeadAccess({ subscriptionTier: 'featured', isSubscriptionActive: false })).toBe(false);
   });
+
+  it('keeps founding Pro dormant before launch and activates it only for the reserved launch window', () => {
+    const founding = {
+      subscriptionTier: 'featured' as const,
+      isSubscriptionActive: false,
+      trialEndsAt: '2027-01-15T00:00:00.000Z',
+    };
+    expect(hasActiveLeadAccess(founding, new Date('2026-10-14T22:59:59.000Z'))).toBe(false);
+    expect(hasActiveLeadAccess(founding, new Date('2026-10-14T23:00:00.000Z'))).toBe(true);
+    expect(hasActiveLeadAccess(founding, new Date('2027-01-14T23:59:59.000Z'))).toBe(true);
+    expect(hasActiveLeadAccess(founding, new Date('2027-01-15T00:00:00.000Z'))).toBe(false);
+  });
 });
 
 describe('trade-category change cooldown', () => {

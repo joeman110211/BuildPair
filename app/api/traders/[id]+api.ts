@@ -5,6 +5,7 @@ import { reviews, traderProfiles, users } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { hasActiveLeadAccess } from '@/lib/subscription';
 
 const defaultShowcase = {
   template: 'classic' as const,
@@ -50,13 +51,14 @@ export async function GET(request: Request, { id }: { id: string }) {
       photos: traderProfiles.photos,
       subscriptionTier: traderProfiles.subscriptionTier,
       isSubscriptionActive: traderProfiles.isSubscriptionActive,
+      trialEndsAt: traderProfiles.trialEndsAt,
       createdAt: traderProfiles.createdAt,
     }).from(traderProfiles)
       .where(and(eq(traderProfiles.id, id), sql`NOT EXISTS (SELECT 1 FROM users u WHERE u.id = ${traderProfiles.userId} AND (coalesce(u.is_suspended, false) = true OR coalesce(u.is_deleted, false) = true))`))
       .limit(1);
     if (!profile) throw new HttpError(404, 'Trader profile not found');
 
-    const paidProfile = profile.subscriptionTier !== 'free' && profile.isSubscriptionActive;
+    const paidProfile = hasActiveLeadAccess(profile);
     const tradeCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
 
     let viewerId: string | null = null;

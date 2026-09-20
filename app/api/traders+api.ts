@@ -1,5 +1,6 @@
 import { jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { FOUNDING_PRO_START_ISO, MARKETPLACE_OPEN } from '@/lib/launch-config';
 
 type DirectoryTrader = {
   id: string;
@@ -24,6 +25,7 @@ type DirectoryTrader = {
 };
 
 export async function GET(request: Request) {
+  if (!MARKETPLACE_OPEN) return Response.json([]);
   const url = new URL(request.url);
   const trade = url.searchParams.get('trade');
 
@@ -43,7 +45,7 @@ export async function GET(request: Request) {
              tp.external_links AS "externalLinks",
              tp.photos,
              tp.subscription_tier AS "subscriptionTier",
-             tp.is_subscription_active AS "isSubscriptionActive",
+             (tp.is_subscription_active = true OR (tp.trial_ends_at IS NOT NULL AND now() >= ${FOUNDING_PRO_START_ISO}::timestamptz AND tp.trial_ends_at > now())) AS "isSubscriptionActive",
              coalesce(avg(r.rating), 0)::float AS "averageRating",
              count(r.id)::int AS "reviewCount",
              (SELECT count(*)::int
@@ -79,7 +81,7 @@ export async function GET(request: Request) {
       LEFT JOIN reviews r
         ON r.trader_id = tp.user_id AND r.verified_completion = true
       WHERE tp.subscription_tier <> 'free'
-        AND tp.is_subscription_active = true
+        AND (tp.is_subscription_active = true OR (tp.trial_ends_at IS NOT NULL AND now() >= ${FOUNDING_PRO_START_ISO}::timestamptz AND tp.trial_ends_at > now()))
         AND tp.user_id NOT LIKE 'seed_demo_trader_%'
         AND NOT EXISTS (
           SELECT 1 FROM users u

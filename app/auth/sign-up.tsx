@@ -8,7 +8,7 @@ import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { modeSetupHref, parseAccountMode, signInHref } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { waitlistHref } from '@/lib/launch';
+import { HOMEOWNER_REGISTRATION_OPEN, LAUNCH_DATE_LABEL, waitlistHref } from '@/lib/launch';
 
 type InviteStatus = {
   valid: boolean;
@@ -64,6 +64,16 @@ export default function SignUpScreen() {
     && signUp.missingFields.length === 0;
   const verificationEmail = signUp.emailAddress ?? email;
   const title = mode === 'customer' ? 'Create Homeowner Account' : 'Create Tradesperson Account';
+
+  if (mode === 'customer' && !HOMEOWNER_REGISTRATION_OPEN) {
+    return <Screen title="Homeowner registration is not open yet" subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
+      <AppCard style={styles.inviteCard}>
+        <Text variant="titleMedium" style={styles.inviteTitle}>Marketplace pre-launch</Text>
+        <Text style={styles.inviteText}>Tradespeople can prepare their business profiles now. Homeowner accounts, jobs, quotes, messaging and payments open with the marketplace.</Text>
+      </AppCard>
+      <Link href={waitlistHref('customer', 'homeowner-invite-paused')} asChild><Button mode="contained">Get launch updates</Button></Link>
+    </Screen>;
+  }
 
   if (!inviteStatus.valid || !email) {
     return <Screen title="This early-access invite is no longer available" subtitle={inviteStatus.claimed ? 'This invite has already been used.' : 'The link may have expired, been replaced or been withdrawn.'}>
@@ -152,7 +162,7 @@ export default function SignUpScreen() {
     {jobContext}
     <AppCard style={styles.inviteCard}>
       <Text variant="titleMedium" style={styles.inviteTitle}>Early access approved</Text>
-      <Text style={styles.inviteText}>This invite is locked to <Text style={styles.strong}>{email}</Text>. Create your account, complete your profile and use BuildPair normally while we finish the public launch.</Text>
+      <Text style={styles.inviteText}>This invite is locked to <Text style={styles.strong}>{email}</Text>. Create your account and complete your real trade profile now. Marketplace jobs, quotes, messaging and payments stay locked until launch.</Text>
     </AppCard>
     <TextInput label="Approved email address" accessibilityLabel="Approved email address" value={email} editable={false} mode="outlined" />
     <TextInput label="Choose a password" accessibilityLabel="Choose a password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" mode="outlined" />
