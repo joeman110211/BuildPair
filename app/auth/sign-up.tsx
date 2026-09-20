@@ -70,7 +70,7 @@ export default function SignUpScreen() {
   if (mode === 'customer' && !HOMEOWNER_REGISTRATION_OPEN) return <Redirect href={waitlistHref('customer', 'homeowner-signup-closed')} />;
 
   if (inviteToken && (!inviteStatus?.valid || !email)) {
-    return <Screen title="This early-access invite is no longer available" subtitle={inviteStatus.claimed ? 'This invite has already been used.' : 'The link may have expired, been replaced or been withdrawn.'}>
+    return <Screen title="This early-access invite is no longer available" subtitle={inviteStatus?.claimed ? 'This invite has already been used.' : 'The link may have expired, been replaced or been withdrawn.'}>
       <AppCard style={styles.inviteCard}>
         <Text style={styles.inviteText}>If you already created an account, sign in normally. Otherwise, your place on the launch list is unaffected.</Text>
       </AppCard>
