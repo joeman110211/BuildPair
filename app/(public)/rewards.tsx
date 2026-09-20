@@ -9,8 +9,8 @@ export default function RewardsPage() {
     updated="13 September 2026"
     sections={[
       { title: 'Launch rewards', body: <View style={infoStyles.list}>
-        <Text style={infoStyles.item}>• The first 100 eligible tradespeople to complete BuildPair registration during the launch offer receive 3 months of BuildPair Pro free.</Text>
-        <Text style={infoStyles.item}>• Other eligible tradespeople who join during the launch offer receive 3 months of BuildPair Plus free.</Text>
+        <Text style={infoStyles.item}>• Eligible Surrey Founding 50 tradespeople who create and complete their launch-ready profile before the marketplace opens receive 3 months of BuildPair Pro from launch.</Text>
+        <Text style={infoStyles.item}>• The three-month Founding Pro period does not run down during pre-launch profile setup.</Text>
         <Text style={infoStyles.item}>• No lead fee is added simply because a tradesperson receives or responds to a job through BuildPair. Normal membership and any separately disclosed BuildPay terms apply after promotional periods end.</Text>
       </View> },
       { title: 'Complete real jobs, unlock more', body: <View style={infoStyles.list}>
