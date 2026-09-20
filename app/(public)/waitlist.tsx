@@ -273,7 +273,7 @@ export default function WaitlistPage() {
         </AppCard>
       </> : null}
 
-      <AppCard elevated={false} style={styles.earlyCard}>
+      {audience === 'homeowner' ? <AppCard elevated={false} style={styles.earlyCard}>
         <Checkbox.Item
           label="I’d like early access before the public launch"
           status={requestEarlyAccess ? 'checked' : 'unchecked'}
@@ -281,16 +281,18 @@ export default function WaitlistPage() {
           position="leading"
           labelStyle={styles.earlyLabel}
         />
-        <Text style={styles.earlyHelp}>We’re inviting a limited number of homeowners and tradespeople in batches for real-world testing. Tick this if you want to be considered. Your normal launch-list place is still secured either way.</Text>
-      </AppCard>
+        <Text style={styles.earlyHelp}>We’re inviting a limited number of homeowners in batches for real-world testing. Tick this if you want to be considered.</Text>
+      </AppCard> : null}
 
       <Text style={styles.privacy}>{contactPreference === 'sms'
         ? 'You’re asking BuildPair to send service texts about the launch and your requested early access. We will not use this as consent for marketing texts.'
         : contactPreference === 'both'
           ? 'You’re asking BuildPair to contact you by email and service text about the launch and requested early access. Marketing messages require separate consent.'
-          : `We’ll use your email for the launch list${requestEarlyAccess ? ' and your early-access request' : ''}. If you add an optional mobile number, we will not text it unless you later choose text updates or separately opt in.`} See our Privacy Policy for details.</Text>
+          : audience === 'trader'
+            ? 'We’ll use your email to reserve your Founding Trade place and contact you about onboarding or launch access. If you add an optional mobile number, we will not text it unless you later opt in.'
+            : `We’ll use your email for launch and early-access updates${requestEarlyAccess ? ' including your early-access request' : ''}. If you add an optional mobile number, we will not text it unless you later choose text updates or separately opt in.`} See our Privacy Policy for details.</Text>
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
-      <Button mode="contained" icon={requestEarlyAccess ? 'key-plus' : 'account-clock-outline'} loading={busy} disabled={busy || !canJoin} onPress={() => void join()}>{requestEarlyAccess ? 'Join list & request early access' : audience === 'trader' ? 'Join the Founding Trades list' : 'Join the launch list'}</Button>
+      <Button mode="contained" icon={audience === 'trader' ? 'hammer-wrench' : requestEarlyAccess ? 'key-plus' : 'account-clock-outline'} loading={busy} disabled={busy || !canJoin} onPress={() => void join()}>{audience === 'trader' ? 'Claim my Founding 50 place' : requestEarlyAccess ? 'Get early access' : 'Get launch updates'}</Button>
       <View style={styles.links}><Link href="/(public)/privacy" asChild><Button mode="text">Privacy</Button></Link><Link href="/auth/sign-in" asChild><Button mode="text">Existing member? Sign in</Button></Link></View>
     </AppCard>
   </Screen>;
