@@ -4,18 +4,18 @@ import { Button, Text } from 'react-native-paper';
 import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
 import { colors } from '@/constants/theme';
-import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
+import { REGISTRATION_OPEN, TRADER_PRELAUNCH_REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 export default function PricingPage() {
   const primaryHref = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', 'pricing-hero');
-  const primaryLabel = REGISTRATION_OPEN ? 'Create trade account' : 'Join tradesperson launch list';
+  const primaryLabel = REGISTRATION_OPEN ? 'Create trade account' : TRADER_PRELAUNCH_REGISTRATION_OPEN ? 'Create launch-ready trade profile' : 'Join tradesperson launch list';
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
     <View style={styles.hero}>
       <View style={styles.heroInner}>
         <Text style={styles.eyebrow}>Tradesperson membership</Text>
         <Text variant="displaySmall" style={styles.title}>Simple monthly plans, built around how much of the marketplace you actually use.</Text>
-        <Text variant="bodyLarge" style={styles.intro}>BuildPair keeps the free Starter plan useful while reserving marketplace selling tools, searchable visibility and higher offer capacity for Plus and Pro members.</Text>
+        <Text variant="bodyLarge" style={styles.intro}>BuildPair keeps the free Starter plan useful while reserving marketplace selling tools, searchable visibility and higher offer capacity for Plus and Pro members. Before launch, trades can build a private profile but cannot buy a plan or use marketplace features.</Text>
         <View style={styles.heroActions}>
           <Link href={primaryHref} asChild><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.primary}>{primaryLabel}</Button></Link>
           <Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.outline}>See trade features</Button></Link>

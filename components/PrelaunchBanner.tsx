@@ -15,20 +15,20 @@ export function PrelaunchBanner() {
           <Chip compact icon="rocket-launch-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Launching {LAUNCH_DATE_LABEL}</Chip>
           <Chip compact icon="gift-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Founding trade bonuses</Chip>
           <Chip compact icon="star-circle-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Bring your Google reviews</Chip>
-          <Chip compact icon="shield-check-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>BuildPay available</Chip>
+          <Chip compact icon="lock-clock" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Marketplace opens later</Chip>
         </View>
         <Text style={[styles.title, compact && styles.titleCompact]}>Founding 50: Surrey trades wanted.</Text>
-        <Text style={[styles.body, compact && styles.bodyCompact]}>We’re personally onboarding the first 50 Surrey trades before public launch. Build a strong profile, get early access to local opportunities, quote properly and keep the job organised without paying for individual leads.</Text>
-        <Text style={[styles.reputation, compact && styles.reputationCompact]}><Text style={styles.strong}>We’ll help you get set up.</Text> Founding trades can bring their existing reputation, including an approved Google business listing, and shape BuildPair while the Surrey launch group is still small.</Text>
+        <Text style={[styles.body, compact && styles.bodyCompact]}>We’re onboarding the first 50 Surrey trades before public launch. Create the real account now and complete your business profile so you are ready on day one. The marketplace itself stays locked until launch.</Text>
+        <Text style={[styles.reputation, compact && styles.reputationCompact]}><Text style={styles.strong}>Set up now, stay private for now.</Text> Add services, photos, qualifications, service area and an approved Google business listing without going publicly searchable before launch.</Text>
         <View style={[styles.offerBox, compact && styles.offerBoxCompact]}>
-          <Text style={[styles.offer, compact && styles.offerCompact]}><Text style={styles.strong}>Founding 50 Surrey group:</Text> free early onboarding, founding-member recognition and priority launch support. The existing launch reward also gives the first 100 eligible completed registrations <Text style={styles.strong}>3 months of BuildPair Pro free.</Text></Text>
-          <Text style={[styles.offerNote, compact && styles.offerNoteCompact]}>No pay-per-lead charges. No obligation to stay on a paid plan. We want useful Surrey supply first, not a giant fake signup number.</Text>
+          <Text style={[styles.offer, compact && styles.offerCompact]}><Text style={styles.strong}>Founding 50 Surrey group:</Text> complete your launch-ready profile before the marketplace opens and, if eligible, receive <Text style={styles.strong}>3 months of BuildPair Pro from launch day.</Text> The free period does not run down during pre-launch.</Text>
+          <Text style={[styles.offerNote, compact && styles.offerNoteCompact]}>No membership billing, no pay-per-lead charges and no live marketplace activity before launch.</Text>
         </View>
-        <Text style={[styles.small, compact && styles.smallCompact]}>Claim a founding place now. It takes under a minute and we can help finish the business profile afterwards.</Text>
+        <Text style={[styles.small, compact && styles.smallCompact]}>Create your account now, then complete the profile properly before homeowners are allowed in.</Text>
       </View>
       <View style={[styles.actions, compact && styles.actionsCompact]}>
         <Link href={waitlistHref('trader', 'homepage-banner')} asChild>
-          <Button mode="contained" icon="account-clock-outline" style={compact ? styles.primaryActionCompact : undefined} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>Claim a Founding 50 place</Button>
+          <Button mode="contained" icon="account-plus-outline" style={compact ? styles.primaryActionCompact : undefined} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>Create Founding Trade account</Button>
         </Link>
         <Link href="/(public)/rewards" asChild>
           <Button mode="outlined" style={compact ? styles.secondaryActionCompact : undefined} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>See launch rewards</Button>

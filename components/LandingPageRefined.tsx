@@ -60,7 +60,7 @@ export default function LandingPageRefined() {
         </View>
         <View style={styles.heroActions} testID="home-hero-actions">
           <Link href={waitlistHref('customer', 'homepage-hero')} asChild><Button mode="outlined" style={styles.heroActionButton}>Join homeowner launch list</Button></Link>
-          <Link href={waitlistHref('trader', 'homepage-hero-trader')} asChild><Button mode="contained" style={styles.heroActionButton}>Join Surrey Founding 50</Button></Link>
+          <Link href={waitlistHref('trader', 'homepage-hero-trader')} asChild><Button mode="contained" style={styles.heroActionButton}>Create Founding Trade profile</Button></Link>
           <Link href="/(public)/how-it-works" asChild><Button mode="outlined" style={styles.heroActionButton}>How it works</Button></Link>
         </View>
       </View>
@@ -97,7 +97,7 @@ export default function LandingPageRefined() {
             <Text style={[styles.audienceEyebrow, styles.tradeAudienceEyebrow]}>FOR TRADESPEOPLE</Text>
             <Text variant="headlineSmall" style={styles.cardTitle}>Present your business well, quote clearly and manage work in one place.</Text>
             <Text style={styles.cardText}>Build your profile, find relevant local opportunities, arrange a site visit where needed, respond with structured quotes and keep the project record organised after the work is won.</Text>
-            <View style={styles.audienceActions}><Link href={waitlistHref('trader', 'homepage-trade-card')} asChild><Button mode="contained">Claim a founding place</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined">See trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="text">View membership</Button></Link></View>
+            <View style={styles.audienceActions}><Link href={waitlistHref('trader', 'homepage-trade-card')} asChild><Button mode="contained">Create trade account</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined">See trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="text">View membership</Button></Link></View>
           </View>
         </View>
       </View>
@@ -189,7 +189,7 @@ export default function LandingPageRefined() {
     <View style={styles.section}>
       <View style={styles.finalCta}>
         <View style={styles.finalCopy}><Text style={styles.finalEyebrow}>BUILDPAIR UK</Text><Text variant="headlineSmall" style={styles.finalTitle}>Find the trade. Agree the job. Keep everything connected.</Text><Text style={styles.finalText}>Search, compare structured quotes, message, manage changes, choose the payment route and complete the project in one place.</Text></View>
-        <View style={styles.finalButtons}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('trader', 'homepage-final-trader')} asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.finalOutline}>Trade? Join Founding 50</Button></Link></View>
+        <View style={styles.finalButtons}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('trader', 'homepage-final-trader')} asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.finalOutline}>Trade? Build your profile now</Button></Link></View>
       </View>
     </View>
 

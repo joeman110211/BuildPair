@@ -10,6 +10,7 @@ import { colors } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref, parseAccountMode, safeInternalReturnTo } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { MARKETPLACE_LIVE } from '@/lib/launch';
 import type { CurrentUser, UserRole } from '@/types';
 
 type ModeActivationResponse = CurrentUser & { wasEnabled?: boolean };
@@ -94,16 +95,17 @@ export default function ChooseRoleScreen() {
         {([['customer', '🏠 Homeowner', 'Post jobs, compare quotes and pay safely.'], ['trader', '🔨 Tradesperson', 'Build a public profile, find work, quote and invoice customers.']] as const).map(([value, title, body]) => {
           const enabled = value === 'customer' ? user?.customerEnabled : user?.traderEnabled;
           const selected = role === value;
+          const prelaunchBlocked = value === 'customer' && !MARKETPLACE_LIVE && !enabled;
           return (
-            <Pressable key={value} onPress={() => setRole(value)} style={styles.choice}>
+            <Pressable key={value} disabled={prelaunchBlocked} onPress={() => setRole(value)} style={styles.choice}>
               <AppCard style={[styles.choiceCard, selected && styles.selected]} elevated={!selected}>
                 <View style={styles.choiceTop}>
                   <Text variant="titleLarge" style={styles.choiceTitle}>{title}</Text>
                   <View style={[styles.status, enabled ? styles.statusEnabled : styles.statusAdd]}>
-                    <Text variant="labelSmall" style={enabled ? styles.enabledText : styles.addText}>{enabled ? '✓ Enabled' : '+ Add profile'}</Text>
+                    <Text variant="labelSmall" style={enabled ? styles.enabledText : styles.addText}>{enabled ? '✓ Enabled' : prelaunchBlocked ? 'Opens at launch' : '+ Add profile'}</Text>
                   </View>
                 </View>
-                <Text style={styles.muted}>{body}</Text>
+                <Text style={styles.muted}>{prelaunchBlocked ? 'Homeowner account creation is closed during pre-launch. Trade profiles can be prepared now.' : body}</Text>
                 {selected ? <Text variant="labelMedium" style={styles.selectedText}>Selected</Text> : null}
               </AppCard>
             </Pressable>
@@ -124,7 +126,7 @@ export default function ChooseRoleScreen() {
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
       <Button
         mode="contained"
-        disabled={!role || busy || !authLoaded || !isSignedIn}
+        disabled={!role || busy || !authLoaded || !isSignedIn || (role === 'customer' && !MARKETPLACE_LIVE && !user?.customerEnabled)}
         loading={busy}
         onPress={() => void save()}
         contentStyle={styles.continueButton}

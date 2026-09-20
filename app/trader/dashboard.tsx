@@ -9,6 +9,7 @@ import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors, controlHeights, spacing } from '@/constants/theme';
 import { apiFetch, ApiError, errorMessage } from '@/lib/api';
+import { LAUNCH_DATE_LABEL, MARKETPLACE_LIVE } from '@/lib/launch';
 import type { Job, Quote, TraderProfile } from '@/types';
 
 export default function TraderDashboard() {
@@ -28,8 +29,12 @@ export default function TraderDashboard() {
       const tokenGetter = () => getTokenRef.current();
       const ownProfile = await apiFetch<TraderProfile>('/api/me/profile', {}, tokenGetter);
       setProfile(ownProfile);
-      const [jobRows, quoteRows] = await Promise.all([apiFetch<Job[]>('/api/jobs', {}, tokenGetter), apiFetch<Quote[]>('/api/quotes', {}, tokenGetter)]);
-      setJobs(jobRows); setQuotes(quoteRows);
+      if (MARKETPLACE_LIVE) {
+        const [jobRows, quoteRows] = await Promise.all([apiFetch<Job[]>('/api/jobs', {}, tokenGetter), apiFetch<Quote[]>('/api/quotes', {}, tokenGetter)]);
+        setJobs(jobRows); setQuotes(quoteRows);
+      } else {
+        setJobs([]); setQuotes([]);
+      }
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) setProfile(undefined);
       else setError(errorMessage(e));
@@ -38,7 +43,40 @@ export default function TraderDashboard() {
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   if (loading) return <LoadingScreen />;
-  if (!profile) return <Screen title="Build your tradesperson profile" subtitle="Your profile is your shop window on BuildPair."><EmptyState title="Your profile is waiting" body="Add your trade, service area, skills and business details so homeowners can find you." action={<Link href="/trader/onboarding" asChild><Button mode="contained" contentStyle={styles.actionButton}>Build my profile</Button></Link>} /></Screen>;
+  if (!profile) return <Screen title="Build your tradesperson profile" subtitle="Get everything ready now so your business can be launch-ready."><EmptyState title="Your profile is waiting" body="Add your trade, service area, skills, photos and business details now. It stays private until BuildPair launches." action={<Link href="/trader/onboarding" asChild><Button mode="contained" contentStyle={styles.actionButton}>Build my profile</Button></Link>} /></Screen>;
+
+  if (!MARKETPLACE_LIVE) return <Screen title={profile.businessName} subtitle={`Pre-launch profile setup · planned launch ${LAUNCH_DATE_LABEL}`}>
+    <AppCard style={styles.payoutReadyCard}>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Text variant="titleLarge" style={styles.cardTitle}>Your BuildPair profile is being prepared for launch</Text>
+          <Text style={styles.muted}>Your account is real and your profile is saved, but it is not publicly searchable yet. Marketplace jobs, homeowner requests, quotes, messaging, membership billing, Stripe payout setup and BuildPay are locked until BuildPair is launched.</Text>
+        </View>
+        <Chip icon="lock-clock">Pre-launch</Chip>
+      </View>
+    </AppCard>
+
+    <AppCard style={styles.membershipCard}>
+      <Text style={styles.membershipEyebrow}>FOUNDING TRADE STATUS</Text>
+      <Text variant="titleLarge" style={styles.cardTitle}>{profile.subscriptionTier === 'featured' ? '3 months Pro reserved for launch' : 'Launch-ready profile'}</Text>
+      <Text style={styles.muted}>{profile.subscriptionTier === 'featured' ? 'Your free Pro period is reserved. It does not count down while the marketplace is closed; the launch activation step will start the full three-month period.' : 'Your profile can be completed now and will remain private until marketplace access is switched on.'}</Text>
+    </AppCard>
+
+    <AppCard>
+      <Text variant="titleLarge" style={styles.cardTitle}>Finish the useful bits now</Text>
+      <Text style={styles.muted}>Use this time to make the profile worth opening on day one: services, working radius, photos, qualifications, business links and your Google business reputation where available.</Text>
+      <View style={styles.membershipActions}>
+        <Link href="/trader/profile" asChild><Button mode="contained" contentStyle={styles.actionButton}>Manage my profile</Button></Link>
+        <Link href="/trader/google-reviews" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Connect Google reviews</Button></Link>
+        <Button mode="outlined" contentStyle={styles.actionButton} onPress={() => router.push(`/(public)/traders/${profile.id}` as Href)}>Private profile preview</Button>
+      </View>
+    </AppCard>
+
+    <AppCard style={styles.payoutCard}>
+      <Text variant="titleMedium" style={styles.cardTitle}>Nothing to pay yet</Text>
+      <Text style={styles.muted}>There is no subscription checkout and no Stripe payout onboarding during pre-launch profile setup. We will only open the operational marketplace when BuildPair is ready to run it.</Text>
+    </AppCard>
+  </Screen>;
 
   const pendingQuoteJobIds = new Set(quotes.filter((quote) => quote.status === 'pending').map((quote) => quote.jobId));
   const newLeads = jobs.filter((job) => ['open', 'quoted'].includes(job.status) && !pendingQuoteJobIds.has(job.id));

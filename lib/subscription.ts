@@ -1,4 +1,5 @@
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
+import { LAUNCH_DATE_ISO, MARKETPLACE_LIVE } from '@/lib/launch-config';
 
 export const CATEGORY_CHANGE_COOLDOWN_DAYS = 14;
 
@@ -32,8 +33,17 @@ export function traderMonthlyQuoteLimit(profile?: { subscriptionTier?: TraderWor
 export function hasActiveLeadAccess(profile: {
   subscriptionTier?: TraderWorkTypeTier | null;
   isSubscriptionActive?: boolean | null;
+  trialEndsAt?: Date | string | null;
 }) {
-  return profile.subscriptionTier !== 'free' && profile.isSubscriptionActive === true;
+  if (!MARKETPLACE_LIVE) return false;
+  if (profile.subscriptionTier === 'free') return false;
+  if (profile.isSubscriptionActive === true) return true;
+  if (profile.subscriptionTier !== 'featured' || !profile.trialEndsAt) return false;
+  const launch = new Date(LAUNCH_DATE_ISO);
+  if (!Number.isFinite(launch.getTime()) || Date.now() < launch.getTime()) return false;
+  const foundingEnd = new Date(launch);
+  foundingEnd.setMonth(foundingEnd.getMonth() + 3);
+  return Date.now() < foundingEnd.getTime();
 }
 
 export function isPubliclySearchable(profile: {

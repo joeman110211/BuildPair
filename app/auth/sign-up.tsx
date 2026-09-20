@@ -8,7 +8,7 @@ import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { modeSetupHref, parseAccountMode, signInHref } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { waitlistHref } from '@/lib/launch';
+import { HOMEOWNER_REGISTRATION_OPEN, LAUNCH_DATE_LABEL, TRADER_PRELAUNCH_REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 type InviteStatus = {
   valid: boolean;
@@ -37,6 +37,7 @@ export default function SignUpScreen() {
   const jobCategory = scalar(params.jobCategory);
   const jobLocation = scalar(params.jobLocation);
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>();
+  const [directEmail, setDirectEmail] = useState('');
   const [checkingInvite, setCheckingInvite] = useState(Boolean(inviteToken));
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -53,20 +54,23 @@ export default function SignUpScreen() {
     return () => { active = false; };
   }, [inviteToken]);
 
-  if (!inviteToken) return <Redirect href={waitlistHref(requestedMode, 'direct-signup')} />;
-  if (checkingInvite || !inviteStatus) return <LoadingScreen label="Checking your BuildPair early-access invite…" />;
+  const directTraderPrelaunch = !inviteToken && requestedMode === 'trader' && TRADER_PRELAUNCH_REGISTRATION_OPEN;
+  if (!inviteToken && !directTraderPrelaunch) return <Redirect href={waitlistHref(requestedMode, 'direct-signup')} />;
+  if (inviteToken && (checkingInvite || !inviteStatus)) return <LoadingScreen label="Checking your BuildPair early-access invite…" />;
 
-  const mode = inviteStatus.mode === 'homeowner' ? 'customer' : 'trader';
-  const email = inviteStatus.email?.trim().toLowerCase() ?? '';
+  const mode = inviteToken ? (inviteStatus?.mode === 'homeowner' ? 'customer' : 'trader') : 'trader';
+  const email = inviteToken ? inviteStatus?.email?.trim().toLowerCase() ?? '' : directEmail.trim().toLowerCase();
   const busy = fetchStatus === 'fetching';
   const needsEmailVerification = signUp.status === 'missing_requirements'
     && signUp.unverifiedFields.includes('email_address')
     && signUp.missingFields.length === 0;
   const verificationEmail = signUp.emailAddress ?? email;
-  const title = mode === 'customer' ? 'Create Homeowner Account' : 'Create Tradesperson Account';
+  const title = mode === 'customer' ? 'Create Homeowner Account' : directTraderPrelaunch ? 'Create your Founding Trade account' : 'Create Tradesperson Account';
 
-  if (!inviteStatus.valid || !email) {
-    return <Screen title="This early-access invite is no longer available" subtitle={inviteStatus.claimed ? 'This invite has already been used.' : 'The link may have expired, been replaced or been withdrawn.'}>
+  if (mode === 'customer' && !HOMEOWNER_REGISTRATION_OPEN) return <Redirect href={waitlistHref('customer', 'homeowner-signup-closed')} />;
+
+  if (inviteToken && (!inviteStatus?.valid || !email)) {
+    return <Screen title="This early-access invite is no longer available" subtitle={inviteStatus?.claimed ? 'This invite has already been used.' : 'The link may have expired, been replaced or been withdrawn.'}>
       <AppCard style={styles.inviteCard}>
         <Text style={styles.inviteText}>If you already created an account, sign in normally. Otherwise, your place on the launch list is unaffected.</Text>
       </AppCard>
@@ -76,6 +80,7 @@ export default function SignUpScreen() {
   }
 
   async function confirmInvite() {
+    if (!inviteToken) return;
     const result = await apiFetch<InviteStatus>(`/api/early-access-invite?invite=${encodeURIComponent(inviteToken)}`);
     if (!result.valid || result.email?.trim().toLowerCase() !== email) throw new Error('This early-access invite is no longer valid.');
   }
@@ -84,10 +89,11 @@ export default function SignUpScreen() {
     try {
       setError('');
       await confirmInvite();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Enter a valid email address.');
       const result = await signUp.password({
         emailAddress: email,
         password,
-        unsafeMetadata: { buildpairMode: mode, buildpairEarlyAccess: true },
+        unsafeMetadata: { buildpairMode: mode, buildpairEarlyAccess: Boolean(inviteToken), buildpairPrelaunchProfile: directTraderPrelaunch },
       });
       if (result.error) throw result.error;
       const verification = await signUp.verifications.sendEmailCode();
@@ -102,7 +108,7 @@ export default function SignUpScreen() {
     try {
       setError('');
       await confirmInvite();
-      if ((signUp.emailAddress ?? '').trim().toLowerCase() !== email) throw new Error('This invite is tied to a different email address.');
+      if ((signUp.emailAddress ?? '').trim().toLowerCase() !== email) throw new Error(inviteToken ? 'This invite is tied to a different email address.' : 'The verification email does not match this sign-up.');
       const verification = await signUp.verifications.verifyEmailCode({ code: code.trim() });
       if (verification.error) throw verification.error;
       if (signUp.status !== 'complete') {
@@ -148,18 +154,18 @@ export default function SignUpScreen() {
     </Screen>;
   }
 
-  return <Screen title={title} subtitle="You’ve been approved for BuildPair early access before the public launch.">
+  return <Screen title={title} subtitle={directTraderPrelaunch ? `Set everything up now. Your profile stays private until BuildPair launches.` : 'You’ve been approved for BuildPair early access before the public launch.'}>
     {jobContext}
     <AppCard style={styles.inviteCard}>
-      <Text variant="titleMedium" style={styles.inviteTitle}>Early access approved</Text>
-      <Text style={styles.inviteText}>This invite is locked to <Text style={styles.strong}>{email}</Text>. Create your account, complete your profile and use BuildPair normally while we finish the public launch.</Text>
+      <Text variant="titleMedium" style={styles.inviteTitle}>{directTraderPrelaunch ? 'Build your profile before launch' : 'Early access approved'}</Text>
+      <Text style={styles.inviteText}>{directTraderPrelaunch ? `Create your account now and complete your business profile, services, photos and trust details. The marketplace, homeowner contact, quoting, payments and paid membership billing stay switched off until launch. Founding Pro time will not start before ${LAUNCH_DATE_LABEL}.` : <>This invite is locked to <Text style={styles.strong}>{email}</Text>. Create your account and complete your profile while we finish the public launch.</>}</Text>
     </AppCard>
-    <TextInput label="Approved email address" accessibilityLabel="Approved email address" value={email} editable={false} mode="outlined" />
+    <TextInput label={directTraderPrelaunch ? 'Business email address' : 'Approved email address'} accessibilityLabel={directTraderPrelaunch ? 'Business email address' : 'Approved email address'} value={email} onChangeText={directTraderPrelaunch ? setDirectEmail : undefined} editable={directTraderPrelaunch} keyboardType="email-address" autoCapitalize="none" autoComplete="email" mode="outlined" />
     <TextInput label="Choose a password" accessibilityLabel="Choose a password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" mode="outlined" />
     <Text variant="bodySmall" style={styles.hint}>Use at least 8 characters. Your email will be verified before the account is activated.</Text>
     <View nativeID="clerk-captcha" />
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
-    <Button mode="contained" loading={busy} disabled={busy || password.length < 8} onPress={() => void startEmailSignUp()} contentStyle={styles.button}>Create my BuildPair account</Button>
+    <Button mode="contained" loading={busy} disabled={busy || password.length < 8 || (directTraderPrelaunch && !email)} onPress={() => void startEmailSignUp()} contentStyle={styles.button}>{directTraderPrelaunch ? 'Create account & build my profile' : 'Create my BuildPair account'}</Button>
     <View style={styles.footer}><Text>Already registered?</Text><Link href={signInHref(mode)} asChild><Button>Sign in</Button></Link></View>
   </Screen>;
 }

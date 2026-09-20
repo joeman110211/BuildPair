@@ -7,6 +7,7 @@ import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { MARKETPLACE_LIVE } from '@/lib/launch';
 import type { GooglePlaceCandidate, GoogleReviewSnapshot } from '@/lib/google-reviews';
 
 type Connection = {
@@ -112,9 +113,9 @@ export default function GoogleReviewsPage() {
     subtitle="Link your existing Google business reputation to BuildPair. BuildPair checks the listing against your saved business details before anything is shown publicly."
   >
     {params.onboarding === '1' ? <AppCard style={styles.welcomeCard}>
-      <Text style={styles.eyebrow}>PROFILE PUBLISHED</Text>
+      <Text style={styles.eyebrow}>{MARKETPLACE_LIVE ? 'PROFILE PUBLISHED' : 'PROFILE SAVED FOR LAUNCH'}</Text>
       <Text variant="titleLarge" style={styles.title}>Bring your existing reputation with you</Text>
-      <Text style={styles.muted}>This step is optional. Connect the correct Google business listing now, or skip it and come back from Manage Profile whenever you like.</Text>
+      <Text style={styles.muted}>This step is optional. Connect the correct Google business listing now, or skip it and come back later. During pre-launch it remains part of your private profile preparation and is not shown publicly.</Text>
       <Button mode="outlined" onPress={() => router.replace('/trader/dashboard')}>Skip for now</Button>
     </AppCard> : null}
 

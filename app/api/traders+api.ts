@@ -1,3 +1,4 @@
+import { LAUNCH_DATE_ISO, MARKETPLACE_LIVE } from '@/lib/launch-config';
 import { jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
@@ -24,6 +25,7 @@ type DirectoryTrader = {
 };
 
 export async function GET(request: Request) {
+  if (!MARKETPLACE_LIVE) return Response.json([]);
   const url = new URL(request.url);
   const trade = url.searchParams.get('trade');
 
@@ -79,7 +81,15 @@ export async function GET(request: Request) {
       LEFT JOIN reviews r
         ON r.trader_id = tp.user_id AND r.verified_completion = true
       WHERE tp.subscription_tier <> 'free'
-        AND tp.is_subscription_active = true
+        AND (
+          tp.is_subscription_active = true
+          OR (
+            tp.subscription_tier = 'featured'
+            AND tp.trial_ends_at IS NOT NULL
+            AND now() >= ${LAUNCH_DATE_ISO}::timestamptz
+            AND now() < ${LAUNCH_DATE_ISO}::timestamptz + interval '3 months'
+          )
+        )
         AND tp.user_id NOT LIKE 'seed_demo_trader_%'
         AND NOT EXISTS (
           SELECT 1 FROM users u

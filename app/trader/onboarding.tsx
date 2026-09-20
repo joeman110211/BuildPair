@@ -12,6 +12,7 @@ import { TraderProfileDraftPreview } from '@/components/TraderProfileDraftPrevie
 import { RADIUS_OPTIONS, SUB_SKILLS, TRADE_CATEGORIES, TRADER_BIO_MIN_LENGTH, type TradeCategory } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, ApiError, errorMessage } from '@/lib/api';
+import { MARKETPLACE_LIVE } from '@/lib/launch';
 import { clearDraft, loadDraft, saveDraft } from '@/lib/draft-storage';
 import type { BeforeAfterProject, TraderProfile } from '@/types';
 
@@ -356,13 +357,13 @@ export default function TraderOnboarding() {
     {step > 0 ? <Button mode="text" onPress={() => setStep((value) => value - 1)}>Back</Button> : <View />}
     {step < 3
       ? <Button mode="contained" contentStyle={styles.continueButton} disabled={!valid} onPress={() => setStep((value) => value + 1)}>Continue</Button>
-      : <Button mode="contained" icon="check-circle-outline" contentStyle={styles.continueButton} loading={busy} disabled={!valid || busy} onPress={() => void save()}>{busy ? 'Publishing…' : 'Save & Publish Profile'}</Button>}
+      : <Button mode="contained" icon="check-circle-outline" contentStyle={styles.continueButton} loading={busy} disabled={!valid || busy} onPress={() => void save()}>{busy ? 'Saving…' : MARKETPLACE_LIVE ? 'Save & Publish Profile' : 'Save Launch-Ready Profile'}</Button>}
   </View>;
 
   return <Screen
     key={step}
     title={STEP_TITLES[step]}
-    subtitle="Build the same polished storefront homeowners will see, with your services, work, service area and trust information in the right place."
+    subtitle={MARKETPLACE_LIVE ? 'Build the same polished storefront homeowners will see, with your services, work, service area and trust information in the right place.' : 'Build the profile homeowners will see after launch. It stays private while BuildPair is in pre-launch setup mode.'}
     footer={footer}
   >
     <View style={styles.progressBlock}>

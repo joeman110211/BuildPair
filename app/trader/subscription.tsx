@@ -10,6 +10,7 @@ import { StripeConnectOnboarding } from '@/components/StripeConnectOnboarding';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { LAUNCH_DATE_LABEL, MARKETPLACE_LIVE } from '@/lib/launch';
 import type { PayoutStatus } from '@/lib/payout-status';
 import type { SubscriptionTier, TraderProfile } from '@/types';
 
@@ -79,7 +80,7 @@ export default function SubscriptionScreen() {
     } catch (e) {
       setError(errorMessage(e));
     }
-    await refreshPayoutStatus();
+    if (MARKETPLACE_LIVE) await refreshPayoutStatus();
   }, [getToken, refreshPayoutStatus]);
 
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
@@ -104,6 +105,17 @@ export default function SubscriptionScreen() {
   }
 
   const activeTier: SubscriptionTier = profile?.subscriptionTier ?? 'free';
+
+  if (!MARKETPLACE_LIVE) return <Screen title="Membership starts at launch" subtitle={`BuildPair is in profile-setup mode before the planned ${LAUNCH_DATE_LABEL} launch.`}>
+    <AppCard style={styles.currentPlan}>
+      <Text variant="titleLarge" style={styles.title}>{activeTier === 'featured' ? 'BuildPair Pro reserved' : 'No membership billing yet'}</Text>
+      <Text style={styles.muted}>{activeTier === 'featured' ? 'Your Founding Trade profile has three months of Pro reserved for launch. The free period is not running now and there is nothing to pay before launch.' : 'BuildPair is not taking membership payments during pre-launch profile setup.'}</Text>
+    </AppCard>
+    <AppCard>
+      <Text variant="titleLarge" style={styles.title}>Payments and payouts are deliberately locked</Text>
+      <Text style={styles.muted}>Stripe subscription checkout, payout onboarding, marketplace quote allowances and BuildPay remain unavailable until the operational marketplace is switched on.</Text>
+    </AppCard>
+  </Screen>;
   const used = profile?.monthlyQuotesUsed ?? 0;
   const limit = profile?.monthlyQuoteLimit ?? PLAN_COPY[activeTier].monthlyMarketplaceQuotes;
   const payoutsReady = payoutStatus?.ready ?? Boolean(profile?.stripePayoutsEnabled);

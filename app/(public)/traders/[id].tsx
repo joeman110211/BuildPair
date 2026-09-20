@@ -56,14 +56,14 @@ export default function PublicTraderProfileRoute() {
         <Text variant="titleMedium" style={styles.businessName}>{profile.businessName}</Text>
         <Text style={styles.tradeLine}>{categories.filter(Boolean).join(' · ')}</Text>
         <Text style={styles.body}>
-          This tradesperson has a BuildPair account, but full public profiles are available only while a paid tradesperson membership is active.
+          This tradesperson has a BuildPair account, but the profile is not publicly active yet. Pre-launch profiles remain private, and after launch public visibility depends on the applicable BuildPair membership.
         </Text>
         <Text style={styles.body}>
-          Creating or signing into a homeowner account will not unlock an inactive profile. If this tradesperson activates their public profile later, this same shared link will begin showing it automatically.
+          Homeowner registration and marketplace access may also be unavailable while BuildPair is preparing for launch. When this profile becomes publicly active, this same link can show the full storefront automatically.
         </Text>
         <View style={styles.actions}>
           <Link href="/(public)/directory" asChild><Button mode="contained" icon="magnify">Find active local trades</Button></Link>
-          {!isSignedIn ? <Link href="/auth/sign-up?mode=customer" asChild><Button mode="outlined" icon="account-plus-outline">Create homeowner account</Button></Link> : null}
+          {!isSignedIn ? <Link href="/(public)/waitlist?audience=homeowner&source=locked-profile" asChild><Button mode="outlined" icon="bell-outline">Get homeowner launch updates</Button></Link> : null}
         </View>
       </AppCard>
     </View>
