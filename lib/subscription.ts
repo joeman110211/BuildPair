@@ -1,4 +1,5 @@
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
+import { MARKETPLACE_LIVE } from '@/lib/launch-config';
 
 export const CATEGORY_CHANGE_COOLDOWN_DAYS = 14;
 
@@ -32,8 +33,14 @@ export function traderMonthlyQuoteLimit(profile?: { subscriptionTier?: TraderWor
 export function hasActiveLeadAccess(profile: {
   subscriptionTier?: TraderWorkTypeTier | null;
   isSubscriptionActive?: boolean | null;
+  trialEndsAt?: Date | string | null;
 }) {
-  return profile.subscriptionTier !== 'free' && profile.isSubscriptionActive === true;
+  if (!MARKETPLACE_LIVE) return false;
+  if (profile.subscriptionTier === 'free') return false;
+  if (profile.isSubscriptionActive === true) return true;
+  if (profile.subscriptionTier !== 'featured' || !profile.trialEndsAt) return false;
+  const trialEnd = profile.trialEndsAt instanceof Date ? profile.trialEndsAt : new Date(profile.trialEndsAt);
+  return Number.isFinite(trialEnd.getTime()) && trialEnd.getTime() > Date.now();
 }
 
 export function isPubliclySearchable(profile: {
