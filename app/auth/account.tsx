@@ -20,8 +20,8 @@ export default function AccountEntryScreen() {
     <View style={styles.hero}>
       <BuildPairLogo tagline />
       <Chip icon="rocket-launch-outline">Launching {LAUNCH_DATE_LABEL}</Chip>
-      <Text variant="headlineSmall" style={styles.heading}>New account registration is paused until launch.</Text>
-      <Text style={styles.subheading}>Existing members can still sign in normally. If you’re new to BuildPair, join the launch waiting list and we’ll let you know as soon as registration opens.</Text>
+      <Text variant="headlineSmall" style={styles.heading}>Trades can get launch-ready now. Homeowner accounts open later.</Text>
+      <Text style={styles.subheading}>Tradespeople can create an account and build their full profile now. The marketplace itself stays locked until launch, so profiles remain private and no live jobs, quotes, payments or homeowner contact can happen yet.</Text>
     </View>
 
     <View style={styles.cards}>
@@ -33,8 +33,8 @@ export default function AccountEntryScreen() {
             <Text variant="bodySmall" style={styles.kicker}>POST • COMPARE • HIRE</Text>
           </View>
         </View>
-        <Text style={styles.body}>Find trades, compare quotes and keep the whole job together when BuildPair opens.</Text>
-        <Link href={signUpHref('customer')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Join Homeowner Waitlist</Button></Link>
+        <Text style={styles.body}>Homeowner account creation and job posting stay closed until the marketplace launches.</Text>
+        <Link href={signUpHref('customer')} asChild><Button mode="outlined" icon="bell-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Get homeowner launch updates</Button></Link>
         <Link href={signInHref('customer')} asChild><Button mode="text">Existing Homeowner Sign In</Button></Link>
       </AppCard>
 
@@ -46,8 +46,8 @@ export default function AccountEntryScreen() {
             <Chip compact style={styles.trialChip} textStyle={styles.trialChipText}>Founding offer</Chip>
           </View>
         </View>
-        <Text style={styles.body}>Join the waiting list for launch. The first 50 eligible waiting-list trades who complete registration within 24 hours of launch get 3 months of Pro free.</Text>
-        <Link href={signUpHref('trader')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Join Tradesperson Waitlist</Button></Link>
+        <Text style={styles.body}>Create the real account now and complete your business profile before launch. Eligible Founding 50 profiles get 3 months of Pro from launch day, so the free period does not run down while the marketplace is closed.</Text>
+        <Link href={signUpHref('trader')} asChild><Button mode="contained" icon="account-plus-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Create Founding Trade Account</Button></Link>
         <Link href={signInHref('trader')} asChild><Button mode="text">Existing Tradesperson Sign In</Button></Link>
       </AppCard>
     </View>
@@ -55,11 +55,11 @@ export default function AccountEntryScreen() {
     <AppCard elevated={false} style={styles.browseCard}>
       <View style={styles.browseCopy}>
         <Text variant="titleMedium" style={styles.title}>Explore BuildPair now</Text>
-        <Text style={styles.browseText}>The public site stays open while we finish release work. Browse trade profiles, jobs, pricing, guides and how BuildPay works without creating an account.</Text>
+        <Text style={styles.browseText}>The public information site stays open while we finish launch work. You can read how BuildPair, pricing and BuildPay are intended to work, but the live marketplace remains switched off.</Text>
       </View>
       <View style={styles.browseActions}>
-        <Link href="/(public)/directory" asChild><Button mode="outlined" contentStyle={styles.browseButton}>Browse trades</Button></Link>
-        <Link href="/(public)/jobs" asChild><Button mode="outlined" icon="briefcase-search-outline" contentStyle={styles.browseButton}>Jobs</Button></Link>
+        <Link href="/(public)/how-it-works" asChild><Button mode="outlined" contentStyle={styles.browseButton}>How it works</Button></Link>
+        <Link href="/(public)/payments" asChild><Button mode="outlined" icon="shield-check-outline" contentStyle={styles.browseButton}>BuildPay</Button></Link>
       </View>
     </AppCard>
   </Screen>;
