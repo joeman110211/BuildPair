@@ -8,7 +8,7 @@ import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 export default function PricingPage() {
   const primaryHref = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', 'pricing-hero');
-  const primaryLabel = REGISTRATION_OPEN ? 'Create trade account' : 'Join tradesperson launch list';
+  const primaryLabel = REGISTRATION_OPEN ? 'Create trade account' : 'Create launch-ready trade profile';
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
     <View style={styles.hero}>
