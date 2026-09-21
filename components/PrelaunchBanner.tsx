@@ -17,7 +17,7 @@ export function PrelaunchBanner() {
           <Chip compact icon="star-circle-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Bring your Google reviews</Chip>
           <Chip compact icon="lock-clock" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Marketplace unlocks at launch</Chip>
         </View>
-        <Text style={[styles.title, compact && styles.titleCompact]}>Surrey trades can set up now. BuildPair launches ${LAUNCH_DATE_LABEL}.</Text>
+        <Text style={[styles.title, compact && styles.titleCompact]}>Surrey trades can set up now. BuildPair launches {LAUNCH_DATE_LABEL}.</Text>
         <Text style={[styles.body, compact && styles.bodyCompact]}>We’re onboarding the first 50 Surrey trades before public launch. Create your real BuildPair account now, complete your business profile, service area, portfolio and trust details, then arrive at launch already set up.</Text>
         <Text style={[styles.reputation, compact && styles.reputationCompact]}><Text style={styles.strong}>Pre-launch means setup only.</Text> Jobs, quoting, homeowner messaging, BuildPay and paid subscriptions stay locked until launch. Founding trades can still bring their Google reputation and get their storefront launch-ready now.</Text>
         <View style={[styles.offerBox, compact && styles.offerBoxCompact]}>
