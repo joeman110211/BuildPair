@@ -40,7 +40,10 @@ export function ServiceAreaMap({ latitude, longitude, radiusMiles, locationLabel
   const bbox = [centreLon - lonDelta, centreLat - latDelta, centreLon + lonDelta, centreLat + latDelta]
     .map((value) => value.toFixed(6))
     .join('%2C');
-  const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${centreLat.toFixed(6)}%2C${centreLon.toFixed(6)}`;
+  // OpenStreetMap's embedded marker currently exposes a broken untranslated
+  // tooltip in some locales. BuildPair already draws its own privacy-safe centre
+  // marker, so omit the OSM marker rather than showing third-party error text.
+  const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik`;
   const fullMapUrl = `https://www.openstreetmap.org/?mlat=${centreLat.toFixed(5)}&mlon=${centreLon.toFixed(5)}#map=11/${centreLat.toFixed(5)}/${centreLon.toFixed(5)}`;
 
   const iframe = Platform.OS === 'web'

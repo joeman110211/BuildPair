@@ -1,0 +1,56 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+
+function source(path: string) {
+  return readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
+}
+
+describe('public surface hardening', () => {
+  it('does not ship the temporary full-source export API', () => {
+    const route = new URL('../app/api/internal-source-export-20260912+api.ts', import.meta.url);
+    expect(existsSync(route)).toBe(false);
+  });
+
+  it('does not advertise an admin sign-in entry point in the public footer', () => {
+    const footer = source('components/PublicFooter.tsx');
+    expect(footer).not.toContain('Admin sign in');
+    expect(footer).not.toContain('admin=1');
+  });
+
+  it('keeps directory capability labels informational rather than disabled-looking controls', () => {
+    const directory = source('app/(public)/directory.tsx');
+    expect(directory).toContain('BuildPair search');
+    expect(directory).toContain('capabilityPill');
+    expect(directory).not.toContain('<Chip>Smart intent matching</Chip>');
+  });
+
+  it('avoids the broken third-party embedded map marker tooltip', () => {
+    const map = source('components/ServiceAreaMap.tsx');
+    expect(map).toContain('export/embed.html?bbox=${bbox}&layer=mapnik`');
+    expect(map).not.toContain('export/embed.html?bbox=${bbox}&layer=mapnik&marker=');
+  });
+
+  it('does not ship the public production blueprint with site-wide noindex enabled', () => {
+    const renderConfig = source('render.yaml');
+    expect(renderConfig).toContain('BUILDPAIR_NOINDEX');
+    expect(renderConfig).toContain('value: "false"');
+    expect(renderConfig).not.toContain('BUILDPAIR_NOINDEX\n        value: "true"');
+  });
+
+  it('rate limits anonymous analytics ingestion', () => {
+    const analytics = source('app/api/visitor-analytics+api.ts');
+    expect(analytics).toContain("assertRateLimit(request, 'visitor-analytics', 300, 60)");
+  });
+
+  it('keeps production readiness diagnostics high level', () => {
+    const readiness = source('app/api/readiness+api.ts');
+    expect(readiness).toContain("process.env.NODE_ENV === 'production'");
+    expect(readiness).toContain('publicStatus');
+  });
+
+  it('includes social sharing metadata for public links', () => {
+    const html = source('app/+html.tsx');
+    expect(html).toContain('property="og:title"');
+    expect(html).toContain('name="twitter:card"');
+  });
+});
