@@ -69,7 +69,7 @@ async function clerkSignupIdentity(userId: string): Promise<ClerkSignupIdentity>
     const response = await fetch(`https://api.clerk.com/v1/users/${encodeURIComponent(userId)}`, {
       headers: { Authorization: `Bearer ${secret}`, Accept: 'application/json' },
     });
-    if (!response.ok) return { email: null, name: null, mode: null };
+    if (!response.ok) return { email: null, name: null, mode: null, acquisitionSource: null, referralCode: null };
     const data = await response.json() as {
       primary_email_address_id?: string | null;
       email_addresses?: { id: string; email_address: string }[];
