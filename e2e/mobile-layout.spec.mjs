@@ -122,6 +122,8 @@ test('narrow public card layouts stay inside a 320px viewport', async ({ page })
     ['/contact', 'contact'],
     ['/advice', 'advice hub'],
     ['/pricing', 'membership'],
+    ['/waitlist?audience=homeowner&source=e2e', 'homeowner waitlist'],
+    ['/auth/founding-trade-signup?source=e2e', 'founding trade signup'],
     ['/download', 'download'],
     ['/report', 'reporting'],
   ];
