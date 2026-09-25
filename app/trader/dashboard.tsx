@@ -2,14 +2,21 @@ import { useAuth } from '@clerk/expo';
 import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Share, StyleSheet, View } from 'react-native';
 import { Button, Chip, ProgressBar, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors, controlHeights, spacing } from '@/constants/theme';
 import { apiFetch, ApiError, errorMessage } from '@/lib/api';
+import { LAUNCH_DATE_LABEL, MARKETPLACE_OPEN } from '@/lib/launch';
 import type { Job, Quote, TraderProfile } from '@/types';
+
+type ReferralState = {
+  referralCode: string;
+  referralCount: number;
+  referralUrl: string;
+};
 
 export default function TraderDashboard() {
   const { getToken } = useAuth();
@@ -18,6 +25,7 @@ export default function TraderDashboard() {
   const [profile, setProfile] = useState<TraderProfile>();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [referral, setReferral] = useState<ReferralState>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -28,14 +36,39 @@ export default function TraderDashboard() {
       const tokenGetter = () => getTokenRef.current();
       const ownProfile = await apiFetch<TraderProfile>('/api/me/profile', {}, tokenGetter);
       setProfile(ownProfile);
-      const [jobRows, quoteRows] = await Promise.all([apiFetch<Job[]>('/api/jobs', {}, tokenGetter), apiFetch<Quote[]>('/api/quotes', {}, tokenGetter)]);
-      setJobs(jobRows); setQuotes(quoteRows);
+      const referralState = await apiFetch<ReferralState>('/api/trader-referral', { method: 'POST' }, tokenGetter).catch(() => undefined);
+      setReferral(referralState);
+      if (MARKETPLACE_OPEN) {
+        const [jobRows, quoteRows] = await Promise.all([
+          apiFetch<Job[]>('/api/jobs', {}, tokenGetter),
+          apiFetch<Quote[]>('/api/quotes', {}, tokenGetter),
+        ]);
+        setJobs(jobRows);
+        setQuotes(quoteRows);
+      } else {
+        setJobs([]);
+        setQuotes([]);
+      }
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) setProfile(undefined);
       else setError(errorMessage(e));
     } finally { setLoading(false); }
   }, []);
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
+
+  async function shareOneGoodTrade() {
+    if (!referral?.referralUrl) return;
+    const text = `I’m getting BuildPair ready before launch. They’re asking each founding trade to invite one decent Surrey trade they’d genuinely be happy to work alongside. I’m passing my One Good Trade invite to you: ${referral.referralUrl}`;
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+        await navigator.share({ title: 'BuildPair · One Good Trade', text, url: referral.referralUrl });
+        return;
+      }
+      await Share.share({ title: 'BuildPair · One Good Trade', message: text, url: referral.referralUrl });
+    } catch {
+      // Cancelling the native share sheet is not an error.
+    }
+  }
 
   if (loading) return <LoadingScreen />;
   if (!profile) return <Screen title="Build your tradesperson profile" subtitle="Your profile is your shop window on BuildPair."><EmptyState title="Your profile is waiting" body="Add your trade, service area, skills and business details so homeowners can find you." action={<Link href="/trader/onboarding" asChild><Button mode="contained" contentStyle={styles.actionButton}>Build my profile</Button></Link>} /></Screen>;
@@ -56,7 +89,15 @@ export default function TraderDashboard() {
   const serviceArea = profile.locationLabel || profile.postcode || 'your saved service area';
 
   return <Screen title={profile.businessName} subtitle={`${profile.tradeCategory}${profile.locationLabel ? ` · ${profile.locationLabel}` : ''}`}>
-    {!payoutsReady ? <AppCard style={styles.payoutCard}>
+    {!MARKETPLACE_OPEN ? <AppCard style={styles.prelaunchCard}>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Text variant="titleLarge" style={styles.cardTitle}>Profile setup is live. Marketplace activity is not.</Text>
+          <Text style={styles.muted}>BuildPair launches {LAUNCH_DATE_LABEL}. Jobs, quotes, messaging, BuildPay, subscriptions and payout setup stay locked until launch, so there is nothing missing from your account right now.</Text>
+        </View>
+        <Chip icon="rocket-launch-outline">Launch ready</Chip>
+      </View>
+    </AppCard> : !payoutsReady ? <AppCard style={styles.payoutCard}>
       <View style={styles.row}>
         <View style={styles.flex}>
           <Text variant="titleLarge" style={styles.cardTitle}>Payout verification incomplete</Text>
@@ -74,11 +115,13 @@ export default function TraderDashboard() {
         <View style={styles.flex}>
           <Text style={styles.membershipEyebrow}>CURRENT MEMBERSHIP</Text>
           <Text variant="titleLarge" style={styles.cardTitle}>{plan.name}</Text>
-          <Text style={styles.muted}>{profile.subscriptionTier === 'free'
-            ? 'Your Starter profile can be shared externally and you can browse marketplace jobs. Upgrade to appear in BuildPair search and submit marketplace offers.'
-            : `${Math.max(0, offerLimit - offersUsed)} of ${offerLimit} marketplace offers remaining this month. An offer is counted when you submit an open-marketplace quote. Direct homeowner requests do not use this allowance.`}</Text>
+          <Text style={styles.muted}>{!MARKETPLACE_OPEN && profile.subscriptionTier !== 'free'
+            ? `${plan.name} is reserved for launch. Your founding offer starts when BuildPair opens, so pre-launch setup does not burn any paid or free membership time.`
+            : profile.subscriptionTier === 'free'
+              ? 'Your Starter profile can be shared externally and you can browse marketplace jobs. Upgrade to appear in BuildPair search and submit marketplace offers.'
+              : `${Math.max(0, offerLimit - offersUsed)} of ${offerLimit} marketplace offers remaining this month. An offer is counted when you submit an open-marketplace quote. Direct homeowner requests do not use this allowance.`}</Text>
         </View>
-        <Chip>{paidActive ? 'Active' : profile.subscriptionTier === 'free' ? 'Starter' : 'Needs attention'}</Chip>
+        <Chip>{!MARKETPLACE_OPEN && profile.subscriptionTier !== 'free' ? 'Reserved for launch' : paidActive ? 'Active' : profile.subscriptionTier === 'free' ? 'Starter' : 'Needs attention'}</Chip>
       </View>
       {offerLimit > 0 ? <><ProgressBar progress={offerProgress} color={colors.primary} style={styles.progress} /><Text style={styles.offerMeta}>{offersUsed} used · {offerLimit} monthly allowance</Text></> : null}
       <View style={styles.membershipActions}>
@@ -97,6 +140,22 @@ export default function TraderDashboard() {
       </View>
       <Link href="/trader/profile" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Manage profile & service area</Button></Link>
     </AppCard>
+
+    {referral ? <AppCard style={styles.relayCard}>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Text style={styles.membershipEyebrow}>ONE GOOD TRADE · BUILDPAIR RELAY</Text>
+          <Text variant="titleLarge" style={styles.cardTitle}>One good trade brings one good trade.</Text>
+          <Text style={styles.muted}>Don’t spam forty strangers. Pass this to one Surrey builder or tradesperson you genuinely rate and would be happy to work alongside. If they join through your link, BuildPair records the connection and the relay keeps moving.</Text>
+        </View>
+        <Chip icon={referral.referralCount > 0 ? 'check-circle-outline' : 'account-multiple-plus-outline'}>
+          {referral.referralCount > 0 ? `${referral.referralCount} joined` : 'Your turn'}
+        </Chip>
+      </View>
+      <Button mode="contained" icon="share-variant-outline" onPress={() => void shareOneGoodTrade()} contentStyle={styles.actionButton}>Pass my One Good Trade invite</Button>
+      <Text selectable style={styles.relayLink}>{referral.referralUrl}</Text>
+      <Text style={styles.relayNote}>No paid-lead nonsense and no cash-for-random-invites scheme. The point is to seed BuildPair with real local working networks before launch.</Text>
+    </AppCard> : null}
 
     <View style={styles.stats}>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{newLeads.length}</Text><Text style={styles.statLabel}>New opportunities</Text></AppCard>
@@ -130,7 +189,7 @@ export default function TraderDashboard() {
 }
 
 const styles = StyleSheet.create({
-  payoutCard: { backgroundColor: colors.goldSoft, borderColor: colors.gold }, payoutReadyCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent }, activeJobCard: { borderColor: colors.primary, borderWidth: 2 },
+  payoutCard: { backgroundColor: colors.goldSoft, borderColor: colors.gold }, payoutReadyCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent }, prelaunchCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary }, relayCard: { backgroundColor: '#FFF9F5', borderColor: colors.primary, borderWidth: 2 }, relayLink: { color: colors.primary, fontSize: 12, fontWeight: '700' }, relayNote: { color: colors.muted, fontSize: 12, lineHeight: 18 }, activeJobCard: { borderColor: colors.primary, borderWidth: 2 },
   membershipCard: { backgroundColor: colors.surfaceRaised, borderColor: colors.border }, membershipCardPaid: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' }, membershipEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.1, marginBottom: spacing.xxs }, membershipActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center', justifyContent: 'flex-start' }, offerMeta: { color: colors.muted, fontSize: 11, fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' }, cardActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }, flex: { flex: 1, minWidth: 220, gap: spacing.xxs }, cardTitle: { fontWeight: '900', color: colors.charcoal }, muted: { color: colors.muted, lineHeight: 21 }, progress: { height: 7, borderRadius: 4, backgroundColor: colors.surfaceStrong }, stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }, stat: { flexGrow: 1, flexBasis: 145, minWidth: 135, paddingVertical: spacing.lg, alignItems: 'center' }, statNumber: { color: colors.primary, fontWeight: '900', textAlign: 'center' }, statLabel: { color: colors.muted, fontWeight: '700', textAlign: 'center' }, sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.xxs }, quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'center' }, actionButton: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xs }, description: { color: colors.text, lineHeight: 21 },
 });
