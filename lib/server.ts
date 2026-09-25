@@ -3,8 +3,9 @@ import { getDb } from '@/db/client';
 import { users } from '@/db/schema';
 import { verifyBuildPairClerkSession } from '@/lib/clerk-session';
 import { ensureEarlyAccessInviteTable } from '@/lib/early-access-store';
-import { REGISTRATION_OPEN } from '@/lib/launch-config';
+import { REGISTRATION_OPEN, TRADER_PRELAUNCH_REGISTRATION_OPEN } from '@/lib/launch-config';
 import { getSql } from '@/lib/sql';
+import { ensureLaunchWaitlistTable } from '@/lib/waitlist-store';
 import { sendWelcomeEmailOnce } from '@/lib/transactional-email';
 
 export class HttpError extends Error {
@@ -25,6 +26,8 @@ type ClerkSignupIdentity = {
   email: string | null;
   name: string | null;
   mode: AccountMode | null;
+  acquisitionSource: string | null;
+  referralCode: string | null;
 };
 
 function bootstrapAdminIds() {
@@ -54,9 +57,14 @@ function clerkSessionToken(request: Request) {
   try { return decodeURIComponent(encoded); } catch { return encoded; }
 }
 
+function metadataString(metadata: Record<string, unknown> | null | undefined, key: string, maxLength: number) {
+  const value = metadata?.[key];
+  return typeof value === 'string' ? value.trim().slice(0, maxLength) || null : null;
+}
+
 async function clerkSignupIdentity(userId: string): Promise<ClerkSignupIdentity> {
   const secret = process.env.CLERK_SECRET_KEY?.trim();
-  if (!secret) return { email: null, name: null, mode: null };
+  if (!secret) return { email: null, name: null, mode: null, acquisitionSource: null, referralCode: null };
   try {
     const response = await fetch(`https://api.clerk.com/v1/users/${encodeURIComponent(userId)}`, {
       headers: { Authorization: `Bearer ${secret}`, Accept: 'application/json' },
@@ -75,13 +83,21 @@ async function clerkSignupIdentity(userId: string): Promise<ClerkSignupIdentity>
     const rawMode = data.unsafe_metadata?.buildpairMode ?? data.public_metadata?.buildpairMode;
     const mode: AccountMode | null = rawMode === 'customer' || rawMode === 'trader' ? rawMode : null;
     const name = [data.first_name, data.last_name].filter(Boolean).join(' ').trim() || null;
+    const acquisitionSource = metadataString(data.unsafe_metadata, 'buildpairAcquisitionSource', 80)
+      ?? metadataString(data.public_metadata, 'buildpairAcquisitionSource', 80);
+    const referralCode = (
+      metadataString(data.unsafe_metadata, 'buildpairReferralCode', 24)
+      ?? metadataString(data.public_metadata, 'buildpairReferralCode', 24)
+    )?.toUpperCase() ?? null;
     return {
       email: primary?.email_address?.trim().toLowerCase() || null,
       name,
       mode,
+      acquisitionSource,
+      referralCode,
     };
   } catch {
-    return { email: null, name: null, mode: null };
+    return { email: null, name: null, mode: null, acquisitionSource: null, referralCode: null };
   }
 }
 
@@ -97,6 +113,57 @@ async function activeEarlyAccessEmail(email: string | null) {
     LIMIT 1
   ` as unknown as { id: string }[];
   return rows.length ? email : null;
+}
+
+async function recordPrelaunchTraderRegistration(userId: string, identity: ClerkSignupIdentity) {
+  if (!identity.email) return;
+
+  await ensureLaunchWaitlistTable();
+  const sql = getSql();
+  const referrerRows = identity.referralCode ? await sql`
+    SELECT id
+    FROM launch_waitlist
+    WHERE upper(referral_code) = ${identity.referralCode}
+      AND status <> 'removed'
+    LIMIT 1
+  ` as unknown as { id: string }[] : [];
+  const referredById = referrerRows[0]?.id ?? null;
+  const source = identity.acquisitionSource || 'founding-trade-signup';
+
+  await sql`
+    INSERT INTO launch_waitlist (
+      name, email, phone, postcode, audience, trade, tester_interest,
+      sms_opt_in, marketing_opt_in, preferred_contact, source,
+      referral_code, referred_by_id, status, registered_user_id, registered_at
+    )
+    VALUES (
+      ${identity.name || ''}, ${identity.email}, NULL, '', 'trader', NULL, true,
+      false, false, 'email', ${source},
+      'BP' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 10)),
+      ${referredById}::uuid, 'registered', ${userId}, now()
+    )
+    ON CONFLICT (email) DO UPDATE SET
+      audience = 'trader',
+      tester_interest = true,
+      source = ${source},
+      status = 'registered',
+      registered_user_id = ${userId},
+      registered_at = coalesce(launch_waitlist.registered_at, now()),
+      referred_by_id = CASE
+        WHEN ${referredById}::uuid IS NULL OR launch_waitlist.id = ${referredById}::uuid
+          THEN launch_waitlist.referred_by_id
+        ELSE coalesce(launch_waitlist.referred_by_id, ${referredById}::uuid)
+      END,
+      updated_at = now()
+  `;
+
+  await ensureEarlyAccessInviteTable();
+  await sql`
+    UPDATE early_access_invites
+    SET used_at = coalesce(used_at, now()), updated_at = now()
+    WHERE lower(email) = lower(${identity.email})
+      AND revoked_at IS NULL
+  `;
 }
 
 export async function authenticatedUserId(request: Request) {
@@ -166,17 +233,24 @@ export async function ensureDbUser(userId: string) {
   }
 
   const identity = await clerkSignupIdentity(userId);
+  const prelaunchTraderAllowed = !REGISTRATION_OPEN
+    && TRADER_PRELAUNCH_REGISTRATION_OPEN
+    && identity.mode === 'trader';
   let earlyAccessEmail: string | null = null;
-  if (!REGISTRATION_OPEN && !bootstrapAdminIds().has(userId)) {
+  if (!REGISTRATION_OPEN && !bootstrapAdminIds().has(userId) && !prelaunchTraderAllowed) {
     earlyAccessEmail = await activeEarlyAccessEmail(identity.email);
     if (!earlyAccessEmail) {
-      throw new HttpError(403, 'New BuildPair registrations are paused until 1 October 2026. Join the launch waiting list to be notified when sign-up opens.');
+      throw new HttpError(403, 'New homeowner registrations are paused until launch. Surrey tradespeople can create a launch-ready profile now.');
     }
   }
 
   const [created] = await db.insert(users).values({ id: userId, email: identity.email }).onConflictDoNothing().returning();
   const user = created ?? await db.query.users.findFirst({ where: eq(users.id, userId) });
   if (!user) throw new Error('Unable to synchronize user');
+
+  if (prelaunchTraderAllowed) {
+    await recordPrelaunchTraderRegistration(userId, identity);
+  }
 
   if (earlyAccessEmail) {
     const sql = getSql();
