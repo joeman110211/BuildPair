@@ -13,6 +13,14 @@ describe('BuildPair prelaunch gates', () => {
     expect(MARKETPLACE_OPEN).toBe(false);
   });
 
+  it('lets Founding Trades synchronize a real account while public registration stays closed', () => {
+    const server = readFileSync('lib/server.ts', 'utf8');
+    expect(server).toContain('TRADER_PRELAUNCH_REGISTRATION_OPEN');
+    expect(server).toContain("identity.mode === 'trader'");
+    expect(server).toContain('prelaunchTraderAllowed');
+    expect(server).toContain('recordPrelaunchTraderRegistration');
+  });
+
   it('keeps a server-side marketplace lock around transactional API families', () => {
     const server = readFileSync('server.mjs', 'utf8');
     for (const path of [
