@@ -49,7 +49,7 @@ export default function PricingPage() {
 
       <View style={styles.notice}>
         <Text variant="titleMedium" style={styles.noticeTitle}>BuildPair job payment fee</Text>
-        <Text style={styles.noticeText}>For jobs using BuildPay, the fee responsibility and exact amount are shown before the payment arrangement is confirmed. Customer-paid BuildPay fees are added to the amount collected. Where a tradesperson chooses to absorb the fee, the relevant deduction is shown in the payout record. BuildPair keeps the contract amount and payment-fee breakdown visible so both sides can see what was agreed.</Text>
+        <Text style={styles.noticeText}>For jobs using BuildPay, the party who asks to add BuildPay carries its cost. Tradesperson-requested BuildPay is absorbed from controlled service payouts; homeowner-requested BuildPay adds the separately disclosed service fee to the homeowner total. BuildPair keeps the contract amount and payment-fee responsibility visible so both sides can see what was agreed.</Text>
         <Link href="/(public)/payments" asChild><Button mode="text">Read how BuildPair payments work</Button></Link>
       </View>
 
