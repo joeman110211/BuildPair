@@ -103,23 +103,27 @@ describe('marketplace validation', () => {
     if (!result.success) expect(result.error.issues.some((issue) => issue.message.includes('at least one trade category'))).toBe(true);
   });
 
-  it('allows profile setup with more than six main trade categories', () => {
+  it('allows profile setup with more than six main trade categories before plan enforcement', () => {
+    const categories = TRADE_CATEGORIES.slice(0, 7);
+    const serviceSelections = Object.fromEntries(categories.map((category) => [category, [SUB_SKILLS[category][0]]]));
     const result = traderProfileSchema.safeParse({
       ...validTraderProfile,
       tradeCategory: TRADE_CATEGORIES[0],
-      tradeCategories: TRADE_CATEGORIES.slice(0, 7),
-      serviceSelections: { Tiling: ['Bathroom tiling'] },
+      tradeCategories: categories,
+      serviceSelections,
     });
     expect(result.success).toBe(true);
   });
 
   it('allows broad renovation profiles with more than 100 selected service labels', () => {
+    const categories = TRADE_CATEGORIES.slice(0, 10);
     const manyServices = TRADE_CATEGORIES.flatMap((category) => SUB_SKILLS[category]).slice(0, 120);
+    const serviceSelections = Object.fromEntries(categories.map((category) => [category, [...SUB_SKILLS[category]]]));
     const result = traderProfileSchema.safeParse({
       ...validTraderProfile,
       tradeCategory: TRADE_CATEGORIES[0],
-      tradeCategories: TRADE_CATEGORIES.slice(0, 10),
-      serviceSelections: { Tiling: ['Bathroom tiling'] },
+      tradeCategories: categories,
+      serviceSelections,
       subSkills: manyServices,
     });
     expect(result.success).toBe(true);
@@ -133,6 +137,16 @@ describe('marketplace validation', () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error.issues.some((issue) => issue.message.includes(`no more than ${TRADE_CATEGORIES.length} trade categories`))).toBe(true);
+  });
+
+  it('requires at least one genuine service inside every selected main category', () => {
+    const result = traderProfileSchema.safeParse({
+      ...validTraderProfile,
+      tradeCategories: ['Tiling', 'Bathrooms'],
+      serviceSelections: { Tiling: ['Bathroom tiling'], Bathrooms: [] },
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues.some((issue) => issue.message.includes('Choose at least one service inside Bathrooms'))).toBe(true);
   });
 
   it('rejects a service that does not belong to the selected category', () => {
