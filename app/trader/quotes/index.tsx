@@ -8,6 +8,7 @@ import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { MARKETPLACE_OPEN } from '@/lib/launch';
 import { formatMoney } from '@/lib/money';
 import type { PaymentStagePlan, Quote } from '@/types';
 
@@ -66,7 +67,7 @@ export default function TraderQuotesScreen() {
       setLoading(true); setError('');
       const [outside, marketplace] = await Promise.all([
         apiFetch<BusinessQuote[]>('/api/business-quotes', {}, getToken),
-        apiFetch<Quote[]>('/api/quotes', {}, getToken),
+        MARKETPLACE_OPEN ? apiFetch<Quote[]>('/api/quotes', {}, getToken) : Promise.resolve([] as Quote[]),
       ]);
       setBusinessQuotes(outside);
       setJobQuotes(marketplace);
