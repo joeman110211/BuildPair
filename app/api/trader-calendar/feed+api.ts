@@ -30,11 +30,12 @@ async function ensureFeed(traderId: string) {
 
 function response(row: { token: string; enabled: boolean }) {
   const feedUrl = `${baseUrl()}/api/public/calendar/${row.token}`;
+  const webcalUrl = feedUrl.replace(/^https:/, 'webcal:').replace(/^http:/, 'webcal:');
   return {
     enabled: row.enabled,
     feedUrl,
-    webcalUrl: feedUrl.replace(/^https:/, 'webcal:').replace(/^http:/, 'webcal:'),
-    googleUrl: `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(feedUrl)}`,
+    webcalUrl,
+    googleUrl: `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(webcalUrl)}`,
   };
 }
 
