@@ -186,6 +186,36 @@ export default function LandingPageRefined() {
       </View>
     </View>
 
+    <View style={styles.updatesBand}>
+      <View style={styles.section}>
+        <SectionHeading eyebrow="BuildPair updates" title="Recently added. Already building the next bit." body="BuildPair is being developed around the whole job, including work a tradesperson found somewhere else. The roadmap stays visible so people can tell the difference between what is available and what is still being built." />
+        <View style={styles.updateColumns}>
+          <View style={styles.updatePanel}>
+            <Chip icon="check-circle-outline">Recently added</Chip>
+            {[
+              'Main categories with deliberate subcategory/service selection',
+              'Quote customers from outside the BuildPair marketplace',
+              'Quote revisions and accepted outside jobs becoming managed projects',
+              'Project workspace for progress, materials, expenses, snagging and handover',
+              'Tiered availability up to six months on Pro',
+              'Project+ AI planning and room-concept tools',
+            ].map((item) => <Text key={item} style={styles.updateItem}>✓ {item}</Text>)}
+          </View>
+          <View style={[styles.updatePanel, styles.comingPanel]}>
+            <Chip icon="clock-outline">Coming soon</Chip>
+            {[
+              'Smarter quote and invoice reminders',
+              'Customer book and fuller job scheduling calendar',
+              'Richer project files, certificates and aftercare reminders',
+              'Optional opportunity, team, AI/design and SMS add-ons',
+              'Clearly labelled promoted visibility without pay-to-win trust',
+            ].map((item) => <Text key={item} style={styles.updateItem}>• {item}</Text>)}
+          </View>
+        </View>
+        <Link href="/(public)/updates" asChild><Button mode="outlined" icon="update">See product updates</Button></Link>
+      </View>
+    </View>
+
     <View style={styles.section}>
       <View style={styles.finalCta}>
         <View style={styles.finalCopy}><Text style={styles.finalEyebrow}>BUILDPAIR UK</Text><Text variant="headlineSmall" style={styles.finalTitle}>Find the trade. Agree the job. Keep everything connected.</Text><Text style={styles.finalText}>Search, compare structured quotes, message, manage changes, choose the payment route and complete the project in one place.</Text></View>
@@ -256,6 +286,11 @@ const styles = StyleSheet.create({
   trustGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   trustCard: { flexGrow: 1, flexShrink: 1, flexBasis: 240, minWidth: 0, backgroundColor: '#FFFFFF', borderRadius: 18, padding: 17, gap: 7, borderWidth: 1, borderColor: '#CDE2DE' },
   pricingBand: { backgroundColor: '#FBF8F5' },
+  updatesBand: { backgroundColor: '#F6FBFA' },
+  updateColumns: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
+  updatePanel: { flexGrow: 1, flexShrink: 1, flexBasis: 420, minWidth: 0, padding: 18, gap: 9, borderRadius: 18, borderWidth: 1, borderColor: '#CDE2DE', backgroundColor: colors.surfaceRaised },
+  comingPanel: { backgroundColor: '#FFF9F3', borderColor: '#E8D7C7' },
+  updateItem: { color: colors.charcoalSoft, lineHeight: 22 },
   faqBand: { backgroundColor: colors.surfaceSoft },
   faqList: { gap: 9, maxWidth: 900, width: '100%', minWidth: 0, alignSelf: 'center' },
   faqCard: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 15, gap: 8 },
