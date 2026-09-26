@@ -111,7 +111,8 @@ describe('whole-job BuildPair tools', () => {
     expect(updates).toContain('Coming soon');
     expect(updates).toContain('Trade customer book');
     expect(updates).toContain('Working calendar');
-    expect(updates).toContain('Optional business add-ons');
+    expect(updates).toContain('Project+ trade add-on');
+    expect(updates).toContain('Dedicated project file library');
     expect(source('components/PublicHeader.tsx')).toContain("What's new");
   });
 });
