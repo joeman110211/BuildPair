@@ -28,14 +28,6 @@ type Status = {
   designs: Design[];
 };
 
-function baseUrl() {
-  if (Platform.OS === 'web') {
-    const origin = (globalThis as unknown as { location?: { origin?: string } }).location?.origin;
-    if (origin) return origin;
-  }
-  return process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '') || 'https://www.buildpair.co.uk';
-}
-
 function BulletList({ title, items }: { title: string; items?: string[] }) {
   if (!items?.length) return null;
   return <View style={styles.list}><Text variant="titleMedium" style={styles.title}>{title}</Text>{items.map((item, index) => <Text key={index} style={styles.muted}>• {item}</Text>)}</View>;
@@ -51,7 +43,7 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
   const [budget, setBudget] = useState('');
   const [plan, setPlan] = useState<Plan>();
   const [imageUrl, setImageUrl] = useState('');
-  const [busy, setBusy] = useState<'plan' | 'image' | ''>('');
+  const [busy, setBusy] = useState<'plan' | 'image' | 'checkout' | ''>('');
   const [error, setError] = useState('');
   useEffect(() => { tokenRef.current = getToken; }, [getToken]);
 
@@ -62,6 +54,16 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
     } catch (e) { setError(errorMessage(e)); }
   }, []);
   useEffect(() => { void load(); }, [load]);
+
+  async function startProjectPlus() {
+    try {
+      setBusy('checkout'); setError('');
+      const result = await apiFetch<{ url: string }>('/api/stripe/project-plus/start', { method: 'POST' }, () => tokenRef.current());
+      if (!result.url) throw new Error('BuildPair did not return a Project+ checkout link.');
+      if (Platform.OS === 'web' && typeof window !== 'undefined') window.location.assign(result.url);
+      else await Linking.openURL(result.url);
+    } catch (e) { setError(errorMessage(e)); setBusy(''); }
+  }
 
   async function generatePlan() {
     try {
@@ -96,10 +98,10 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
       {audience === 'customer' ? <>
         <Text variant="headlineSmall" style={styles.price}>£4.99/month</Text>
         <Text style={styles.muted}>Includes 10 AI room concepts and up to 50 planning sessions per month. Normal BuildPair homeowner marketplace and project tools remain free.</Text>
-        <Button mode="contained" icon="credit-card-outline" onPress={() => void Linking.openURL(`${baseUrl()}/api/stripe/project-plus/start`)}>Get Project+</Button>
+        <Button mode="contained" icon="credit-card-outline" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void startProjectPlus()}>Get Project+</Button>
       </> : <>
         <Text style={styles.muted}>Project+ is included with BuildPair Pro, so a Pro tradesperson can use the same planning tools with customers during site visits and quoting.</Text>
-        <Button mode="contained" onPress={() => void Linking.openURL(`${baseUrl()}/trader/subscription`)}>Compare trade plans</Button>
+        <Button mode="contained" onPress={() => void Linking.openURL(Platform.OS === 'web' ? '/trader/subscription' : 'https://www.buildpair.co.uk/trader/subscription')}>Compare trade plans</Button>
       </>}
     </AppCard>
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
