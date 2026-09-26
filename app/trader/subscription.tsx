@@ -140,7 +140,7 @@ export default function SubscriptionScreen() {
       {limit > 0 ? <View style={styles.usage}>
         <View style={styles.currentRow}><Text variant="labelLarge">Marketplace offers</Text><Text variant="labelLarge">{used} / {limit}</Text></View>
         <ProgressBar progress={usageProgress} color={colors.primary} style={styles.progress} />
-        <Text style={styles.muted}>Allowance resets {resetLabel}. An offer is counted when you submit an open-marketplace quote. Opening a job or preparing a draft does not use the allowance. Direct homeowner requests use the same allowance on Core. On Plus and Pro they do not count.</Text>
+        <Text style={styles.muted}>Allowance resets {resetLabel}. An open-marketplace opportunity is counted when you first engage with a job by opening a conversation or sending an offer. Merely viewing a job does not use the allowance. Core direct homeowner requests use the same allowance; Plus and Pro direct requests do not.</Text>
       </View> : <Text style={styles.muted}>Starter tradespeople can browse jobs without consuming anything, but submitting an open-marketplace offer requires an active paid plan.</Text>}
     </AppCard>
 
