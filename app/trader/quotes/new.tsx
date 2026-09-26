@@ -140,7 +140,7 @@ export default function NewQuoteScreen() {
         const ownProfile = await apiFetch<TraderProfile>('/api/me/profile', {}, tokenGetter);
         if (!active) return;
         setProfile(ownProfile);
-        if (!externalTradeCategory) setExternalTradeCategory(ownProfile.tradeCategory);
+        setExternalTradeCategory((current) => current || ownProfile.tradeCategory);
         const templates = await apiFetch<TraderTemplate[]>('/api/trader-templates', {}, tokenGetter).catch(() => []);
         if (active) setQuoteTemplates(templates.filter((item) => item.kind === 'quote'));
 
