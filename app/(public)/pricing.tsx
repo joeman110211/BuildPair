@@ -15,7 +15,7 @@ export default function PricingPage() {
       <View style={styles.heroInner}>
         <Text style={styles.eyebrow}>Tradesperson membership</Text>
         <Text variant="displaySmall" style={styles.title}>Simple monthly plans, built around how much of the marketplace you actually use.</Text>
-        <Text variant="bodyLarge" style={styles.intro}>BuildPair keeps the free Starter plan useful while reserving marketplace selling tools, searchable visibility and higher offer capacity for Plus and Pro members.</Text>
+        <Text variant="bodyLarge" style={styles.intro}>BuildPair keeps Starter useful, adds a low-cost Core route for occasional work, makes Plus the everyday marketplace plan and reserves the strongest growth tools for Pro.</Text>
         <View style={styles.heroActions}>
           <Link href={primaryHref} asChild><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.primary}>{primaryLabel}</Button></Link>
           <Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.outline}>See trade features</Button></Link>
@@ -49,7 +49,7 @@ export default function PricingPage() {
 
       <View style={styles.notice}>
         <Text variant="titleMedium" style={styles.noticeTitle}>Membership billing</Text>
-        <Text style={styles.noticeText}>Starter is £0 per month. The current monthly membership prices are £19.99 for BuildPair Plus and £29.99 for BuildPair Pro. Subscription purchases, renewals, plan changes and cancellations are handled through the BuildPair billing flow and Stripe. The applicable amount is shown before a paid subscription is confirmed.</Text>
+        <Text style={styles.noticeText}>Starter is £0 per month. BuildPair Core is £9.99, BuildPair Plus is £19.99 and BuildPair Pro is £29.99 per month. Subscription purchases, renewals, plan changes and cancellations are handled through the BuildPair billing flow and Stripe. The applicable amount is shown before a paid subscription is confirmed.</Text>
       </View>
     </View>
     <PublicFooter />
