@@ -3,7 +3,7 @@ import { jsonError, requireRole } from '@/lib/server';
 import { getStripe, providerReturnUrl } from '@/lib/stripe';
 import { sendSubscriptionReceiptOnce } from '@/lib/transactional-email';
 
-type PaidTier = 'basic' | 'featured';
+type PaidTier = 'core' | 'basic' | 'featured';
 
 function subscriptionObject(value: string | Stripe.Subscription | null) {
   return value && typeof value !== 'string' ? value : null;
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     if (!subscription) return Response.redirect(providerReturnUrl('subscription', 'complete'), 303);
 
     const tier = subscription.metadata.tier as PaidTier | undefined;
-    if (tier !== 'basic' && tier !== 'featured') {
+    if (tier !== 'core' && tier !== 'basic' && tier !== 'featured') {
       return Response.redirect(providerReturnUrl('subscription', 'complete'), 303);
     }
 
