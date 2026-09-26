@@ -1,5 +1,4 @@
 import { eq } from 'drizzle-orm';
-import { TRADE_CATEGORIES } from '@/constants/options';
 import { getDb } from '@/db/client';
 import { traderProfiles } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
