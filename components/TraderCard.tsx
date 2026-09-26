@@ -10,7 +10,7 @@ export function TraderCard({ trader, compareSelected = false, onToggleCompare }:
   const router = useRouter();
   const rating = Number(trader.averageRating || 0);
   const isPro = trader.subscriptionTier === 'featured';
-  const membership = isPro ? 'BuildPair Pro' : trader.subscriptionTier === 'basic' ? 'BuildPair Plus' : trader.subscriptionTier === 'core' ? 'BuildPair Core' : null;
+  const membership = trader.isSubscriptionActive ? (isPro ? 'BuildPair Pro' : trader.subscriptionTier === 'basic' ? 'BuildPair Plus' : trader.subscriptionTier === 'core' ? 'BuildPair Core' : null) : null;
   const responseLabel = trader.averageResponseHours && trader.averageResponseHours > 0 ? `Replies in ~${trader.averageResponseHours < 1 ? '<1' : Math.round(trader.averageResponseHours)}h` : trader.responseRate && trader.responseRate > 0 ? `${Math.round(trader.responseRate)}% response rate` : null;
 
   return <AppCard style={styles.card}>
