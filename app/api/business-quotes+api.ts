@@ -78,6 +78,10 @@ type QuoteRow = {
   supersedesQuoteId: string | null;
   managedJobId: string | null;
   managedProjectEligible: boolean;
+  reminderEnabled: boolean;
+  reminderDays: number;
+  reminderLastSentAt: string | null;
+  reminderCount: number;
   sentAt: string | null;
   viewedAt: string | null;
   acceptedAt: string | null;
@@ -147,6 +151,10 @@ async function listQuotes(traderId: string) {
            q.supersedes_quote_id AS "supersedesQuoteId",
            q.managed_job_id AS "managedJobId",
            q.managed_project_eligible AS "managedProjectEligible",
+           q.reminder_enabled AS "reminderEnabled",
+           q.reminder_days AS "reminderDays",
+           q.reminder_last_sent_at AS "reminderLastSentAt",
+           q.reminder_count AS "reminderCount",
            q.sent_at AS "sentAt",
            q.viewed_at AS "viewedAt",
            q.accepted_at AS "acceptedAt",
