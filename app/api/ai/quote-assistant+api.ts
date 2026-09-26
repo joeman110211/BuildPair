@@ -2,7 +2,9 @@ import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 import { assertAiDailyBudget, recordAiRequest } from '@/lib/ai-audit';
 import { assertRateLimit } from '@/lib/rate-limit';
-import { jsonError, requireRole } from '@/lib/server';
+import { HttpError, jsonError, requireRole } from '@/lib/server';
+import { getSql } from '@/lib/sql';
+import { hasPlanSetupAccess, tierAtLeast } from '@/lib/subscription';
 
 const schema = z.object({
   jobTitle: z.string().trim().min(3).max(160),
@@ -37,6 +39,14 @@ function fallback(input: z.infer<typeof schema>) {
 export async function POST(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
+    const planRows = await getSql()`
+      SELECT subscription_tier AS "subscriptionTier", is_subscription_active AS "isSubscriptionActive", trial_ends_at AS "trialEndsAt"
+      FROM trader_profiles WHERE user_id = ${trader.id} LIMIT 1
+    ` as unknown as { subscriptionTier: 'free' | 'core' | 'basic' | 'featured'; isSubscriptionActive: boolean; trialEndsAt: string | null }[];
+    const plan = planRows[0];
+    if (!plan || !tierAtLeast(plan.subscriptionTier, 'basic') || !hasPlanSetupAccess(plan, 'basic')) {
+      throw new HttpError(402, 'AI quote drafting is included with BuildPair Plus and Pro.');
+    }
     await assertRateLimit(request, 'ai-quote-assistant', 20, 3600, trader.id);
     const input = schema.parse(await request.json());
     const base = fallback(input);
