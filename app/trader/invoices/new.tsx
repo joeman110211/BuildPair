@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
@@ -13,9 +13,10 @@ type Line = { description: string; quantity: string; unitPrice: string };
 export default function NewInvoiceScreen() {
   const { getToken } = useAuth();
   const router = useRouter();
+  const { customerName: presetCustomerName, customerEmail: presetCustomerEmail } = useLocalSearchParams<{ customerName?: string; customerEmail?: string }>();
   const [invoiceNumber, setInvoiceNumber] = useState(`INV-${new Date().toISOString().replace(/\D/g, '').slice(0, 14)}`);
-  const [customerName, setCustomerName] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerName, setCustomerName] = useState(presetCustomerName ?? '');
+  const [customerEmail, setCustomerEmail] = useState(presetCustomerEmail ?? '');
   const [items, setItems] = useState<Line[]>([{ description: 'Labour', quantity: '1', unitPrice: '' }]);
   const [vat, setVat] = useState('no');
   const [deposit, setDeposit] = useState('');
