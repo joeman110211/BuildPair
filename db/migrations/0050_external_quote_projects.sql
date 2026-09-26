@@ -3,6 +3,7 @@ ALTER TABLE business_quotes
   ADD COLUMN IF NOT EXISTS revision_number integer NOT NULL DEFAULT 1,
   ADD COLUMN IF NOT EXISTS supersedes_quote_id uuid REFERENCES business_quotes(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS managed_job_id uuid REFERENCES jobs(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS managed_project_eligible boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS decision_note text;
 
 CREATE INDEX IF NOT EXISTS business_quotes_managed_job_idx ON business_quotes(managed_job_id);
@@ -36,6 +37,7 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'External quote not found'; END IF;
   IF bq.status <> 'accepted' THEN RAISE EXCEPTION 'External quote must be accepted before it can become a BuildPair project'; END IF;
   IF bq.managed_job_id IS NOT NULL THEN RETURN bq.managed_job_id; END IF;
+  IF bq.managed_project_eligible IS NOT TRUE THEN RAISE EXCEPTION 'This quote was not created with a plan that includes managed outside-customer projects'; END IF;
   IF bq.customer_email IS NULL OR trim(bq.customer_email) = '' THEN RAISE EXCEPTION 'The quote needs the customer email before it can be claimed'; END IF;
 
   SELECT email INTO customer_email FROM users WHERE id = p_customer_id;
