@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       FROM trader_profiles WHERE user_id = ${trader.id} LIMIT 1
     ` as unknown as { subscriptionTier: 'free' | 'core' | 'basic' | 'featured'; isSubscriptionActive: boolean; trialEndsAt: string | null }[];
     const plan = planRows[0];
-    if (!plan || !tierAtLeast(plan.subscriptionTier, 'core') || !hasPlanSetupAccess(plan, 'core')) throw new HttpError(402, 'Quote revisions are included with paid BuildPair trade plans.');
+    if (!plan || !tierAtLeast(plan.subscriptionTier, 'basic') || !hasPlanSetupAccess(plan, 'basic')) throw new HttpError(402, 'Quote revisions are included with BuildPair Plus and Pro.');
 
     const { quoteId } = schema.parse(await request.json());
     const sourceRows = await getSql()`
