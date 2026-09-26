@@ -1,6 +1,6 @@
 import { jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
-import { FOUNDING_PRO_START_ISO, MARKETPLACE_OPEN } from '@/lib/launch-config';
+import { FOUNDING_PRO_START_ISO, LAUNCH_DATE_ISO, MARKETPLACE_OPEN } from '@/lib/launch-config';
 
 type DirectoryTrader = {
   id: string;
@@ -15,17 +15,17 @@ type DirectoryTrader = {
   locationLabel: string | null;
   externalLinks: Record<string, string>;
   photos: string[];
-  subscriptionTier: 'basic' | 'featured';
+  subscriptionTier: 'free' | 'core' | 'basic' | 'featured';
   isSubscriptionActive: boolean;
   averageRating: number;
   reviewCount: number;
   verifiedCredentialCount: number;
   availabilitySummary: string | null;
   rankingScore: number;
+  createdAt: string;
 };
 
 export async function GET(request: Request) {
-  if (!MARKETPLACE_OPEN) return Response.json([]);
   const url = new URL(request.url);
   const trade = url.searchParams.get('trade');
 
@@ -45,6 +45,7 @@ export async function GET(request: Request) {
              tp.external_links AS "externalLinks",
              tp.photos,
              tp.subscription_tier AS "subscriptionTier",
+             tp.created_at AS "createdAt",
              (tp.is_subscription_active = true OR (tp.trial_ends_at IS NOT NULL AND now() >= ${FOUNDING_PRO_START_ISO}::timestamptz AND tp.trial_ends_at > now())) AS "isSubscriptionActive",
              coalesce(avg(r.rating), 0)::float AS "averageRating",
              count(r.id)::int AS "reviewCount",
@@ -75,13 +76,20 @@ export async function GET(request: Request) {
                    FROM conversations c
                    WHERE c.trader_id = tp.user_id
                  ), 1.0) * 10
-               + CASE WHEN tp.subscription_tier = 'featured' THEN 8 ELSE 0 END
+               + CASE WHEN tp.subscription_tier = 'featured' THEN 8
+                      WHEN tp.subscription_tier = 'basic' THEN 2
+                      ELSE 0 END
              )::float AS "rankingScore"
       FROM trader_profiles tp
       LEFT JOIN reviews r
         ON r.trader_id = tp.user_id AND r.verified_completion = true
-      WHERE tp.subscription_tier <> 'free'
-        AND (tp.is_subscription_active = true OR (tp.trial_ends_at IS NOT NULL AND now() >= ${FOUNDING_PRO_START_ISO}::timestamptz AND tp.trial_ends_at > now()))
+      WHERE (
+          ${MARKETPLACE_OPEN}::boolean = false
+          OR (
+            tp.subscription_tier <> 'free'
+            AND (tp.is_subscription_active = true OR (tp.trial_ends_at IS NOT NULL AND now() >= ${FOUNDING_PRO_START_ISO}::timestamptz AND tp.trial_ends_at > now()))
+          )
+        )
         AND tp.user_id NOT LIKE 'seed_demo_trader_%'
         AND NOT EXISTS (
           SELECT 1 FROM users u
@@ -101,7 +109,14 @@ export async function GET(request: Request) {
       LIMIT 100
     ` as unknown as DirectoryTrader[];
 
-    return Response.json(rows.map((trader) => ({ ...trader, isPreview: false })));
+    return Response.json(rows.map((trader) => ({
+      ...trader,
+      externalLinks: MARKETPLACE_OPEN ? trader.externalLinks : {},
+      isPreview: false,
+      prelaunchProfile: !MARKETPLACE_OPEN,
+      foundingTrade: new Date(trader.createdAt).getTime() < new Date(LAUNCH_DATE_ISO).getTime(),
+      canRequestQuote: MARKETPLACE_OPEN && trader.isSubscriptionActive && trader.subscriptionTier !== 'free',
+    })));
   } catch (error) {
     return jsonError(error);
   }
