@@ -1,0 +1,66 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+
+function source(path: string) { return readFileSync(path, 'utf8'); }
+
+describe('whole-job BuildPair tools', () => {
+  it('lets accepted outside quotes become normal managed BuildPair projects', () => {
+    const migration = source('db/migrations/0050_external_quote_projects.sql');
+    expect(migration).toContain('claim_external_business_quote');
+    expect(migration).toContain("'external_quote'");
+    expect(migration).toContain('managed_job_id');
+    expect(migration).toContain('job_milestones');
+    expect(source('app/api/external-projects/claim+api.ts')).toContain('claim_external_business_quote');
+  });
+
+  it('keeps external quote revisions instead of overwriting sent versions', () => {
+    const api = source('app/api/business-quotes/revise+api.ts');
+    expect(api).toContain('revision_number + 1');
+    expect(api).toContain('supersedes_quote_id');
+    expect(api).toContain('Use a project variation');
+  });
+
+  it('supports the in-between project record', () => {
+    const migration = source('db/migrations/0051_job_workspace.sql');
+    for (const type of ['task','note','progress','material','expense','snag','document','handover','warranty']) {
+      expect(migration).toContain(`'${type}'`);
+    }
+    const workspace = source('app/api/jobs/workspace+api.ts');
+    expect(workspace).toContain('assertApprovedMediaUrls');
+    expect(workspace).toContain('media_url');
+  });
+
+  it('gives Plus and Pro a combined working calendar', () => {
+    const calendar = source('app/api/trader-calendar+api.ts');
+    expect(calendar).toContain("tierAtLeast(plan.subscriptionTier, 'basic')");
+    expect(calendar).toContain("plan.subscriptionTier === 'featured' ? 183 : 84");
+    expect(calendar).toContain('job_site_visits');
+    expect(calendar).toContain('trader_availability');
+  });
+
+  it('includes Project+ with Pro and meters customer AI usage', () => {
+    const projectPlus = source('lib/project-plus.ts');
+    expect(projectPlus).toContain('PROJECT_PLUS_PRICE_PENCE = 499');
+    expect(projectPlus).toContain('imageLimit: 10');
+    expect(projectPlus).toContain("profile.subscriptionTier === 'featured'");
+    expect(source('app/api/project-plus/image+api.ts')).toContain('consumeProjectPlusImage');
+    expect(source('app/api/project-plus/plan+api.ts')).toContain('consumeProjectPlusPlanner');
+  });
+
+  it('uses authenticated checkout creation rather than a protected redirect URL', () => {
+    expect(source('app/api/stripe/project-plus/start+api.ts')).toContain('export async function POST');
+    const studio = source('components/ProjectPlusStudio.tsx');
+    expect(studio).toContain("apiFetch<{ url: string }>('/api/stripe/project-plus/start'");
+    expect(studio).not.toContain("Linking.openURL(`${baseUrl()}/api/stripe/project-plus/start`)");
+  });
+
+  it('shows an honest public recently-added and coming-soon roadmap', () => {
+    const updates = source('app/(public)/updates.tsx');
+    expect(updates).toContain('Recently added');
+    expect(updates).toContain('Coming soon');
+    expect(updates).toContain('Trade customer book');
+    expect(updates).toContain('Working calendar');
+    expect(updates).toContain('Optional business add-ons');
+    expect(source('components/PublicHeader.tsx')).toContain("What's new");
+  });
+});
