@@ -98,10 +98,12 @@ function isPublicAddress(value: string) {
   if (!value.includes(':')) {
     const parts = value.split('.').map(Number);
     if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return false;
-    if (parts[0] === 10 || parts[0] === 127 || parts[0] === 0) return false;
-    if (parts[0] === 169 && parts[1] === 254) return false;
-    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return false;
-    if (parts[0] === 192 && parts[1] === 168) return false;
+    const first = parts[0] ?? -1;
+    const second = parts[1] ?? -1;
+    if (first === 10 || first === 127 || first === 0) return false;
+    if (first === 169 && second === 254) return false;
+    if (first === 172 && second >= 16 && second <= 31) return false;
+    if (first === 192 && second === 168) return false;
   }
   return true;
 }
