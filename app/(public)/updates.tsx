@@ -18,15 +18,19 @@ const RECENT = [
   ['Trade customer book', 'Outside-customer quotes and invoices now feed a simple customer history so tradespeople can keep using BuildPair when the lead came from somewhere else.'],
   ['Working calendar', 'Plus and Pro can see scheduled job starts, site visits and published availability together. Plus covers roughly 12 weeks and Pro roughly six months.'],
   ['Project evidence', 'The shared job workspace can attach moderated photos or document images to progress, materials, expenses, snagging, handover and warranty records.'],
+  ['Friendly quote & invoice reminders', 'Tradespeople can send a polite reminder when a quote has been waiting at least 48 hours, or when an invoice is approaching its due date or overdue. BuildPair blocks repeat reminders for 48 hours to avoid pestering customers.'],
+  ['Calendar subscription', 'Plus and Pro trades can subscribe to their BuildPair working calendar from Google Calendar, Outlook, Apple Calendar or another calendar app without uploading their private diary into BuildPair.'],
+  ['Project handover packs', 'Each managed job can produce one clean handover record containing the agreed scope, accepted variations, payment history, shared evidence, handover notes, warranty and aftercare.'],
+  ['Quote choices & optional extras', 'Outside-customer quotes can show optional upgrades and alternative choices separately from the agreed core price, so useful choices do not muddy the base scope.'],
+  ['Aftercare follow-ups', 'Warranty and aftercare items can stay on the completed project record with due dates and a controlled customer reminder when it is genuinely useful.'],
+  ['Project+ trade add-on', 'Project+ can be added to a Starter, Core or Plus trade account for £4.99/month. It remains included with BuildPair Pro.'],
 ] as const;
 
 const COMING = [
-  ['Smarter quote & invoice reminders', 'Optional reminder rules for quotes awaiting a decision, invoices approaching due date and overdue invoices, with controls to avoid pestering customers.'],
-  ['Calendar sync', 'Optional Google or Outlook calendar sync so BuildPair scheduling can fit around the diary a trade already uses.'],
-  ['Richer project document library', 'Dedicated PDF/file storage, grouped certificates, receipts and handover packs beyond the photo/document evidence already available in the project workspace.'],
-  ['Quote alternatives & optional extras', 'Let a tradesperson present clearly separated optional upgrades or alternative quote options without muddying the accepted core scope.'],
-  ['Aftercare reminders', 'Warranty, service and follow-up reminders so completed jobs can remain useful after final payment and review.'],
-  ['Optional business add-ons', 'Extra marketplace-opportunity packs, additional team seats, AI/design credit packs and SMS credits without bloating the core memberships.'],
+  ['Automatic reminder rules', 'The new reminder controls are deliberately manual first. Later, tradespeople will be able to choose sensible automatic reminder rules without turning BuildPair into a spam cannon.'],
+  ['Two-way calendar sync', 'The private calendar subscription is live first. A later opt-in sync can let Google or Outlook availability influence BuildPair without exposing private event details.'],
+  ['Dedicated project file library', 'The handover pack and moderated evidence are live. Dedicated PDF/file storage for certificates, manuals and receipts is next once document privacy scanning is ready.'],
+  ['More business add-ons', 'Project+ is the first real optional trade add-on. Team seats, communication credits or opportunity packs will only be added when the underlying feature and pricing are real, rather than selling decorative buttons.'],
   ['Clearly labelled promoted placement', 'Optional sponsored visibility may be tested later. If used, it will be labelled as promoted and will never be presented as verification or trust.'],
 ] as const;
 
