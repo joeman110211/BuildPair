@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { assertApprovedMediaUrls } from '@/lib/media-safety';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
@@ -12,6 +13,7 @@ const createSchema = z.object({
   body: z.string().trim().max(4000).default(''),
   amount: z.number().int().nonnegative().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
+  mediaUrl: z.string().url().nullable().optional(),
 });
 const updateSchema = z.object({
   id: z.string().uuid(),
@@ -64,10 +66,11 @@ export async function POST(request: Request) {
       throw new HttpError(403, 'Homeowners can add project notes and snagging items. The tradesperson manages tasks, progress, materials and handover records.');
     }
     if (access.role === 'customer' && input.visibility !== 'shared') throw new HttpError(403, 'Homeowner workspace entries are shared with the tradesperson.');
+    if (input.mediaUrl) await assertApprovedMediaUrls(userId, access.role === 'trader' ? 'trader' : 'job', [input.mediaUrl]);
     const rows = await getSql()`
-      INSERT INTO job_workspace_entries(job_id, created_by, entry_type, visibility, title, body, amount, due_at)
-      VALUES (${input.jobId}, ${userId}, ${input.entryType}, ${input.visibility}, ${input.title}, ${input.body}, ${input.amount ?? null}, ${input.dueAt ?? null}::timestamptz)
-      RETURNING id, job_id AS "jobId", created_by AS "createdBy", entry_type AS "entryType", visibility, title, body, amount, status, due_at AS "dueAt", created_at AS "createdAt"
+      INSERT INTO job_workspace_entries(job_id, created_by, entry_type, visibility, title, body, amount, media_url, due_at)
+      VALUES (${input.jobId}, ${userId}, ${input.entryType}, ${input.visibility}, ${input.title}, ${input.body}, ${input.amount ?? null}, ${input.mediaUrl ?? null}, ${input.dueAt ?? null}::timestamptz)
+      RETURNING id, job_id AS "jobId", created_by AS "createdBy", entry_type AS "entryType", visibility, title, body, amount, status, media_url AS "mediaUrl", due_at AS "dueAt", created_at AS "createdAt"
     `;
     return Response.json(rows[0], { status: 201 });
   } catch (error) { return jsonError(error); }
