@@ -8,33 +8,14 @@ type TokenGetter = () => Promise<string | null>;
 const MAX_BATCH_UPLOADS = 10;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
-type UploadSignature = {
-  cloudName: string;
-  apiKey: string;
-  timestamp: number;
-  signature: string;
-  assetFolder: string;
-};
-
-type CloudinaryResponse = {
-  secure_url?: string;
-  error?: { message?: string };
-};
-
 export type UploadBatchResult = {
   urls: string[];
   failed: number;
+  failureMessage?: string;
 };
 
 function isBrowser() {
   return Platform.OS === 'web' || (typeof window !== 'undefined' && typeof document !== 'undefined');
-}
-
-async function signedUpload(kind: MediaKind, getToken: TokenGetter) {
-  return apiFetch<UploadSignature>('/api/uploads/sign', {
-    method: 'POST',
-    body: JSON.stringify({ kind }),
-  }, getToken);
 }
 
 async function appendBrowserAsset(form: FormData, asset: ImagePicker.ImagePickerAsset, index: number) {
@@ -50,7 +31,7 @@ async function appendBrowserAsset(form: FormData, asset: ImagePicker.ImagePicker
   form.append('file', blob, fileName);
 }
 
-async function uploadAsset(asset: ImagePicker.ImagePickerAsset, signed: UploadSignature, index: number) {
+async function uploadAsset(asset: ImagePicker.ImagePickerAsset, kind: MediaKind, getToken: TokenGetter, index: number) {
   const form = new FormData();
   if (isBrowser()) {
     await appendBrowserAsset(form, asset, index);
@@ -61,18 +42,13 @@ async function uploadAsset(asset: ImagePicker.ImagePickerAsset, signed: UploadSi
       type: asset.mimeType ?? 'image/jpeg',
     } as unknown as Blob);
   }
-  form.append('api_key', signed.apiKey);
-  form.append('timestamp', String(signed.timestamp));
-  form.append('signature', signed.signature);
-  form.append('asset_folder', signed.assetFolder);
+  form.append('kind', kind);
 
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${signed.cloudName}/image/upload`, {
+  const uploaded = await apiFetch<{ url: string }>('/api/uploads/image', {
     method: 'POST',
     body: form,
-  });
-  const body = await response.json() as CloudinaryResponse;
-  if (!response.ok || !body.secure_url) throw new Error(body.error?.message ?? 'Image upload failed');
-  return body.secure_url;
+  }, getToken, 45_000);
+  return uploaded.url;
 }
 
 async function ensurePhotoPermission() {
@@ -107,13 +83,12 @@ export async function pickAndUploadImages(
   let failed = selected.length - validAssets.length;
   if (!validAssets.length) throw new Error('Choose images smaller than 10 MB each');
 
-  const signed = await signedUpload(kind, getToken);
   const urls: string[] = [];
   let firstError: unknown = null;
 
   for (const [index, asset] of validAssets.entries()) {
     try {
-      urls.push(await uploadAsset(asset, signed, index));
+      urls.push(await uploadAsset(asset, kind, getToken, index));
     } catch (error) {
       failed += 1;
       firstError ??= error;
@@ -121,7 +96,8 @@ export async function pickAndUploadImages(
   }
 
   if (!urls.length && firstError) throw firstError;
-  return { urls, failed };
+  const failureMessage = firstError instanceof Error ? firstError.message : undefined;
+  return { urls, failed, failureMessage };
 }
 
 export async function pickAndUploadImage(kind: MediaKind, getToken: TokenGetter) {

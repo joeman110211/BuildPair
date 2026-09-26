@@ -1,38 +1,11 @@
-import { createHash } from 'node:crypto';
-import { assertRateLimit } from '@/lib/rate-limit';
-import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
+import { HttpError, jsonError } from '@/lib/server';
 
-type UploadKind = 'job' | 'trader';
-
-const folders: Record<UploadKind, string> = {
-  job: 'buildpair/job-photos',
-  trader: 'buildpair/trader-gallery',
-};
-
-const DEFAULT_CLOUDINARY_CLOUD_NAME = 'qrrcn7ma';
-
-export async function POST(request: Request) {
+export async function POST() {
   try {
-    const userId = await authenticatedUserId(request);
-    await ensureDbUser(userId);
-    await assertRateLimit(request, 'media-upload-signature', 100, 86400, userId);
-    const modes = await accountModes(userId);
-    const body = await request.json() as { kind?: UploadKind };
-    if (!body.kind || !(body.kind in folders)) throw new HttpError(400, 'Invalid upload type');
-    if (body.kind === 'trader' && !modes.traderEnabled) throw new HttpError(403, 'Tradesperson account required');
-    if (body.kind === 'job' && !modes.customerEnabled) throw new HttpError(403, 'Homeowner account required');
-
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim() || DEFAULT_CLOUDINARY_CLOUD_NAME;
-    const apiKey = process.env.CLOUDINARY_API_KEY;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
-    if (!apiKey || !apiSecret) throw new Error('Cloudinary is not configured');
-
-    const timestamp = Math.floor(Date.now() / 1000);
-    const assetFolder = folders[body.kind];
-    const toSign = `asset_folder=${assetFolder}&timestamp=${timestamp}${apiSecret}`;
-    const signature = createHash('sha1').update(toSign).digest('hex');
-
-    return Response.json({ cloudName, apiKey, timestamp, signature, assetFolder });
+    // Direct-to-Cloudinary signatures are intentionally disabled. All user
+    // images must pass through /api/uploads/image so moderation, privacy checks
+    // and metadata stripping happen before an approved URL is issued.
+    throw new HttpError(410, 'Direct photo uploads are no longer supported. Update BuildPair and try again.');
   } catch (error) {
     return jsonError(error);
   }

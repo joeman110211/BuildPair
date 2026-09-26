@@ -6,6 +6,7 @@ import { traderProfileShowcase } from '@/db/showcase-schema';
 import { InvalidPostcodeError, lookupPostcode } from '@/lib/postcode';
 import { getSql } from '@/lib/sql';
 import { FOUNDING_PRO_END_ISO, LAUNCH_DATE_ISO, HOMEOWNER_REGISTRATION_OPEN } from '@/lib/launch-config';
+import { assertApprovedMediaUrls } from '@/lib/media-safety';
 import { accountAccess, accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { categoryChangeAllowed, categoryChangeAvailableAt } from '@/lib/subscription';
 import { roleSchema, traderProfileSchema } from '@/lib/validation';
@@ -84,6 +85,13 @@ export async function PUT(request: Request) {
     if (!modes.traderEnabled) throw new HttpError(403, 'Trader account required');
     const payload = traderProfileSchema.parse(await request.json());
     const { showcase } = payload;
+    const showcasePhotos = showcase ? [
+      showcase.coverPhotoUrl,
+      showcase.profileImageUrl,
+      showcase.logoUrl,
+      ...showcase.beforeAfterProjects.flatMap((project) => [project.before, project.after]),
+    ].filter((value): value is string => Boolean(value)) : [];
+    await assertApprovedMediaUrls(userId, 'trader', [...payload.photos, ...showcasePhotos]);
 
     const tradeCategories = payload.tradeCategories?.length
       ? [...new Set(payload.tradeCategories)]

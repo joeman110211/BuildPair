@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { getSql } from '@/lib/sql';
+import { assertApprovedMediaUrls } from '@/lib/media-safety';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 
 const schema = z.object({
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
     const input = schema.parse(await request.json());
+    await assertApprovedMediaUrls(trader.id, 'trader', [...input.beforePhotos, ...input.afterPhotos]);
     if (!input.beforePhotos.length && !input.afterPhotos.length) throw new HttpError(400, 'Add at least one project photo');
     const rows = await getSql()`
       INSERT INTO trader_stories(trader_id, title, location_label, summary, before_photos, after_photos, duration_days, completed_at)
