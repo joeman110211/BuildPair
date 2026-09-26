@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/expo';
 import type { Href } from 'expo-router';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, ProgressBar, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
 import { AIJobSpecModal } from '@/components/AIJobSpecModal';
@@ -14,6 +14,7 @@ import { BUDGET_OPTIONS, PROPERTY_TYPES, TRADE_CATEGORIES, URGENCY_OPTIONS } fro
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { clearDraft, loadDraft, saveDraft } from '@/lib/draft-storage';
+import type { Job } from '@/types';
 
 const STEP_TITLES = ['What do you need?', 'Describe the job', 'Add photos', 'Location & budget', 'Review & post'] as const;
 type Category = (typeof TRADE_CATEGORIES)[number];
@@ -38,11 +39,12 @@ type JobDraft = {
 
 export default function NewJobScreen() {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
   const router = useRouter();
-  const { traderId, traderName, tradeCategory } = useLocalSearchParams<{ traderId?: string; traderName?: string; tradeCategory?: string }>();
+  const { traderId, traderName, tradeCategory, repeatJobId } = useLocalSearchParams<{ traderId?: string; traderName?: string; tradeCategory?: string; repeatJobId?: string }>();
   const directRequest = Boolean(traderId);
   const initialCategory = TRADE_CATEGORIES.find((item) => item === tradeCategory);
-  const draftKey = traderId ? `customer-job-direct-${traderId}` : 'customer-job-open-v1';
+  const draftKey = repeatJobId ? `customer-job-repeat-${repeatJobId}-${traderId ?? 'open'}` : traderId ? `customer-job-direct-${traderId}` : 'customer-job-open-v1';
   const [step, setStep] = useState(0);
   const [category, setCategory] = useState<Category | undefined>(initialCategory);
   const [propertyType, setPropertyType] = useState<PropertyType>();
@@ -61,27 +63,58 @@ export default function NewJobScreen() {
   const [draftStatus, setDraftStatus] = useState('');
   const [error, setError] = useState('');
 
+  useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
+
   useEffect(() => {
     let active = true;
-    void loadDraft<JobDraft>(draftKey).then((draft) => {
-      if (!active || !draft) return;
-      setStep(Math.max(0, Math.min(4, Number(draft.step) || 0)));
-      const restoredCategory = TRADE_CATEGORIES.find((item) => item === draft.category);
-      setCategory(restoredCategory ?? initialCategory);
-      setPropertyType(PROPERTY_TYPES.find((item) => item === draft.propertyType));
-      setPostcode(draft.postcode ?? '');
-      setUrgency(URGENCY_OPTIONS.find((item) => item === draft.urgency));
-      setBudgetRange(BUDGET_OPTIONS.find((item) => item === draft.budgetRange));
-      setTitle(draft.title ?? '');
-      setDescription(draft.description ?? '');
-      setPhotos(Array.isArray(draft.photos) ? draft.photos.slice(0, 8) : []);
-      setAiGeneratedSpec(typeof draft.aiGeneratedSpec === 'string' ? draft.aiGeneratedSpec : null);
-      setMode(draft.mode === 'ai' ? 'ai' : 'manual');
-      setIsEmergency(!directRequest && Boolean(draft.isEmergency));
-      setDraftStatus('Draft restored ✓');
-    }).finally(() => { if (active) setDraftReady(true); });
+    async function restore() {
+      try {
+        const draft = await loadDraft<JobDraft>(draftKey);
+        if (!active) return;
+        if (draft) {
+          setStep(Math.max(0, Math.min(4, Number(draft.step) || 0)));
+          const restoredCategory = TRADE_CATEGORIES.find((item) => item === draft.category);
+          setCategory(restoredCategory ?? initialCategory);
+          setPropertyType(PROPERTY_TYPES.find((item) => item === draft.propertyType));
+          setPostcode(draft.postcode ?? '');
+          setUrgency(URGENCY_OPTIONS.find((item) => item === draft.urgency));
+          setBudgetRange(BUDGET_OPTIONS.find((item) => item === draft.budgetRange));
+          setTitle(draft.title ?? '');
+          setDescription(draft.description ?? '');
+          setPhotos(Array.isArray(draft.photos) ? draft.photos.slice(0, 8) : []);
+          setAiGeneratedSpec(typeof draft.aiGeneratedSpec === 'string' ? draft.aiGeneratedSpec : null);
+          setMode(draft.mode === 'ai' ? 'ai' : 'manual');
+          setIsEmergency(!directRequest && Boolean(draft.isEmergency));
+          setDraftStatus('Draft restored ✓');
+          return;
+        }
+
+        if (repeatJobId) {
+          const previous = await apiFetch<{ job: Job }>(`/api/jobs/${encodeURIComponent(repeatJobId)}`, {}, () => getTokenRef.current());
+          if (!active) return;
+          const old = previous.job;
+          setCategory(TRADE_CATEGORIES.find((item) => item === old.category) ?? initialCategory);
+          setPropertyType(PROPERTY_TYPES.find((item) => item === old.propertyType));
+          setPostcode(old.postcode ?? '');
+          setUrgency(URGENCY_OPTIONS.find((item) => item === old.urgency));
+          setBudgetRange(BUDGET_OPTIONS.find((item) => item === old.budgetRange));
+          setTitle(old.title);
+          setDescription(old.description);
+          setPhotos([]);
+          setAiGeneratedSpec(null);
+          setMode('manual');
+          setIsEmergency(false);
+          setDraftStatus('Previous job copied in ✓ Check what has changed before sending.');
+        }
+      } catch {
+        if (active && repeatJobId) setDraftStatus('The previous job could not be copied. Start a fresh request below.');
+      } finally {
+        if (active) setDraftReady(true);
+      }
+    }
+    void restore();
     return () => { active = false; };
-  }, [directRequest, draftKey, initialCategory]);
+  }, [directRequest, draftKey, initialCategory, repeatJobId]);
 
   const draft = useMemo<JobDraft>(() => ({
     step,
@@ -181,7 +214,10 @@ export default function NewJobScreen() {
     <View style={styles.progressBlock}><View style={styles.progressHeader}><Text style={styles.step}>Step {step + 1} of 5</Text><Text style={styles.muted}>{STEP_TITLES[step]}</Text></View><ProgressBar progress={(step + 1) / 5} color={colors.primary} style={styles.progress} /></View>
     {draftStatus ? <HelperText type="info" visible>{draftStatus}</HelperText> : null}
 
-    {directRequest ? <AppCard style={styles.directInfo}>
+    {repeatJobId ? <AppCard style={styles.directInfo}>
+      <Text variant="titleMedium" style={styles.title}>Previous job copied in</Text>
+      <Text style={styles.muted}>BuildPair has reused the useful details, but not the old photos. Check the scope, condition, timing and budget before sending a fresh request.</Text>
+    </AppCard> : directRequest ? <AppCard style={styles.directInfo}>
       <Text variant="titleMedium" style={styles.title}>Keep it simple</Text>
       <Text style={styles.muted}>Only the job description and area are required. Photos, property type, timing, budget and a custom title can be agreed in chat.</Text>
     </AppCard> : null}
