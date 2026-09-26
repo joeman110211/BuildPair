@@ -59,7 +59,7 @@ export function PublicFooter() {
       </View>
       <View style={styles.flowLinks}>
         <Link href="/(public)/how-it-works" asChild><Pressable style={styles.flowButton}><Text style={styles.flowButtonText}>How it works</Text></Pressable></Link>
-        <Link href="/(public)/updates" asChild><Pressable style={styles.flowButtonAlt}><Text style={styles.flowButtonAltText}>What\'s new</Text></Pressable></Link>
+        <Link href="/(public)/updates" asChild><Pressable style={styles.flowButtonAlt}><Text style={styles.flowButtonAltText}>What&apos;s new</Text></Pressable></Link>
       </View>
     </View>
     <View style={styles.inner}>
