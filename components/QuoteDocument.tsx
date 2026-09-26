@@ -13,6 +13,14 @@ export type QuoteDocumentItem = {
   lineTotal: number;
 };
 
+export type QuoteChoice = {
+  id?: string;
+  kind: 'optional' | 'alternative';
+  title: string;
+  description?: string | null;
+  priceDelta: number;
+};
+
 export type QuoteDocumentData = {
   businessName: string;
   quoteNumber?: string | null;
@@ -27,6 +35,7 @@ export type QuoteDocumentData = {
   durationText?: string | null;
   warrantyText?: string | null;
   items: QuoteDocumentItem[];
+  options?: QuoteChoice[];
   subtotal: number;
   vatRate: number;
   vatAmount: number;
@@ -106,6 +115,20 @@ export function QuoteDocument({ quote }: { quote: QuoteDocumentData }) {
       </View>
     </View>
 
+    {quote.options?.length ? <View style={styles.section}>
+      <Text variant="titleLarge" style={styles.sectionTitle}>Choices & optional extras</Text>
+      <Text style={styles.muted}>These are shown separately and are not included in the quoted total above. If you want one, agree it with the tradesperson before it becomes part of the job.</Text>
+      <View style={styles.items}>
+        {quote.options.map((option, index) => <View key={option.id || `${option.title}-${index}`} style={styles.choiceRow}>
+          <View style={styles.itemText}>
+            <Text style={styles.strong}>{option.title}</Text>
+            <Text style={styles.muted}>{option.kind === 'alternative' ? 'Alternative option' : 'Optional extra'}{option.description ? ` · ${option.description}` : ''}</Text>
+          </View>
+          <Text style={styles.choicePrice}>{option.priceDelta === 0 ? 'No price change' : `${option.priceDelta > 0 ? '+' : '-'}${formatMoney(Math.abs(option.priceDelta))}`}</Text>
+        </View>)}
+      </View>
+    </View> : null}
+
     {(quote.expectedStart || quote.durationText || quote.warrantyText) ? <View style={styles.facts}>
       {quote.expectedStart ? <View style={styles.fact}><Text style={styles.label}>EXPECTED START</Text><Text style={styles.strong}>{quote.expectedStart}</Text></View> : null}
       {quote.durationText ? <View style={styles.fact}><Text style={styles.label}>ESTIMATED TIME</Text><Text style={styles.strong}>{quote.durationText}</Text></View> : null}
@@ -153,6 +176,8 @@ const styles = StyleSheet.create({
   items: { gap: spacing.xs },
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md, paddingVertical: spacing.xs, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
   itemText: { flex: 1, minWidth: 160, gap: 2 },
+  choiceRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceSoft, alignItems: 'flex-start', flexWrap: 'wrap' },
+  choicePrice: { color: colors.primary, fontWeight: '900' },
   totals: { marginLeft: 'auto', width: '100%', maxWidth: 360, gap: spacing.xs, paddingTop: spacing.sm },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md, alignItems: 'center' },
   total: { color: colors.primary, fontWeight: '900' },
