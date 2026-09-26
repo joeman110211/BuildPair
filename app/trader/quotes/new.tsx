@@ -201,6 +201,7 @@ export default function NewQuoteScreen() {
   const serviceCost = labourOnlyCost + overheadCost;
   const serviceFundingBalance = totalAmount - materialsCost;
   const payoutReady = Boolean(profile?.stripeAccountId && profile.stripePayoutsEnabled);
+  const plusBusinessTools = profile?.subscriptionTier === 'basic' || profile?.subscriptionTier === 'featured';
   const effectiveNotIncluded = useMemo(() => {
     const exclusions = notIncluded.trim();
     if (!subjectToInspection) return exclusions;
@@ -328,6 +329,10 @@ export default function NewQuoteScreen() {
   }
 
   async function buildWithAi() {
+    if (!plusBusinessTools) {
+      setError('AI quote drafting is included with BuildPair Plus and Pro.');
+      return;
+    }
     const description = (workIncluded || job?.description || `Customer requested ${jobTitle}`).trim();
     if ((jobTitle || job?.title || '').trim().length < 3 || description.length < 10) {
       setError('Add a short job title and a few words about the work before asking AI to draft it.');
@@ -380,6 +385,7 @@ export default function NewQuoteScreen() {
     if (!external && !durationDays) return 'Choose roughly how long the job should take.';
     if (!external && !proposedStartDate) return 'Choose when you expect to start.';
     if (!external && buildPayRequested && !payoutReady) return 'BuildPay cannot be included in this quote until Stripe has confirmed your payout setup. Finish payout setup or use a single direct-payment quote for now.';
+    if (external && paymentMethod === 'buildpair' && !plusBusinessTools) return 'Outside-customer BuildPay and managed projects are included with BuildPair Plus and Pro.';
     if (external && paymentMethod === 'buildpair' && !payoutReady) return 'BuildPay is not available until Stripe has confirmed payout readiness. Use direct payment for now or finish payout setup first.';
     return '';
   }
@@ -545,7 +551,7 @@ export default function NewQuoteScreen() {
       </View> : null}
       <TextInput label="Not included (optional)" value={notIncluded} onChangeText={setNotIncluded} mode="outlined" multiline numberOfLines={3} placeholder="e.g. Decorating, hidden defects, extra work not listed above" />
       {subjectToInspection ? <HelperText type="info">Inspection caveat added to the customer-facing quote.</HelperText> : null}
-      <Button mode="contained-tonal" icon="creation" loading={aiBusy} disabled={aiBusy} onPress={() => void buildWithAi()}>Help me draft the wording with AI</Button>
+      <Button mode="contained-tonal" icon="creation" loading={aiBusy} disabled={aiBusy || !plusBusinessTools} onPress={() => void buildWithAi()}>{plusBusinessTools ? 'Help me draft the wording with AI' : 'AI quote drafting · Plus'}</Button>
     </AppCard>
 
     <AppCard>
@@ -630,7 +636,8 @@ export default function NewQuoteScreen() {
       </AppCard> : null}
       {external ? <>
         <Text variant="labelLarge" style={styles.label}>Payment method</Text>
-        <SegmentedButtons value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'external' | 'buildpair')} buttons={[{ value: 'external', label: 'Paid directly' }, { value: 'buildpair', label: 'BuildPay', disabled: !payoutReady }]} />
+        <SegmentedButtons value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'external' | 'buildpair')} buttons={[{ value: 'external', label: 'Paid directly' }, { value: 'buildpair', label: 'BuildPay', disabled: !payoutReady || !plusBusinessTools }]} />
+        {!plusBusinessTools ? <HelperText type="info">Core can quote and invoice outside customers. Converting an accepted outside quote into a managed BuildPair project with staged BuildPay is included with Plus and Pro.</HelperText> : null}
         {paymentMethod === 'buildpair' ? <HelperText type="info">You are asking to use BuildPay for this outside customer, so you carry the BuildPay cost. After the customer accepts and claims the project, the agreed stages move into the normal BuildPay project flow.</HelperText> : null}
         {!payoutReady ? <HelperText type="info">BuildPay is unavailable until Stripe has confirmed that payouts are enabled. You can still create, send and track quotes normally.</HelperText> : null}
       </> : null}
