@@ -220,7 +220,7 @@ export async function POST(request: Request) {
             sin(radians(tp.latitude)) * sin(radians(${location.latitude}))
           )))) <= tp.radius_miles
         LIMIT 100
-      ` as unknown as { userId: string; subscriptionTier: 'basic' | 'featured' }[];
+      ` as unknown as { userId: string; subscriptionTier: 'core' | 'basic' | 'featured' }[];
 
       await Promise.allSettled(matched.map(({ userId, subscriptionTier }) => {
         const pro = subscriptionTier === 'featured';
