@@ -98,9 +98,7 @@ export async function GET(request: Request) {
                    FROM conversations c
                    WHERE c.trader_id = tp.user_id
                  ), 1.0) * 10
-               + CASE WHEN tp.subscription_tier = 'featured' THEN 8
-                      WHEN tp.subscription_tier = 'basic' THEN 2
-                      ELSE 0 END
+               + CASE WHEN tp.subscription_tier = 'featured' THEN 8 ELSE 0 END
              )::float AS "rankingScore"
       FROM trader_profiles tp
       LEFT JOIN reviews r
