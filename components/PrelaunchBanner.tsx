@@ -31,10 +31,10 @@ export function PrelaunchBanner() {
           <Button mode="contained" icon="account-clock-outline" style={compact ? styles.primaryActionCompact : undefined} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>Create my trade profile</Button>
         </Link>
         <Link href="/(public)/rewards" asChild>
-          <Button mode="outlined" style={compact ? styles.secondaryActionCompact : undefined} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>See launch rewards</Button>
+          <Button mode="outlined" style={compact ? styles.secondaryActionCompact : undefined} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>Rewards</Button>
         </Link>
         <Link href="/auth/sign-in" asChild>
-          <Button mode="text" style={compact ? styles.secondaryActionCompact : undefined} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>Existing member sign in</Button>
+          <Button mode="text" style={compact ? styles.secondaryActionCompact : undefined} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>Sign in</Button>
         </Link>
       </View>
     </View>
