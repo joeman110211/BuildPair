@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Platform, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { PublicInfoPage } from '@/components/PublicInfoPage';
@@ -47,11 +47,7 @@ function removeDetailedIdentity(requestDeletion = true) {
 }
 
 export default function CookiesPage() {
-  const [choice, setChoice] = useState<AnalyticsChoice>('basic');
-
-  useEffect(() => {
-    setChoice(currentChoice());
-  }, []);
+  const [choice, setChoice] = useState<AnalyticsChoice>(() => currentChoice());
 
   const saveChoice = (next: AnalyticsChoice) => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
