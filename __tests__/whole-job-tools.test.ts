@@ -72,6 +72,39 @@ describe('whole-job BuildPair tools', () => {
     expect(external).toContain("CASE WHEN bq.payment_method = 'buildpair' THEN 'trader_absorbs' ELSE NULL END");
   });
 
+  it('smooths the job journey with reminders, calendar subscriptions, handover and quote choices', () => {
+    const migration = source('db/migrations/0053_smooth_workflow.sql');
+    expect(migration).toContain('business_quote_options');
+    expect(migration).toContain('trader_calendar_tokens');
+    expect(migration).toContain('business_reminder_log');
+    expect(migration).toContain("'aftercare'");
+
+    const reminders = source('app/api/business-reminders+api.ts');
+    expect(reminders).toContain("interval '48 hours'");
+    expect(reminders).toContain("'quote','invoice','aftercare'");
+
+    expect(source('app/api/calendar-feed/[token]+api.ts')).toContain('text/calendar');
+    expect(source('app/trader/calendar.tsx')).toContain('Subscribe in calendar');
+    expect(source('app/api/jobs/[id]/handover+api.ts')).toContain('job_workspace_entries');
+    expect(source('components/HandoverPackScreen.tsx')).toContain('Project handover pack');
+
+    const businessQuotes = source('app/api/business-quotes+api.ts');
+    expect(businessQuotes).toContain('business_quote_options');
+    expect(source('app/api/business-quotes/revise+api.ts')).toContain('INSERT INTO business_quote_options');
+    expect(source('components/QuoteDocument.tsx')).toContain('Choices & optional extras');
+    expect(source('app/api/public/quotes/[token]/print+api.ts')).toContain('Choices & optional extras');
+  });
+
+  it('offers Project+ as a real optional trade add-on while keeping it included with Pro', () => {
+    const checkout = source('app/api/stripe/project-plus/start+api.ts');
+    expect(checkout).toContain("audience: z.enum(['customer','trader'])");
+    expect(checkout).toContain("audience === 'trader'");
+    const studio = source('components/ProjectPlusStudio.tsx');
+    expect(studio).toContain('£4.99/month');
+    expect(studio).toContain('Add Project+');
+    expect(source('lib/project-plus.ts')).toContain("row?.subscriptionTier === 'featured'");
+  });
+
   it('shows an honest public recently-added and coming-soon roadmap', () => {
     const updates = source('app/(public)/updates.tsx');
     expect(updates).toContain('Recently added');
