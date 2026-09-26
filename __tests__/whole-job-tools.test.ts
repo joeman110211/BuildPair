@@ -88,13 +88,31 @@ describe('whole-job BuildPair tools', () => {
     expect(source('app/api/jobs/[id]/handover+api.ts')).toContain('job_workspace_entries');
     expect(source('components/HandoverPackScreen.tsx')).toContain('Project handover pack');
     expect(source('app/customer/dashboard.tsx')).toContain('WHAT NEEDS YOUR ATTENTION');
-    expect(source('app/customer/jobs/[id].tsx')).toContain('Hire this trade again');
+    expect(source('app/customer/jobs/[id].tsx')).toContain('Hire same trade again');
 
     const businessQuotes = source('app/api/business-quotes+api.ts');
     expect(businessQuotes).toContain('business_quote_options');
     expect(source('app/api/business-quotes/revise+api.ts')).toContain('INSERT INTO business_quote_options');
     expect(source('components/QuoteDocument.tsx')).toContain('Choices & optional extras');
     expect(source('app/api/public/quotes/[token]/print+api.ts')).toContain('Choices & optional extras');
+  });
+
+  it('keeps repeat homeowner and trade work inside BuildPair without retyping it', () => {
+    const homeRecord = source('app/api/home-record+api.ts');
+    expect(homeRecord).toContain('job_private_details');
+    expect(homeRecord).toContain('job_workspace_entries');
+    expect(homeRecord).toContain("'handover', 'warranty', 'aftercare', 'document', 'snag'");
+
+    const homeScreen = source('app/customer/home-record.tsx');
+    expect(homeScreen).toContain('Hire same trade again');
+    expect(homeScreen).toContain('Post similar job');
+    expect(source('app/customer/new-job.tsx')).toContain('repeatJobId');
+
+    const customers = source('app/trader/customers.tsx');
+    expect(customers).toContain('New quote');
+    expect(customers).toContain('New invoice');
+    expect(source('app/trader/quotes/new.tsx')).toContain('presetCustomerName');
+    expect(source('app/trader/invoices/new.tsx')).toContain('presetCustomerEmail');
   });
 
   it('offers Project+ as a real optional trade add-on while keeping it included with Pro', () => {
