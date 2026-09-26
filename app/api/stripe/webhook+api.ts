@@ -51,6 +51,27 @@ async function clearPaidSubscription(subscriptionId: string) {
   await getSql()`UPDATE trader_profiles SET stripe_subscription_id = NULL, paid_subscription_tier = NULL, subscription_tier = ${effective}::subscription_tier, is_subscription_active = ${effective !== 'free'}, updated_at = now() WHERE user_id = ${profile.userId}`;
 }
 
+async function syncProjectPlusSubscription(userId: string, subscription: Stripe.Subscription) {
+  const active = ['active', 'trialing'].includes(subscription.status);
+  await getSql()`
+    UPDATE users
+    SET project_plus_active = ${active},
+        project_plus_stripe_subscription_id = ${active ? subscription.id : null},
+        updated_at = now()
+    WHERE id = ${userId}
+  `;
+}
+
+async function clearProjectPlusSubscription(subscriptionId: string) {
+  await getSql()`
+    UPDATE users
+    SET project_plus_active = false,
+        project_plus_stripe_subscription_id = NULL,
+        updated_at = now()
+    WHERE project_plus_stripe_subscription_id = ${subscriptionId}
+  `;
+}
+
 function chargeIdFromIntent(intent: Stripe.PaymentIntent) {
   return typeof intent.latest_charge === 'string' ? intent.latest_charge : intent.latest_charge?.id ?? null;
 }
@@ -256,11 +277,20 @@ async function handleEvent(event: Stripe.Event) {
   if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.created') {
     const subscription = event.data.object;
     const userId = subscription.metadata.buildpairUserId ?? subscription.metadata.buildmateUserId;
+    if (subscription.metadata.buildpairProduct === 'project_plus') {
+      if (userId) await syncProjectPlusSubscription(userId, subscription);
+      return;
+    }
     const tier = subscription.metadata.tier;
     if (userId && (tier === 'core' || tier === 'basic' || tier === 'featured')) await syncSubscriptionState(userId, subscription, tier);
     return;
   }
-  if (event.type === 'customer.subscription.deleted') { await clearPaidSubscription(event.data.object.id); return; }
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object;
+    if (subscription.metadata.buildpairProduct === 'project_plus') await clearProjectPlusSubscription(subscription.id);
+    else await clearPaidSubscription(subscription.id);
+    return;
+  }
 
   if (event.type === 'payment_intent.succeeded') {
     const intent = event.data.object;
