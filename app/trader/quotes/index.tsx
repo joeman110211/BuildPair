@@ -18,10 +18,13 @@ type BusinessQuote = {
   customerEmail: string | null;
   customerPhone: string | null;
   jobTitle: string;
+  tradeCategory: string | null;
   totalAmount: number;
   status: 'draft' | 'sent' | 'viewed' | 'accepted' | 'declined' | 'withdrawn';
   shareToken: string;
   shareUrl: string;
+  revisionNumber: number;
+  managedJobId: string | null;
   paymentSchedule: PaymentStagePlan[];
   validUntil: string | null;
   createdAt: string;
@@ -75,6 +78,16 @@ export default function TraderQuotesScreen() {
     return () => clearTimeout(timer);
   }, [load]);
 
+  async function reviseQuote(quote: BusinessQuote) {
+    try {
+      setError('');
+      const result = await apiFetch<{ id: string }>('/api/business-quotes/revise', { method: 'POST', body: JSON.stringify({ quoteId: quote.id }) }, getToken);
+      router.push(`/trader/quotes/new?quoteId=${encodeURIComponent(result.id)}` as Href);
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  }
+
   async function shareQuote(quote: BusinessQuote) {
     const text = `Quote ${quote.quoteNumber} for ${quote.jobTitle}: ${quote.shareUrl}`;
     if (Platform.OS === 'web') {
@@ -105,7 +118,7 @@ export default function TraderQuotesScreen() {
       <View style={styles.row}>
         <View style={styles.flex}>
           <Text variant="titleMedium" style={styles.title}>{quote.jobTitle}</Text>
-          <Text style={styles.muted}>{quote.quoteNumber} · {quote.customerName}</Text>
+          <Text style={styles.muted}>{quote.quoteNumber} · Revision {quote.revisionNumber || 1} · {quote.customerName}{quote.tradeCategory ? ` · ${quote.tradeCategory}` : ''}</Text>
         </View>
         <View style={styles.amountBlock}><Text variant="titleLarge" style={styles.amount}>{formatMoney(quote.totalAmount)}</Text><Chip compact>{statusLabel(quote.status)}</Chip></View>
       </View>
@@ -115,6 +128,8 @@ export default function TraderQuotesScreen() {
           <Button mode="outlined" icon="open-in-new" onPress={() => void Linking.openURL(quote.shareUrl)}>Open customer view</Button>
           <Button mode="outlined" icon="file-pdf-box" onPress={() => void Linking.openURL(printUrl(quote))}>PDF / print</Button>
           {quote.customerEmail ? <Button mode="text" icon="email-outline" onPress={() => void Linking.openURL(`mailto:${encodeURIComponent(quote.customerEmail!)}?subject=${encodeURIComponent(`Quote ${quote.quoteNumber}`)}&body=${encodeURIComponent(`Hi ${quote.customerName},\n\nHere is your quote for ${quote.jobTitle}:\n${quote.shareUrl}`)}`)}>Email</Button> : null}
+          {quote.status !== 'accepted' && quote.status !== 'draft' ? <Button mode="outlined" icon="file-replace-outline" onPress={() => void reviseQuote(quote)}>Create revision</Button> : null}
+          {quote.managedJobId ? <Button mode="outlined" icon="briefcase-outline" onPress={() => router.push(`/trader/jobs/${quote.managedJobId}` as Href)}>Open managed project</Button> : null}
           {quote.customerPhone ? <Button mode="text" icon="message-text-outline" onPress={() => void Linking.openURL(`sms:${quote.customerPhone}?body=${encodeURIComponent(`Your quote for ${quote.jobTitle}: ${quote.shareUrl}`)}`)}>SMS</Button> : null}
         </>}
       </View>
