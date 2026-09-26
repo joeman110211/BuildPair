@@ -26,10 +26,11 @@ export async function POST(request: Request) {
   }
 }
 
-type PaidTier = 'basic' | 'featured';
+type PaidTier = 'core' | 'basic' | 'featured';
 function effectiveTier(paidTier: PaidTier | null, complimentaryTier: PaidTier | null): 'free' | PaidTier {
   if (paidTier === 'featured' || complimentaryTier === 'featured') return 'featured';
   if (paidTier === 'basic' || complimentaryTier === 'basic') return 'basic';
+  if (paidTier === 'core' || complimentaryTier === 'core') return 'core';
   return 'free';
 }
 
@@ -256,7 +257,7 @@ async function handleEvent(event: Stripe.Event) {
     const subscription = event.data.object;
     const userId = subscription.metadata.buildpairUserId ?? subscription.metadata.buildmateUserId;
     const tier = subscription.metadata.tier;
-    if (userId && (tier === 'basic' || tier === 'featured')) await syncSubscriptionState(userId, subscription, tier);
+    if (userId && (tier === 'core' || tier === 'basic' || tier === 'featured')) await syncSubscriptionState(userId, subscription, tier);
     return;
   }
   if (event.type === 'customer.subscription.deleted') { await clearPaidSubscription(event.data.object.id); return; }
