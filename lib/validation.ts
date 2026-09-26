@@ -73,6 +73,7 @@ export const traderProfileSchema = z.object({
 
 export const jobSchema = z.object({
   targetTraderId: z.string().min(1).nullable().optional(),
+  propertyId: z.uuid().optional(),
   title: z.string().trim().min(1, 'Enter a job title').max(120),
   category: z.enum(TRADE_CATEGORIES),
   propertyType: z.enum(PROPERTY_TYPES),
