@@ -137,7 +137,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
       })}
     </View>
     {!REGISTRATION_OPEN ? <Text style={styles.launchNote}>Trade profile setup is open now. Marketplace activity and paid subscriptions unlock at launch on {LAUNCH_DATE_LABEL}; founding Pro time starts from launch day.</Text> : null}
-    <Text style={styles.note}>Category limits count broad trade categories, not every service inside them. Direct homeowner requests do not use the monthly open-marketplace offer allowance. Google reviews remain clearly labelled as Google reviews and only appear after the business listing connection is approved.</Text>
+    <Text style={styles.note}>Category limits count broad trade categories, not every service inside them. Core direct homeowner requests use the same five-opportunity monthly allowance. On Plus and Pro, direct homeowner requests do not use the open-marketplace allowance. Google reviews remain clearly labelled as Google reviews and only appear after the business listing connection is approved.</Text>
   </View>;
 }
 
