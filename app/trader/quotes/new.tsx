@@ -664,7 +664,7 @@ export default function NewQuoteScreen() {
     {external ? <AppCard>
       <Text variant="titleLarge" style={styles.title}>Choices & optional extras</Text>
       <Text style={styles.muted}>Keep upgrades and alternatives separate from the core quote. Their price change is shown clearly but is not included in the main total until you issue a revised quote that includes it.</Text>
-      {quoteOptions.map((option, index) => <View key={option.key} style={styles.stageCard}>
+      {quoteOptions.map((option, index) => <View key={option.key} style={styles.itemCard}>
         <SegmentedButtons value={option.kind} onValueChange={(value) => updateQuoteOption(index, { kind: value as DraftQuoteOption['kind'] })} buttons={[{ value: 'optional', label: 'Optional extra' }, { value: 'alternative', label: 'Alternative' }]} />
         <TextInput label="Option title" value={option.title} onChangeText={(value) => updateQuoteOption(index, { title: value })} mode="outlined" placeholder="e.g. Upgrade to porcelain tiles" />
         <TextInput label="What changes? (optional)" value={option.description} onChangeText={(value) => updateQuoteOption(index, { description: value })} mode="outlined" multiline numberOfLines={2} />
