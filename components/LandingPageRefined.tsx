@@ -59,8 +59,8 @@ export default function LandingPageRefined() {
           <Button mode="contained" contentStyle={styles.searchButton} onPress={() => goSearch(search)}>Find a trade</Button>
         </View>
         <View style={styles.heroActions} testID="home-hero-actions">
-          <Link href={waitlistHref('customer', 'homepage-hero')} asChild><Button mode="outlined" style={styles.heroActionButton}>Join homeowner launch list</Button></Link>
-          <Link href={waitlistHref('trader', 'homepage-hero-trader')} asChild><Button mode="contained" style={styles.heroActionButton}>Set up my trade profile</Button></Link>
+          <Link href={waitlistHref('customer', 'homepage-hero')} asChild><Button mode="outlined" style={styles.heroActionButton}>Create account</Button></Link>
+          <Link href={waitlistHref('trader', 'homepage-hero-trader')} asChild><Button mode="contained" style={styles.heroActionButton}>Join as a trade</Button></Link>
           <Link href="/(public)/how-it-works" asChild><Button mode="outlined" style={styles.heroActionButton}>How it works</Button></Link>
         </View>
       </View>
@@ -220,7 +220,7 @@ export default function LandingPageRefined() {
     <View style={styles.section}>
       <View style={styles.finalCta}>
         <View style={styles.finalCopy}><Text style={styles.finalEyebrow}>BUILDPAIR UK</Text><Text variant="headlineSmall" style={styles.finalTitle}>Find the trade. Agree the job. Keep everything connected.</Text><Text style={styles.finalText}>Search, compare structured quotes, message, manage changes, choose the payment route and complete the project in one place.</Text></View>
-        <View style={styles.finalButtons}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('trader', 'homepage-final-trader')} asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.finalOutline}>Trade? Set up before launch</Button></Link></View>
+        <View style={styles.finalButtons}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('trader', 'homepage-final-trader')} asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.finalOutline}>Join as a trade</Button></Link></View>
       </View>
     </View>
 
