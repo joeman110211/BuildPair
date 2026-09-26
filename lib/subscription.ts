@@ -90,6 +90,18 @@ export function canShowPaidProfileExtras(profile: {
   return hasActiveLeadAccess(profile);
 }
 
+export function hasPlanSetupAccess(profile: {
+  subscriptionTier?: TraderWorkTypeTier | null;
+  isSubscriptionActive?: boolean | null;
+  trialEndsAt?: Date | string | null;
+}, minimum: TraderWorkTypeTier, now = new Date()) {
+  if (!tierAtLeast(profile.subscriptionTier, minimum)) return false;
+  if (hasActiveLeadAccess(profile, now)) return true;
+  if (!profile.trialEndsAt) return false;
+  const endsAt = profile.trialEndsAt instanceof Date ? profile.trialEndsAt.getTime() : new Date(profile.trialEndsAt).getTime();
+  return Number.isFinite(endsAt) && endsAt > now.getTime();
+}
+
 export function canUseTraderMessaging(profile: {
   subscriptionTier?: TraderWorkTypeTier | null;
   isSubscriptionActive?: boolean | null;
