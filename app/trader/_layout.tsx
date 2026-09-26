@@ -5,7 +5,8 @@ import { AppCard } from '@/components/AppCard';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { NativeBottomNav } from '@/components/NativeBottomNav';
 import { RoleGate } from '@/components/RoleGate';
-import { Screen } from '@/components/Screen';
+import { LoadingScreen, Screen } from '@/components/Screen';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { colors } from '@/constants/theme';
 import { FOUNDING_PRO_MONTHS, LAUNCH_DATE_LABEL, MARKETPLACE_OPEN } from '@/lib/launch';
 
@@ -53,7 +54,9 @@ function TraderPrelaunchLocked() {
 
 export default function TraderLayout() {
   const pathname = usePathname();
-  if (!MARKETPLACE_OPEN) {
+  const { user, loading } = useCurrentUser();
+  if (!MARKETPLACE_OPEN && loading) return <LoadingScreen label="Checking internal preview access…" />;
+  if (!MARKETPLACE_OPEN && !user?.isAdmin) {
     const content = pathname === '/trader/dashboard'
       ? <TraderPrelaunchHome />
       : PRELAUNCH_SETUP_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))
