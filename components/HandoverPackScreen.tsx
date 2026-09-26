@@ -1,4 +1,5 @@
 import { useAuth } from '@clerk/expo';
+import type { Href } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, Platform, Share, StyleSheet, View } from 'react-native';
 import { Button, Chip, Divider, Text } from 'react-native-paper';
@@ -59,7 +60,7 @@ export function HandoverPackScreen({ jobId, role }: { jobId: string; role: 'trad
     await Share.share({ title: `${pack.job.title} project pack`, message: lines });
   }
 
-  return <Screen title="Project handover pack" subtitle="One clean record of the agreed job, changes, payments, evidence, handover and aftercare." backHref={role === 'trader' ? `/trader/jobs/${jobId}` : `/customer/jobs/${jobId}`}>
+  return <Screen title="Project handover pack" subtitle="One clean record of the agreed job, changes, payments, evidence, handover and aftercare." backHref={(role === 'trader' ? `/trader/jobs/${jobId}` : `/customer/jobs/${jobId}`) as Href}>
     <View style={styles.actions}><Button mode="contained" icon="file-document-outline" onPress={() => void exportPack()}>{Platform.OS === 'web' ? 'Print / save PDF' : 'Share pack summary'}</Button><Button mode="outlined" icon="refresh" onPress={() => void load()}>Refresh</Button></View>
 
     <AppCard>
