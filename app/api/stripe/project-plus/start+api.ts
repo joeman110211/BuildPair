@@ -4,7 +4,7 @@ import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError }
 import { getSql } from '@/lib/sql';
 import { appUrl, getStripe } from '@/lib/stripe';
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   try {
     if (!MARKETPLACE_OPEN) throw new HttpError(423, 'Project+ subscriptions open with the homeowner marketplace on 15 October 2026.');
     const userId = await authenticatedUserId(request);
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const modes = await accountModes(userId);
     if (!modes.customerEnabled) throw new HttpError(403, 'Enable homeowner mode to subscribe to Project+.');
     const entitlement = await projectPlusEntitlement(userId);
-    if (entitlement.active) return Response.redirect(`${appUrl()}/customer/project-plus?subscription=active`, 303);
+    if (entitlement.active) return Response.json({ url: `${appUrl()}/customer/project-plus?subscription=active`, active: true });
 
     const rows = await getSql()`
       SELECT email, project_plus_stripe_customer_id AS "customerId"
@@ -36,12 +36,12 @@ export async function GET(request: Request) {
       client_reference_id: userId,
       line_items: [lineItem],
       allow_promotion_codes: true,
-      success_url: `${appUrl()}/api/stripe/project-plus/confirm?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${appUrl()}/customer/project-plus?subscription=complete`,
       cancel_url: `${appUrl()}/customer/project-plus?subscription=cancelled`,
       metadata: { buildpairUserId: userId, buildpairProduct: 'project_plus' },
       subscription_data: { metadata: { buildpairUserId: userId, buildpairProduct: 'project_plus' } },
     });
     if (!session.url) throw new Error('Stripe did not return a Project+ checkout URL');
-    return Response.redirect(session.url, 303);
+    return Response.json({ url: session.url });
   } catch (error) { return jsonError(error); }
 }
