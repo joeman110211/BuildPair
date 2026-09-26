@@ -32,8 +32,8 @@ export default function PricingPage() {
           <Text style={styles.explainerText}>The monthly allowance applies when a tradesperson submits an offer to an open marketplace job. Simply viewing a job does not use an allowance, and the same trader/job combination cannot consume it twice.</Text>
         </View>
         <View style={[styles.explainer, { backgroundColor: colors.accentSoft }]}>
-          <Text variant="titleLarge" style={styles.explainerTitle}>Direct requests are separate</Text>
-          <Text style={styles.explainerText}>When a homeowner chooses a searchable Plus or Pro profile and requests a quote directly, that opportunity does not consume the tradesperson’s open-marketplace offer allowance.</Text>
+          <Text variant="titleLarge" style={styles.explainerTitle}>Direct requests scale with the plan</Text>
+          <Text style={styles.explainerText}>Core includes five marketplace opportunities in total, so direct homeowner requests use that same allowance. On Plus and Pro, direct homeowner requests do not consume the open-marketplace offer allowance.</Text>
         </View>
         <View style={[styles.explainer, { backgroundColor: colors.navySoft }]}>
           <Text variant="titleLarge" style={styles.explainerTitle}>Categories stay meaningful</Text>
