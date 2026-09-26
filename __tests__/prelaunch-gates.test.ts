@@ -23,7 +23,7 @@ describe('BuildPair prelaunch gates', () => {
 
   it('allows public trader discovery before launch while transactional public routes stay locked', () => {
     const layout = readFileSync('app/(public)/_layout.tsx', 'utf8');
-    expect(layout).toContain("const MARKETPLACE_PATHS = ['/jobs', '/quote']");
+    expect(layout).toContain("const MARKETPLACE_PATHS = ['/jobs']");
     expect(layout).not.toContain("['/directory', '/jobs', '/traders', '/quote']");
     expect(layout).toContain('visitors can browse those profiles before launch');
   });
