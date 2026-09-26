@@ -6,11 +6,12 @@ import { AppCard } from '@/components/AppCard';
 import { colors } from '@/constants/theme';
 import type { TraderProfile } from '@/types';
 
-export function TraderCard({ trader }: { trader: TraderProfile }) {
+export function TraderCard({ trader, compareSelected = false, onToggleCompare }: { trader: TraderProfile; compareSelected?: boolean; onToggleCompare?: (trader: TraderProfile) => void }) {
   const router = useRouter();
   const rating = Number(trader.averageRating || 0);
   const isPro = trader.subscriptionTier === 'featured';
-  const membership = isPro ? 'BuildPair Pro' : trader.subscriptionTier === 'basic' ? 'BuildPair Plus' : null;
+  const membership = isPro ? 'BuildPair Pro' : trader.subscriptionTier === 'basic' ? 'BuildPair Plus' : trader.subscriptionTier === 'core' ? 'BuildPair Core' : null;
+  const responseLabel = trader.averageResponseHours && trader.averageResponseHours > 0 ? `Replies in ~${trader.averageResponseHours < 1 ? '<1' : Math.round(trader.averageResponseHours)}h` : trader.responseRate && trader.responseRate > 0 ? `${Math.round(trader.responseRate)}% response rate` : null;
 
   return <AppCard style={styles.card}>
     <View style={styles.media}>
@@ -25,15 +26,23 @@ export function TraderCard({ trader }: { trader: TraderProfile }) {
           <Text variant="titleLarge" style={styles.title}>{trader.businessName}</Text>
           <Text style={styles.muted}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
         </View>
-        {trader.isPreview ? <Chip compact>Example profile</Chip> : null}
+        <View style={styles.badges}>
+          {trader.foundingTrade ? <Chip compact icon="rocket-launch-outline">Founding BuildPair Trade</Chip> : null}
+          {trader.isPreview ? <Chip compact>Example profile</Chip> : null}
+        </View>
       </View>
       <View style={styles.metaRow}>
         <View style={styles.metaPill}><Text style={styles.metaStrong}>{trader.reviewCount ? `${rating.toFixed(1)} ★` : 'New'}</Text><Text style={styles.metaText}>{trader.reviewCount ? `${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}` : 'No reviews yet'}</Text></View>
         <View style={styles.metaPill}><Text style={styles.metaStrong}>{trader.radiusMiles} miles</Text><Text style={styles.metaText}>working radius</Text></View>
+        {trader.availabilitySummary ? <View style={styles.metaPill}><Text style={styles.metaStrong}>Available</Text><Text style={styles.metaText}>{trader.availabilitySummary}</Text></View> : null}
+        {responseLabel ? <View style={styles.metaPill}><Text style={styles.metaStrong}>{responseLabel}</Text><Text style={styles.metaText}>BuildPair response history</Text></View> : null}
       </View>
       <Text numberOfLines={3} style={styles.bio}>{trader.bio}</Text>
       <View style={styles.skills}>{trader.subSkills.slice(0, 4).map((skill) => <Chip key={skill} compact>{skill}</Chip>)}</View>
-      <Button mode="contained" contentStyle={styles.button} onPress={() => router.push(`/(public)/traders/${trader.id}` as Href)}>View profile</Button>
+      <View style={styles.actions}>
+        <Button mode="contained" contentStyle={styles.button} onPress={() => router.push(`/(public)/traders/${trader.id}` as Href)}>View profile</Button>
+        {onToggleCompare ? <Button mode={compareSelected ? 'contained-tonal' : 'outlined'} icon="compare-horizontal" onPress={() => onToggleCompare(trader)}>{compareSelected ? 'Comparing' : 'Compare'}</Button> : null}
+      </View>
     </View>
   </AppCard>;
 }
@@ -53,6 +62,7 @@ const styles = StyleSheet.create({
   content: { padding: 18, gap: 11 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' },
   flex: { flex: 1, minWidth: 180, gap: 3 },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, justifyContent: 'flex-end' },
   title: { fontWeight: '900', color: colors.text, letterSpacing: -0.35 },
   muted: { color: colors.muted, lineHeight: 21 },
   bio: { color: colors.charcoalSoft, lineHeight: 22 },
@@ -61,5 +71,6 @@ const styles = StyleSheet.create({
   metaStrong: { color: colors.charcoal, fontWeight: '900' },
   metaText: { color: colors.muted, fontSize: 10 },
   skills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   button: { minHeight: 48 },
 });
