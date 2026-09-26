@@ -144,6 +144,24 @@ export async function POST(request: Request) {
         throw new HttpError(409, 'This job is outside the tradesperson’s published service radius');
       }
       targetPlan = target.subscriptionTier;
+      if (target.subscriptionTier === 'core') {
+        const usage = await getSql()`
+          SELECT (
+            (SELECT count(*) FROM trader_job_offers
+             WHERE trader_id = ${payload.targetTraderId}
+               AND created_at >= date_trunc('month', now())
+               AND created_at < date_trunc('month', now()) + interval '1 month')
+            +
+            (SELECT count(*) FROM jobs
+             WHERE target_trader_id = ${payload.targetTraderId}
+               AND created_at >= date_trunc('month', now())
+               AND created_at < date_trunc('month', now()) + interval '1 month')
+          )::int AS count
+        ` as unknown as { count: number }[];
+        if ((usage[0]?.count ?? 0) >= 5) {
+          throw new HttpError(409, 'This tradesperson has used their five Core marketplace opportunities for this month. Choose another tradesperson or try again after their allowance resets.');
+        }
+      }
     }
 
     const [job] = await db.insert(jobs).values({
