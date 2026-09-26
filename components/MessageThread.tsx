@@ -76,7 +76,7 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
       setError('');
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
-  }, [conversationId]);
+  }, [conversationId, userId]);
   useEffect(() => { void load(); const refresh = setInterval(() => void load(), 5000); return () => clearInterval(refresh); }, [load]);
 
   const send = async () => {
