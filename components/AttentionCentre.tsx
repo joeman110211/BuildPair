@@ -27,7 +27,7 @@ export function AttentionCentre({ role }: { role: 'customer' | 'trader' }) {
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
   }, [getToken, role]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   if (loading) return <LoadingScreen label="Checking what needs attention…" />;
   return <Screen title="Needs attention" subtitle="One action list for the things that actually need a decision, follow-up or next step. Notifications can chatter; this list should not.">
