@@ -30,6 +30,7 @@ export default function CustomerLayout() {
     <Stack.Screen name="jobs" options={{ headerShown: false }} />
     <Stack.Screen name="profile" options={{ headerShown: false }} />
     <Stack.Screen name="saved-trades" options={{ headerShown: false }} />
+    <Stack.Screen name="project-plus" options={{ headerShown: false }} />
     <Stack.Screen name="claim-quote" options={{ title: 'Add accepted quote' }} />
     <Stack.Screen name="notifications" options={{ headerShown: false }} />
     <Stack.Screen name="settings" options={{ headerShown: false }} />
