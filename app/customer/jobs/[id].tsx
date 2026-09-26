@@ -8,6 +8,7 @@ import { MilestoneTimeline } from '@/components/MilestoneTimeline';
 // Metro and TypeScript resolve the .native/.web implementation; ESLint's generic resolver does not.
 // eslint-disable-next-line import/no-unresolved
 import { PayMilestoneButton } from '@/components/PayMilestoneButton';
+import { ProjectAftercare } from '@/components/ProjectAftercare';
 import { ProjectWorkspace } from '@/components/ProjectWorkspace';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -334,6 +335,7 @@ export default function JobDetailScreen() {
     </> : data.job.status === 'cancelled' ? <EmptyState title="Job cancelled" body="This job is closed and will no longer receive quotes." /> : <EmptyState title="No quote accepted" body="Compare quotes when they arrive, then accept the best fit, not just the cheapest number." />}
 
     {data.acceptedQuote ? <ProjectWorkspace jobId={id} role="customer" /> : null}
+    {data.acceptedQuote ? <ProjectAftercare jobId={id} role="customer" /> : null}
 
     {data.timeline?.length ? <><Text variant="titleLarge" style={styles.heading}>Project activity</Text><AppCard>{data.timeline.map((event, index) => <View key={event.id} style={styles.timelineRow}><View style={styles.timelineDot} /><View style={styles.timelineCopy}><Text variant="titleSmall" style={styles.heading}>{event.title}</Text>{event.description ? <Text style={styles.muted}>{event.description}</Text> : null}<Text variant="bodySmall" style={styles.muted}>{new Date(event.createdAt).toLocaleString('en-GB')}</Text></View>{index < data.timeline.length - 1 ? <View style={styles.timelineLine} /> : null}</View>)}</AppCard></> : null}
 
