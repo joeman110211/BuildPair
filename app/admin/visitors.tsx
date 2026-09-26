@@ -150,17 +150,19 @@ export default function VisitorAnalyticsAdmin() {
     const samples = number(summary.pageTimeSamples);
     return samples ? number(summary.totalPageSeconds) / samples : 0;
   }, [summary]);
-  const sessions = number(summary.sessions);
-  const conversionRate = sessions ? (number(summary.convertedSessions) / sessions) * 100 : 0;
-  const engagedRate = sessions ? (number(summary.engagedSessions) / sessions) * 100 : 0;
+  const visits = number(summary.sessions);
+  const detailedSessions = number(summary.detailedSessions);
+  const conversionRate = detailedSessions ? (number(summary.detailedConvertedSessions) / detailedSessions) * 100 : 0;
+  const engagedRate = detailedSessions ? (number(summary.detailedEngagedSessions) / detailedSessions) * 100 : 0;
+  const pagesPerVisit = visits ? number(summary.pageViews) / visits : 0;
   const legacyViews = number(summary.legacyAggregatePageViews);
 
-  return <Screen title="Visitor Intelligence" subtitle="Live traffic, new versus returning visitors, acquisition, journeys and conversion signals in one place.">
+  return <Screen title="Visitor Intelligence" subtitle="Pre-launch traffic, acquisition, coarse location, device mix and product-friction signals in one place.">
     <AppCard style={styles.heroCard}>
       <View style={styles.headerRow}>
         <View style={styles.flex}>
           <Text variant="titleLarge" style={styles.title}>Traffic command centre</Text>
-          <Text style={styles.muted}>Anonymous browser and visit IDs separate people from page refreshes. Signed-in accounts are tracked separately in Live users. Raw IP addresses, form contents, passwords and precise GPS location are not stored here.</Text>
+          <Text style={styles.muted}>Default website analytics is aggregate and does not create a persistent visitor ID. It records visits, pages, interactions, acquisition, device categories and coarse network location. Individual journey data below only exists for visitors who explicitly allowed detailed analytics. Raw IP addresses, typed form contents, passwords and precise GPS location are not stored in analytics.</Text>
         </View>
         <View style={styles.toolbarButtons}>
           {Platform.OS === 'web' ? <Button mode={browserExcluded ? 'contained-tonal' : 'outlined'} icon={browserExcluded ? 'eye-off-outline' : 'eye-outline'} onPress={toggleBrowserExclusion}>{browserExcluded ? 'This browser excluded' : 'Exclude this browser'}</Button> : null}
@@ -182,23 +184,23 @@ export default function VisitorAnalyticsAdmin() {
     </AppCard>
 
     <View style={styles.metrics}>
-      <Metric live label="On site now" value={compact(summary.activeNow)} hint="Anonymous visitors active in roughly the last 2 minutes." />
-      <Metric label="Unique visitors" value={compact(summary.uniqueVisitors)} hint="Distinct anonymous browsers in this period." />
-      <Metric label="New visitors" value={compact(summary.newVisitors)} hint="First seen during the selected period." />
-      <Metric label="Returning visitors" value={compact(summary.returningVisitors)} hint="Seen before the selected period and came back." />
-      <Metric label="Visits" value={compact(summary.sessions)} hint={`${compact(summary.returningSessions)} repeat visit${number(summary.returningSessions) === 1 ? '' : 's'} in this period.`} />
-      <Metric label="Page views" value={compact(summary.pageViews)} hint="Page loads and route changes, including preserved historical totals." />
-      <Metric label="Pages / visit" value={decimal(summary.pagesPerSession)} hint="Based on visits recorded after unique tracking began." />
-      <Metric label="Signup / sign-in conversion" value={`${conversionRate.toFixed(1)}%`} hint={`${compact(summary.convertedSessions)} anonymous visit${number(summary.convertedSessions) === 1 ? '' : 's'} converted.`} />
+      <Metric label="Visits" value={compact(summary.sessions)} hint="Aggregate visit starts. Refreshing starts a new visit; no persistent visitor ID is needed." />
+      <Metric label="Page views" value={compact(summary.pageViews)} hint="Page loads and route changes across the selected period." />
+      <Metric label="Pages / visit" value={decimal(pagesPerVisit)} hint="Aggregate page views divided by aggregate visits." />
+      <Metric label="Meaningful clicks" value={compact(summary.clicks)} hint="Buttons and links used, without recording typed field contents." />
+      <Metric label="Accounts created" value={compact(summary.signups)} hint="BuildPair accounts created in the selected period." />
+      <Metric label="Detailed opt-in browsers" value={compact(summary.detailedUniqueVisitors)} hint="Only browsers that explicitly allowed detailed journey analytics." />
+      <Metric live label="Detailed live now" value={compact(summary.detailedActiveNow)} hint="Opted-in detailed visitors active in roughly the last 2 minutes." />
+      <Metric label="Detailed conversion" value={`${conversionRate.toFixed(1)}%`} hint={`${compact(summary.detailedConvertedSessions)} of ${compact(summary.detailedSessions)} opted-in detailed visits converted.`} />
     </View>
 
     <AppCard>
       <View style={styles.quickFacts}>
-        <View style={styles.fact}><Text style={styles.factValue}>{duration(summary.avgSessionSeconds)}</Text><Text style={styles.muted}>avg visit</Text></View>
+        <View style={styles.fact}><Text style={styles.factValue}>{duration(summary.detailedAvgSessionSeconds)}</Text><Text style={styles.muted}>detailed avg visit</Text></View>
         <View style={styles.fact}><Text style={styles.factValue}>{duration(avgPageSeconds)}</Text><Text style={styles.muted}>avg page attention</Text></View>
-        <View style={styles.fact}><Text style={styles.factValue}>{engagedRate.toFixed(0)}%</Text><Text style={styles.muted}>engaged visits</Text></View>
-        <View style={styles.fact}><Text style={styles.factValue}>{compact(summary.clicks)}</Text><Text style={styles.muted}>meaningful clicks</Text></View>
-        <View style={styles.fact}><Text style={styles.factValue}>{compact(summary.signups)}</Text><Text style={styles.muted}>accounts created</Text></View>
+        <View style={styles.fact}><Text style={styles.factValue}>{engagedRate.toFixed(0)}%</Text><Text style={styles.muted}>detailed engaged</Text></View>
+        <View style={styles.fact}><Text style={styles.factValue}>{compact(summary.formInteractions)}</Text><Text style={styles.muted}>form-field reaches</Text></View>
+        <View style={styles.fact}><Text style={styles.factValue}>{compact(summary.signupClicks)}</Text><Text style={styles.muted}>signup clicks</Text></View>
       </View>
     </AppCard>
 
@@ -206,19 +208,19 @@ export default function VisitorAnalyticsAdmin() {
       <AppCard style={styles.columnCard}>
         <Text variant="titleLarge" style={styles.title}>Where visitors came from</Text>
         <Text style={styles.muted}>UTM campaign data wins when present; otherwise BuildPair uses the referring site. Use UTM links in TikTok, Facebook, email and paid campaigns so the source is unambiguous.</Text>
-        <RankedRows rows={data?.sourceChannels ?? []} render={(row, index) => <View style={styles.row}><Text style={styles.rank}>{index + 1}</Text><View style={styles.flex}><Text style={styles.rowTitle}>{text(row.channel, 'Direct / unknown')}</Text><Text style={styles.muted}>{compact(row.visitors)} visitors · {compact(row.sessions)} visits · {compact(row.conversions)} conversions</Text></View></View>} />
+        <RankedRows rows={data?.sourceChannels ?? []} render={(row, index) => <View style={styles.row}><Text style={styles.rank}>{index + 1}</Text><View style={styles.flex}><Text style={styles.rowTitle}>{text(row.channel, 'Direct / unknown')}</Text><Text style={styles.muted}>{compact(row.sessions)} visits</Text></View></View>} />
       </AppCard>
 
       <AppCard style={styles.columnCard}>
         <Text variant="titleLarge" style={styles.title}>Landing pages</Text>
         <Text style={styles.muted}>The first page of each tracked visit. This is the useful answer to “what did my TikTok/Facebook/Google traffic actually land on?”</Text>
-        <RankedRows rows={data?.topLandingPages ?? []} render={(row, index) => <View style={styles.row}><Text style={styles.rank}>{index + 1}</Text><View style={styles.flex}><Text style={styles.rowTitle}>{text(row.path, '/')}</Text><Text style={styles.muted}>{compact(row.visitors)} visitors · {compact(row.sessions)} visits · {compact(row.conversions)} conversions</Text></View></View>} />
+        <RankedRows rows={data?.topLandingPages ?? []} render={(row, index) => <View style={styles.row}><Text style={styles.rank}>{index + 1}</Text><View style={styles.flex}><Text style={styles.rowTitle}>{text(row.path, '/')}</Text><Text style={styles.muted}>{compact(row.sessions)} visits</Text></View></View>} />
       </AppCard>
     </View>
 
     <AppCard>
       <View style={styles.headerRow}>
-        <View style={styles.flex}><Text variant="titleLarge" style={styles.title}>Recent anonymous visits</Text><Text style={styles.muted}>New/returning status, acquisition, pages and activity. “Anonymous” means this does not tell you the person’s real-world identity unless they later sign in.</Text></View>
+        <View style={styles.flex}><Text variant="titleLarge" style={styles.title}>Opted-in detailed visits</Text><Text style={styles.muted}>Individual anonymous journeys appear here only when a visitor explicitly allowed detailed analytics. Default no-popup traffic remains aggregate and does not create these journey records.</Text></View>
         <Chip icon="clock-outline">Live refresh on demand</Chip>
       </View>
       {(data?.recentSessions ?? []).length ? <View style={styles.list}>{(data?.recentSessions ?? []).slice(0, 50).map((session, index) => <View key={session.id}>
@@ -236,7 +238,7 @@ export default function VisitorAnalyticsAdmin() {
           <Button compact mode="outlined" onPress={() => openSession(session)}>Open journey</Button>
         </View>
         {index < (data?.recentSessions ?? []).length - 1 ? <Divider /> : null}
-      </View>)}</View> : <Text style={styles.muted}>No anonymous visits have been recorded with the new visitor tracking yet.</Text>}
+      </View>)}</View> : <Text style={styles.muted}>No opted-in detailed visits have been recorded in this period.</Text>}
     </AppCard>
 
     {selectedSession ? <AppCard style={styles.journeyCard}>
@@ -247,6 +249,7 @@ export default function VisitorAnalyticsAdmin() {
         <Text style={styles.muted}>Viewport: {text(selectedSession.device?.viewport)} · screen {text(selectedSession.device?.screen)}</Text>
         <Text style={styles.muted}>Language/timezone: {text(selectedSession.device?.language)} · {text(selectedSession.device?.timezone)}</Text>
         <Text style={styles.muted}>Referrer: {text(selectedSession.referrerHost, 'Direct / unknown')}</Text>
+        <Text style={styles.muted}>Coarse network location: {[selectedSession.geo?.city, selectedSession.geo?.region, selectedSession.geo?.country].map((value) => text(value, '')).filter(Boolean).join(', ') || 'Unknown'} · not GPS or a street address</Text>
       </View>
       {eventsLoading ? <HelperText type="info" visible>Loading journey…</HelperText> : <View style={styles.list}>{events.map((event, index) => <View key={event.id}>
         <View style={styles.eventRow}><Text style={styles.eventTime}>{new Date(event.createdAt).toLocaleTimeString('en-GB')}</Text><View style={styles.flex}><Text style={styles.rowTitle}>{event.eventType.replaceAll('_', ' ')}</Text><Text style={styles.muted}>{event.path || '/'}{event.target ? ` · ${event.target}` : ''}{event.value != null ? ` · ${event.eventType === 'page_time' ? duration(event.value) : event.value}` : ''}</Text></View></View>
@@ -268,12 +271,12 @@ export default function VisitorAnalyticsAdmin() {
     <View style={styles.twoColumn}>
       <AppCard style={styles.columnCard}>
         <Text variant="titleLarge" style={styles.title}>Devices</Text>
-        <RankedRows rows={data?.devices ?? []} render={(row, index) => <View style={styles.row}><Text style={styles.rank}>{index + 1}</Text><View style={styles.flex}><Text style={styles.rowTitle}>{text(row.deviceType)} · {text(row.browser)} · {text(row.os)}</Text><Text style={styles.muted}>{compact(row.visitors)} visitors · {compact(row.sessions)} visits</Text></View></View>} />
+        <RankedRows rows={data?.devices ?? []} render={(row, index) => <View style={styles.row}><Text style={styles.rank}>{index + 1}</Text><View style={styles.flex}><Text style={styles.rowTitle}>{text(row.deviceType)} · {text(row.browser)} · {text(row.os)}</Text><Text style={styles.muted}>{compact(row.sessions)} visits</Text></View></View>} />
       </AppCard>
       <AppCard style={styles.columnCard}>
         <Text variant="titleLarge" style={styles.title}>Approximate locations</Text>
-        <Text style={styles.muted}>Only coarse hosting/network signals and timezone. No precise GPS or raw IP address is retained.</Text>
-        <RankedRows rows={data?.locations ?? []} render={(row, index) => <View style={styles.row}><Text style={styles.rank}>{index + 1}</Text><View style={styles.flex}><Text style={styles.rowTitle}>{[row.city, row.region, row.country].map((value) => text(value, '')).filter(Boolean).join(', ') || text(row.timezone)}</Text><Text style={styles.muted}>{compact(row.visitors)} visitors · {compact(row.sessions)} visits{row.timezone ? ` · ${text(row.timezone)}` : ''}</Text></View></View>} />
+        <Text style={styles.muted}>Best available network estimate, normally town/city or region. It can be wrong by miles, especially on mobile networks and VPNs. No precise GPS, street address, full postcode or raw IP address is retained in analytics.</Text>
+        <RankedRows rows={data?.locations ?? []} render={(row, index) => <View style={styles.row}><Text style={styles.rank}>{index + 1}</Text><View style={styles.flex}><Text style={styles.rowTitle}>{[row.city, row.region, row.country].map((value) => text(value, '')).filter(Boolean).join(', ') || text(row.timezone)}</Text><Text style={styles.muted}>{compact(row.sessions)} visits{row.timezone ? ` · ${text(row.timezone)}` : ''}</Text></View></View>} />
       </AppCard>
     </View>
 
