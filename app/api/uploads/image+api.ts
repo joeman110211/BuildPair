@@ -7,7 +7,7 @@ import { MEDIA_FOLDERS, recordApprovedMedia, type MediaKind } from '@/lib/media-
 
 const DEFAULT_CLOUDINARY_CLOUD_NAME = 'qrrcn7ma';
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
 
 const moderationSchema = z.object({
   decision: z.enum(['allow', 'block']),
@@ -138,10 +138,11 @@ async function uploadToCloudinary(input: { bytes: Buffer; mimeType: string; kind
 
   const publicId = `${MEDIA_FOLDERS[input.kind]}/${randomUUID()}`;
   const form = new FormData();
-  form.append('file', new Blob([input.bytes], { type: input.mimeType }), 'buildpair-upload');
+  form.append('file', new Blob([new Uint8Array(input.bytes)], { type: input.mimeType }), 'buildpair-upload');
   form.append('public_id', publicId);
   form.append('asset_folder', MEDIA_FOLDERS[input.kind]);
   form.append('overwrite', 'false');
+  if (input.mimeType === 'image/heic' || input.mimeType === 'image/heif') form.append('format', 'jpg');
   // Incoming transformation caps huge dimensions and removes EXIF/GPS/XMP metadata
   // before Cloudinary stores the approved original.
   form.append('transformation', 'c_limit,w_3000,h_3000,fl_force_strip/q_auto:good');
@@ -175,7 +176,7 @@ export async function POST(request: Request) {
     const entry = form.get('file');
     if (!(entry instanceof File)) throw new HttpError(400, 'Choose an image to upload');
     if (!ALLOWED_MIME_TYPES.has(entry.type)) {
-      throw new HttpError(400, 'BuildPair accepts JPG, PNG and WebP photos.');
+      throw new HttpError(400, 'BuildPair accepts JPG, PNG, WebP and HEIC/HEIF photos.');
     }
     if (entry.size <= 0 || entry.size > MAX_IMAGE_BYTES) {
       throw new HttpError(400, 'Choose an image smaller than 10 MB.');
