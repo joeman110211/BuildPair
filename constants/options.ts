@@ -190,7 +190,7 @@ export const SUBSCRIPTION_TIERS = {
     monthlyMarketplaceQuotes: 0,
     savedSearchLimit: 0,
     analyticsLevel: 'none',
-    features: ['Full profile setup', 'Browse marketplace jobs', 'External profile sharing'],
+    features: ['Full profile setup', 'Browse marketplace jobs', 'External profile sharing', 'Main categories with unlimited relevant subcategory selection'],
   },
   core: {
     name: 'BuildPair Core',
@@ -200,7 +200,7 @@ export const SUBSCRIPTION_TIERS = {
     monthlyMarketplaceQuotes: 5,
     savedSearchLimit: 1,
     analyticsLevel: 'basic',
-    features: ['Searchable marketplace profile', '5 marketplace opportunities per month', 'BuildPair messaging', 'Basic business stats', '1 saved job search'],
+    features: ['Searchable marketplace profile', '5 marketplace opportunities per month', 'BuildPair messaging', 'Basic business stats', '1 saved job search', 'External customer quotes & invoices', 'Simple availability'],
   },
   basic: {
     name: 'BuildPair Plus',
@@ -210,7 +210,7 @@ export const SUBSCRIPTION_TIERS = {
     monthlyMarketplaceQuotes: 15,
     savedSearchLimit: 5,
     analyticsLevel: 'standard',
-    features: ['Everything in Core', '15 open-marketplace offers per month', 'Unlimited direct quote requests', 'Google review connection', 'Full AI reply assistance', '5 saved job searches'],
+    features: ['Everything in Core', '15 open-marketplace offers per month', 'Unlimited direct quote requests', 'Google review connection', 'Full AI reply assistance', '5 saved job searches', 'Full Quote Builder & customer projects', '12-week availability calendar'],
   },
   featured: {
     name: 'BuildPair Pro',
@@ -220,6 +220,6 @@ export const SUBSCRIPTION_TIERS = {
     monthlyMarketplaceQuotes: 35,
     savedSearchLimit: null,
     analyticsLevel: 'advanced',
-    features: ['Everything in Plus', '35 open-marketplace offers per month', 'Modest search boost', 'Advanced analytics', 'Priority new-job alerts', 'Unlimited saved job searches'],
+    features: ['Everything in Plus', '35 open-marketplace offers per month', 'Modest search boost', 'Advanced analytics', 'Priority new-job alerts', 'Unlimited saved job searches', '6-month availability calendar', 'Advanced project tools', 'Project+ homeowner tools included'],
   },
 } as const;
