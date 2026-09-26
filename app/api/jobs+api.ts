@@ -104,9 +104,47 @@ export async function POST(request: Request) {
     }
     const db = getDb();
 
+    let savedProperty: {
+      id: string;
+      propertyType: string;
+      postcode: string;
+      addressLine1: string;
+      addressLine2: string | null;
+      townCity: string;
+      accessNotes: string;
+    } | null = null;
+    let jobPostcode = payload.postcode;
+    let jobPropertyType = payload.propertyType;
+    if (payload.propertyId) {
+      const properties = await getSql()`
+        SELECT id,
+               property_type AS "propertyType",
+               postcode,
+               address_line1 AS "addressLine1",
+               address_line2 AS "addressLine2",
+               town_city AS "townCity",
+               access_notes AS "accessNotes"
+        FROM customer_properties
+        WHERE id = ${payload.propertyId} AND customer_id = ${user.id}
+        LIMIT 1
+      ` as unknown as {
+        id: string;
+        propertyType: string;
+        postcode: string;
+        addressLine1: string;
+        addressLine2: string | null;
+        townCity: string;
+        accessNotes: string;
+      }[];
+      savedProperty = properties[0] ?? null;
+      if (!savedProperty) throw new HttpError(404, 'Saved property not found');
+      jobPostcode = savedProperty.postcode;
+      jobPropertyType = savedProperty.propertyType as typeof payload.propertyType;
+    }
+
     let location;
     try {
-      location = await lookupPostcode(payload.postcode);
+      location = await lookupPostcode(jobPostcode);
     } catch (error) {
       if (error instanceof InvalidPostcodeError) throw new HttpError(400, error.message);
       throw error;
@@ -171,7 +209,7 @@ export async function POST(request: Request) {
       targetTraderId: payload.targetTraderId ?? null,
       title: payload.title,
       category: payload.category,
-      propertyType: payload.propertyType,
+      propertyType: jobPropertyType,
       postcode: location.postcode,
       locationLabel: location.locationLabel,
       latitude: location.latitude,
@@ -184,6 +222,24 @@ export async function POST(request: Request) {
       isEmergency: payload.isEmergency,
     }).returning();
     if (!job) throw new Error('Job could not be created');
+
+    if (savedProperty) {
+      await getSql()`
+        INSERT INTO customer_property_jobs(property_id, job_id)
+        VALUES (${savedProperty.id}, ${job.id})
+        ON CONFLICT (job_id) DO UPDATE SET property_id = EXCLUDED.property_id
+      `;
+      await getSql()`
+        INSERT INTO job_private_details(job_id, customer_id, address_line1, address_line2, town_city, access_notes)
+        VALUES (${job.id}, ${user.id}, ${savedProperty.addressLine1}, ${savedProperty.addressLine2}, ${savedProperty.townCity}, ${savedProperty.accessNotes})
+        ON CONFLICT (job_id) DO UPDATE SET
+          address_line1 = EXCLUDED.address_line1,
+          address_line2 = EXCLUDED.address_line2,
+          town_city = EXCLUDED.town_city,
+          access_notes = EXCLUDED.access_notes,
+          updated_at = now()
+      `;
+    }
 
     await addJobEvent(job.id, user.id, 'job_posted', payload.isEmergency ? 'Emergency job posted' : 'Job posted', payload.title, { category: payload.category, emergency: payload.isEmergency });
 
