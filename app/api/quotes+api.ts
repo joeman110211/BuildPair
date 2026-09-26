@@ -8,7 +8,7 @@ import { canAcceptNewQuote } from '@/lib/quote-marketplace';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
-import { hasActiveLeadAccess, traderMonthlyQuoteLimit } from '@/lib/subscription';
+import { effectiveTraderCategories, hasActiveLeadAccess, traderMonthlyQuoteLimit } from '@/lib/subscription';
 import { quoteSchema } from '@/lib/validation';
 
 function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -104,7 +104,7 @@ export async function POST(request: Request) {
     }
 
     if (!job.targetTraderId) {
-      const listedCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
+      const listedCategories = effectiveTraderCategories(profile, profile.tradeCategories, profile.tradeCategory);
       if (!listedCategories.includes(job.category)) throw new HttpError(403, 'This marketplace job does not match one of your selected trade categories');
       if (profile.latitude == null || profile.longitude == null || job.latitude == null || job.longitude == null) throw new HttpError(403, 'Location matching is required to quote this marketplace job');
       const miles = distanceMiles(profile.latitude, profile.longitude, job.latitude, job.longitude);

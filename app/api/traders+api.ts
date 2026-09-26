@@ -1,6 +1,7 @@
 import { jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { FOUNDING_PRO_START_ISO, LAUNCH_DATE_ISO, MARKETPLACE_OPEN } from '@/lib/launch-config';
+import { effectiveTraderCategories } from '@/lib/subscription';
 
 type DirectoryTrader = {
   id: string;
@@ -122,21 +123,38 @@ export async function GET(request: Request) {
         )
         AND (
           ${trade}::text IS NULL
-          OR ${trade} = ANY(CASE WHEN cardinality(tp.trade_categories) > 0 THEN tp.trade_categories ELSE ARRAY[tp.trade_category]::text[] END)
+          OR coalesce(array_position(
+               CASE WHEN cardinality(tp.trade_categories) > 0 THEN tp.trade_categories ELSE ARRAY[tp.trade_category]::text[] END,
+               ${trade}
+             ), 0) BETWEEN 1 AND CASE tp.subscription_tier
+               WHEN 'featured' THEN 6
+               WHEN 'basic' THEN 4
+               ELSE 2
+             END
         )
       GROUP BY tp.id
       ORDER BY "rankingScore" DESC, coalesce(avg(r.rating), 0) DESC, tp.updated_at DESC
       LIMIT 100
     ` as unknown as DirectoryTrader[];
 
-    return Response.json(rows.map((trader) => ({
-      ...trader,
-      externalLinks: MARKETPLACE_OPEN ? trader.externalLinks : {},
-      isPreview: false,
-      prelaunchProfile: !MARKETPLACE_OPEN,
-      foundingTrade: new Date(trader.createdAt).getTime() < new Date(LAUNCH_DATE_ISO).getTime(),
-      canRequestQuote: MARKETPLACE_OPEN && trader.isSubscriptionActive && trader.subscriptionTier !== 'free',
-    })));
+    return Response.json(rows.map((trader) => {
+      const tradeCategories = effectiveTraderCategories(trader, trader.tradeCategories, trader.tradeCategory);
+      const serviceSelections = Object.fromEntries(
+        Object.entries(trader.serviceSelections ?? {}).filter(([category]) => tradeCategories.includes(category))
+      );
+      const selectedSkills = [...new Set(Object.values(serviceSelections).flat())];
+      return {
+        ...trader,
+        tradeCategories,
+        serviceSelections,
+        subSkills: selectedSkills.length ? selectedSkills : trader.subSkills,
+        externalLinks: MARKETPLACE_OPEN ? trader.externalLinks : {},
+        isPreview: false,
+        prelaunchProfile: !MARKETPLACE_OPEN,
+        foundingTrade: new Date(trader.createdAt).getTime() < new Date(LAUNCH_DATE_ISO).getTime(),
+        canRequestQuote: MARKETPLACE_OPEN && trader.isSubscriptionActive && trader.subscriptionTier !== 'free',
+      };
+    }));
   } catch (error) {
     return jsonError(error);
   }

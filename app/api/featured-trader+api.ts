@@ -1,6 +1,7 @@
 import { LAUNCH_DATE_ISO, MARKETPLACE_OPEN } from '@/lib/launch-config';
 import { jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { effectiveTraderCategories } from '@/lib/subscription';
 
 type FeaturedTraderRow = {
   id: string;
@@ -34,6 +35,7 @@ function currentWeekStart(date = new Date()) {
 function toPublicTrader(trader: FeaturedTraderRow, overrideUserId?: string) {
   return {
     ...trader,
+    tradeCategories: effectiveTraderCategories(trader, trader.tradeCategories, trader.tradeCategory),
     galleryCount: trader.photos.length,
     isOverride: trader.userId === overrideUserId,
     prelaunchProfile: !MARKETPLACE_OPEN,

@@ -3,6 +3,7 @@ import {
   CATEGORY_CHANGE_COOLDOWN_DAYS,
   categoryChangeAllowed,
   categoryChangeAvailableAt,
+  effectiveTraderCategories,
   hasActiveLeadAccess,
   traderAvailabilityEntitlement,
   traderMonthlyQuoteLimit,
@@ -16,6 +17,14 @@ import {
 } from '@/lib/subscription';
 
 describe('BuildPair trade plan entitlements', () => {
+  it('does not grandfather legacy profiles above the current plan category limit', () => {
+    const legacy = ['Tiling', 'Bathrooms', 'Plumbing', 'Electrical', 'Kitchens', 'Carpentry & Joinery', 'Roofing & Roofline'];
+    expect(traderWorkTypeLimit({ subscriptionTier: 'featured', tradeCategories: legacy })).toBe(6);
+    expect(effectiveTraderCategories({ subscriptionTier: 'featured' }, legacy)).toEqual(legacy.slice(0, 6));
+    expect(effectiveTraderCategories({ subscriptionTier: 'basic' }, legacy)).toEqual(legacy.slice(0, 4));
+    expect(effectiveTraderCategories({ subscriptionTier: 'core' }, legacy)).toEqual(legacy.slice(0, 2));
+  });
+
   it('uses the agreed 2, 2, 4, 6 main-category ladder', () => {
     expect(TRADER_WORK_TYPE_LIMITS).toEqual({ free: 2, core: 2, basic: 4, featured: 6 });
     expect(traderWorkTypeLimit()).toBe(2);

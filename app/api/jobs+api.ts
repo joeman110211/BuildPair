@@ -9,6 +9,7 @@ import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError, 
 import { getSql } from '@/lib/sql';
 import { FOUNDING_PRO_START_ISO } from '@/lib/launch-config';
 import { assertApprovedMediaUrls } from '@/lib/media-safety';
+import { effectiveTraderCategories } from '@/lib/subscription';
 import { jobSchema } from '@/lib/validation';
 
 function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
       }).from(traderProfiles).where(eq(traderProfiles.userId, user.id)).limit(1);
       if (!profile) throw new HttpError(409, 'Complete your trader profile first');
 
-      const acceptedCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
+      const acceptedCategories = effectiveTraderCategories(profile, profile.tradeCategories, profile.tradeCategory);
       const acceptedWork = sql`${jobs.acceptedQuoteId} in (select id from quotes where trader_id = ${user.id})`;
       const directWork = eq(jobs.targetTraderId, user.id);
       const withinRadius = profile.latitude != null && profile.longitude != null
@@ -130,7 +131,7 @@ export async function POST(request: Request) {
       ` as unknown as {
         tradeCategory: string;
         tradeCategories: string[];
-        subscriptionTier: string;
+        subscriptionTier: 'free' | 'core' | 'basic' | 'featured';
         isSubscriptionActive: boolean;
         latitude: number | null;
         longitude: number | null;
@@ -138,7 +139,8 @@ export async function POST(request: Request) {
       }[];
       const target = targets[0];
       if (!target || !target.isSubscriptionActive || target.subscriptionTier === 'free') throw new HttpError(409, 'This tradesperson is not currently accepting direct BuildPair leads');
-      if (!target.tradeCategories.includes(payload.category)) throw new HttpError(400, `This direct request must use one of the tradesperson's listed trade categories.`);
+      const targetCategories = effectiveTraderCategories(target, target.tradeCategories, target.tradeCategory);
+      if (!targetCategories.includes(payload.category)) throw new HttpError(400, `This direct request must use one of the tradesperson's current plan categories.`);
       if (target.latitude == null || target.longitude == null) throw new HttpError(409, 'This tradesperson does not currently have a valid service location');
       if (distanceMiles(target.latitude, target.longitude, location.latitude, location.longitude) > target.radiusMiles) {
         throw new HttpError(409, 'This job is outside the tradesperson’s published service radius');
@@ -208,7 +210,14 @@ export async function POST(request: Request) {
         SELECT DISTINCT tp.user_id AS "userId", tp.subscription_tier AS "subscriptionTier"
         FROM trader_profiles tp
         JOIN users u ON u.id = tp.user_id
-        WHERE ${payload.category} = ANY(CASE WHEN cardinality(tp.trade_categories) > 0 THEN tp.trade_categories ELSE ARRAY[tp.trade_category]::text[] END)
+        WHERE coalesce(array_position(
+                CASE WHEN cardinality(tp.trade_categories) > 0 THEN tp.trade_categories ELSE ARRAY[tp.trade_category]::text[] END,
+                ${payload.category}
+              ), 0) BETWEEN 1 AND CASE tp.subscription_tier
+                WHEN 'featured' THEN 6
+                WHEN 'basic' THEN 4
+                ELSE 2
+              END
           AND tp.subscription_tier <> 'free'
           AND (tp.is_subscription_active = true OR (tp.trial_ends_at IS NOT NULL AND now() >= ${FOUNDING_PRO_START_ISO}::timestamptz AND tp.trial_ends_at > now()))
           AND coalesce(u.is_suspended, false) = false
