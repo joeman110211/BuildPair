@@ -6,7 +6,7 @@ import { traderProfileShowcase } from '@/db/showcase-schema';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { LAUNCH_DATE_ISO, MARKETPLACE_OPEN } from '@/lib/launch-config';
-import { hasActiveLeadAccess } from '@/lib/subscription';
+import { effectiveTraderCategories, hasActiveLeadAccess } from '@/lib/subscription';
 
 const defaultShowcase = {
   template: 'classic' as const,
@@ -61,7 +61,7 @@ export async function GET(request: Request, { id }: { id: string }) {
 
     const paidProfile = hasActiveLeadAccess(profile);
     const prelaunchProfile = !MARKETPLACE_OPEN;
-    const tradeCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
+    const tradeCategories = effectiveTraderCategories(profile, profile.tradeCategories, profile.tradeCategory);
 
     let viewerId: string | null = null;
     try {
