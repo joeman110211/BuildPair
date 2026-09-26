@@ -24,6 +24,13 @@ export const TRADER_SAVED_SEARCH_LIMITS = {
   featured: SUBSCRIPTION_TIERS.featured.savedSearchLimit,
 } as const;
 
+export const TRADER_AVAILABILITY = {
+  free: { horizonDays: 0, maxSlots: 0, label: 'Not included' },
+  core: { horizonDays: 60, maxSlots: 1, label: 'Next available window' },
+  basic: { horizonDays: 84, maxSlots: 24, label: '12-week calendar' },
+  featured: { horizonDays: 183, maxSlots: 180, label: '6-month calendar' },
+} as const;
+
 export type TraderWorkTypeTier = keyof typeof TRADER_WORK_TYPE_LIMITS;
 export type TraderAnalyticsLevel = 'none' | 'basic' | 'standard' | 'advanced';
 
@@ -118,12 +125,16 @@ export function canUseGoogleReviews(profile: {
   return hasActiveLeadAccess(profile) && tierAtLeast(profile.subscriptionTier, 'basic');
 }
 
+export function traderAvailabilityEntitlement(profile?: { subscriptionTier?: TraderWorkTypeTier | null }) {
+  return TRADER_AVAILABILITY[profile?.subscriptionTier ?? 'free'];
+}
+
 export function canUseAvailabilityCalendar(profile: {
   subscriptionTier?: TraderWorkTypeTier | null;
   isSubscriptionActive?: boolean | null;
   trialEndsAt?: Date | string | null;
 }) {
-  return hasActiveLeadAccess(profile) && tierAtLeast(profile.subscriptionTier, 'featured');
+  return hasPlanSetupAccess(profile, 'core');
 }
 
 export function categoryChangeAvailableAt(lastChangedAt?: Date | string | null) {
