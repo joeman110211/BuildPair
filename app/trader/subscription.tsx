@@ -17,8 +17,8 @@ const PLAN_COPY = {
   free: {
     ...SUBSCRIPTION_TIERS.free,
     detail: [
-      'Create a complete trade profile and work gallery',
-      'Choose up to 2 main trade categories',
+      'Complete trade profile, work gallery and project stories',
+      'Choose up to 2 main categories, then the genuine services inside each',
       'Browse matching BuildPair job posts',
       'Share your profile externally',
       'No marketplace offers or direct homeowner enquiries',
@@ -29,35 +29,41 @@ const PLAN_COPY = {
     detail: [
       'Everything in Starter',
       'Public searchable marketplace profile',
-      'Choose up to 2 main trade categories',
+      'Up to 2 main trade categories',
       '5 marketplace opportunities per calendar month',
       'Direct homeowner requests use the same allowance',
       'BuildPair messaging',
+      'Quote and invoice customers you found outside BuildPair',
       '1 saved job search and basic business stats',
+      'Publish a simple next-available window',
     ],
   },
   basic: {
     ...SUBSCRIPTION_TIERS.basic,
     detail: [
       'Everything in Core',
-      'Choose up to 4 main trade categories',
+      'Up to 4 main trade categories',
       '15 open-marketplace offers per calendar month',
       'Direct homeowner requests do not use your allowance',
-      'Google review connection',
-      'Full AI reply assistance',
+      'Full Quote Builder with revisions and outside-customer managed projects',
+      'Staged BuildPay can follow an accepted outside quote once the customer claims the project',
+      'Google review connection and full AI assistance',
       '5 saved searches and full conversion analytics',
+      'Working calendar and availability up to roughly 12 weeks',
     ],
   },
   featured: {
     ...SUBSCRIPTION_TIERS.featured,
     detail: [
       'Everything in Plus',
-      'Choose up to 6 main trade categories',
+      'Up to 6 main trade categories',
       '35 open-marketplace offers per calendar month',
       'Modest relevance-aware search boost',
-      'Advanced business analytics and priority alerts',
+      'Advanced analytics and priority alerts',
       'Unlimited saved searches',
-      'Availability calendar and reusable quote/message templates',
+      'Availability up to six months and reusable quote/message templates',
+      'Advanced project workspace for tasks, progress, materials, expenses, snagging, handover and warranty',
+      'BuildPair Project+ planning and room-concept tools included',
     ],
   },
 } as const;
@@ -173,7 +179,7 @@ export default function SubscriptionScreen() {
 
     {isWeb ? <AppCard>
       <Text variant="titleLarge" style={styles.title}>Why each £10 step has to earn its place</Text>
-      <Text style={styles.muted}>Core gives occasional marketplace access instead of a large jump from free. Plus triples Core’s open-market capacity and removes direct-request usage from the allowance. Pro then raises capacity to 35, adds deeper analytics, priority tools, availability and reusable business templates. Paying more never creates a trust badge: reviews, credentials, relevance and profile quality remain separate.</Text>
+      <Text style={styles.muted}>Core adds a real business-tool layer as well as occasional marketplace access. Plus triples Core’s open-market capacity, removes direct-request usage from the allowance and adds the full outside-customer/project workflow. Pro then raises capacity to 35 and adds the longest availability horizon, advanced project tools, deeper analytics, templates and Project+. Paying more never creates a trust badge: reviews, credentials, relevance and profile quality remain separate.</Text>
     </AppCard> : null}
 
     <AppCard style={payoutsReady ? styles.payoutReady : undefined}>
