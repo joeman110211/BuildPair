@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         WHERE j.id = ${jobId}
           AND q.trader_id = ${trader.id}
         LIMIT 1
-      ` as unknown as Array<{ customerId: string; customerEmail: string | null }>;
+      ` as unknown as { customerId: string; customerEmail: string | null }[];
       const relationship = relationships[0];
       if (!relationship) throw new HttpError(403, 'Invoices can only be linked to BuildPair jobs you have won');
       if (customerId && relationship.customerId !== customerId) throw new HttpError(400, 'Invoice customer does not match the selected job');
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
         WHERE j.customer_id = ${customerId}
           AND q.trader_id = ${trader.id}
         LIMIT 1
-      ` as unknown as Array<{ customerEmail: string | null }>;
+      ` as unknown as { customerEmail: string | null }[];
       const relationship = relationships[0];
       if (!relationship) throw new HttpError(403, 'Invoices can only be linked to BuildPair customers you have worked with');
       linkedCustomerEmail = relationship.customerEmail;
