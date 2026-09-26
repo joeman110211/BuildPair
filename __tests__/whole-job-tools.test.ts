@@ -41,8 +41,9 @@ describe('whole-job BuildPair tools', () => {
   it('includes Project+ with Pro and meters customer AI usage', () => {
     const projectPlus = source('lib/project-plus.ts');
     expect(projectPlus).toContain('PROJECT_PLUS_PRICE_PENCE = 499');
-    expect(projectPlus).toContain('imageLimit: 10');
-    expect(projectPlus).toContain("profile.subscriptionTier === 'featured'");
+    expect(projectPlus).toContain('PROJECT_PLUS_IMAGE_LIMIT = 10');
+    expect(projectPlus).toContain('imageLimit: PROJECT_PLUS_IMAGE_LIMIT');
+    expect(projectPlus).toContain("row?.subscriptionTier === 'featured'");
     expect(source('app/api/project-plus/image+api.ts')).toContain('consumeProjectPlusImage');
     expect(source('app/api/project-plus/plan+api.ts')).toContain('consumeProjectPlusPlanner');
   });
