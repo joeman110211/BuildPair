@@ -21,7 +21,6 @@ export async function POST(request: Request) {
     const usage = await projectPlusUsage(userId);
     if (usage.plannerUsed >= entitlement.plannerLimit) throw new HttpError(429, 'Your Project+ monthly planning allowance has been used.');
     const input = schema.parse(await request.json());
-    await consumeProjectPlusPlanner(userId);
     await assertAiDailyBudget();
     const key = process.env.GEMINI_API_KEY;
     if (!key) throw new HttpError(503, 'AI project planning is temporarily unavailable.');
@@ -45,6 +44,7 @@ Return JSON only with keys: conceptSummary (string), layoutIdeas (array of strin
     const raw = response.text?.trim().replace(/^\`\`\`json\s*/i, '').replace(/\`\`\`$/i, '');
     if (!raw) throw new Error('Project+ returned an empty plan');
     const plan = JSON.parse(raw) as Record<string, unknown>;
+    await consumeProjectPlusPlanner(userId);
     const rows = await getSql()`
       INSERT INTO project_plus_designs(user_id, room_type, title, prompt, plan_json)
       VALUES (${userId}, ${input.roomType}, ${input.roomType + ' project plan'}, ${input.brief}, ${JSON.stringify(plan)}::jsonb)
