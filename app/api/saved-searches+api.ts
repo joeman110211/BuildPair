@@ -4,6 +4,7 @@ import { InvalidPostcodeError, lookupPostcode } from '@/lib/postcode';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { getSql } from '@/lib/sql';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
+import { hasPlanSetupAccess, traderSavedSearchLimit } from '@/lib/subscription';
 
 const createSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -18,6 +19,24 @@ const updateSchema = createSchema.partial().extend({ id: z.string().uuid() });
 const deleteSchema = z.object({ id: z.string().uuid() });
 
 type SearchLocation = { postcode: string | null; latitude: number | null; longitude: number | null };
+
+
+async function savedSearchEntitlement(traderId: string) {
+  const rows = await getSql()`
+    SELECT subscription_tier AS "subscriptionTier",
+           is_subscription_active AS "isSubscriptionActive",
+           trial_ends_at AS "trialEndsAt"
+    FROM trader_profiles
+    WHERE user_id = ${traderId}
+    LIMIT 1
+  ` as unknown as { subscriptionTier: 'free' | 'core' | 'basic' | 'featured'; isSubscriptionActive: boolean; trialEndsAt: string | null }[];
+  const profile = rows[0];
+  if (!profile) throw new HttpError(409, 'Complete your trader profile first');
+  const limit = traderSavedSearchLimit(profile);
+  const minimum = profile.subscriptionTier === 'featured' ? 'featured' : profile.subscriptionTier === 'basic' ? 'basic' : 'core';
+  const allowed = profile.subscriptionTier !== 'free' && hasPlanSetupAccess(profile, minimum);
+  return { profile, limit, allowed };
+}
 
 async function resolveSearchLocation(postcode?: string): Promise<SearchLocation> {
   const value = postcode?.trim();
@@ -50,8 +69,12 @@ export async function POST(request: Request) {
     const trader = await requireRole(request, 'trader');
     await assertRateLimit(request, 'saved-job-search-create', 30, 3600, trader.id);
     const input = createSchema.parse(await request.json());
-    const existing = await getSql()`SELECT count(*)::int AS count FROM saved_job_searches WHERE trader_id = ${trader.id}` as unknown as Array<{ count: number }>;
-    if ((existing[0]?.count ?? 0) >= 25) throw new HttpError(409, 'You can keep up to 25 saved job searches. Delete an old search before adding another.');
+    const entitlement = await savedSearchEntitlement(trader.id);
+    if (!entitlement.allowed || entitlement.limit === 0) throw new HttpError(402, 'BuildPair Core, Plus or Pro is required to create saved job searches.');
+    const existing = await getSql()`SELECT count(*)::int AS count FROM saved_job_searches WHERE trader_id = ${trader.id}` as unknown as { count: number }[];
+    if (entitlement.limit != null && (existing[0]?.count ?? 0) >= entitlement.limit) {
+      throw new HttpError(409, `Your current plan includes ${entitlement.limit} saved job search${entitlement.limit === 1 ? '' : 'es'}. Upgrade or delete an old search before adding another.`);
+    }
     const location = await resolveSearchLocation(input.postcode);
     const rows = await getSql()`
       INSERT INTO saved_job_searches(trader_id, name, category, keywords, postcode, latitude, longitude, radius_miles, emergency_only, enabled)
@@ -67,6 +90,10 @@ export async function PATCH(request: Request) {
     const trader = await requireRole(request, 'trader');
     await assertRateLimit(request, 'saved-job-search-update', 120, 3600, trader.id);
     const input = updateSchema.parse(await request.json());
+    if (input.enabled === true) {
+      const entitlement = await savedSearchEntitlement(trader.id);
+      if (!entitlement.allowed || entitlement.limit === 0) throw new HttpError(402, 'Your current plan does not include active saved job searches.');
+    }
     const currentRows = await getSql()`
       SELECT id, name, category, keywords, postcode, latitude, longitude, radius_miles, emergency_only, enabled
       FROM saved_job_searches
