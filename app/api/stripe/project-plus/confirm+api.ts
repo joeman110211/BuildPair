@@ -11,11 +11,14 @@ export async function GET(request: Request) {
   try {
     const userId = await authenticatedUserId(request);
     await ensureDbUser(userId);
-    const sessionId = new URL(request.url).searchParams.get('session_id')?.trim();
-    if (!sessionId) return Response.redirect(`${appUrl()}/customer/project-plus`, 303);
+    const params = new URL(request.url).searchParams;
+    const audience = params.get('audience') === 'trader' ? 'trader' : 'customer';
+    const returnPath = audience === 'trader' ? '/trader/project-plus' : '/customer/project-plus';
+    const sessionId = params.get('session_id')?.trim();
+    if (!sessionId) return Response.redirect(`${appUrl()}${returnPath}`, 303);
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.retrieve(sessionId, { expand: ['subscription'] });
-    if (session.client_reference_id !== userId) return Response.redirect(`${appUrl()}/customer/project-plus?subscription=invalid`, 303);
+    if (session.client_reference_id !== userId) return Response.redirect(`${appUrl()}${returnPath}?subscription=invalid`, 303);
     let subscription = subscriptionObject(session.subscription);
     if (!subscription && typeof session.subscription === 'string') subscription = await stripe.subscriptions.retrieve(session.subscription);
     if (subscription?.metadata.buildpairProduct === 'project_plus' && ['active','trialing'].includes(subscription.status)) {
@@ -28,6 +31,6 @@ export async function GET(request: Request) {
         WHERE id = ${userId}
       `;
     }
-    return Response.redirect(`${appUrl()}/customer/project-plus?subscription=complete`, 303);
+    return Response.redirect(`${appUrl()}${returnPath}?subscription=complete`, 303);
   } catch (error) { return jsonError(error); }
 }
