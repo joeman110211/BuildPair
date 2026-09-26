@@ -15,13 +15,16 @@ const RECENT = [
   ['Whole-job workspace', 'Tasks, progress notes, materials, expenses, snagging, handover and warranty records can stay with the job instead of disappearing into separate apps.'],
   ['Tiered availability', 'Core can publish a simple next-available window, Plus can plan roughly 12 weeks ahead and Pro can publish up to six months. Private diary details stay private.'],
   ['Project+ planning tools', 'Project+ adds AI room concepts and project-planning help for homeowners. BuildPair Pro includes the same tools for tradespeople to use with customers.'],
+  ['Trade customer book', 'Outside-customer quotes and invoices now feed a simple customer history so tradespeople can keep using BuildPair when the lead came from somewhere else.'],
+  ['Working calendar', 'Plus and Pro can see scheduled job starts, site visits and published availability together. Plus covers roughly 12 weeks and Pro roughly six months.'],
+  ['Project evidence', 'The shared job workspace can attach moderated photos or document images to progress, materials, expenses, snagging, handover and warranty records.'],
 ] as const;
 
 const COMING = [
   ['Smarter quote & invoice reminders', 'Optional reminder rules for quotes awaiting a decision, invoices approaching due date and overdue invoices, with controls to avoid pestering customers.'],
-  ['Trade customer book', 'A simple customer history showing outside quotes, BuildPair projects, invoices and recent activity in one place.'],
-  ['Job scheduling calendar', 'A working calendar that brings together confirmed jobs, site visits and public availability, with external calendar sync considered later.'],
-  ['Project files & richer job evidence', 'More structured before/during/after photos, receipts, certificates and handover documents attached directly to the project record.'],
+  ['Calendar sync', 'Optional Google or Outlook calendar sync so BuildPair scheduling can fit around the diary a trade already uses.'],
+  ['Richer project document library', 'Dedicated PDF/file storage, grouped certificates, receipts and handover packs beyond the photo/document evidence already available in the project workspace.'],
+  ['Quote alternatives & optional extras', 'Let a tradesperson present clearly separated optional upgrades or alternative quote options without muddying the accepted core scope.'],
   ['Aftercare reminders', 'Warranty, service and follow-up reminders so completed jobs can remain useful after final payment and review.'],
   ['Optional business add-ons', 'Extra marketplace-opportunity packs, additional team seats, AI/design credit packs and SMS credits without bloating the core memberships.'],
   ['Clearly labelled promoted placement', 'Optional sponsored visibility may be tested later. If used, it will be labelled as promoted and will never be presented as verification or trust.'],
