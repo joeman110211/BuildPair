@@ -12,6 +12,9 @@ type PublicQuoteRow = {
   traderPhone: string | null;
   customerName: string;
   jobTitle: string;
+  tradeCategory: string | null;
+  revisionNumber: number;
+  managedJobId: string | null;
   jobAddress: string | null;
   workIncluded: string;
   notIncluded: string | null;
@@ -46,6 +49,9 @@ async function loadQuote(token: string) {
            u.phone AS "traderPhone",
            q.customer_name AS "customerName",
            q.job_title AS "jobTitle",
+           q.trade_category AS "tradeCategory",
+           q.revision_number AS "revisionNumber",
+           q.managed_job_id AS "managedJobId",
            q.job_address AS "jobAddress",
            q.work_included AS "workIncluded",
            q.not_included AS "notIncluded",
