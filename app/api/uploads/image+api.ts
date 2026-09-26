@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, HarmBlockThreshold, HarmCategory } from '@google/genai';
 import { z } from 'zod';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
@@ -92,10 +92,10 @@ If visible text is too small or unclear to confidently identify as contact/sensi
         maxOutputTokens: 500,
         responseMimeType: 'application/json',
         safetySettings: [
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: HarmCategory.HARM_CATEGORY_IMAGE_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_IMAGE_HATE, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_IMAGE_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_IMAGE_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
         ],
       },
     });
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
     await assertRateLimit(request, 'media-upload-hour', 60, 3600, userId);
     await assertRateLimit(request, 'media-upload-day', 150, 86400, userId);
 
-    const form = await request.formData();
+    const form = await request.formData() as unknown as { get(name: string): FormDataEntryValue | null };
     const kind = uploadKind(form.get('kind'));
     if (kind === 'trader' && !modes.traderEnabled) throw new HttpError(403, 'Tradesperson account required');
     if (kind === 'job' && !modes.customerEnabled) throw new HttpError(403, 'Homeowner account required');
