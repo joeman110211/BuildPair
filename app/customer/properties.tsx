@@ -45,7 +45,7 @@ export default function CustomerPropertiesScreen() {
     catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
   }, [getToken]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   function reset() {
     setEditId(undefined); setNickname('My home'); setPropertyType(undefined); setPostcode('');
