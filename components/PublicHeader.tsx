@@ -45,6 +45,7 @@ function NavMenu({ dashboard, signedIn, onDashboard, onSignOut, preview = false 
     { label: 'For Homeowners', sectionLabel: 'Guides', dividerBefore: true, onPress: () => go('/(public)/for-homeowners') },
     { label: 'For Tradespeople', onPress: () => go('/(public)/for-tradespeople') },
     { label: 'Advice Hub', onPress: () => go('/(public)/advice') },
+    { label: "What's new", onPress: () => go('/(public)/updates') },
     { label: 'Trust & Safety', sectionLabel: 'Support', dividerBefore: true, onPress: () => go('/(public)/trust-safety') },
     { label: 'Contact Us', onPress: () => go('/(public)/contact') },
   ];
