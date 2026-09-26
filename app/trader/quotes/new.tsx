@@ -35,6 +35,7 @@ type BusinessQuote = {
   customerEmail: string | null;
   customerPhone: string | null;
   jobTitle: string;
+  tradeCategory: string | null;
   jobAddress: string | null;
   workIncluded: string;
   notIncluded: string | null;
@@ -54,6 +55,8 @@ type BusinessQuote = {
   status: string;
   shareToken: string;
   shareUrl: string;
+  revisionNumber: number;
+  managedJobId: string | null;
   createdAt: string;
   items: { id?: string; description: string; category: ItemCategory; quantity: number | string; unitPrice: number; lineTotal: number }[];
 };
@@ -94,6 +97,7 @@ export default function NewQuoteScreen() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [jobTitle, setJobTitle] = useState(title ?? '');
+  const [externalTradeCategory, setExternalTradeCategory] = useState('');
   const [jobAddress, setJobAddress] = useState('');
   const [workIncluded, setWorkIncluded] = useState('');
   const [notIncluded, setNotIncluded] = useState('');
@@ -137,6 +141,7 @@ export default function NewQuoteScreen() {
         const ownProfile = await apiFetch<TraderProfile>('/api/me/profile', {}, tokenGetter);
         if (!active) return;
         setProfile(ownProfile);
+        if (!externalTradeCategory) setExternalTradeCategory(ownProfile.tradeCategory);
         const templates = await apiFetch<TraderTemplate[]>('/api/trader-templates', {}, tokenGetter).catch(() => []);
         if (active) setQuoteTemplates(templates.filter((item) => item.kind === 'quote'));
 
@@ -158,6 +163,7 @@ export default function NewQuoteScreen() {
           setCustomerEmail(draft.customerEmail ?? '');
           setCustomerPhone(draft.customerPhone ?? '');
           setJobTitle(draft.jobTitle);
+          setExternalTradeCategory(draft.tradeCategory || ownProfile.tradeCategory);
           setJobAddress(draft.jobAddress ?? '');
           setWorkIncluded(draft.workIncluded);
           setNotIncluded(draft.notIncluded ?? '');
@@ -364,6 +370,7 @@ export default function NewQuoteScreen() {
 
   function validate() {
     if (external && customerName.trim().length < 2) return 'Add the customer name.';
+    if (external && !externalTradeCategory) return 'Choose the main trade category for this job.';
     if ((jobTitle || job?.title || '').trim().length < 2) return 'Add a job title.';
     if (workIncluded.trim().length < QUOTE_SCOPE_MIN_LENGTH) return `Explain the work included in at least ${QUOTE_SCOPE_MIN_LENGTH} characters so the customer knows exactly what the price covers.`;
     if (!pricedItems.length || totalAmount <= 0) return 'Add at least one priced item.';
@@ -412,6 +419,7 @@ export default function NewQuoteScreen() {
           customerEmail: customerEmail.trim(),
           customerPhone: customerPhone.trim(),
           jobTitle: jobTitle.trim(),
+          tradeCategory: externalTradeCategory,
           jobAddress: jobAddress.trim(),
           workIncluded: workIncluded.trim(),
           notIncluded: effectiveNotIncluded,
@@ -522,6 +530,8 @@ export default function NewQuoteScreen() {
       <TextInput label="Customer name" value={customerName} onChangeText={setCustomerName} mode="outlined" />
       <View style={styles.row}><TextInput style={styles.flexField} label="Email (optional)" value={customerEmail} onChangeText={setCustomerEmail} keyboardType="email-address" autoCapitalize="none" mode="outlined" /><TextInput style={styles.flexField} label="Mobile (optional)" value={customerPhone} onChangeText={setCustomerPhone} keyboardType="phone-pad" mode="outlined" /></View>
       <TextInput label="Job address (optional)" value={jobAddress} onChangeText={setJobAddress} mode="outlined" />
+      <QuoteDropdown label="Main trade category" value={externalTradeCategory} options={(profile?.tradeCategories?.length ? profile.tradeCategories : [profile?.tradeCategory].filter(Boolean) as string[]).map((value) => ({ value, label: value }))} placeholder="Choose category" onSelect={setExternalTradeCategory} />
+      <Text style={styles.muted}>This category is used if the customer later brings this accepted quote into BuildPair as a managed project.</Text>
     </AppCard> : job ? <AppCard>
       <View style={styles.row}><View style={styles.flex}><Text variant="titleLarge" style={styles.title}>{job.title}</Text><Text style={styles.muted}>{job.postcode || job.locationLabel || 'BuildPair job'} · {job.budgetRange}</Text></View><Chip>{job.category}</Chip></View>
       <Text style={styles.body}>{job.description}</Text>
