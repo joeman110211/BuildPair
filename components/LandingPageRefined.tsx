@@ -196,8 +196,9 @@ export default function LandingPageRefined() {
               'Main categories with deliberate subcategory/service selection',
               'Quote customers from outside the BuildPair marketplace',
               'Quote revisions and accepted outside jobs becoming managed projects',
-              'Project workspace for progress, materials, expenses, snagging and handover',
-              'Tiered availability up to six months on Pro',
+              'Project workspace for progress, materials, expenses, snagging, evidence and handover',
+              'Customer book plus a working calendar for Plus and Pro',
+              'Tiered public availability up to six months on Pro',
               'Project+ AI planning and room-concept tools',
             ].map((item) => <Text key={item} style={styles.updateItem}>✓ {item}</Text>)}
           </View>
@@ -205,8 +206,8 @@ export default function LandingPageRefined() {
             <Chip icon="clock-outline">Coming soon</Chip>
             {[
               'Smarter quote and invoice reminders',
-              'Customer book and fuller job scheduling calendar',
-              'Richer project files, certificates and aftercare reminders',
+              'Google/Outlook calendar sync and richer document packs',
+              'Quote alternatives, warranty/service follow-up and aftercare reminders',
               'Optional opportunity, team, AI/design and SMS add-ons',
               'Clearly labelled promoted visibility without pay-to-win trust',
             ].map((item) => <Text key={item} style={styles.updateItem}>• {item}</Text>)}
