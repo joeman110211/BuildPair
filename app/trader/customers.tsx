@@ -20,7 +20,7 @@ export default function TraderCustomersScreen() {
     catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
   }, [getToken]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
   if (loading) return <LoadingScreen label="Loading customers…" />;
 
   return <Screen title="Customer book" subtitle="Customers from outside quotes and invoices stay together so BuildPair remains useful even when BuildPair did not generate the lead.">
