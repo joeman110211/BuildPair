@@ -13,12 +13,14 @@ type FeaturedTrader = {
   tradeCategory: string;
   locationLabel: string | null;
   photos: string[];
-  subscriptionTier: 'free' | 'basic' | 'featured';
+  subscriptionTier: 'free' | 'core' | 'basic' | 'featured';
   averageRating: number;
   reviewCount: number;
   completedJobs: number;
   galleryCount: number;
   verifiedCredentialCount: number;
+  foundingTrade?: boolean;
+  prelaunchProfile?: boolean;
 };
 
 type FeaturedTraderResponse = {
@@ -37,7 +39,7 @@ function chunk<T>(items: T[], size: number) {
 function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
   const router = useRouter();
   const rating = Number(trader.averageRating || 0);
-  const membership = trader.subscriptionTier === 'featured' ? 'PRO' : trader.subscriptionTier === 'basic' ? 'PLUS' : 'STARTER';
+  const membership = trader.subscriptionTier === 'featured' ? 'PRO' : trader.subscriptionTier === 'basic' ? 'PLUS' : trader.subscriptionTier === 'core' ? 'CORE' : 'STARTER';
   const reputation = trader.reviewCount > 0
     ? `${rating.toFixed(1)} ★ · ${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}`
     : 'New to BuildPair';
@@ -56,13 +58,13 @@ function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
     >
       <View style={styles.cardShade} />
       <View style={styles.cardTopRow}>
-        <View style={styles.featuredBadge}><Text style={styles.featuredBadgeText}>FEATURED</Text></View>
+        <View style={styles.featuredBadge}><Text style={styles.featuredBadgeText}>{trader.foundingTrade ? 'FOUNDING TRADE' : 'BUILDPAIR TRADE'}</Text></View>
         <View style={styles.planBadge}><Text style={styles.planBadgeText}>{membership}</Text></View>
       </View>
       <View style={styles.cardInfo}>
         <Text numberOfLines={2} style={styles.businessName}>{trader.businessName}</Text>
         <Text numberOfLines={2} style={styles.tradeLine}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
-        <Text numberOfLines={1} style={styles.metaLine}>{reputation}</Text>
+        <Text numberOfLines={1} style={styles.metaLine}>{reputation}{trader.prelaunchProfile ? ' · Profile live before launch' : ''}</Text>
         <View style={styles.cardFoot}>
           <Text style={styles.activityText}>{trader.completedJobs > 0 ? `${trader.completedJobs} completed` : `${trader.galleryCount} work photos`}</Text>
           <Text style={styles.viewText}>View →</Text>
