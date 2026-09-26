@@ -49,6 +49,12 @@ export const traderProfileSchema = z.object({
     return;
   }
   const categorySet = new Set<string>(categories);
+  for (const category of categories) {
+    const services = data.serviceSelections?.[category] ?? [];
+    if (!services.length) {
+      ctx.addIssue({ code: 'custom', path: ['serviceSelections', category], message: `Choose at least one service inside ${category}` });
+    }
+  }
   for (const [category, services] of Object.entries(data.serviceSelections ?? {})) {
     if (!categorySet.has(category)) {
       ctx.addIssue({ code: 'custom', path: ['serviceSelections', category], message: `${category} is not one of your selected trade categories` });
