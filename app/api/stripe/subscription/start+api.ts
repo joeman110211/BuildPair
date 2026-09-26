@@ -5,6 +5,7 @@ import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { appUrl, getStripe, providerReturnUrl } from '@/lib/stripe';
 
 const plans = {
+  core: { name: 'BuildPair Core', unitAmount: 999, priceEnv: 'STRIPE_CORE_PRICE_ID' },
   basic: { name: 'BuildPair Plus', unitAmount: 1999, priceEnv: 'STRIPE_BASIC_PRICE_ID' },
   featured: { name: 'BuildPair Pro', unitAmount: 2999, priceEnv: 'STRIPE_FEATURED_PRICE_ID' },
 } as const;
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
     const tierParam = new URL(request.url).searchParams.get('tier');
-    if (tierParam !== 'basic' && tierParam !== 'featured') {
+    if (tierParam !== 'core' && tierParam !== 'basic' && tierParam !== 'featured') {
       throw new HttpError(400, 'Choose a valid BuildPair plan');
     }
     const tier = tierParam as Tier;
