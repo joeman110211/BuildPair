@@ -86,7 +86,11 @@ export interface TraderProfile {
   beforeAfterProjects?: BeforeAfterProject[];
   verifiedCredentialCount?: number;
   availabilitySummary?: string | null;
+  responseRate?: number;
+  averageResponseHours?: number;
   rankingScore?: number;
+  prelaunchProfile?: boolean;
+  foundingTrade?: boolean;
   createdAt?: string;
   subscriptionTier: SubscriptionTier;
   isSubscriptionActive: boolean;
