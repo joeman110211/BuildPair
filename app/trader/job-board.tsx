@@ -126,12 +126,12 @@ export default function TraderJobBoard() {
     <AppCard>
       <View style={styles.usageTop}>
         <View style={styles.flex}>
-          <Text variant="titleMedium" style={styles.title}>{profile?.subscriptionTier === 'featured' ? 'BuildPair Pro' : profile?.subscriptionTier === 'basic' ? 'BuildPair Plus' : 'Starter Free'}</Text>
-          <Text style={styles.muted}>{paid ? `${used} of ${limit} open-marketplace offers used this month. An offer is counted when you submit an open-marketplace quote. Opening a job, starting a conversation or preparing a draft does not use the allowance. Direct homeowner requests do not count.` : 'You can browse matching jobs. Upgrade to Plus or Pro when you want to submit an open-marketplace offer or message.'}</Text>
+          <Text variant="titleMedium" style={styles.title}>{profile?.subscriptionTier === 'featured' ? 'BuildPair Pro' : profile?.subscriptionTier === 'basic' ? 'BuildPair Plus' : profile?.subscriptionTier === 'core' ? 'BuildPair Core' : 'Starter Free'}</Text>
+          <Text style={styles.muted}>{paid ? `${used} of ${limit} open-marketplace offers used this month. An open-marketplace opportunity is counted when you first engage with a job by opening a conversation or submitting an offer. Core direct requests use the same five-opportunity allowance; Plus and Pro direct requests do not.` : 'You can browse matching jobs. Upgrade to Core, Plus or Pro when you want to engage with marketplace jobs.'}</Text>
         </View>
         {paid ? <Chip icon="message-text-outline">{used}/{limit} used</Chip> : <Chip icon="eye-outline">Browse only</Chip>}
       </View>
-      {paid ? <><ProgressBar progress={limit ? Math.min(1, used / limit) : 0} color={allowanceUsed ? colors.danger : colors.primary} style={styles.progress} /><Text variant="bodySmall" style={styles.muted}>Resets {resetLabel}{allowanceUsed ? ' · You can still browse jobs and reply to direct requests.' : ''}</Text></> : <Button mode="contained" onPress={() => router.push('/trader/subscription')}>See Plus and Pro</Button>}
+      {paid ? <><ProgressBar progress={limit ? Math.min(1, used / limit) : 0} color={allowanceUsed ? colors.danger : colors.primary} style={styles.progress} /><Text variant="bodySmall" style={styles.muted}>Resets {resetLabel}{allowanceUsed ? ' · You can still browse jobs and reply to direct requests.' : ''}</Text></> : <Button mode="contained" onPress={() => router.push('/trader/subscription')}>Compare paid plans</Button>}
     </AppCard>
 
     {linkedJobId ? <AppCard style={styles.linkedCard}>
@@ -214,7 +214,7 @@ export default function TraderJobBoard() {
             {blockedByAllowance ? <Button mode="text" onPress={() => router.push('/trader/subscription')}>{profile?.subscriptionTier === 'basic' ? 'Upgrade to Pro' : 'View plans'}</Button> : null}
           </>}
         </View>
-        {blockedByAllowance ? <Text variant="bodySmall" style={styles.limitText}>Your open-marketplace allowance resets {resetLabel}. Direct homeowner requests remain available and do not count.</Text> : null}
+        {blockedByAllowance ? <Text variant="bodySmall" style={styles.limitText}>Your open-marketplace allowance resets {resetLabel}. Plus and Pro direct homeowner requests remain available and do not count. Core direct requests share the Core allowance.</Text> : null}
       </AppCard>;
     })}
   </Screen>;
