@@ -54,6 +54,23 @@ describe('whole-job BuildPair tools', () => {
     expect(studio).not.toContain("Linking.openURL(`${baseUrl()}/api/stripe/project-plus/start`)");
   });
 
+  it('keeps Core useful while reserving advanced outside-project tools for Plus and Pro', () => {
+    const quotes = source('app/api/business-quotes+api.ts');
+    expect(quotes).toContain("tierAtLeast(plan.subscriptionTier, 'basic')");
+    expect(quotes).toContain('managed_project_eligible');
+    expect(quotes).toContain('Outside-customer BuildPay and managed projects are included with BuildPair Plus and Pro.');
+    expect(source('app/api/business-quotes/revise+api.ts')).toContain("tierAtLeast(plan.subscriptionTier, 'basic')");
+    expect(source('app/api/ai/quote-assistant+api.ts')).toContain("tierAtLeast(plan.subscriptionTier, 'basic')");
+  });
+
+  it('makes BuildPay cost responsibility follow who introduced it', () => {
+    const fees = source('lib/buildpay-fees.ts');
+    expect(fees).toContain("requestedBy === 'trader' ? 'trader_absorbs' : 'customer_pays'");
+    const external = source('db/migrations/0050_external_quote_projects.sql');
+    expect(external).toContain("CASE WHEN bq.payment_method = 'buildpair' THEN 'trader' ELSE NULL END");
+    expect(external).toContain("CASE WHEN bq.payment_method = 'buildpair' THEN 'trader_absorbs' ELSE NULL END");
+  });
+
   it('shows an honest public recently-added and coming-soon roadmap', () => {
     const updates = source('app/(public)/updates.tsx');
     expect(updates).toContain('Recently added');
