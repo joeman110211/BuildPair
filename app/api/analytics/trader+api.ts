@@ -2,6 +2,23 @@ import { getSql } from '@/lib/sql';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { hasPlanSetupAccess, traderAnalyticsLevel } from '@/lib/subscription';
 
+type AnalyticsRow = {
+  profileViews30d: number;
+  profileViewsPrevious30d: number;
+  savedByHomeowners: number;
+  directLeads: number;
+  quotesSent: number;
+  quotesWon: number;
+  averageQuote: number;
+  wonJobValue: number;
+  completedJobs: number;
+  averageRating: number;
+  reviewCount: number;
+  averageQuoteResponseHours: number;
+  activeSavedSearches: number;
+  verifiedCredentials: number;
+};
+
 export async function GET(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
@@ -38,8 +55,23 @@ export async function GET(request: Request) {
         coalesce((SELECT avg(extract(epoch from (q.created_at - j.created_at)) / 3600.0) FROM quotes q JOIN jobs j ON j.id = q.job_id WHERE q.trader_id = ${trader.id}), 0)::float AS "averageQuoteResponseHours",
         (SELECT count(*) FROM saved_job_searches WHERE trader_id = ${trader.id} AND enabled = true)::int AS "activeSavedSearches",
         (SELECT count(*) FROM trader_credentials WHERE trader_id = ${trader.id} AND status = 'verified' AND (expires_at IS NULL OR expires_at > now()))::int AS "verifiedCredentials"
-    ` as unknown as Array<Record<string, unknown>>;
-    const metrics = rows[0] ?? {};
+    ` as unknown as AnalyticsRow[];
+    const metrics: AnalyticsRow = rows[0] ?? {
+      profileViews30d: 0,
+      profileViewsPrevious30d: 0,
+      savedByHomeowners: 0,
+      directLeads: 0,
+      quotesSent: 0,
+      quotesWon: 0,
+      averageQuote: 0,
+      wonJobValue: 0,
+      completedJobs: 0,
+      averageRating: 0,
+      reviewCount: 0,
+      averageQuoteResponseHours: 0,
+      activeSavedSearches: 0,
+      verifiedCredentials: 0,
+    };
     const sent = Number(metrics.quotesSent ?? 0);
     const won = Number(metrics.quotesWon ?? 0);
     const all = { ...metrics, quoteWinRate: sent ? Math.round((won / sent) * 1000) / 10 : 0 };
