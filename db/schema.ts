@@ -16,7 +16,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 export const userRoleEnum = pgEnum('user_role', ['customer', 'trader']);
-export const subscriptionTierEnum = pgEnum('subscription_tier', ['free', 'basic', 'featured']);
+export const subscriptionTierEnum = pgEnum('subscription_tier', ['free', 'core', 'basic', 'featured']);
 export const jobStatusEnum = pgEnum('job_status', ['open', 'quoted', 'in_progress', 'completed', 'cancelled']);
 export const quoteStatusEnum = pgEnum('quote_status', ['pending', 'accepted', 'declined', 'withdrawn']);
 export const invoiceStatusEnum = pgEnum('invoice_status', ['draft', 'sent', 'paid', 'void', 'overdue']);
