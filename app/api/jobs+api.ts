@@ -8,6 +8,7 @@ import { assertRateLimit } from '@/lib/rate-limit';
 import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { FOUNDING_PRO_START_ISO } from '@/lib/launch-config';
+import { assertApprovedMediaUrls } from '@/lib/media-safety';
 import { jobSchema } from '@/lib/validation';
 
 function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -95,6 +96,7 @@ export async function POST(request: Request) {
     const user = await requireRole(request, 'customer');
     await assertRateLimit(request, 'post-job', 20, 3600, user.id);
     const payload = jobSchema.parse(await request.json());
+    await assertApprovedMediaUrls(user.id, 'job', payload.photos);
     if (payload.isEmergency) {
       await assertRateLimit(request, 'post-emergency-job-hour', 3, 3600, user.id);
       await assertRateLimit(request, 'post-emergency-job-day', 10, 86400, user.id);
