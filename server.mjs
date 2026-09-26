@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { execFileSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import http from 'node:http';
 import path from 'node:path';
 import { createReadStream, existsSync, readFileSync } from 'node:fs';
@@ -30,6 +31,12 @@ if (envFile) {
   for (const [name, value] of Object.entries(parsed)) {
     if (!runtimeOverrides.has(name)) process.env[name] = value;
   }
+}
+
+if (!process.env.CRON_SECRET) {
+  // Keep the internal retention tick protected even on deployments created
+  // before CRON_SECRET was added to the Render blueprint.
+  process.env.CRON_SECRET = randomBytes(32).toString('hex');
 }
 
 if (!process.env.BUILDPAIR_BUILD_SHA) {
@@ -332,8 +339,26 @@ const server = http.createServer(async (req, res) => {
 server.keepAliveTimeout = 65_000;
 server.headersTimeout = 70_000;
 
+async function runRetentionTick() {
+  if (process.env.NODE_ENV !== 'production' || !process.env.CRON_SECRET) return;
+  try {
+    const response = await fetch(`http://127.0.0.1:${PORT}/api/cron/retention`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!response.ok) console.error(`[BuildPair] Retention tick failed with ${response.status}`);
+  } catch (error) {
+    console.error('[BuildPair] Retention tick failed:', error);
+  }
+}
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`[BuildPair] Server listening on port ${PORT}`);
+  if (process.env.NODE_ENV === 'production') {
+    setTimeout(() => void runRetentionTick(), 90_000).unref();
+    setInterval(() => void runRetentionTick(), 60 * 60 * 1000).unref();
+  }
 });
 
 function shutdown(signal) {

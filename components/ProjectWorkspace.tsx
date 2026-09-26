@@ -89,6 +89,25 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
   }
 
   const typeOptions = role === 'trader' ? TRADER_TYPES : [{ value: 'snag' as const, label: 'Snag / issue' }, { value: 'note' as const, label: 'Project note' }];
+  const documentTypes = new Set<EntryType>(['document', 'handover', 'warranty']);
+  const documentItems = items.filter((item) => documentTypes.has(item.entryType));
+  const workItems = items.filter((item) => !documentTypes.has(item.entryType));
+
+  function entryCard(item: Entry) {
+    return <AppCard key={item.id} style={item.status === 'open' ? undefined : styles.doneCard}>
+      <View style={styles.headingRow}>
+        <View style={styles.flex}>
+          <View style={styles.typeWrap}><Chip compact>{item.entryType.replaceAll('_',' ')}</Chip>{item.visibility === 'trader_only' ? <Chip compact icon="lock-outline">Private</Chip> : null}<Chip compact>{item.status}</Chip></View>
+          <Text variant="titleMedium" style={styles.title}>{item.title}</Text>
+          {item.body ? <Text style={styles.muted}>{item.body}</Text> : null}
+          {item.mediaUrl ? <Image source={{ uri: item.mediaUrl }} style={styles.evidenceImage} resizeMode="cover" /> : null}
+          {item.amount != null ? <Text style={styles.amount}>{formatMoney(item.amount)}</Text> : null}
+          {item.dueAt ? <Text style={styles.muted}>Due {new Date(item.dueAt).toLocaleDateString('en-GB')}</Text> : null}
+        </View>
+        <View style={styles.actions}>{item.status === 'open' ? <Button compact mode="outlined" disabled={busy} onPress={() => void update(item.id, role === 'customer' && item.entryType === 'snag' ? 'approve' : 'done')}>{role === 'customer' && item.entryType === 'snag' ? 'Resolved' : 'Done'}</Button> : <Button compact disabled={busy} onPress={() => void update(item.id, 'reopen')}>Reopen</Button>}</View>
+      </View>
+    </AppCard>;
+  }
 
   return <View style={styles.wrap}>
     <View style={styles.headingRow}><View style={styles.flex}><Text variant="headlineSmall" style={styles.title}>Project workspace</Text><Text style={styles.muted}>Keep the practical middle of the job here: tasks, progress, materials, expenses, snagging, handover and warranty notes. Contract price changes still use Variations.</Text></View><Chip icon="clipboard-check-outline">{items.filter((item) => item.status === 'open').length} open</Chip></View>
@@ -105,9 +124,22 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
     </AppCard>
 
-    {!items.length ? <EmptyState title="Workspace is clear" body="Project tasks, progress updates, snagging and handover information will stay together here." /> : items.map((item) => <AppCard key={item.id} style={item.status === 'open' ? undefined : styles.doneCard}>
-      <View style={styles.headingRow}><View style={styles.flex}><View style={styles.typeWrap}><Chip compact>{item.entryType.replaceAll('_',' ')}</Chip>{item.visibility === 'trader_only' ? <Chip compact icon="lock-outline">Private</Chip> : null}<Chip compact>{item.status}</Chip></View><Text variant="titleMedium" style={styles.title}>{item.title}</Text>{item.body ? <Text style={styles.muted}>{item.body}</Text> : null}{item.mediaUrl ? <Image source={{ uri: item.mediaUrl }} style={styles.evidenceImage} resizeMode="cover" /> : null}{item.amount != null ? <Text style={styles.amount}>{formatMoney(item.amount)}</Text> : null}{item.dueAt ? <Text style={styles.muted}>Due {new Date(item.dueAt).toLocaleDateString('en-GB')}</Text> : null}</View><View style={styles.actions}>{item.status === 'open' ? <Button compact mode="outlined" disabled={busy} onPress={() => void update(item.id, role === 'customer' && item.entryType === 'snag' ? 'approve' : 'done')}>{role === 'customer' && item.entryType === 'snag' ? 'Resolved' : 'Done'}</Button> : <Button compact disabled={busy} onPress={() => void update(item.id, 'reopen')}>Reopen</Button>}</View></View>
-    </AppCard>)}
+    {!items.length ? <EmptyState title="Workspace is clear" body="Project tasks, progress updates, snagging and handover information will stay together here." /> : <>
+      <View style={styles.libraryHeader}>
+        <View style={styles.flex}>
+          <Text variant="titleLarge" style={styles.title}>Documents & handover</Text>
+          <Text style={styles.muted}>Certificates, receipt images, warranty evidence and handover notes stay together instead of disappearing into the general project timeline.</Text>
+        </View>
+        <Chip icon="folder-text-outline">{documentItems.length}</Chip>
+      </View>
+      {documentItems.length ? documentItems.map(entryCard) : <AppCard elevated={false}><Text style={styles.muted}>No document, handover or warranty records have been added yet.</Text></AppCard>}
+
+      <View style={styles.libraryHeader}>
+        <View style={styles.flex}><Text variant="titleLarge" style={styles.title}>Working record</Text><Text style={styles.muted}>Tasks, progress, materials, expenses, notes and snagging.</Text></View>
+        <Chip icon="hammer-wrench">{workItems.length}</Chip>
+      </View>
+      {workItems.length ? workItems.map(entryCard) : <AppCard elevated={false}><Text style={styles.muted}>No working-record items yet.</Text></AppCard>}
+    </>}
   </View>;
 }
 
@@ -122,5 +154,6 @@ const styles = StyleSheet.create({
   amount: { color: colors.primary, fontWeight: '900' },
   evidence: { gap: 6 },
   evidenceImage: { width: '100%', maxWidth: 520, height: 260, borderRadius: 14, backgroundColor: colors.border },
+  libraryHeader: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginTop: 6 },
   doneCard: { opacity: 0.72 },
 });

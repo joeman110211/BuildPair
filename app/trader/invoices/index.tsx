@@ -20,6 +20,9 @@ type Invoice = {
   totalAmount: number;
   dueAt: string | null;
   status: 'draft' | 'sent' | 'paid' | 'void' | 'overdue';
+  reminderEnabled: boolean;
+  reminderLastSentAt: string | null;
+  reminderCount: number;
   createdAt: string;
 };
 
@@ -38,6 +41,18 @@ export default function InvoicesScreen() {
   }, [getToken]);
 
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
+
+  async function reminderAction(invoice: Invoice, action: 'send' | 'configure', enabled?: boolean) {
+    try {
+      setBusy(invoice.id); setError('');
+      await apiFetch('/api/invoices/reminders', {
+        method: 'POST',
+        body: JSON.stringify({ invoiceId: invoice.id, action, enabled }),
+      }, getToken);
+      await load();
+    } catch (e) { setError(errorMessage(e)); }
+    finally { setBusy(undefined); }
+  }
 
   async function changeStatus(id: string, action: 'send' | 'paid' | 'void') {
     try {
@@ -60,7 +75,16 @@ export default function InvoicesScreen() {
         <View style={styles.row}><Text>Total</Text><Text variant="titleLarge" style={styles.total}>{formatMoney(invoice.totalAmount)}</Text></View>
         {invoice.depositAmount ? <Text style={styles.muted}>Deposit recorded: {formatMoney(invoice.depositAmount)}</Text> : null}
         {invoice.dueAt ? <Text style={overdue ? styles.overdue : styles.muted}>Due {new Date(invoice.dueAt).toLocaleDateString('en-GB')}</Text> : null}
-        {invoice.status !== 'paid' && invoice.status !== 'void' ? <View style={styles.actions}>{invoice.status === 'draft' ? <Button mode="contained" icon="email-send" loading={busy === invoice.id} disabled={Boolean(busy)} onPress={() => changeStatus(invoice.id, 'send')}>Send invoice</Button> : null}<Button mode={invoice.status === 'draft' ? 'outlined' : 'contained'} loading={busy === invoice.id} disabled={Boolean(busy)} onPress={() => changeStatus(invoice.id, 'paid')}>Mark paid</Button><Button mode="outlined" disabled={Boolean(busy)} onPress={() => changeStatus(invoice.id, 'void')}>Void</Button></View> : null}
+        {invoice.status !== 'paid' && invoice.status !== 'void' ? <View style={styles.actions}>
+          {invoice.status === 'draft' ? <Button mode="contained" icon="email-send" loading={busy === invoice.id} disabled={Boolean(busy)} onPress={() => changeStatus(invoice.id, 'send')}>Send invoice</Button> : null}
+          {invoice.status === 'sent' ? <>
+            <Button mode="outlined" icon="bell-outline" loading={busy === invoice.id} disabled={Boolean(busy)} onPress={() => void reminderAction(invoice, 'send')}>Send reminder</Button>
+            <Button mode="text" icon={invoice.reminderEnabled ? 'bell-off-outline' : 'bell-check-outline'} disabled={Boolean(busy)} onPress={() => void reminderAction(invoice, 'configure', !invoice.reminderEnabled)}>{invoice.reminderEnabled ? 'Stop auto reminders' : 'Auto reminders'}</Button>
+          </> : null}
+          <Button mode={invoice.status === 'draft' ? 'outlined' : 'contained'} loading={busy === invoice.id} disabled={Boolean(busy)} onPress={() => changeStatus(invoice.id, 'paid')}>Mark paid</Button>
+          <Button mode="outlined" disabled={Boolean(busy)} onPress={() => changeStatus(invoice.id, 'void')}>Void</Button>
+        </View> : null}
+        {invoice.reminderCount > 0 ? <Text variant="bodySmall" style={styles.muted}>Reminders sent: {invoice.reminderCount}{invoice.reminderLastSentAt ? ` · last ${new Date(invoice.reminderLastSentAt).toLocaleDateString('en-GB')}` : ''}</Text> : invoice.reminderEnabled ? <Text variant="bodySmall" style={styles.muted}>Automatic reminders are on. BuildPair limits reminders and stops when the invoice is marked paid or void.</Text> : null}
       </AppCard>;
     })}
   </Screen>;

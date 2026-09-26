@@ -18,15 +18,17 @@ const RECENT = [
   ['Trade customer book', 'Outside-customer quotes and invoices now feed a simple customer history so tradespeople can keep using BuildPair when the lead came from somewhere else.'],
   ['Working calendar', 'Plus and Pro can see scheduled job starts, site visits and published availability together. Plus covers roughly 12 weeks and Pro roughly six months.'],
   ['Project evidence', 'The shared job workspace can attach moderated photos or document images to progress, materials, expenses, snagging, handover and warranty records.'],
+  ['Quote & invoice reminders', 'Tradespeople can send bounded customer reminders and turn on sensible automatic follow-ups without creating an endless spam machine.'],
+  ['Calendar sync', 'Plus and Pro can subscribe to a private live BuildPair calendar in Google Calendar, Outlook, Apple Calendar and compatible diary apps.'],
+  ['Documents & handover library', 'Project certificates, receipt images, handover evidence and warranty records now sit in a dedicated grouped library inside the shared job workspace.'],
+  ['Quote choices & optional extras', 'Standalone quotes can offer upgrades or grouped alternatives separately from the core price, with the customer choice written into the accepted total and payment record.'],
+  ['Aftercare', 'Tradespeople can schedule warranty, service and follow-up dates against the finished project so useful customer relationships continue after final payment.'],
+  ['Optional business add-ons', 'Tradespeople can request extra opportunity capacity, team seats, AI/design capacity or SMS credits separately from their permanent membership. Nothing is charged merely by requesting access.'],
 ] as const;
 
 const COMING = [
-  ['Smarter quote & invoice reminders', 'Optional reminder rules for quotes awaiting a decision, invoices approaching due date and overdue invoices, with controls to avoid pestering customers.'],
-  ['Calendar sync', 'Optional Google or Outlook calendar sync so BuildPair scheduling can fit around the diary a trade already uses.'],
-  ['Richer project document library', 'Dedicated PDF/file storage, grouped certificates, receipts and handover packs beyond the photo/document evidence already available in the project workspace.'],
-  ['Quote alternatives & optional extras', 'Let a tradesperson present clearly separated optional upgrades or alternative quote options without muddying the accepted core scope.'],
-  ['Aftercare reminders', 'Warranty, service and follow-up reminders so completed jobs can remain useful after final payment and review.'],
-  ['Optional business add-ons', 'Extra marketplace-opportunity packs, additional team seats, AI/design credit packs and SMS credits without bloating the core memberships.'],
+  ['Self-serve add-on checkout', 'Optional add-ons can already be requested without charge. Direct self-serve activation will only be switched on once live Stripe pricing and purchase flows are configured and tested.'],
+  ['Richer file formats', 'The grouped project document library supports moderated document images today. Dedicated PDF and broader file upload can follow once file scanning and download safety are in place.'],
   ['Clearly labelled promoted placement', 'Optional sponsored visibility may be tested later. If used, it will be labelled as promoted and will never be presented as verification or trust.'],
 ] as const;
 

@@ -8,6 +8,7 @@ import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { MARKETPLACE_OPEN } from '@/lib/launch';
 import { formatMoney } from '@/lib/money';
 import type { PaymentStagePlan, Quote } from '@/types';
 
@@ -25,6 +26,10 @@ type BusinessQuote = {
   shareUrl: string;
   revisionNumber: number;
   managedJobId: string | null;
+  reminderEnabled: boolean;
+  reminderDays: number;
+  reminderLastSentAt: string | null;
+  reminderCount: number;
   paymentSchedule: PaymentStagePlan[];
   validUntil: string | null;
   createdAt: string;
@@ -62,7 +67,7 @@ export default function TraderQuotesScreen() {
       setLoading(true); setError('');
       const [outside, marketplace] = await Promise.all([
         apiFetch<BusinessQuote[]>('/api/business-quotes', {}, getToken),
-        apiFetch<Quote[]>('/api/quotes', {}, getToken),
+        MARKETPLACE_OPEN ? apiFetch<Quote[]>('/api/quotes', {}, getToken) : Promise.resolve([] as Quote[]),
       ]);
       setBusinessQuotes(outside);
       setJobQuotes(marketplace);
@@ -83,6 +88,19 @@ export default function TraderQuotesScreen() {
       setError('');
       const result = await apiFetch<{ id: string }>('/api/business-quotes/revise', { method: 'POST', body: JSON.stringify({ quoteId: quote.id }) }, getToken);
       router.push(`/trader/quotes/new?quoteId=${encodeURIComponent(result.id)}` as Href);
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  }
+
+  async function reminderAction(quote: BusinessQuote, action: 'send' | 'configure', enabled?: boolean) {
+    try {
+      setError('');
+      await apiFetch('/api/business-quotes/reminders', {
+        method: 'POST',
+        body: JSON.stringify({ quoteId: quote.id, action, enabled, days: quote.reminderDays || 3 }),
+      }, getToken);
+      await load();
     } catch (e) {
       setError(errorMessage(e));
     }
@@ -129,10 +147,15 @@ export default function TraderQuotesScreen() {
           <Button mode="outlined" icon="file-pdf-box" onPress={() => void Linking.openURL(printUrl(quote))}>PDF / print</Button>
           {quote.customerEmail ? <Button mode="text" icon="email-outline" onPress={() => void Linking.openURL(`mailto:${encodeURIComponent(quote.customerEmail!)}?subject=${encodeURIComponent(`Quote ${quote.quoteNumber}`)}&body=${encodeURIComponent(`Hi ${quote.customerName},\n\nHere is your quote for ${quote.jobTitle}:\n${quote.shareUrl}`)}`)}>Email</Button> : null}
           {quote.status !== 'accepted' ? <Button mode="outlined" icon="file-replace-outline" onPress={() => void reviseQuote(quote)}>Create revision</Button> : null}
+          {['sent','viewed'].includes(quote.status) && quote.customerEmail ? <>
+            <Button mode="text" icon="bell-outline" onPress={() => void reminderAction(quote, 'send')}>Remind customer</Button>
+            <Button mode="text" icon={quote.reminderEnabled ? 'bell-off-outline' : 'bell-check-outline'} onPress={() => void reminderAction(quote, 'configure', !quote.reminderEnabled)}>{quote.reminderEnabled ? 'Stop auto reminders' : 'Auto remind after 3 days'}</Button>
+          </> : null}
           {quote.managedJobId ? <Button mode="outlined" icon="briefcase-outline" onPress={() => router.push(`/trader/jobs/${quote.managedJobId}` as Href)}>Open managed project</Button> : null}
           {quote.customerPhone ? <Button mode="text" icon="message-text-outline" onPress={() => void Linking.openURL(`sms:${quote.customerPhone}?body=${encodeURIComponent(`Your quote for ${quote.jobTitle}: ${quote.shareUrl}`)}`)}>SMS</Button> : null}
         </>}
       </View>
+      {quote.reminderCount > 0 ? <Text variant="bodySmall" style={styles.muted}>Reminders sent: {quote.reminderCount}{quote.reminderLastSentAt ? ` · last ${new Date(quote.reminderLastSentAt).toLocaleDateString('en-GB')}` : ''}</Text> : quote.reminderEnabled ? <Text variant="bodySmall" style={styles.muted}>Automatic reminder is on. BuildPair waits at least {quote.reminderDays || 3} days and limits follow-ups.</Text> : null}
     </AppCard>)}
 
     <View style={styles.heading}><Text variant="titleLarge" style={styles.title}>BuildPair job quotes</Text><Chip>{jobQuotes.length}</Chip></View>

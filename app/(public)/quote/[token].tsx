@@ -27,6 +27,15 @@ type PublicQuote = QuoteDocumentData & {
   managedJobId: string | null;
   managedProjectEligible: boolean;
   revisionNumber: number;
+  options: {
+    id: string;
+    kind: 'optional' | 'alternative';
+    groupKey: string | null;
+    label: string;
+    description: string;
+    priceAdjustment: number;
+    selected: boolean;
+  }[];
 };
 
 export default function PublicQuoteScreen() {
@@ -35,6 +44,7 @@ export default function PublicQuoteScreen() {
   const [quote, setQuote] = useState<PublicQuote>();
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [selectedOptionIds, setSelectedOptionIds] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [renderedAt] = useState(() => Date.now());
 
@@ -44,6 +54,7 @@ export default function PublicQuoteScreen() {
       setLoading(true);
       const row = await apiFetch<PublicQuote>(`/api/public/quotes/${encodeURIComponent(token)}`);
       setQuote(row);
+      setSelectedOptionIds(row.options.filter((option) => option.selected).map((option) => option.id));
       setError('');
     } catch (e) {
       setError(errorMessage(e));
@@ -62,7 +73,7 @@ export default function PublicQuoteScreen() {
     try {
       setBusy(true); setError('');
       const updated = await apiFetch<PublicQuote>(`/api/public/quotes/${encodeURIComponent(token)}`, {
-        method: 'POST', body: JSON.stringify({ action }),
+        method: 'POST', body: JSON.stringify({ action, selectedOptionIds: action === 'accept' ? selectedOptionIds : [] }),
       });
       setQuote(updated);
     } catch (e) {
@@ -72,11 +83,30 @@ export default function PublicQuoteScreen() {
     }
   }
 
+  function toggleOption(optionId: string) {
+    if (!quote || finished) return;
+    const option = quote.options.find((row) => row.id === optionId);
+    if (!option) return;
+    setSelectedOptionIds((current) => {
+      if (current.includes(optionId)) return current.filter((id) => id !== optionId);
+      if (option.kind !== 'alternative') return [...current, optionId];
+      const group = (option.groupKey || 'Alternative').trim().toLowerCase();
+      const otherGroupIds = quote.options
+        .filter((row) => row.kind === 'alternative' && (row.groupKey || 'Alternative').trim().toLowerCase() === group)
+        .map((row) => row.id);
+      return [...current.filter((id) => !otherGroupIds.includes(id)), optionId];
+    });
+  }
+
   if (loading) return <LoadingScreen />;
   if (!quote) return <Screen title="Quote unavailable"><EmptyState title="This quote is not available" body={error || 'Ask the tradesperson to send you a fresh quote link.'} action={<Button mode="outlined" onPress={() => router.replace('/')}>Go to BuildPair</Button>} /></Screen>;
 
   const expired = Boolean(quote.validUntil && new Date(quote.validUntil).getTime() < renderedAt);
   const finished = quote.status === 'accepted' || quote.status === 'declined';
+  const selectedOptions = quote.options.filter((option) => selectedOptionIds.includes(option.id));
+  const selectedOptionsSubtotal = selectedOptions.reduce((sum, option) => sum + option.priceAdjustment, 0);
+  const selectedOptionsVat = Math.round(selectedOptionsSubtotal * quote.vatRate / 100);
+  const pendingTotal = quote.totalAmount + selectedOptionsSubtotal + selectedOptionsVat;
   const webOrigin = Platform.OS === 'web'
     ? ((globalThis as unknown as { location?: { origin?: string } }).location?.origin ?? '')
     : '';
@@ -95,6 +125,28 @@ export default function PublicQuoteScreen() {
     </View>
 
     <QuoteDocument quote={quote} />
+
+    {quote.options.length ? <AppCard>
+      <Text variant="titleLarge" style={styles.title}>{finished ? 'Quote choices' : 'Choose any extras or alternatives'}</Text>
+      <Text style={styles.muted}>{finished ? 'The choices below are part of the recorded quote decision.' : 'Optional extras are added to the quoted price. Alternatives are grouped so you can choose at most one from each group.'}</Text>
+      <View style={styles.optionList}>
+        {quote.options.map((option) => {
+          const selected = selectedOptionIds.includes(option.id);
+          return <View key={option.id} style={[styles.optionCard, selected ? styles.optionSelected : undefined]}>
+            <View style={styles.optionHeading}>
+              <View style={styles.optionText}>
+                <View style={styles.statusRow}><Chip compact>{option.kind === 'alternative' ? (option.groupKey || 'Alternative') : 'Optional extra'}</Chip>{selected ? <Chip compact icon="check">Selected</Chip> : null}</View>
+                <Text variant="titleMedium" style={styles.title}>{option.label}</Text>
+                {option.description ? <Text style={styles.muted}>{option.description}</Text> : null}
+              </View>
+              <Text variant="titleMedium" style={styles.optionPrice}>+{new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(option.priceAdjustment / 100)}</Text>
+            </View>
+            {!finished ? <Button mode={selected ? 'contained' : 'outlined'} icon={selected ? 'check' : 'plus'} disabled={busy} onPress={() => toggleOption(option.id)}>{selected ? 'Selected' : 'Choose'}</Button> : null}
+          </View>;
+        })}
+      </View>
+      {!finished && selectedOptions.length ? <View style={styles.choiceTotal}><Text>Selected extras{quote.vatRate ? ' + VAT' : ''}</Text><Text variant="titleMedium" style={styles.title}>{new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format((selectedOptionsSubtotal + selectedOptionsVat) / 100)}</Text><Text variant="titleLarge" style={styles.optionPrice}>New total {new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pendingTotal / 100)}</Text></View> : null}
+    </AppCard> : null}
 
     <AppCard>
       {quote.status === 'accepted' ? <>
@@ -127,4 +179,11 @@ const styles = StyleSheet.create({
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 21 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' },
+  optionList: { gap: spacing.sm },
+  optionCard: { borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: spacing.md, gap: spacing.sm },
+  optionSelected: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  optionHeading: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap' },
+  optionText: { flex: 1, minWidth: 220, gap: 5 },
+  optionPrice: { color: colors.primary, fontWeight: '900' },
+  choiceTotal: { alignItems: 'flex-end', gap: 4, paddingTop: spacing.sm },
 });

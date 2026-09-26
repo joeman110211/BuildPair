@@ -13,6 +13,15 @@ import { apiFetch, errorMessage } from '@/lib/api';
 import type { PayoutStatus } from '@/lib/payout-status';
 import type { SubscriptionTier, TraderProfile } from '@/types';
 
+type AddonRequest = { id: string; addonKey: 'opportunity_pack' | 'team_seat' | 'ai_credits' | 'sms_credits'; quantity: number; status: 'requested' | 'active' | 'declined' | 'cancelled'; createdAt: string };
+
+const ADDONS = [
+  { key: 'opportunity_pack' as const, title: 'Extra opportunity pack', detail: 'For a busy month when you want more open-marketplace opportunities without changing your permanent membership.' },
+  { key: 'team_seat' as const, title: 'Additional team seat', detail: 'For businesses that want another person to help manage customers, quoting and project admin.' },
+  { key: 'ai_credits' as const, title: 'AI / design credit pack', detail: 'Extra Project+ or AI capacity for unusually heavy planning and design use.' },
+  { key: 'sms_credits' as const, title: 'SMS credit pack', detail: 'Optional message credits for businesses that want BuildPair notifications to reach customers by text as well as in-app/email.' },
+] as const;
+
 const PLAN_COPY = {
   free: {
     ...SUBSCRIPTION_TIERS.free,
@@ -73,6 +82,8 @@ export default function SubscriptionScreen() {
   const isWeb = Platform.OS === 'web';
   const [profile, setProfile] = useState<TraderProfile>();
   const [payoutStatus, setPayoutStatus] = useState<PayoutStatus>();
+  const [addonRequests, setAddonRequests] = useState<AddonRequest[]>([]);
+  const [addonBusy, setAddonBusy] = useState<string>();
   const [checkingPayouts, setCheckingPayouts] = useState(false);
   const [error, setError] = useState('');
   const [payoutError, setPayoutError] = useState('');
@@ -92,13 +103,33 @@ export default function SubscriptionScreen() {
 
   const load = useCallback(async () => {
     try {
-      setProfile(await apiFetch<TraderProfile>('/api/me/profile', {}, getToken));
+      const [nextProfile, requests] = await Promise.all([
+        apiFetch<TraderProfile>('/api/me/profile', {}, getToken),
+        apiFetch<AddonRequest[]>('/api/trader-addons', {}, getToken).catch(() => []),
+      ]);
+      setProfile(nextProfile);
+      setAddonRequests(requests);
       setError('');
     } catch (e) {
       setError(errorMessage(e));
     }
     await refreshPayoutStatus();
   }, [getToken, refreshPayoutStatus]);
+
+  async function requestAddon(addonKey: AddonRequest['addonKey']) {
+    try {
+      setAddonBusy(addonKey); setError('');
+      await apiFetch('/api/trader-addons', {
+        method: 'POST',
+        body: JSON.stringify({ addonKey, quantity: 1 }),
+      }, getToken);
+      setAddonRequests(await apiFetch<AddonRequest[]>('/api/trader-addons', {}, getToken));
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setAddonBusy(undefined);
+    }
+  }
 
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
@@ -177,6 +208,23 @@ export default function SubscriptionScreen() {
       </View>;
     })}</View>
 
+    <AppCard>
+      <Text variant="titleLarge" style={styles.title}>Optional business add-ons</Text>
+      <Text style={styles.muted}>Keep your normal membership lean, then add capacity only when your business actually needs it. Pricing and activation are confirmed before anything is charged, so a request here is not a surprise purchase.</Text>
+      <View style={styles.addonGrid}>
+        {ADDONS.map((addon) => {
+          const latest = addonRequests.find((request) => request.addonKey === addon.key && ['requested','active'].includes(request.status));
+          return <View key={addon.key} style={styles.addon}>
+            <View style={styles.flex}>
+              <Text variant="titleMedium" style={styles.title}>{addon.title}</Text>
+              <Text style={styles.muted}>{addon.detail}</Text>
+            </View>
+            {latest?.status === 'active' ? <Chip icon="check-circle">Active</Chip> : latest?.status === 'requested' ? <Chip icon="clock-outline">Requested</Chip> : <Button compact mode="outlined" loading={addonBusy === addon.key} disabled={Boolean(addonBusy)} onPress={() => void requestAddon(addon.key)}>Request access</Button>}
+          </View>;
+        })}
+      </View>
+    </AppCard>
+
     {isWeb ? <AppCard>
       <Text variant="titleLarge" style={styles.title}>Why each £10 step has to earn its place</Text>
       <Text style={styles.muted}>Core adds a real business-tool layer as well as occasional marketplace access. Plus triples Core’s open-market capacity, removes direct-request usage from the allowance and adds the full outside-customer/project workflow. Pro then raises capacity to 35 and adds the longest availability horizon, advanced project tools, deeper analytics, templates and Project+. Paying more never creates a trust badge: reviews, credentials, relevance and profile quality remain separate.</Text>
@@ -231,6 +279,8 @@ export default function SubscriptionScreen() {
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  addonGrid: { gap: 10 },
+  addon: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 10 },
   plan: { flex: 1, minWidth: 260 },
   currentPlan: { borderColor: colors.primary, borderWidth: 2 },
   currentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' },
