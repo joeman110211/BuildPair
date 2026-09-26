@@ -85,7 +85,7 @@ function itemLineTotal(item: DraftItem) {
 }
 
 export default function NewQuoteScreen() {
-  const { jobId, title, quoteId } = useLocalSearchParams<{ jobId?: string; title?: string; quoteId?: string }>();
+  const { jobId, title, quoteId, customerName: presetCustomerName, customerEmail: presetCustomerEmail, customerPhone: presetCustomerPhone } = useLocalSearchParams<{ jobId?: string; title?: string; quoteId?: string; customerName?: string; customerEmail?: string; customerPhone?: string }>();
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   const router = useRouter();
@@ -94,9 +94,9 @@ export default function NewQuoteScreen() {
   const [loading, setLoading] = useState(true);
   const [job, setJob] = useState<Job>();
   const [profile, setProfile] = useState<TraderProfile>();
-  const [customerName, setCustomerName] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerName, setCustomerName] = useState(presetCustomerName ?? '');
+  const [customerEmail, setCustomerEmail] = useState(presetCustomerEmail ?? '');
+  const [customerPhone, setCustomerPhone] = useState(presetCustomerPhone ?? '');
   const [jobTitle, setJobTitle] = useState(title ?? '');
   const [externalTradeCategory, setExternalTradeCategory] = useState('');
   const [jobAddress, setJobAddress] = useState('');

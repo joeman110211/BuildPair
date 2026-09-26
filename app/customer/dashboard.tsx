@@ -53,6 +53,7 @@ export default function CustomerDashboard() {
       <Link href="/customer/new-job" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Post a job</Button></Link>
       <Link href="/(public)/directory" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Find local trades</Button></Link>
       <Link href="/customer/saved-trades" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Saved trades</Button></Link>
+      <Link href="/customer/home-record" asChild><Button mode="outlined" icon="home-heart" contentStyle={styles.actionButton}>Home Record</Button></Link>
     </View>
 
     <View style={styles.stats}>
