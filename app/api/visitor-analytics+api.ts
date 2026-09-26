@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { isIP } from 'node:net';
 import { z } from 'zod';
 import { getSql } from '@/lib/sql';
 
@@ -29,7 +30,7 @@ const acquisitionSchema = z.object({
 const eventSchema = z.object({
   action: z.literal('event').default('event'),
   mode: z.enum(['aggregate', 'detailed', 'anonymous']),
-  eventType: z.enum(['page_view', 'click', 'scroll', 'page_time', 'form_interaction', 'form_submit', 'heartbeat']),
+  eventType: z.enum(['visit_start', 'page_view', 'click', 'scroll', 'page_time', 'form_interaction', 'form_submit', 'heartbeat']),
   path: text(500),
   target: text(200),
   targetPath: text(500),
@@ -62,13 +63,138 @@ function safe(value: unknown, max = 200) {
   return typeof value === 'string' ? value.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max) : '';
 }
 
-function geoFromHeaders(request: Request) {
+type CoarseGeo = {
+  country: string;
+  countryCode: string;
+  region: string;
+  regionCode: string;
+  city: string;
+  timezone: string;
+  source: string;
+};
+
+const GEO_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const GEO_CACHE_MAX = 2048;
+const geoCache = new Map<string, { expiresAt: number; geo: CoarseGeo }>();
+
+function edgeGeo(request: Request): CoarseGeo {
   const headers = request.headers;
+  const countryCode = safe(headers.get('cf-ipcountry') || headers.get('x-vercel-ip-country') || headers.get('x-country-code'), 10);
   return {
-    country: safe(headers.get('cf-ipcountry') || headers.get('x-vercel-ip-country') || headers.get('x-country-code'), 80),
-    region: safe(headers.get('x-vercel-ip-country-region') || headers.get('x-region') || headers.get('x-region-code'), 100),
-    city: safe(headers.get('x-vercel-ip-city') || headers.get('x-city'), 120),
+    country: safe(headers.get('cf-country') || headers.get('x-country'), 80),
+    countryCode,
+    region: safe(headers.get('cf-region') || headers.get('x-vercel-ip-country-region') || headers.get('x-region'), 100),
+    regionCode: safe(headers.get('cf-region-code') || headers.get('x-region-code'), 30),
+    city: safe(headers.get('cf-ipcity') || headers.get('x-vercel-ip-city') || headers.get('x-city'), 120),
+    timezone: safe(headers.get('cf-timezone') || headers.get('x-timezone'), 100),
+    source: 'edge',
   };
+}
+
+function isPublicAddress(value: string) {
+  if (!isIP(value)) return false;
+  const lower = value.toLowerCase();
+  if (lower === '::1' || lower === '0:0:0:0:0:0:0:1' || lower.startsWith('fc') || lower.startsWith('fd') || lower.startsWith('fe80:')) return false;
+  if (!value.includes(':')) {
+    const parts = value.split('.').map(Number);
+    if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return false;
+    if (parts[0] === 10 || parts[0] === 127 || parts[0] === 0) return false;
+    if (parts[0] === 169 && parts[1] === 254) return false;
+    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return false;
+    if (parts[0] === 192 && parts[1] === 168) return false;
+  }
+  return true;
+}
+
+function requestIp(request: Request) {
+  const direct = safe(request.headers.get('cf-connecting-ip') || request.headers.get('x-real-ip'), 80);
+  if (isPublicAddress(direct)) return direct;
+
+  const forwarded = String(request.headers.get('x-forwarded-for') || '');
+  for (const candidate of forwarded.split(',').map((value) => value.trim())) {
+    if (isPublicAddress(candidate)) return candidate;
+  }
+  return '';
+}
+
+function cachedGeo(key: string) {
+  const cached = geoCache.get(key);
+  if (!cached) return null;
+  if (cached.expiresAt <= Date.now()) {
+    geoCache.delete(key);
+    return null;
+  }
+  return cached.geo;
+}
+
+function rememberGeo(key: string, geo: CoarseGeo) {
+  if (geoCache.size >= GEO_CACHE_MAX) {
+    const oldestKey = geoCache.keys().next().value as string | undefined;
+    if (oldestKey) geoCache.delete(oldestKey);
+  }
+  geoCache.set(key, { expiresAt: Date.now() + GEO_CACHE_TTL_MS, geo });
+}
+
+async function coarseGeoForRequest(request: Request): Promise<CoarseGeo> {
+  const edge = edgeGeo(request);
+  if (edge.city && (edge.country || edge.countryCode)) return edge;
+
+  const ip = requestIp(request);
+  if (!ip) return edge;
+
+  const cacheKey = createHash('sha256').update(ip).digest('hex');
+  const cached = cachedGeo(cacheKey);
+  if (cached) return {
+    ...cached,
+    country: edge.country || cached.country,
+    countryCode: edge.countryCode || cached.countryCode,
+    region: edge.region || cached.region,
+    regionCode: edge.regionCode || cached.regionCode,
+    city: edge.city || cached.city,
+    timezone: edge.timezone || cached.timezone,
+  };
+
+  try {
+    const endpoint = `https://ipwho.is/${encodeURIComponent(ip)}?fields=success,country,country_code,region,region_code,city,timezone.id`;
+    const response = await fetch(endpoint, {
+      headers: { Accept: 'application/json', 'User-Agent': 'BuildPair visitor analytics' },
+      signal: AbortSignal.timeout(1500),
+    });
+    if (!response.ok) return edge;
+    const data = await response.json() as {
+      success?: boolean;
+      country?: string;
+      country_code?: string;
+      region?: string;
+      region_code?: string;
+      city?: string;
+      timezone?: { id?: string };
+    };
+    if (data.success === false) return edge;
+
+    const lookup: CoarseGeo = {
+      country: safe(data.country, 80),
+      countryCode: safe(data.country_code, 10),
+      region: safe(data.region, 100),
+      regionCode: safe(data.region_code, 30),
+      city: safe(data.city, 120),
+      timezone: safe(data.timezone?.id, 100),
+      source: 'ipwhois',
+    };
+    rememberGeo(cacheKey, lookup);
+    return {
+      ...lookup,
+      country: edge.country || lookup.country,
+      countryCode: edge.countryCode || lookup.countryCode,
+      region: edge.region || lookup.region,
+      regionCode: edge.regionCode || lookup.regionCode,
+      city: edge.city || lookup.city,
+      timezone: edge.timezone || lookup.timezone,
+      source: edge.city ? 'edge' : 'ipwhois',
+    };
+  } catch {
+    return edge;
+  }
 }
 
 function normaliseDetails(input: JsonMap) {
@@ -110,7 +236,7 @@ export async function POST(request: Request) {
       return Response.json({ accepted: true });
     }
 
-    const geo = geoFromHeaders(request);
+    const geo = await coarseGeoForRequest(request);
     const dimensions = {
       path: safe(payload.path, 500),
       target: safe(payload.target, 200),
@@ -119,6 +245,8 @@ export async function POST(request: Request) {
       utmSource: safe(payload.acquisition.utmSource, 150),
       utmMedium: safe(payload.acquisition.utmMedium, 150),
       utmCampaign: safe(payload.acquisition.utmCampaign, 200),
+      utmContent: safe(payload.acquisition.utmContent, 200),
+      utmTerm: safe(payload.acquisition.utmTerm, 200),
       sourceParam: safe(payload.acquisition.sourceParam, 150),
       referralCode: safe(payload.acquisition.referralCode, 40),
       deviceType: safe(payload.device.deviceType, 40),
@@ -130,9 +258,14 @@ export async function POST(request: Request) {
       viewport: safe(payload.device.viewport, 40),
       screen: safe(payload.device.screen, 40),
       connection: safe(payload.device.connection, 40),
+      touch: Boolean(payload.device.touch),
       country: geo.country,
+      countryCode: geo.countryCode,
       region: geo.region,
+      regionCode: geo.regionCode,
       city: geo.city,
+      geoTimezone: geo.timezone,
+      locationSource: geo.source,
     };
 
     const sessionTracked = payload.mode !== 'aggregate';
