@@ -129,7 +129,7 @@ export async function GET(request: Request, { id }: { id: string }) {
         console.warn('[buildpair-profile] Verified reviews unavailable', { profileId: profile.id });
       }
     }
-    const reviewCount = paidProfile ? verifiedReviews.length : 0;
+    const reviewCount = paidProfile || prelaunchProfile || viewerIsOwner ? verifiedReviews.length : 0;
     const averageRating = reviewCount ? verifiedReviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount : 0;
 
     const [credentials, availability, stories] = await Promise.all([
