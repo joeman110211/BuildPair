@@ -21,6 +21,8 @@ type DirectoryTrader = {
   reviewCount: number;
   verifiedCredentialCount: number;
   availabilitySummary: string | null;
+  responseRate: number;
+  averageResponseHours: number;
   rankingScore: number;
   createdAt: string;
 };
@@ -60,6 +62,26 @@ export async function GET(request: Request) {
                  AND ta.status = 'available'
                  AND ta.ends_at >= now()
                  AND ta.starts_at <= now() + interval '30 days') AS "availabilitySummary",
+             coalesce((
+               SELECT avg(CASE WHEN EXISTS (
+                 SELECT 1 FROM messages m
+                 WHERE m.conversation_id = c.id AND m.sender_id = tp.user_id
+               ) THEN 100.0 ELSE 0.0 END)
+               FROM conversations c
+               WHERE c.trader_id = tp.user_id
+             ), 0)::float AS "responseRate",
+             coalesce((
+               SELECT avg(extract(epoch FROM (first_reply.created_at - c.created_at)) / 3600.0)
+               FROM conversations c
+               CROSS JOIN LATERAL (
+                 SELECT m.created_at
+                 FROM messages m
+                 WHERE m.conversation_id = c.id AND m.sender_id = tp.user_id
+                 ORDER BY m.created_at ASC
+                 LIMIT 1
+               ) first_reply
+               WHERE c.trader_id = tp.user_id
+             ), 0)::float AS "averageResponseHours",
              (
                coalesce(avg(r.rating), 0) * 10
                + least(count(r.id), 20) * 0.5
