@@ -68,6 +68,7 @@ type QuoteRow = {
   revisionNumber: number;
   supersedesQuoteId: string | null;
   managedJobId: string | null;
+  managedProjectEligible: boolean;
   sentAt: string | null;
   viewedAt: string | null;
   acceptedAt: string | null;
@@ -101,6 +102,7 @@ async function requireBusinessQuotePlan(traderId: string) {
   if (!profile || !tierAtLeast(profile.subscriptionTier, 'core') || !hasPlanSetupAccess(profile, 'core')) {
     throw new HttpError(402, 'Standalone customer quotes are included with BuildPair Core, Plus and Pro.');
   }
+  return profile;
 }
 
 async function listQuotes(traderId: string) {
@@ -134,6 +136,7 @@ async function listQuotes(traderId: string) {
            q.revision_number AS "revisionNumber",
            q.supersedes_quote_id AS "supersedesQuoteId",
            q.managed_job_id AS "managedJobId",
+           q.managed_project_eligible AS "managedProjectEligible",
            q.sent_at AS "sentAt",
            q.viewed_at AS "viewedAt",
            q.accepted_at AS "acceptedAt",
@@ -172,8 +175,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
-    await requireBusinessQuotePlan(trader.id);
+    const plan = await requireBusinessQuotePlan(trader.id);
     const payload = businessQuoteSchema.parse(await request.json());
+    const managedProjectEligible = tierAtLeast(plan.subscriptionTier, 'basic') && hasPlanSetupAccess(plan, 'basic');
+    if (payload.paymentMethod === 'buildpair' && !managedProjectEligible) {
+      throw new HttpError(402, 'Outside-customer BuildPay and managed projects are included with BuildPair Plus and Pro.');
+    }
     const subtotal = payload.items.reduce((sum, item) => sum + Math.round(item.quantity * item.unitPrice), 0);
     if (subtotal <= 0) throw new HttpError(400, 'Add at least one priced item to the quote.');
     const vatAmount = Math.round(subtotal * payload.vatRate / 100);
@@ -214,6 +221,7 @@ export async function POST(request: Request) {
             notes = ${payload.notes || null},
             show_breakdown = ${payload.showBreakdown},
             valid_until = ${payload.validUntil ? new Date(payload.validUntil).toISOString() : null},
+            managed_project_eligible = ${managedProjectEligible},
             status = ${payload.status},
             sent_at = ${sentAt},
             updated_at = now()
@@ -229,13 +237,13 @@ export async function POST(request: Request) {
           id, trader_id, quote_number, customer_name, customer_email, customer_phone,
           job_title, trade_category, job_address, work_included, not_included, expected_start, duration_text,
           warranty_text, subtotal, vat_rate, vat_amount, total_amount, payment_method,
-          payment_terms, payment_schedule, notes, show_breakdown, valid_until, status,
+          payment_terms, payment_schedule, notes, show_breakdown, valid_until, managed_project_eligible, status,
           share_token, sent_at, updated_at
         ) VALUES (
           ${id}, ${trader.id}, ${number}, ${payload.customerName}, ${payload.customerEmail || null}, ${payload.customerPhone || null},
           ${payload.jobTitle}, ${payload.tradeCategory}, ${payload.jobAddress || null}, ${payload.workIncluded}, ${payload.notIncluded || null}, ${payload.expectedStart || null}, ${payload.durationText || null},
           ${payload.warrantyText || null}, ${subtotal}, ${payload.vatRate}, ${vatAmount}, ${totalAmount}, ${payload.paymentMethod},
-          ${payload.paymentTerms}, ${JSON.stringify(paymentSchedule)}::jsonb, ${payload.notes || null}, ${payload.showBreakdown}, ${payload.validUntil ? new Date(payload.validUntil).toISOString() : null}, ${payload.status},
+          ${payload.paymentTerms}, ${JSON.stringify(paymentSchedule)}::jsonb, ${payload.notes || null}, ${payload.showBreakdown}, ${payload.validUntil ? new Date(payload.validUntil).toISOString() : null}, ${managedProjectEligible}, ${payload.status},
           ${token}, ${sentAt}, now()
         )
       `;
