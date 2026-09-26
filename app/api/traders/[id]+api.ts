@@ -156,6 +156,26 @@ export async function GET(request: Request, { id }: { id: string }) {
       `,
     ]);
 
+    const responseRows = await sqlClient`
+      SELECT
+        coalesce(avg(CASE WHEN EXISTS (
+          SELECT 1 FROM messages m
+          WHERE m.conversation_id = c.id AND m.sender_id = ${profile.userId}
+        ) THEN 100.0 ELSE 0.0 END), 0)::float AS "responseRate",
+        coalesce(avg(extract(epoch FROM (first_reply.created_at - c.created_at)) / 3600.0), 0)::float AS "averageResponseHours"
+      FROM conversations c
+      LEFT JOIN LATERAL (
+        SELECT m.created_at
+        FROM messages m
+        WHERE m.conversation_id = c.id AND m.sender_id = ${profile.userId}
+        ORDER BY m.created_at ASC
+        LIMIT 1
+      ) first_reply ON true
+      WHERE c.trader_id = ${profile.userId}
+    ` as unknown as { responseRate: number; averageResponseHours: number }[];
+    const responseRate = Number(responseRows[0]?.responseRate ?? 0);
+    const averageResponseHours = Number(responseRows[0]?.averageResponseHours ?? 0);
+
     let contact: { email: string | null; phone: string | null } | null = null;
     let savedByViewer = false;
     if (viewerId && (paidProfile || viewerIsOwner)) {
@@ -208,6 +228,8 @@ export async function GET(request: Request, { id }: { id: string }) {
       verifiedCredentialCount: credentials.length,
       availability,
       availabilitySummary: availability.length ? 'Upcoming availability listed' : null,
+      responseRate,
+      averageResponseHours,
       stories,
       savedByViewer,
       contact,
