@@ -5,7 +5,7 @@ import { traderProfiles } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
-import { categoryChangeAvailableAt, hasActiveLeadAccess, traderMonthlyQuoteLimit } from '@/lib/subscription';
+import { categoryChangeAvailableAt, hasActiveLeadAccess, traderMonthlyQuoteLimit, traderWorkTypeLimit } from '@/lib/subscription';
 import { FOUNDING_PRO_START_ISO, MARKETPLACE_OPEN } from '@/lib/launch-config';
 
 function missingShowcaseTable(error: unknown) {
@@ -69,11 +69,19 @@ export async function GET(request: Request) {
     }
 
     const usageRows = await getSql()`
-      SELECT count(*)::int AS count
-      FROM trader_job_offers
-      WHERE trader_id = ${trader.id}
-        AND created_at >= date_trunc('month', now())
-        AND created_at < date_trunc('month', now()) + interval '1 month'
+      SELECT (
+        (SELECT count(*) FROM trader_job_offers
+         WHERE trader_id = ${trader.id}
+           AND created_at >= date_trunc('month', now())
+           AND created_at < date_trunc('month', now()) + interval '1 month')
+        +
+        CASE WHEN ${profile.subscriptionTier}::text = 'core' THEN
+          (SELECT count(*) FROM jobs
+           WHERE target_trader_id = ${trader.id}
+             AND created_at >= date_trunc('month', now())
+             AND created_at < date_trunc('month', now()) + interval '1 month')
+        ELSE 0 END
+      )::int AS count
     ` as unknown as { count: number }[];
     const resetRows = await getSql()`
       SELECT (date_trunc('month', now()) + interval '1 month') AS "resetAt"
@@ -96,7 +104,7 @@ export async function GET(request: Request) {
       isSubscriptionActive: active,
       marketplaceOpen: MARKETPLACE_OPEN,
       foundingProStartsAt: profile.trialEndsAt ? FOUNDING_PRO_START_ISO : null,
-      categoryLimit: TRADE_CATEGORIES.length,
+      categoryLimit: traderWorkTypeLimit(profile),
       categoryChangeAvailableAt: categoryChangeAvailableAt(profile.categoriesChangedAt)?.toISOString() ?? null,
       monthlyQuotesUsed: usageRows[0]?.count ?? 0,
       monthlyQuoteLimit: traderMonthlyQuoteLimit(profile),
