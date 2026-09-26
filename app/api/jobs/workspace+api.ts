@@ -3,7 +3,7 @@ import { assertApprovedMediaUrls } from '@/lib/media-safety';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
-const entryType = z.enum(['task','note','progress','material','expense','snag','document','handover','warranty']);
+const entryType = z.enum(['task','note','progress','material','expense','snag','document','handover','warranty','aftercare']);
 const visibility = z.enum(['shared','trader_only']);
 const createSchema = z.object({
   jobId: z.string().uuid(),
