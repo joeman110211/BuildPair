@@ -10,6 +10,7 @@ import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors, controlHeights, spacing } from '@/constants/theme';
 import { apiFetch, ApiError, errorMessage } from '@/lib/api';
 import { LAUNCH_DATE_LABEL, MARKETPLACE_OPEN } from '@/lib/launch';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import type { Job, Quote, TraderProfile } from '@/types';
 
 type ReferralState = {
@@ -20,6 +21,8 @@ type ReferralState = {
 
 export default function TraderDashboard() {
   const { getToken } = useAuth();
+  const { user: currentUser } = useCurrentUser();
+  const marketplaceEnabled = MARKETPLACE_OPEN || Boolean(currentUser?.isAdmin);
   const getTokenRef = useRef(getToken);
   const router = useRouter();
   const [profile, setProfile] = useState<TraderProfile>();
@@ -38,7 +41,7 @@ export default function TraderDashboard() {
       setProfile(ownProfile);
       const referralState = await apiFetch<ReferralState>('/api/trader-referral', { method: 'POST' }, tokenGetter).catch(() => undefined);
       setReferral(referralState);
-      if (MARKETPLACE_OPEN) {
+      if (marketplaceEnabled) {
         const [jobRows, quoteRows] = await Promise.all([
           apiFetch<Job[]>('/api/jobs', {}, tokenGetter),
           apiFetch<Quote[]>('/api/quotes', {}, tokenGetter),
@@ -53,7 +56,7 @@ export default function TraderDashboard() {
       if (e instanceof ApiError && e.status === 404) setProfile(undefined);
       else setError(errorMessage(e));
     } finally { setLoading(false); }
-  }, []);
+  }, [marketplaceEnabled]);
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   async function shareOneGoodTrade() {
@@ -89,7 +92,7 @@ export default function TraderDashboard() {
   const serviceArea = profile.locationLabel || profile.postcode || 'your saved service area';
 
   return <Screen title={profile.businessName} subtitle={`${profile.tradeCategory}${profile.locationLabel ? ` · ${profile.locationLabel}` : ''}`}>
-    {!MARKETPLACE_OPEN ? <AppCard style={styles.prelaunchCard}>
+    {!marketplaceEnabled ? <AppCard style={styles.prelaunchCard}>
       <View style={styles.row}>
         <View style={styles.flex}>
           <Text variant="titleLarge" style={styles.cardTitle}>Profile setup is live. Marketplace activity is not.</Text>
@@ -115,13 +118,13 @@ export default function TraderDashboard() {
         <View style={styles.flex}>
           <Text style={styles.membershipEyebrow}>CURRENT MEMBERSHIP</Text>
           <Text variant="titleLarge" style={styles.cardTitle}>{plan.name}</Text>
-          <Text style={styles.muted}>{!MARKETPLACE_OPEN && profile.subscriptionTier !== 'free'
+          <Text style={styles.muted}>{!marketplaceEnabled && profile.subscriptionTier !== 'free'
             ? `${plan.name} is reserved for launch. Your founding offer starts when BuildPair opens, so pre-launch setup does not burn any paid or free membership time.`
             : profile.subscriptionTier === 'free'
               ? 'Your Starter profile can be shared externally and you can browse marketplace jobs. Upgrade to Core, Plus or Pro to appear in BuildPair search after launch and use marketplace opportunities.'
               : `${Math.max(0, offerLimit - offersUsed)} of ${offerLimit} marketplace offers remaining this month. An open-marketplace opportunity is counted when you first engage with a job. Core direct requests share its five-opportunity allowance; Plus and Pro direct requests do not use their open-market allowance.`}</Text>
         </View>
-        <Chip>{!MARKETPLACE_OPEN && profile.subscriptionTier !== 'free' ? 'Reserved for launch' : paidActive ? 'Active' : profile.subscriptionTier === 'free' ? 'Starter' : 'Needs attention'}</Chip>
+        <Chip>{!marketplaceEnabled && profile.subscriptionTier !== 'free' ? 'Reserved for launch' : paidActive ? 'Active' : profile.subscriptionTier === 'free' ? 'Starter' : 'Needs attention'}</Chip>
       </View>
       {offerLimit > 0 ? <><ProgressBar progress={offerProgress} color={colors.primary} style={styles.progress} /><Text style={styles.offerMeta}>{offersUsed} used · {offerLimit} monthly allowance</Text></> : null}
       <View style={styles.membershipActions}>
@@ -141,7 +144,7 @@ export default function TraderDashboard() {
       <Link href="/trader/profile" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Manage profile & service area</Button></Link>
     </AppCard>
 
-    {!MARKETPLACE_OPEN && referral ? <AppCard style={styles.relayCard}>
+    {!marketplaceEnabled && referral ? <AppCard style={styles.relayCard}>
       <View style={styles.row}>
         <View style={styles.flex}>
           <Text style={styles.membershipEyebrow}>ONE GOOD TRADE · BUILDPAIR RELAY</Text>
