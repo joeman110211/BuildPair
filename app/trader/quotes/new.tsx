@@ -10,7 +10,6 @@ import { QuoteDocument, type QuoteDocumentData } from '@/components/QuoteDocumen
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { buildPayCustomerFee, plannedBuildPayChargeCount } from '@/lib/buildpay-fees';
 import { formatMoney, poundsToPence } from '@/lib/money';
 import { buildQuoteStartDateOptions, closestQuoteDuration, QUOTE_DURATION_OPTIONS, QUOTE_SCOPE_MIN_LENGTH } from '@/lib/quote-options';
 import type { BuildPayFeeMode, Job, PaymentStagePlan, TraderProfile } from '@/types';
@@ -268,12 +267,6 @@ export default function NewQuoteScreen() {
   }, [depositAmount, external, finalAmount, materialsCost, planMode, stages, totalAmount]);
 
   const buildPayRequested = !external && (requestBuildPay || planMode !== 'single');
-  const buildPayPreview = useMemo(() => {
-    if (!buildPayRequested || totalAmount <= 0 || serviceCost <= 0 || !paymentSchedule.length) return null;
-    return buildPayCustomerFee({ contractAmount: totalAmount, laborServiceAmount: serviceCost, plannedChargeCount: plannedBuildPayChargeCount(paymentSchedule) });
-  }, [buildPayRequested, paymentSchedule, serviceCost, totalAmount]);
-  const homeownerAllInTotal = buildPayRequested && buildPayFeeMode === 'customer_pays' ? totalAmount + (buildPayPreview?.customerFee ?? 0) : totalAmount;
-
   const validUntil = useMemo(() => new Date(Date.now() + Number(validDays) * 24 * 60 * 60 * 1000).toISOString(), [validDays]);
   const previewQuote = useMemo<QuoteDocumentData>(() => ({
     businessName: profile?.businessName ?? 'Your business',
@@ -510,9 +503,9 @@ export default function NewQuoteScreen() {
         {buildPayRequested ? <>
           <View style={styles.totalBox}>
             <View style={styles.row}><Text style={styles.strong}>Your work price</Text><Text style={styles.strong}>{formatMoney(totalAmount)}</Text></View>
-            {buildPayFeeMode === 'customer_pays' ? <><View style={styles.row}><Text>Estimated BuildPay service fee</Text><Text>{formatMoney(buildPayPreview?.customerFee ?? 0)}</Text></View><View style={styles.row}><Text variant="titleMedium" style={styles.title}>Homeowner all-in total</Text><Text variant="titleMedium" style={styles.total}>{formatMoney(homeownerAllInTotal)}</Text></View></> : <><View style={styles.row}><Text>BuildPay fee charged to homeowner</Text><Text>{formatMoney(0)}</Text></View><View style={styles.row}><Text variant="titleMedium" style={styles.title}>Homeowner all-in total</Text><Text variant="titleMedium" style={styles.total}>{formatMoney(totalAmount)}</Text></View></>}
+            <View style={styles.row}><Text>BuildPay fee charged to homeowner</Text><Text>{formatMoney(0)}</Text></View><View style={styles.row}><Text variant="titleMedium" style={styles.title}>Homeowner all-in total</Text><Text variant="titleMedium" style={styles.total}>{formatMoney(totalAmount)}</Text></View>
           </View>
-          <Text style={styles.muted}>{buildPayFeeMode === 'customer_pays' ? 'The homeowner sees the work price, BuildPay service fee and all-in total before accepting. Your contract price is not reduced by that fee.' : `You are choosing to absorb BuildPay costs. The homeowner pays your ${formatMoney(totalAmount)} work price; BuildPair's labour/service fee and actual Stripe processing costs are recovered from controlled service payouts.`}</Text>
+          <Text style={styles.muted}>{`You requested BuildPay, so you carry its costs. The homeowner pays your ${formatMoney(totalAmount)} work price; BuildPair's labour/service fee and actual Stripe processing costs are recovered from controlled service payouts.`}</Text>
         </> : <Text style={styles.muted}>The homeowner can accept this quote at the work price and choose direct payment. If they later request optional BuildPay, BuildPair will show them its service fee and all-in total before they confirm it.</Text>}
       </AppCard> : null}
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
