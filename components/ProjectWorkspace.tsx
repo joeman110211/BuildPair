@@ -1,8 +1,9 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
+import { PhotoUploader } from '@/components/PhotoUploader';
 import { EmptyState } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
@@ -16,6 +17,7 @@ type Entry = {
   title: string;
   body: string;
   amount: number | null;
+  mediaUrl: string | null;
   status: 'open' | 'done' | 'shared' | 'approved' | 'archived';
   dueAt: string | null;
   createdAt: string;
@@ -43,6 +45,7 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
   const [body, setBody] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [media, setMedia] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   useEffect(() => { tokenRef.current = getToken; }, [getToken]);
@@ -68,10 +71,11 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
           title: title.trim(),
           body: body.trim(),
           amount: amount.trim() ? poundsToPence(amount) : null,
+          mediaUrl: media[0] || null,
           dueAt,
         }),
       }, () => tokenRef.current());
-      setTitle(''); setBody(''); setAmount(''); setDueDate('');
+      setTitle(''); setBody(''); setAmount(''); setDueDate(''); setMedia([]);
       await load();
     } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
   }
@@ -96,12 +100,13 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
       <TextInput mode="outlined" label="Details" value={body} onChangeText={setBody} multiline numberOfLines={3} />
       {role === 'trader' && ['material','expense'].includes(entryType) ? <TextInput mode="outlined" label="Amount (£, optional)" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" /> : null}
       {['task','snag','material','handover'].includes(entryType) ? <TextInput mode="outlined" label="Due date YYYY-MM-DD (optional)" value={dueDate} onChangeText={setDueDate} keyboardType="numbers-and-punctuation" /> : null}
+      <View style={styles.evidence}><Text variant="labelLarge" style={styles.title}>Photo / document image (optional)</Text><Text style={styles.muted}>Attach a moderated before/during/after photo, receipt image, certificate image or handover evidence to this project entry.</Text><PhotoUploader kind={role === 'trader' ? 'trader' : 'job'} photos={media} onChange={setMedia} max={1} /></View>
       <Button mode="contained" disabled={busy || title.trim().length < 2} loading={busy} onPress={() => void create()}>Add to project</Button>
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
     </AppCard>
 
     {!items.length ? <EmptyState title="Workspace is clear" body="Project tasks, progress updates, snagging and handover information will stay together here." /> : items.map((item) => <AppCard key={item.id} style={item.status === 'open' ? undefined : styles.doneCard}>
-      <View style={styles.headingRow}><View style={styles.flex}><View style={styles.typeWrap}><Chip compact>{item.entryType.replaceAll('_',' ')}</Chip>{item.visibility === 'trader_only' ? <Chip compact icon="lock-outline">Private</Chip> : null}<Chip compact>{item.status}</Chip></View><Text variant="titleMedium" style={styles.title}>{item.title}</Text>{item.body ? <Text style={styles.muted}>{item.body}</Text> : null}{item.amount != null ? <Text style={styles.amount}>{formatMoney(item.amount)}</Text> : null}{item.dueAt ? <Text style={styles.muted}>Due {new Date(item.dueAt).toLocaleDateString('en-GB')}</Text> : null}</View><View style={styles.actions}>{item.status === 'open' ? <Button compact mode="outlined" disabled={busy} onPress={() => void update(item.id, role === 'customer' && item.entryType === 'snag' ? 'approve' : 'done')}>{role === 'customer' && item.entryType === 'snag' ? 'Resolved' : 'Done'}</Button> : <Button compact disabled={busy} onPress={() => void update(item.id, 'reopen')}>Reopen</Button>}</View></View>
+      <View style={styles.headingRow}><View style={styles.flex}><View style={styles.typeWrap}><Chip compact>{item.entryType.replaceAll('_',' ')}</Chip>{item.visibility === 'trader_only' ? <Chip compact icon="lock-outline">Private</Chip> : null}<Chip compact>{item.status}</Chip></View><Text variant="titleMedium" style={styles.title}>{item.title}</Text>{item.body ? <Text style={styles.muted}>{item.body}</Text> : null}{item.mediaUrl ? <Image source={{ uri: item.mediaUrl }} style={styles.evidenceImage} resizeMode="cover" /> : null}{item.amount != null ? <Text style={styles.amount}>{formatMoney(item.amount)}</Text> : null}{item.dueAt ? <Text style={styles.muted}>Due {new Date(item.dueAt).toLocaleDateString('en-GB')}</Text> : null}</View><View style={styles.actions}>{item.status === 'open' ? <Button compact mode="outlined" disabled={busy} onPress={() => void update(item.id, role === 'customer' && item.entryType === 'snag' ? 'approve' : 'done')}>{role === 'customer' && item.entryType === 'snag' ? 'Resolved' : 'Done'}</Button> : <Button compact disabled={busy} onPress={() => void update(item.id, 'reopen')}>Reopen</Button>}</View></View>
     </AppCard>)}
   </View>;
 }
@@ -115,5 +120,7 @@ const styles = StyleSheet.create({
   typeWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   amount: { color: colors.primary, fontWeight: '900' },
+  evidence: { gap: 6 },
+  evidenceImage: { width: '100%', maxWidth: 520, height: 260, borderRadius: 14, backgroundColor: colors.border },
   doneCard: { opacity: 0.72 },
 });
