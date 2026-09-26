@@ -1,5 +1,5 @@
 export type UserRole = 'customer' | 'trader';
-export type SubscriptionTier = 'free' | 'basic' | 'featured';
+export type SubscriptionTier = 'free' | 'core' | 'basic' | 'featured';
 export type JobStatus = 'open' | 'quoted' | 'in_progress' | 'completed' | 'cancelled';
 export type QuoteStatus = 'pending' | 'accepted' | 'declined' | 'withdrawn';
 export type TraderProfileTemplate = 'classic' | 'portfolio' | 'modern';
