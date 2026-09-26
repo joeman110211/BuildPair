@@ -56,7 +56,7 @@ export async function GET(request: Request) {
                WHERE tc.trader_id = tp.user_id
                  AND tc.status = 'verified'
                  AND (tc.expires_at IS NULL OR tc.expires_at > now())) AS "verifiedCredentialCount",
-             (SELECT CASE WHEN count(*) > 0 THEN 'Available soon' ELSE NULL END
+             (SELECT CASE WHEN tp.subscription_tier = 'featured' AND count(*) > 0 THEN 'Available soon' ELSE NULL END
                 FROM trader_availability ta
                WHERE ta.trader_id = tp.user_id
                  AND ta.status = 'available'
