@@ -31,7 +31,9 @@ describe('whole-job BuildPair tools', () => {
   });
 
   it('gives Plus and Pro a combined working calendar', () => {
-    const calendar = source('app/api/trader-calendar+api.ts');
+    const route = source('app/api/trader-calendar+api.ts');
+    const calendar = source('lib/trader-calendar.ts');
+    expect(route).toContain('loadTraderCalendar');
     expect(calendar).toContain("tierAtLeast(plan.subscriptionTier, 'basic')");
     expect(calendar).toContain("plan.subscriptionTier === 'featured' ? 183 : 84");
     expect(calendar).toContain('job_site_visits');
