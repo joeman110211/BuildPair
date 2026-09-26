@@ -15,6 +15,7 @@ type PublicQuoteRow = {
   tradeCategory: string | null;
   revisionNumber: number;
   managedJobId: string | null;
+  managedProjectEligible: boolean;
   jobAddress: string | null;
   workIncluded: string;
   notIncluded: string | null;
@@ -52,6 +53,7 @@ async function loadQuote(token: string) {
            q.trade_category AS "tradeCategory",
            q.revision_number AS "revisionNumber",
            q.managed_job_id AS "managedJobId",
+           q.managed_project_eligible AS "managedProjectEligible",
            q.job_address AS "jobAddress",
            q.work_included AS "workIncluded",
            q.not_included AS "notIncluded",
