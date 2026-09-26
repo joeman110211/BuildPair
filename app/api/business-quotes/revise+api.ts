@@ -39,12 +39,12 @@ export async function POST(request: Request) {
         id, trader_id, quote_number, customer_name, customer_email, customer_phone, job_title, trade_category, job_address,
         work_included, not_included, expected_start, duration_text, warranty_text, subtotal, vat_rate, vat_amount, total_amount,
         payment_method, payment_terms, payment_schedule, notes, show_breakdown, valid_until, status, share_token,
-        revision_number, supersedes_quote_id, updated_at
+        revision_number, supersedes_quote_id, managed_project_eligible, updated_at
       )
       SELECT ${id}, trader_id, ${number}, customer_name, customer_email, customer_phone, job_title, trade_category, job_address,
              work_included, not_included, expected_start, duration_text, warranty_text, subtotal, vat_rate, vat_amount, total_amount,
              payment_method, payment_terms, payment_schedule, notes, show_breakdown, valid_until, 'draft', ${token},
-             revision_number + 1, id, now()
+             revision_number + 1, id, true, now()
       FROM business_quotes WHERE id = ${quoteId} AND trader_id = ${trader.id}
     `;
     await getSql()`
