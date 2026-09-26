@@ -26,6 +26,10 @@ const RECENT = [
   ['Project+ trade add-on', 'Project+ can be added to a Starter, Core or Plus trade account for £4.99/month. It remains included with BuildPair Pro.'],
   ['Next action + repeat work', 'The homeowner dashboard surfaces the clearest next job action. Completed work can now feed a private Home Record, and a homeowner can reuse a previous job or hire the same active tradesperson again without overwriting the old project.'],
   ['Repeat-customer shortcuts', 'The trade customer book can start a fresh quote or invoice with the known customer details already filled, reducing duplicate admin while keeping repeat work inside BuildPair.'],
+  ['Saved property profiles', 'Homeowners can save a private property once and reuse its property type, postcode, address and access notes on future jobs. The exact address stays out of the public marketplace listing.'],
+  ['Needs Attention centre', 'Homeowners and tradespeople get one focused action list for decisions, payment stages, quote follow-ups, invoices and upcoming aftercare rather than hunting across separate screens.'],
+  ['Structured project updates', 'Either side can record a delay or project problem with a reason, note and optional revised date. The other party is notified and the update stays on the project timeline.'],
+  ['Property Passport care loop', 'The Home Record now surfaces upcoming warranty and aftercare dates alongside the project and tradesperson that created them, making repeat maintenance easier to act on.'],
 ] as const;
 
 const COMING = [
