@@ -36,17 +36,23 @@ async function tokenWithTimeout(getToken: TokenGetter) {
   }
 }
 
-export async function apiFetch<T>(path: string, options: RequestInit = {}, getToken?: TokenGetter): Promise<T> {
+export async function apiFetch<T>(
+  path: string,
+  options: RequestInit = {},
+  getToken?: TokenGetter,
+  timeoutMs = DEFAULT_API_TIMEOUT_MS,
+): Promise<T> {
   const token = getToken ? await tokenWithTimeout(getToken) : null;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), DEFAULT_API_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const isMultipart = typeof FormData !== 'undefined' && options.body instanceof FormData;
 
   try {
     const response = await fetch(`${baseUrl()}${path}`, {
       ...options,
       signal: options.signal ?? controller.signal,
       headers: {
-        'Content-Type': 'application/json',
+        ...(isMultipart ? {} : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
@@ -59,7 +65,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}, getTo
     return body as T;
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new ApiError(408, 'BuildPair could not reach the account service. Please try again.');
+      throw new ApiError(408, 'BuildPair could not complete the request in time. Please try again.');
     }
     throw error;
   } finally {
