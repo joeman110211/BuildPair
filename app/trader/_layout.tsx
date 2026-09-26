@@ -66,6 +66,7 @@ export default function TraderLayout() {
 
   return <RoleGate role="trader"><View style={{ flex: 1, minHeight: 0 }}><DashboardHeader home="/trader/dashboard" /><Stack screenOptions={{ headerTintColor: '#D35400', headerShadowVisible: false }}>
     <Stack.Screen name="dashboard" options={{ headerShown: false }} />
+    <Stack.Screen name="attention" options={{ headerShown: false }} />
     <Stack.Screen name="job-board" options={{ headerShown: false }} />
     <Stack.Screen name="my-jobs" options={{ headerShown: false }} />
     <Stack.Screen name="profile" options={{ headerShown: false }} />
