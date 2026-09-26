@@ -21,7 +21,6 @@ export async function POST(request: Request) {
     const usage = await projectPlusUsage(userId);
     if (usage.imagesUsed >= entitlement.imageLimit) throw new HttpError(429, 'You have used this month’s Project+ room concept allowance.');
     const input = schema.parse(await request.json());
-    await consumeProjectPlusImage(userId);
     await assertAiDailyBudget();
     const key = process.env.GEMINI_API_KEY;
     if (!key) throw new HttpError(503, 'AI room concepts are temporarily unavailable.');
@@ -39,6 +38,7 @@ export async function POST(request: Request) {
     if (!encoded) throw new Error('Project+ did not return an image');
     const mimeType = imagePart.inlineData?.mimeType || 'image/png';
     const url = await uploadGeneratedImage(Buffer.from(encoded, 'base64'), mimeType);
+    await consumeProjectPlusImage(userId);
     const rows = await getSql()`
       INSERT INTO project_plus_designs(user_id, room_type, title, prompt, image_url)
       VALUES (${userId}, ${input.roomType}, ${input.roomType + ' concept'}, ${input.brief}, ${url})
