@@ -22,6 +22,7 @@ type SentJobQuote = { conversationId: string | null };
 type ItemCategory = 'labour' | 'materials' | 'other';
 type DraftItem = { key: string; description: string; category: ItemCategory; quantity: string; unitPrice: string };
 type DraftStage = { key: string; title: string; amount: string; trigger: string; kind: 'materials' | 'stage' };
+type DraftQuoteOption = { key: string; kind: 'optional' | 'alternative'; title: string; description: string; priceDelta: string };
 type PlanMode = 'single' | 'deposit' | 'staged';
 type DepositUnit = 'amount' | 'percent';
 type SelectOption = { value: string; label: string };
@@ -58,6 +59,7 @@ type BusinessQuote = {
   managedJobId: string | null;
   createdAt: string;
   items: { id?: string; description: string; category: ItemCategory; quantity: number | string; unitPrice: number; lineTotal: number }[];
+  options: { id?: string; kind: 'optional' | 'alternative'; title: string; description: string; priceDelta: number }[];
 };
 
 const START_DATE_OPTIONS: SelectOption[] = buildQuoteStartDateOptions(365);
@@ -115,6 +117,7 @@ export default function NewQuoteScreen() {
   const [depositUnit, setDepositUnit] = useState<DepositUnit>('amount');
   const [depositValue, setDepositValue] = useState('');
   const [stages, setStages] = useState<DraftStage[]>([]);
+  const [quoteOptions, setQuoteOptions] = useState<DraftQuoteOption[]>([]);
   const [requestBuildPay, setRequestBuildPay] = useState(false);
   const buildPayFeeMode: BuildPayFeeMode = 'trader_absorbs';
   const [paymentMethod, setPaymentMethod] = useState<'external' | 'buildpair'>('external');
@@ -175,6 +178,7 @@ export default function NewQuoteScreen() {
           setNotes(draft.notes ?? '');
           setShowBreakdown(draft.showBreakdown);
           setItems(draft.items.map((item, index) => ({ key: item.id ?? `item-${index}`, description: item.description, category: item.category, quantity: String(Number(item.quantity)), unitPrice: (item.unitPrice / 100).toFixed(2) })));
+          setQuoteOptions((draft.options ?? []).map((option, index) => ({ key: option.id ?? `option-${index}`, kind: option.kind, title: option.title, description: option.description ?? '', priceDelta: (option.priceDelta / 100).toFixed(2) })));
           const depositStage = draft.paymentSchedule.find((stage) => stage.kind === 'deposit');
           const progressStages = draft.paymentSchedule.filter((stage) => stage.kind === 'stage' || stage.kind === 'materials');
           setPlanMode(progressStages.length ? 'staged' : depositStage ? 'deposit' : 'single');
@@ -283,6 +287,7 @@ export default function NewQuoteScreen() {
     durationText: external ? durationText || null : (DURATION_OPTIONS.find((option) => option.value === durationDays)?.label ?? null),
     warrantyText: warrantyText || null,
     items: pricedItems.map((item) => ({ description: item.description.trim(), category: item.category, quantity: Number(item.quantity || 0), unitPrice: poundsToPence(item.unitPrice), lineTotal: itemLineTotal(item) })),
+    options: quoteOptions.filter((option) => option.title.trim().length >= 2).map((option) => ({ id: option.key, kind: option.kind, title: option.title.trim(), description: option.description.trim(), priceDelta: poundsToPence(option.priceDelta) })),
     subtotal,
     vatRate: Number(vatRate || 0),
     vatAmount,
@@ -293,7 +298,7 @@ export default function NewQuoteScreen() {
     notes: notes || null,
     showBreakdown: external ? showBreakdown : true,
     validUntil,
-  }), [customerEmail, customerName, customerPhone, durationDays, durationText, effectiveNotIncluded, expectedStart, external, job, jobAddress, jobTitle, notes, paymentMethod, paymentSchedule, paymentTerms, pricedItems, profile?.businessName, proposedStartDate, quoteId, showBreakdown, subtotal, totalAmount, validUntil, vatAmount, vatRate, warrantyText, workIncluded]);
+  }), [customerEmail, customerName, customerPhone, durationDays, durationText, effectiveNotIncluded, expectedStart, external, job, jobAddress, jobTitle, notes, paymentMethod, paymentSchedule, paymentTerms, pricedItems, profile?.businessName, proposedStartDate, quoteId, quoteOptions, showBreakdown, subtotal, totalAmount, validUntil, vatAmount, vatRate, warrantyText, workIncluded]);
 
   function updateItem(index: number, patch: Partial<DraftItem>) {
     setItems((current) => current.map((item, i) => i === index ? { ...item, ...patch } : item));
@@ -320,6 +325,18 @@ export default function NewQuoteScreen() {
 
   function removeStage(index: number) {
     setStages((current) => current.filter((_, i) => i !== index));
+  }
+
+  function addQuoteOption(kind: DraftQuoteOption['kind']) {
+    setQuoteOptions((current) => [...current, { key: `quote-option-${Date.now()}-${current.length}`, kind, title: '', description: '', priceDelta: '' }]);
+  }
+
+  function updateQuoteOption(index: number, patch: Partial<DraftQuoteOption>) {
+    setQuoteOptions((current) => current.map((option, i) => i === index ? { ...option, ...patch } : option));
+  }
+
+  function removeQuoteOption(index: number) {
+    setQuoteOptions((current) => current.filter((_, i) => i !== index));
   }
 
   function choosePlanMode(value: string) {
@@ -426,6 +443,7 @@ export default function NewQuoteScreen() {
           durationText: durationText.trim(),
           warrantyText: warrantyText.trim(),
           items: pricedItems.map((item) => ({ description: item.description.trim(), category: item.category, quantity: Number(item.quantity), unitPrice: poundsToPence(item.unitPrice) })),
+          options: quoteOptions.filter((option) => option.title.trim().length >= 2).map((option) => ({ kind: option.kind, title: option.title.trim(), description: option.description.trim(), priceDelta: poundsToPence(option.priceDelta) })),
           vatRate: Number(vatRate),
           paymentMethod,
           paymentTerms: paymentTerms.trim(),
@@ -643,8 +661,21 @@ export default function NewQuoteScreen() {
       </> : null}
     </AppCard>
 
+    {external ? <AppCard>
+      <Text variant="titleLarge" style={styles.title}>Choices & optional extras</Text>
+      <Text style={styles.muted}>Keep upgrades and alternatives separate from the core quote. Their price change is shown clearly but is not included in the main total until you issue a revised quote that includes it.</Text>
+      {quoteOptions.map((option, index) => <View key={option.key} style={styles.itemCard}>
+        <SegmentedButtons value={option.kind} onValueChange={(value) => updateQuoteOption(index, { kind: value as DraftQuoteOption['kind'] })} buttons={[{ value: 'optional', label: 'Optional extra' }, { value: 'alternative', label: 'Alternative' }]} />
+        <TextInput label="Option title" value={option.title} onChangeText={(value) => updateQuoteOption(index, { title: value })} mode="outlined" placeholder="e.g. Upgrade to porcelain tiles" />
+        <TextInput label="What changes? (optional)" value={option.description} onChangeText={(value) => updateQuoteOption(index, { description: value })} mode="outlined" multiline numberOfLines={2} />
+        <TextInput label="Price change (£)" value={option.priceDelta} onChangeText={(value) => updateQuoteOption(index, { priceDelta: value })} mode="outlined" keyboardType="decimal-pad" placeholder="e.g. 350.00 or -100.00" />
+        <Button mode="text" textColor={colors.danger} onPress={() => removeQuoteOption(index)}>Remove option</Button>
+      </View>)}
+      <View style={styles.actions}><Button mode="outlined" icon="plus" onPress={() => addQuoteOption('optional')}>Add optional extra</Button><Button mode="outlined" icon="swap-horizontal" onPress={() => addQuoteOption('alternative')}>Add alternative</Button></View>
+    </AppCard> : null}
+
     <AppCard>
-      <Button mode="text" icon={showMore ? 'chevron-up' : 'chevron-down'} onPress={() => setShowMore((value) => !value)}>{showMore ? 'Hide extra quote options' : 'More quote options'}</Button>
+      <Button mode="text" icon={showMore ? 'chevron-up' : 'chevron-down'} onPress={() => setShowMore((value) => !value)}>{showMore ? 'Hide extra quote settings' : 'More quote settings'}</Button>
       {showMore ? <View style={styles.moreOptions}>
         <Text variant="labelLarge" style={styles.label}>Quote valid for</Text>
         <SegmentedButtons value={validDays} onValueChange={setValidDays} buttons={[{ value: '7', label: '7 days' }, { value: '14', label: '14 days' }, { value: '30', label: '30 days' }]} />

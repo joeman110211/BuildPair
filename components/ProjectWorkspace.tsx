@@ -1,4 +1,6 @@
 import { useAuth } from '@clerk/expo';
+import type { Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
@@ -9,7 +11,7 @@ import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { formatMoney, poundsToPence } from '@/lib/money';
 
-type EntryType = 'task' | 'note' | 'progress' | 'material' | 'expense' | 'snag' | 'document' | 'handover' | 'warranty';
+type EntryType = 'task' | 'note' | 'progress' | 'material' | 'expense' | 'snag' | 'document' | 'handover' | 'warranty' | 'aftercare';
 type Entry = {
   id: string;
   entryType: EntryType;
@@ -33,10 +35,12 @@ const TRADER_TYPES: { value: EntryType; label: string }[] = [
   { value: 'document', label: 'Document note' },
   { value: 'handover', label: 'Handover' },
   { value: 'warranty', label: 'Warranty' },
+  { value: 'aftercare', label: 'Aftercare' },
 ];
 
 export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader' | 'customer' }) {
   const { getToken } = useAuth();
+  const router = useRouter();
   const tokenRef = useRef(getToken);
   const [items, setItems] = useState<Entry[]>([]);
   const [entryType, setEntryType] = useState<EntryType>(role === 'trader' ? 'task' : 'snag');
@@ -80,6 +84,13 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
     } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
   }
 
+  async function remind(id: string) {
+    try {
+      setBusy(true); setError('');
+      await apiFetch('/api/business-reminders', { method: 'POST', body: JSON.stringify({ kind: 'aftercare', id }) }, () => tokenRef.current());
+    } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
+  }
+
   async function update(id: string, action: 'done' | 'reopen' | 'approve' | 'archive') {
     try {
       setBusy(true); setError('');
@@ -91,7 +102,7 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
   const typeOptions = role === 'trader' ? TRADER_TYPES : [{ value: 'snag' as const, label: 'Snag / issue' }, { value: 'note' as const, label: 'Project note' }];
 
   return <View style={styles.wrap}>
-    <View style={styles.headingRow}><View style={styles.flex}><Text variant="headlineSmall" style={styles.title}>Project workspace</Text><Text style={styles.muted}>Keep the practical middle of the job here: tasks, progress, materials, expenses, snagging, handover and warranty notes. Contract price changes still use Variations.</Text></View><Chip icon="clipboard-check-outline">{items.filter((item) => item.status === 'open').length} open</Chip></View>
+    <View style={styles.headingRow}><View style={styles.flex}><Text variant="headlineSmall" style={styles.title}>Project workspace</Text><Text style={styles.muted}>Keep the practical middle of the job here: tasks, progress, materials, expenses, snagging, handover, warranty and aftercare. Contract price changes still use Variations.</Text></View><View style={styles.actions}><Button compact mode="outlined" icon="file-document-outline" onPress={() => router.push(`/${role}/jobs/${jobId}/handover` as Href)}>Project pack</Button><Chip icon="clipboard-check-outline">{items.filter((item) => item.status === 'open').length} open</Chip></View></View>
     <AppCard>
       <Text variant="titleMedium" style={styles.title}>{role === 'trader' ? 'Add to the job record' : 'Add a note or snagging item'}</Text>
       <View style={styles.typeWrap}>{typeOptions.map((option) => <Chip key={option.value} selected={entryType === option.value} showSelectedCheck onPress={() => setEntryType(option.value)}>{option.label}</Chip>)}</View>
@@ -99,14 +110,14 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
       <TextInput mode="outlined" label="Title" value={title} onChangeText={setTitle} placeholder={entryType === 'snag' ? 'e.g. Silicone needs touching up' : 'e.g. Order shower screen'} />
       <TextInput mode="outlined" label="Details" value={body} onChangeText={setBody} multiline numberOfLines={3} />
       {role === 'trader' && ['material','expense'].includes(entryType) ? <TextInput mode="outlined" label="Amount (£, optional)" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" /> : null}
-      {['task','snag','material','handover'].includes(entryType) ? <TextInput mode="outlined" label="Due date YYYY-MM-DD (optional)" value={dueDate} onChangeText={setDueDate} keyboardType="numbers-and-punctuation" /> : null}
+      {['task','snag','material','handover','warranty','aftercare'].includes(entryType) ? <TextInput mode="outlined" label="Due date YYYY-MM-DD (optional)" value={dueDate} onChangeText={setDueDate} keyboardType="numbers-and-punctuation" /> : null}
       <View style={styles.evidence}><Text variant="labelLarge" style={styles.title}>Photo / document image (optional)</Text><Text style={styles.muted}>Attach a moderated before/during/after photo, receipt image, certificate image or handover evidence to this project entry.</Text><PhotoUploader kind={role === 'trader' ? 'trader' : 'job'} photos={media} onChange={setMedia} max={1} /></View>
       <Button mode="contained" disabled={busy || title.trim().length < 2} loading={busy} onPress={() => void create()}>Add to project</Button>
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
     </AppCard>
 
     {!items.length ? <EmptyState title="Workspace is clear" body="Project tasks, progress updates, snagging and handover information will stay together here." /> : items.map((item) => <AppCard key={item.id} style={item.status === 'open' ? undefined : styles.doneCard}>
-      <View style={styles.headingRow}><View style={styles.flex}><View style={styles.typeWrap}><Chip compact>{item.entryType.replaceAll('_',' ')}</Chip>{item.visibility === 'trader_only' ? <Chip compact icon="lock-outline">Private</Chip> : null}<Chip compact>{item.status}</Chip></View><Text variant="titleMedium" style={styles.title}>{item.title}</Text>{item.body ? <Text style={styles.muted}>{item.body}</Text> : null}{item.mediaUrl ? <Image source={{ uri: item.mediaUrl }} style={styles.evidenceImage} resizeMode="cover" /> : null}{item.amount != null ? <Text style={styles.amount}>{formatMoney(item.amount)}</Text> : null}{item.dueAt ? <Text style={styles.muted}>Due {new Date(item.dueAt).toLocaleDateString('en-GB')}</Text> : null}</View><View style={styles.actions}>{item.status === 'open' ? <Button compact mode="outlined" disabled={busy} onPress={() => void update(item.id, role === 'customer' && item.entryType === 'snag' ? 'approve' : 'done')}>{role === 'customer' && item.entryType === 'snag' ? 'Resolved' : 'Done'}</Button> : <Button compact disabled={busy} onPress={() => void update(item.id, 'reopen')}>Reopen</Button>}</View></View>
+      <View style={styles.headingRow}><View style={styles.flex}><View style={styles.typeWrap}><Chip compact>{item.entryType.replaceAll('_',' ')}</Chip>{item.visibility === 'trader_only' ? <Chip compact icon="lock-outline">Private</Chip> : null}<Chip compact>{item.status}</Chip></View><Text variant="titleMedium" style={styles.title}>{item.title}</Text>{item.body ? <Text style={styles.muted}>{item.body}</Text> : null}{item.mediaUrl ? <Image source={{ uri: item.mediaUrl }} style={styles.evidenceImage} resizeMode="cover" /> : null}{item.amount != null ? <Text style={styles.amount}>{formatMoney(item.amount)}</Text> : null}{item.dueAt ? <Text style={styles.muted}>Due {new Date(item.dueAt).toLocaleDateString('en-GB')}</Text> : null}</View><View style={styles.actions}>{role === 'trader' && item.entryType === 'aftercare' && item.visibility === 'shared' ? <Button compact mode="text" icon="bell-outline" disabled={busy} onPress={() => void remind(item.id)}>Remind customer</Button> : null}{item.status === 'open' ? <Button compact mode="outlined" disabled={busy} onPress={() => void update(item.id, role === 'customer' && item.entryType === 'snag' ? 'approve' : 'done')}>{role === 'customer' && item.entryType === 'snag' ? 'Resolved' : 'Done'}</Button> : <Button compact disabled={busy} onPress={() => void update(item.id, 'reopen')}>Reopen</Button>}</View></View>
     </AppCard>)}
   </View>;
 }

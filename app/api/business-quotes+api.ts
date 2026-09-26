@@ -14,6 +14,13 @@ const itemSchema = z.object({
   unitPrice: z.number().int().nonnegative(),
 });
 
+const optionSchema = z.object({
+  kind: z.enum(['optional', 'alternative']).default('optional'),
+  title: z.string().trim().min(2).max(180),
+  description: z.string().trim().max(1200).default(''),
+  priceDelta: z.number().int().min(-100000000).max(100000000).default(0),
+});
+
 const businessQuoteSchema = z.object({
   quoteId: z.string().uuid().optional(),
   customerName: z.string().trim().min(2).max(120),
@@ -28,6 +35,7 @@ const businessQuoteSchema = z.object({
   durationText: z.string().trim().max(120).optional(),
   warrantyText: z.string().trim().max(160).optional(),
   items: z.array(itemSchema).min(1).max(100),
+  options: z.array(optionSchema).max(20).default([]),
   vatRate: z.number().int().min(0).max(100).default(0),
   paymentMethod: z.enum(['undecided', 'buildpair', 'external']).default('undecided'),
   paymentTerms: z.string().trim().min(5).max(2000),
@@ -76,6 +84,7 @@ type QuoteRow = {
   createdAt: string;
   updatedAt: string;
   items: unknown[];
+  options: unknown[];
 };
 
 function shareUrl(token: string) {
@@ -155,7 +164,19 @@ async function listQuotes(traderId: string) {
              ) ORDER BY i.sort_order)
              FROM business_quote_items i
              WHERE i.quote_id = q.id
-           ), '[]'::json) AS items
+           ), '[]'::json) AS items,
+           COALESCE((
+             SELECT json_agg(json_build_object(
+               'id', o.id,
+               'kind', o.kind,
+               'title', o.title,
+               'description', o.description,
+               'priceDelta', o.price_delta,
+               'sortOrder', o.sort_order
+             ) ORDER BY o.sort_order)
+             FROM business_quote_options o
+             WHERE o.quote_id = q.id
+           ), '[]'::json) AS options
     FROM business_quotes q
     WHERE q.trader_id = ${traderId}
     ORDER BY q.updated_at DESC
@@ -228,6 +249,7 @@ export async function POST(request: Request) {
         WHERE id = ${id} AND trader_id = ${trader.id}
       `;
       await getSql()`DELETE FROM business_quote_items WHERE quote_id = ${id}`;
+      await getSql()`DELETE FROM business_quote_options WHERE quote_id = ${id}`;
     } else {
       id = randomUUID();
       const token = randomUUID().replace(/-/g, '') + randomUUID().replace(/-/g, '');
@@ -255,6 +277,13 @@ export async function POST(request: Request) {
       await getSql()`
         INSERT INTO business_quote_items(quote_id, description, category, quantity, unit_price, line_total, sort_order)
         VALUES (${id}, ${item.description}, ${item.category}, ${item.quantity}, ${item.unitPrice}, ${lineTotal}, ${index + 1})
+      `;
+    }
+    for (let index = 0; index < payload.options.length; index += 1) {
+      const option = payload.options[index]!;
+      await getSql()`
+        INSERT INTO business_quote_options(quote_id, kind, title, description, price_delta, sort_order)
+        VALUES (${id}, ${option.kind}, ${option.title}, ${option.description}, ${option.priceDelta}, ${index + 1})
       `;
     }
 

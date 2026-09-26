@@ -39,6 +39,7 @@ type PublicQuoteRow = {
   declinedAt: string | null;
   createdAt: string;
   items: unknown[];
+  options: { id: string; kind: 'optional' | 'alternative'; title: string; description: string; priceDelta: number; sortOrder: number }[];
 };
 
 async function loadQuote(token: string) {
@@ -88,7 +89,19 @@ async function loadQuote(token: string) {
              ) ORDER BY i.sort_order)
              FROM business_quote_items i
              WHERE i.quote_id = q.id
-           ), '[]'::json) AS items
+           ), '[]'::json) AS items,
+           COALESCE((
+             SELECT json_agg(json_build_object(
+               'id', o.id,
+               'kind', o.kind,
+               'title', o.title,
+               'description', o.description,
+               'priceDelta', o.price_delta,
+               'sortOrder', o.sort_order
+             ) ORDER BY o.sort_order)
+             FROM business_quote_options o
+             WHERE o.quote_id = q.id
+           ), '[]'::json) AS options
     FROM business_quotes q
     JOIN trader_profiles tp ON tp.user_id = q.trader_id
     JOIN users u ON u.id = q.trader_id

@@ -58,7 +58,7 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
   async function startProjectPlus() {
     try {
       setBusy('checkout'); setError('');
-      const result = await apiFetch<{ url: string }>('/api/stripe/project-plus/start', { method: 'POST' }, () => tokenRef.current());
+      const result = await apiFetch<{ url: string }>('/api/stripe/project-plus/start', { method: 'POST', body: JSON.stringify({ audience }) }, () => tokenRef.current());
       if (!result.url) throw new Error('BuildPair did not return a Project+ checkout link.');
       if (Platform.OS === 'web' && typeof window !== 'undefined') window.location.assign(result.url);
       else await Linking.openURL(result.url);
@@ -100,8 +100,9 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
         <Text style={styles.muted}>Includes 10 AI room concepts and up to 50 planning sessions per month. Normal BuildPair homeowner marketplace and project tools remain free.</Text>
         <Button mode="contained" icon="credit-card-outline" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void startProjectPlus()}>Get Project+</Button>
       </> : <>
-        <Text style={styles.muted}>Project+ is included with BuildPair Pro, so a Pro tradesperson can use the same planning tools with customers during site visits and quoting.</Text>
-        <Button mode="contained" onPress={() => void Linking.openURL(Platform.OS === 'web' ? '/trader/subscription' : 'https://www.buildpair.co.uk/trader/subscription')}>Compare trade plans</Button>
+        <Text variant="headlineSmall" style={styles.price}>£4.99/month</Text>
+        <Text style={styles.muted}>Add Project+ to a Starter, Core or Plus trade account for customer planning sessions and room concepts. It remains included at no extra cost with BuildPair Pro.</Text>
+        <View style={styles.actions}><Button mode="contained" icon="credit-card-outline" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void startProjectPlus()}>Add Project+</Button><Button mode="outlined" onPress={() => void Linking.openURL(Platform.OS === 'web' ? '/trader/subscription' : 'https://www.buildpair.co.uk/trader/subscription')}>Compare plans</Button></View>
       </>}
     </AppCard>
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>

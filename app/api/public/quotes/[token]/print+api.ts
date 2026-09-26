@@ -3,6 +3,7 @@ import { getSql } from '@/lib/sql';
 
 type Item = { description: string; quantity: number | string; unitPrice: number; lineTotal: number };
 type Stage = { key: string; title: string; amount: number; trigger: string };
+type Choice = { id: string; kind: 'optional' | 'alternative'; title: string; description: string; priceDelta: number };
 type Row = {
   quoteNumber: string;
   businessName: string;
@@ -31,6 +32,7 @@ type Row = {
   status: string;
   createdAt: string;
   items: Item[];
+  options: Choice[];
 };
 
 function esc(value: unknown) {
@@ -67,7 +69,10 @@ export async function GET(request: Request, { token }: { token: string }) {
              q.notes, q.show_breakdown AS "showBreakdown", q.valid_until AS "validUntil", q.status, q.created_at AS "createdAt",
              COALESCE((SELECT json_agg(json_build_object(
                'description', i.description, 'quantity', i.quantity, 'unitPrice', i.unit_price, 'lineTotal', i.line_total
-             ) ORDER BY i.sort_order) FROM business_quote_items i WHERE i.quote_id = q.id), '[]'::json) AS items
+             ) ORDER BY i.sort_order) FROM business_quote_items i WHERE i.quote_id = q.id), '[]'::json) AS items,
+             COALESCE((SELECT json_agg(json_build_object(
+               'id', o.id, 'kind', o.kind, 'title', o.title, 'description', o.description, 'priceDelta', o.price_delta
+             ) ORDER BY o.sort_order) FROM business_quote_options o WHERE o.quote_id = q.id), '[]'::json) AS options
       FROM business_quotes q
       JOIN trader_profiles tp ON tp.user_id = q.trader_id
       JOIN users u ON u.id = q.trader_id
@@ -81,6 +86,7 @@ export async function GET(request: Request, { token }: { token: string }) {
     const valid = quote.validUntil ? new Date(quote.validUntil).toLocaleDateString('en-GB') : '';
     const items = quote.showBreakdown ? quote.items.map((item) => `<tr><td>${esc(item.description)}${Number(item.quantity) !== 1 ? `<small>${esc(item.quantity)} × ${money(item.unitPrice)}</small>` : ''}</td><td>${money(item.lineTotal)}</td></tr>`).join('') : `<tr><td>Quoted works</td><td>${money(quote.subtotal)}</td></tr>`;
     const stages = (quote.paymentSchedule || []).map((stage) => `<div class="stage"><div><strong>${esc(stage.title)}</strong><strong>${money(stage.amount)}</strong></div>${stage.trigger ? `<p>${esc(stage.trigger)}</p>` : ''}</div>`).join('');
+    const choices = (quote.options || []).map((option) => `<div class="stage"><div><strong>${esc(option.title)}</strong><strong class="orange">${option.priceDelta === 0 ? 'No price change' : `${option.priceDelta > 0 ? '+' : '-'}${money(Math.abs(option.priceDelta))}`}</strong></div><p>${esc(option.kind === 'alternative' ? 'Alternative option' : 'Optional extra')}${option.description ? ` · ${esc(option.description)}` : ''}</p></div>`).join('');
     const autoPrint = new URL(request.url).searchParams.get('download') === '1';
 
     const html = `<!doctype html>
@@ -101,6 +107,7 @@ export async function GET(request: Request, { token }: { token: string }) {
   <section class="section"><h2>Work included</h2><div class="body">${esc(quote.workIncluded)}</div></section>
   ${quote.notIncluded ? `<section class="section"><h2>Not included</h2><div class="body">${esc(quote.notIncluded)}</div></section>` : ''}
   <section class="section"><h2>Price</h2><table>${items}</table><div class="totals"><div><span>Subtotal</span><span>${money(quote.subtotal)}</span></div>${quote.vatAmount ? `<div><span>VAT (${quote.vatRate}%)</span><span>${money(quote.vatAmount)}</span></div>` : ''}<div class="grand"><span>Total</span><span>${money(quote.totalAmount)}</span></div></div></section>
+  ${choices ? `<section class="section"><h2>Choices & optional extras</h2><p class="muted">These are separate from the quoted total above and only become part of the job when separately agreed.</p>${choices}</section>` : ''}
   ${(quote.expectedStart || quote.durationText || quote.warrantyText) ? `<div class="facts">${quote.expectedStart ? `<div class="fact"><span class="eyebrow">EXPECTED START</span><strong>${esc(quote.expectedStart)}</strong></div>` : ''}${quote.durationText ? `<div class="fact"><span class="eyebrow">ESTIMATED TIME</span><strong>${esc(quote.durationText)}</strong></div>` : ''}${quote.warrantyText ? `<div class="fact"><span class="eyebrow">GUARANTEE / WARRANTY</span><strong>${esc(quote.warrantyText)}</strong></div>` : ''}</div>` : ''}
   <section class="section"><h2>Payment</h2><p>${esc(paymentLabel(quote.paymentMethod))}</p>${stages}<div class="body">${esc(quote.paymentTerms)}</div></section>
   ${quote.notes ? `<section class="section"><h2>Notes</h2><div class="body">${esc(quote.notes)}</div></section>` : ''}
