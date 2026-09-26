@@ -48,16 +48,18 @@ export function HandoverPackScreen({ jobId, role }: { jobId: string; role: 'trad
       w.print?.();
       return;
     }
+    const current = pack;
+    if (!current) return;
     const lines = [
-      `${pack.job.title} · ${pack.job.businessName}`,
-      `Agreed price: ${formatMoney(pack.job.quotedTotal)}`,
-      pack.variations.length ? `Accepted variations: ${formatMoney(pack.variations.reduce((s,v)=>s+v.amountDelta,0))}` : '',
+      `${current.job.title} · ${current.job.businessName}`,
+      `Agreed price: ${formatMoney(current.job.quotedTotal)}`,
+      current.variations.length ? `Accepted variations: ${formatMoney(current.variations.reduce((s,v)=>s+v.amountDelta,0))}` : '',
       `Current agreed total: ${formatMoney(adjustedTotal)}`,
       `Payments recorded: ${formatMoney(paid)}`,
       warranty.length ? `Warranty / aftercare items: ${warranty.map(x=>x.title).join(', ')}` : '',
       handover.length ? `Handover records: ${handover.map(x=>x.title).join(', ')}` : '',
     ].filter(Boolean).join('\n');
-    await Share.share({ title: `${pack.job.title} project pack`, message: lines });
+    await Share.share({ title: `${current.job.title} project pack`, message: lines });
   }
 
   return <Screen title="Project handover pack" subtitle="One clean record of the agreed job, changes, payments, evidence, handover and aftercare." backHref={(role === 'trader' ? `/trader/jobs/${jobId}` : `/customer/jobs/${jobId}`) as Href}>
