@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { hasPlanSetupAccess } from '@/lib/subscription';
 
 const createSchema = z.object({
   startsAt: z.string().datetime(),
@@ -13,6 +14,22 @@ const deleteSchema = z.object({ id: z.string().uuid() });
 const MAX_AVAILABILITY_SLOTS = 180;
 const MAX_WINDOW_MS = 31 * 24 * 60 * 60 * 1000;
 const MAX_FUTURE_MS = 400 * 24 * 60 * 60 * 1000;
+
+
+async function requireProAvailability(traderId: string) {
+  const rows = await getSql()`
+    SELECT subscription_tier AS "subscriptionTier",
+           is_subscription_active AS "isSubscriptionActive",
+           trial_ends_at AS "trialEndsAt"
+    FROM trader_profiles
+    WHERE user_id = ${traderId}
+    LIMIT 1
+  ` as unknown as { subscriptionTier: 'free' | 'core' | 'basic' | 'featured'; isSubscriptionActive: boolean; trialEndsAt: string | null }[];
+  const profile = rows[0];
+  if (!profile || profile.subscriptionTier !== 'featured' || !hasPlanSetupAccess(profile, 'featured')) {
+    throw new HttpError(402, 'The availability calendar is included with BuildPair Pro.');
+  }
+}
 
 export async function GET(request: Request) {
   try {
@@ -51,6 +68,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
+    await requireProAvailability(trader.id);
     await assertRateLimit(request, 'availability-create', 40, 3600, trader.id);
     const input = createSchema.parse(await request.json());
     const startsAt = new Date(input.startsAt);
@@ -78,6 +96,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
+    await requireProAvailability(trader.id);
     const { id } = deleteSchema.parse(await request.json());
     const rows = await getSql()`DELETE FROM trader_availability WHERE id = ${id} AND trader_id = ${trader.id} RETURNING id`;
     if (!rows.length) throw new HttpError(404, 'Availability entry not found');
