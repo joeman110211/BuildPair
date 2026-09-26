@@ -141,7 +141,7 @@ export default function TraderDashboard() {
       <Link href="/trader/profile" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Manage profile & service area</Button></Link>
     </AppCard>
 
-    {referral ? <AppCard style={styles.relayCard}>
+    {!MARKETPLACE_OPEN && referral ? <AppCard style={styles.relayCard}>
       <View style={styles.row}>
         <View style={styles.flex}>
           <Text style={styles.membershipEyebrow}>ONE GOOD TRADE · BUILDPAIR RELAY</Text>
@@ -172,7 +172,7 @@ export default function TraderDashboard() {
       <Link href="/trader/invoices/new" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Create invoice</Button></Link>
       <Link href="/trader/customers" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Customer book</Button></Link>
       <Link href="/trader/calendar" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Working calendar</Button></Link>
-      <Link href="/trader/project-plus" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Project+ planner</Button></Link>
+      <Link href="/trader/attention" asChild><Button mode="outlined" icon="bell-alert-outline" contentStyle={styles.actionButton}>Needs attention</Button></Link>
       <Link href="/trader/profile" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Manage profile</Button></Link>
       <Button mode="outlined" contentStyle={styles.actionButton} onPress={() => router.push(`/(public)/traders/${profile.id}` as Href)}>View public profile</Button>
     </View>
