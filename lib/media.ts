@@ -11,6 +11,7 @@ const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 export type UploadBatchResult = {
   urls: string[];
   failed: number;
+  failureMessage?: string;
 };
 
 function isBrowser() {
@@ -95,7 +96,8 @@ export async function pickAndUploadImages(
   }
 
   if (!urls.length && firstError) throw firstError;
-  return { urls, failed };
+  const failureMessage = firstError instanceof Error ? firstError.message : undefined;
+  return { urls, failed, failureMessage };
 }
 
 export async function pickAndUploadImage(kind: MediaKind, getToken: TokenGetter) {
