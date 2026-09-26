@@ -41,6 +41,11 @@ export default function CustomerDashboard() {
   const completedJobs = jobs.filter((job) => job.status === 'completed');
   const priority: Record<Job['status'], number> = { in_progress: 0, quoted: 1, open: 2, completed: 3, cancelled: 4 };
   const orderedJobs = [...jobs].sort((a, b) => priority[a.status] - priority[b.status] || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const attentionJob = jobs.find((job) => job.status === 'quoted')
+    ?? jobs.find((job) => job.status === 'in_progress' && (job.paymentMode ?? 'undecided') === 'undecided')
+    ?? jobs.find((job) => job.status === 'in_progress')
+    ?? jobs.find((job) => job.status === 'open');
+  const attention = attentionJob ? dashboardNextAction(attentionJob) : null;
 
   return <Screen title={`Good to see you, ${firstName}`} subtitle="Your jobs do not disappear after a quote. Quotes, messages, payment stages and project progress all continue here.">
     <View style={styles.heroActions}>
@@ -58,6 +63,18 @@ export default function CustomerDashboard() {
 
     {error ? <EmptyState title="Couldn’t load your dashboard" body={error} action={<Button mode="outlined" onPress={load}>Try again</Button>} /> : null}
 
+    {attentionJob && attention ? <AppCard style={styles.attentionCard}>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Text style={styles.attentionEyebrow}>WHAT NEEDS YOUR ATTENTION</Text>
+          <Text variant="titleLarge" style={styles.title}>{attention.title}</Text>
+          <Text style={styles.muted}>{attention.body}</Text>
+        </View>
+        <Chip icon="arrow-right-circle-outline">Next step</Chip>
+      </View>
+      <Button mode="contained" icon="arrow-right" onPress={() => router.push(attention.href)}>{attention.label}</Button>
+    </AppCard> : null}
+
     <View style={styles.sectionHeading}><View><Text style={styles.sectionEyebrow}>YOUR PROJECTS</Text><Text variant="titleLarge" style={styles.title}>Continue where you left off</Text></View><Link href="/customer/jobs" asChild><Button mode="text">View all jobs</Button></Link></View>
     {!jobs.length ? <EmptyState title="No jobs yet" body="Post what you need once. BuildPair keeps quotes, messages and project history together." action={<Link href="/customer/new-job" asChild><Button mode="contained" contentStyle={styles.actionButton}>Post your first job</Button></Link>} /> : orderedJobs.slice(0, 4).map((job) => <AppCard key={job.id} style={job.status === 'in_progress' ? styles.activeJob : undefined}>
       <View style={styles.row}><View style={styles.flex}><Text variant="titleLarge" style={styles.title}>{job.title}</Text><Text style={styles.muted}>{job.category}{job.locationLabel ? ` · ${job.locationLabel}` : ''}{job.postcode ? ` · ${job.postcode}` : ''}</Text></View><Chip icon={job.status === 'in_progress' ? 'progress-clock' : undefined}>{job.status.replace('_', ' ')}</Chip></View>
@@ -72,6 +89,13 @@ export default function CustomerDashboard() {
   </Screen>;
 }
 
+function dashboardNextAction(job: Job): { title: string; body: string; label: string; href: Href } {
+  if (job.status === 'quoted') return { title: `Review quotes for ${job.title}`, body: 'A tradesperson has priced the job. Compare the active quotes, scope and payment stages while the details are fresh.', label: 'Review quotes', href: `/customer/compare/${job.id}` as Href };
+  if (job.status === 'in_progress' && (job.paymentMode ?? 'undecided') === 'undecided') return { title: `Finish setting up ${job.title}`, body: 'The quote is accepted. Confirm the job setup and payment route so both sides know exactly what happens next.', label: 'Finish job setup', href: `/customer/jobs/${job.id}/start` as Href };
+  if (job.status === 'in_progress') return { title: `Continue ${job.title}`, body: 'Keep the next payment stage, messages, changes and project record together instead of letting the job drift into separate chats.', label: 'Continue project', href: `/customer/jobs/${job.id}` as Href };
+  return { title: `Check ${job.title}`, body: 'Your job is live. Keep questions, site-visit arrangements and quote decisions attached to the job.', label: 'Open job', href: `/customer/jobs/${job.id}` as Href };
+}
+
 const styles = StyleSheet.create({
-  heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'center', alignItems: 'center' }, actionButton: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xs }, stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }, stat: { flexGrow: 1, flexBasis: 180, minWidth: 155, paddingVertical: spacing.lg, alignItems: 'center' }, statOrange: { backgroundColor: colors.primarySoft, borderColor: '#F2D7C3' }, statTeal: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' }, statBlue: { backgroundColor: colors.blueSoft, borderColor: '#D4E1E9' }, statEyebrow: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 1, textAlign: 'center' }, statNumber: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' }, statLabel: { color: colors.charcoalSoft, fontWeight: '700', textAlign: 'center' }, sectionHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.xxs }, sectionEyebrow: { color: colors.primary, fontSize: 9, fontWeight: '900', letterSpacing: 1.1, marginBottom: spacing.xxs }, sectionIntro: { color: colors.muted, lineHeight: 21, marginTop: -spacing.md }, title: { fontWeight: '900', color: colors.charcoal }, row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }, cardActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }, flex: { flex: 1, minWidth: 220, gap: spacing.xxs }, muted: { color: colors.muted, lineHeight: 21 }, meta: { color: colors.primaryDark, fontWeight: '700' }, rating: { color: colors.charcoalSoft, fontWeight: '700', fontSize: 12 }, description: { color: colors.text, lineHeight: 22 }, traderGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }, traderCard: { flexGrow: 1, flexBasis: 250, minWidth: 230 }, activeJob: { borderColor: colors.primary, borderWidth: 2 },
+  heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'center', alignItems: 'center' }, attentionCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary, borderWidth: 2 }, attentionEyebrow: { color: colors.primary, fontSize: 9, fontWeight: '900', letterSpacing: 1.1 }, actionButton: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xs }, stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }, stat: { flexGrow: 1, flexBasis: 180, minWidth: 155, paddingVertical: spacing.lg, alignItems: 'center' }, statOrange: { backgroundColor: colors.primarySoft, borderColor: '#F2D7C3' }, statTeal: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' }, statBlue: { backgroundColor: colors.blueSoft, borderColor: '#D4E1E9' }, statEyebrow: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 1, textAlign: 'center' }, statNumber: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' }, statLabel: { color: colors.charcoalSoft, fontWeight: '700', textAlign: 'center' }, sectionHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.xxs }, sectionEyebrow: { color: colors.primary, fontSize: 9, fontWeight: '900', letterSpacing: 1.1, marginBottom: spacing.xxs }, sectionIntro: { color: colors.muted, lineHeight: 21, marginTop: -spacing.md }, title: { fontWeight: '900', color: colors.charcoal }, row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }, cardActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }, flex: { flex: 1, minWidth: 220, gap: spacing.xxs }, muted: { color: colors.muted, lineHeight: 21 }, meta: { color: colors.primaryDark, fontWeight: '700' }, rating: { color: colors.charcoalSoft, fontWeight: '700', fontSize: 12 }, description: { color: colors.text, lineHeight: 22 }, traderGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }, traderCard: { flexGrow: 1, flexBasis: 250, minWidth: 230 }, activeJob: { borderColor: colors.primary, borderWidth: 2 },
 });

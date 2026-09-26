@@ -207,6 +207,8 @@ export default function JobDetailScreen() {
   const reportTraderHref = reportedTraderId ? ({ pathname: '/(public)/report', params: { subjectUserId: reportedTraderId, subjectLabel: data.trader?.businessName ?? 'Tradesperson on this job', subjectType: 'trader' } } as Href) : null;
   const orderedMilestones = [...data.milestones].sort((a, b) => a.sortOrder - b.sortOrder);
   const nextMilestone = orderedMilestones.find((stage) => stage.status !== 'paid');
+  const canRehire = data.job.status === 'completed' && Boolean(data.acceptedQuote?.traderId && data.trader && data.trader.subscriptionTier !== 'free' && data.trader.isSubscriptionActive);
+  const rehireHref = canRehire && data.acceptedQuote && data.trader ? ({ pathname: '/customer/new-job', params: { traderId: data.acceptedQuote.traderId, traderName: data.trader.businessName, tradeCategory: data.trader.tradeCategory } } as Href) : null;
 
   return <Screen title={data.job.title} subtitle={`${data.job.category} · ${data.job.status.replace('_', ' ')}`}>
     <HomeownerNextStep data={data} jobId={id} reviewAllowed={reviewAllowed} />
@@ -339,6 +341,8 @@ export default function JobDetailScreen() {
 
     {data.variations?.length ? <><Text variant="titleLarge" style={styles.heading}>Approved changes & variations</Text>{data.variations.map((variation) => <AppCard key={variation.id}><View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.heading}>{variation.title}</Text><Text style={styles.muted}>{variation.description}</Text></View><Chip>{variation.status}</Chip></View><View style={styles.row}><Text>Price change: <Text style={styles.money}>{variation.amountDelta >= 0 ? '+' : ''}{formatMoney(variation.amountDelta)}</Text></Text><Text>Time: {variation.durationDeltaDays >= 0 ? '+' : ''}{variation.durationDeltaDays} day{Math.abs(variation.durationDeltaDays) === 1 ? '' : 's'}</Text></View>{variation.status === 'pending' ? <View style={styles.row}><Button mode="outlined" textColor={colors.danger} disabled={busy} onPress={() => void variationAction(variation.id, 'decline')}>Decline</Button><Button mode="contained" disabled={busy} onPress={() => void variationAction(variation.id, 'accept')}>Approve variation</Button></View> : null}</AppCard>)}</> : null}
 
+    {rehireHref && data.trader ? <AppCard style={styles.rehireCard}><Chip icon="account-heart-outline">Worked well together?</Chip><Text variant="titleLarge" style={styles.heading}>Hire this trade again</Text><Text style={styles.muted}>Start a fresh direct request with {data.trader.businessName}. Your completed project stays untouched as its own record, while the new job gets a clean quote, messages and payment history.</Text><Link href={rehireHref} asChild><Button mode="contained" icon="account-arrow-right">Hire {data.trader.businessName} again</Button></Link></AppCard> : null}
+
     {data.existingReview ? <AppCard><Text variant="titleMedium">Review published ✓</Text><Text style={styles.muted}>Your verified review is on the tradesperson's public profile and this job counts in their completed BuildPair jobs.</Text></AppCard> : null}
     {reviewAllowed ? <AppCard style={styles.reviewCard}><Chip icon="star-circle-outline">BuildPay project complete</Chip><Text variant="titleLarge" style={styles.heading}>Leave a verified review</Text><Text style={styles.muted}>The final agreed payment is released and the job is complete. Your review will be published on the tradesperson's public profile and linked to a completed BuildPair job.</Text><View style={styles.stars}>{[1, 2, 3, 4, 5].map((star) => <Button key={star} compact mode={rating === star ? 'contained' : 'outlined'} onPress={() => setRating(star)}>{star}★</Button>)}</View><TextInput label="What was the work and how did it go?" value={comment} onChangeText={setComment} mode="outlined" multiline /><Button mode="contained" loading={busy} disabled={comment.trim().length < 10 || busy} onPress={() => void review()}>Publish verified review</Button></AppCard> : null}
     {error ? <HelperText type="error">{error}</HelperText> : null}
@@ -387,6 +391,7 @@ const styles = StyleSheet.create({
   trustBox: { gap: 6, padding: 12, borderRadius: 12, backgroundColor: colors.accentSoft },
   directBox: { gap: 8, padding: 12, borderRadius: 12, backgroundColor: colors.goldSoft, borderColor: colors.gold, borderWidth: 1 },
   reviewCard: { borderColor: colors.primary, borderWidth: 2 },
+  rehireCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent, borderWidth: 2 },
   issueBox: { backgroundColor: colors.goldSoft, borderColor: colors.gold },
   confirmBox: { backgroundColor: colors.surfaceSoft, borderColor: colors.primary },
   heading: { color: colors.charcoal, fontWeight: '900' },

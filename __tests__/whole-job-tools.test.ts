@@ -87,6 +87,8 @@ describe('whole-job BuildPair tools', () => {
     expect(source('app/trader/calendar.tsx')).toContain('Subscribe in calendar');
     expect(source('app/api/jobs/[id]/handover+api.ts')).toContain('job_workspace_entries');
     expect(source('components/HandoverPackScreen.tsx')).toContain('Project handover pack');
+    expect(source('app/customer/dashboard.tsx')).toContain('WHAT NEEDS YOUR ATTENTION');
+    expect(source('app/customer/jobs/[id].tsx')).toContain('Hire this trade again');
 
     const businessQuotes = source('app/api/business-quotes+api.ts');
     expect(businessQuotes).toContain('business_quote_options');

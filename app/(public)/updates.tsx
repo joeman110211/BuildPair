@@ -24,6 +24,7 @@ const RECENT = [
   ['Quote choices & optional extras', 'Outside-customer quotes can show optional upgrades and alternative choices separately from the agreed core price, so useful choices do not muddy the base scope.'],
   ['Aftercare follow-ups', 'Warranty and aftercare items can stay on the completed project record with due dates and a controlled customer reminder when it is genuinely useful.'],
   ['Project+ trade add-on', 'Project+ can be added to a Starter, Core or Plus trade account for £4.99/month. It remains included with BuildPair Pro.'],
+  ['Next action + repeat hire', 'The homeowner dashboard now surfaces the clearest next job action, and a completed customer can start a fresh direct request with the same active tradesperson without losing the old project record.'],
 ] as const;
 
 const COMING = [
