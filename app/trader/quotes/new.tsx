@@ -26,6 +26,7 @@ type DraftStage = { key: string; title: string; amount: string; trigger: string;
 type PlanMode = 'single' | 'deposit' | 'staged';
 type DepositUnit = 'amount' | 'percent';
 type SelectOption = { value: string; label: string };
+type TraderTemplate = { id: string; kind: 'quote' | 'message'; title: string; content: string };
 
 type BusinessQuote = {
   id: string;
@@ -123,6 +124,7 @@ export default function NewQuoteScreen() {
   const [aiBusy, setAiBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [quoteTemplates, setQuoteTemplates] = useState<TraderTemplate[]>([]);
 
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
 
@@ -135,6 +137,8 @@ export default function NewQuoteScreen() {
         const ownProfile = await apiFetch<TraderProfile>('/api/me/profile', {}, tokenGetter);
         if (!active) return;
         setProfile(ownProfile);
+        const templates = await apiFetch<TraderTemplate[]>('/api/trader-templates', {}, tokenGetter).catch(() => []);
+        if (active) setQuoteTemplates(templates.filter((item) => item.kind === 'quote'));
 
         if (jobId) {
           const jobs = await apiFetch<Job[]>('/api/jobs', {}, tokenGetter);
@@ -525,6 +529,7 @@ export default function NewQuoteScreen() {
 
     <AppCard>
       <Text variant="titleLarge" style={styles.title}>Job details</Text>
+      {quoteTemplates.length ? <View style={styles.templateBlock}><Text variant="labelLarge" style={styles.label}>Pro quote templates</Text><View style={styles.actions}>{quoteTemplates.slice(0, 8).map((template) => <Button key={template.id} compact mode="outlined" icon="file-document-edit-outline" onPress={() => setWorkIncluded(template.content)}>{template.title}</Button>)}</View><Text variant="bodySmall" style={styles.muted}>Using a template only fills the wording. Check it against this customer and job before sending.</Text></View> : null}
       {external ? <TextInput label="Job title" value={jobTitle} onChangeText={setJobTitle} mode="outlined" placeholder="e.g. Re-tile bathroom" /> : null}
       <TextInput label="Work included" value={workIncluded} onChangeText={setWorkIncluded} mode="outlined" multiline numberOfLines={5} placeholder="Describe what you are supplying and doing for this price" />
       <HelperText type={workIncluded.trim().length >= QUOTE_SCOPE_MIN_LENGTH ? 'info' : 'error'}>{workIncluded.trim().length}/{QUOTE_SCOPE_MIN_LENGTH} minimum characters. {external ? 'Keep it plain and specific.' : 'The homeowner description is only a starting point. Edit this into the exact work you are offering.'}</HelperText>
@@ -643,6 +648,7 @@ export default function NewQuoteScreen() {
 }
 
 const styles = StyleSheet.create({
+  templateBlock: { gap: 7 },
   title: { color: colors.charcoal, fontWeight: '900' },
   body: { color: colors.text, lineHeight: 22 },
   muted: { color: colors.muted, lineHeight: 21 },

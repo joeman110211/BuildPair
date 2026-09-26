@@ -31,7 +31,7 @@ type JobRow = {
 };
 type CreatedConversation = { id: string; jobId: string; customerId: string; traderId: string; lastMessageAt: string };
 type TraderPlanRow = {
-  subscriptionTier: 'free' | 'basic' | 'featured';
+  subscriptionTier: 'free' | 'core' | 'basic' | 'featured';
   isSubscriptionActive: boolean;
   tradeCategories: string[];
   tradeCategory: string;
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
       ` as unknown as TraderPlanRow[];
       const profile = planRows[0];
       if (!profile || profile.subscriptionTier === 'free' || !profile.isSubscriptionActive) {
-        throw new HttpError(402, 'BuildPair Plus or Pro is required to offer on marketplace jobs');
+        throw new HttpError(402, 'BuildPair Core, Plus or Pro is required to engage with marketplace jobs');
       }
 
       const categories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];

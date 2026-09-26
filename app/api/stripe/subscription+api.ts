@@ -5,9 +5,10 @@ import { traderProfiles } from '@/db/schema';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getStripe, providerReturnUrl } from '@/lib/stripe';
 
-const inputSchema = z.object({ tier: z.enum(['basic', 'featured']) });
+const inputSchema = z.object({ tier: z.enum(['core', 'basic', 'featured']) });
 
 const plans = {
+  core: { name: 'BuildPair Core', unitAmount: 999, priceEnv: 'STRIPE_CORE_PRICE_ID' },
   basic: { name: 'BuildPair Plus', unitAmount: 1999, priceEnv: 'STRIPE_BASIC_PRICE_ID' },
   featured: { name: 'BuildPair Pro', unitAmount: 2999, priceEnv: 'STRIPE_FEATURED_PRICE_ID' },
 } as const;

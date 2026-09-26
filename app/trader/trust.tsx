@@ -8,7 +8,7 @@ import { PhotoUploader } from '@/components/PhotoUploader';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
-import type { AvailabilitySlot, TraderCredential } from '@/types';
+import type { AvailabilitySlot, TraderCredential, TraderProfile } from '@/types';
 
 const CREDENTIAL_TYPES = ['identity','public_liability','qualification','gas_safe','niceic','napit','trustmark','other'] as const;
 
@@ -19,6 +19,7 @@ export default function TraderTrustScreen() {
   const getTokenRef = useRef(getToken);
   const [credentials, setCredentials] = useState<TraderCredential[]>([]);
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
+  const [profile, setProfile] = useState<TraderProfile>();
   const [type, setType] = useState<CredentialType>('public_liability');
   const [name, setName] = useState('Public liability insurance');
   const [issuer, setIssuer] = useState('');
@@ -33,11 +34,12 @@ export default function TraderTrustScreen() {
   const load = useCallback(async () => {
     try {
       const token = () => getTokenRef.current();
-      const [credentialRows, availabilityRows] = await Promise.all([
+      const [credentialRows, availabilityRows, ownProfile] = await Promise.all([
         apiFetch<TraderCredential[]>('/api/credentials', {}, token),
         apiFetch<AvailabilitySlot[]>('/api/availability', {}, token),
+        apiFetch<TraderProfile>('/api/me/profile', {}, token),
       ]);
-      setCredentials(credentialRows); setAvailability(availabilityRows); setError('');
+      setCredentials(credentialRows); setAvailability(availabilityRows); setProfile(ownProfile); setError('');
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
   }, []);
@@ -80,6 +82,7 @@ export default function TraderTrustScreen() {
 
   if (loading) return <LoadingScreen label="Loading trust settings…" />;
   const verified = credentials.filter((credential) => credential.status === 'verified');
+  const proAvailability = profile?.subscriptionTier === 'featured';
   return <Screen title="Trust & Availability" subtitle="Show homeowners what has actually been checked and when you can realistically take new work.">
     <View style={styles.stats}>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{verified.length}</Text><Text style={styles.muted}>verified credentials</Text></AppCard>
@@ -109,14 +112,13 @@ export default function TraderTrustScreen() {
     </AppCard>)}
 
     <AppCard>
-      <Text variant="titleLarge" style={styles.title}>Availability calendar</Text>
-      <Text style={styles.muted}>Quickly publish days you are open to new jobs. A current availability slot also opts you into nearby emergency-job broadcasts while that slot is active.</Text>
-      <View style={styles.actions}>
+      <View style={styles.row}><View style={styles.flex}><Text variant="titleLarge" style={styles.title}>Availability calendar</Text><Text style={styles.muted}>Pro can publish upcoming availability so homeowners can see when you are realistically open to new work. A current availability slot also opts you into nearby emergency-job broadcasts while that slot is active.</Text></View><Chip icon="star-circle-outline">BuildPair Pro</Chip></View>
+      {proAvailability ? <View style={styles.actions}>
         <Button mode="outlined" disabled={busy} onPress={() => void addAvailability(0)}>Available today</Button>
         <Button mode="outlined" disabled={busy} onPress={() => void addAvailability(1)}>Tomorrow</Button>
         <Button mode="outlined" disabled={busy} onPress={() => void addAvailability(2)}>In 2 days</Button>
         <Button mode="outlined" disabled={busy} onPress={() => void addAvailability(7)}>Next week</Button>
-      </View>
+      </View> : <Text style={styles.muted}>Your existing verified credentials are never hidden by plan. Publishing availability is a Pro business feature rather than a trust signal.</Text>}
     </AppCard>
 
     {!availability.length ? <EmptyState title="No availability published" body="Add a day above when you are ready for new enquiries." /> : availability.map((slot) => <AppCard key={slot.id}>

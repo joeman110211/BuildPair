@@ -40,6 +40,7 @@ type ConversationStatus = {
 };
 type SendResult = Message & { conversationStatus?: ConversationStatus['moderationStatus']; warning?: string | null };
 type AssistantResult = { summary: string; suggestions: string[]; source: 'ai' | 'rules' };
+type TraderTemplate = { id: string; kind: 'quote' | 'message'; title: string; content: string };
 
 export function MessageThread({ conversationId }: { conversationId: string }) {
   const { getToken, userId } = useAuth();
@@ -55,6 +56,7 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
   const [actionBusy, setActionBusy] = useState(false);
   const [assistantLoading, setAssistantLoading] = useState(false);
   const [error, setError] = useState('');
+  const [messageTemplates, setMessageTemplates] = useState<TraderTemplate[]>([]);
 
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
   const load = useCallback(async () => {
@@ -65,10 +67,16 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
       ]);
       setMessages(nextMessages);
       setConversation(nextConversation);
+      if (userId === nextConversation.traderId) {
+        const templates = await apiFetch<TraderTemplate[]>('/api/trader-templates', {}, () => getTokenRef.current()).catch(() => []);
+        setMessageTemplates(templates.filter((item) => item.kind === 'message'));
+      } else {
+        setMessageTemplates([]);
+      }
       setError('');
     } catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
-  }, [conversationId]);
+  }, [conversationId, userId]);
   useEffect(() => { void load(); const refresh = setInterval(() => void load(), 5000); return () => clearInterval(refresh); }, [load]);
 
   const send = async () => {
@@ -197,6 +205,11 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
         </View>;
       })}
     </View>
+
+    {isTrader && messageTemplates.length ? <AppCard style={styles.assistantCard} elevated={false}>
+      <View style={styles.assistantTitleBlock}><Text variant="titleMedium" style={styles.title}>Saved Pro messages</Text><Text style={styles.muted}>Reuse your own customer wording, then edit it for this job before sending.</Text></View>
+      <View style={styles.suggestions}>{messageTemplates.slice(0, 8).map((template) => <Button key={template.id} compact mode="outlined" icon="message-text-outline" onPress={() => setBody(template.content)}>{template.title}</Button>)}</View>
+    </AppCard> : null}
 
     <AppCard style={styles.assistantCard} elevated={false}>
       <View style={styles.assistantHeader}>

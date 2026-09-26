@@ -49,6 +49,8 @@ services:
         sync: false
       - key: STRIPE_SECRET_KEY
         sync: false
+      - key: STRIPE_CORE_PRICE_ID
+        sync: false
       - key: STRIPE_BASIC_PRICE_ID
         sync: false
       - key: STRIPE_FEATURED_PRICE_ID

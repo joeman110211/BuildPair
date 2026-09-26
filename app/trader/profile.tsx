@@ -29,7 +29,7 @@ export default function TraderProfileHub() {
   if (loading) return <LoadingScreen />;
   if (!profile) return <Screen title="Build your tradesperson profile" subtitle="Give homeowners enough useful information to understand your business and the work you offer."><EmptyState title="Your profile is waiting" body="Add your trade categories, service area, business details and examples of your work before publishing." action={<Link href="/trader/onboarding" asChild><Button mode="contained">Build my profile</Button></Link>} /></Screen>;
 
-  const planLabel = profile.subscriptionTier === 'featured' ? 'BuildPair Pro' : profile.subscriptionTier === 'basic' ? 'BuildPair Plus' : 'Starter';
+  const planLabel = profile.subscriptionTier === 'featured' ? 'BuildPair Pro' : profile.subscriptionTier === 'basic' ? 'BuildPair Plus' : profile.subscriptionTier === 'core' ? 'BuildPair Core' : 'Starter';
   const ratingLabel = profile.reviewCount ? `${profile.averageRating.toFixed(1)} ★ · ${profile.reviewCount} review${profile.reviewCount === 1 ? '' : 's'}` : 'New profile · no reviews yet';
 
   return <Screen title="Manage business profile" subtitle="Review your public profile, update business details and services, add or remove work photos, and manage the trust information homeowners see.">

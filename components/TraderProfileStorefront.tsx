@@ -5,12 +5,14 @@ import { Image, Linking, Modal, Pressable, ScrollView, StyleSheet, useWindowDime
 import { Button, Chip, Divider, IconButton, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { GoogleReviewsPublicCard } from '@/components/GoogleReviewsPublicCard';
+import { TraderCard } from '@/components/TraderCard';
 import { ProfileShareButtons } from '@/components/ProfileShareButtons';
 import { ServiceAreaMap } from '@/components/ServiceAreaMap';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { isTraderSavedForLaunch, recordRecentlyViewedTrader, toggleTraderSavedForLaunch } from '@/lib/trader-browse-history';
 import type { AvailabilitySlot, ProjectStory, TraderCredential, TraderProfile } from '@/types';
 
 type ProfileResult = Omit<TraderProfile, 'qualifications'> & {
@@ -63,6 +65,8 @@ export default function TraderProfileStorefront() {
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [showAllServices, setShowAllServices] = useState(false);
+  const [savedForLaunch, setSavedForLaunch] = useState(false);
+  const [similarTraders, setSimilarTraders] = useState<TraderProfile[]>([]);
 
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
 
@@ -70,7 +74,10 @@ export default function TraderProfileStorefront() {
     try {
       setError('');
       const tokenGetter = isSignedIn ? () => getTokenRef.current() : undefined;
-      setProfile(await apiFetch(`/api/traders/${id}`, {}, tokenGetter));
+      const result = await apiFetch<ProfileResult>(`/api/traders/${id}`, {}, tokenGetter);
+      setProfile(result);
+      recordRecentlyViewedTrader(result.id);
+      setSavedForLaunch(isTraderSavedForLaunch(result.id));
     } catch (e) {
       setError(errorMessage(e));
     }
@@ -85,6 +92,17 @@ export default function TraderProfileStorefront() {
     setShowAllCategories(false);
     setShowAllServices(false);
   }, [id]);
+  useEffect(() => {
+    if (!profile?.tradeCategory) return;
+    let active = true;
+    apiFetch<TraderProfile[]>(`/api/traders?trade=${encodeURIComponent(profile.tradeCategory)}`)
+      .then((rows) => {
+        if (active) setSimilarTraders(rows.filter((trader) => trader.id !== profile.id).slice(0, 3));
+      })
+      .catch(() => { if (active) setSimilarTraders([]); });
+    return () => { active = false; };
+  }, [profile?.id, profile?.tradeCategory]);
+
 
   async function toggleSaved() {
     if (!profile || profile.shareOnly || !user?.customerEnabled) return;
@@ -117,6 +135,7 @@ export default function TraderProfileStorefront() {
   const beforeAfter = profile.beforeAfterProjects ?? [];
   const memberSince = profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : 'Recently';
   const paidProfile = !profile.shareOnly && !profile.isPreview && profile.canRequestQuote !== false;
+  const prelaunchProfile = Boolean(profile.prelaunchProfile);
   const isAvailable = profile.availability?.some((slot) => slot.status === 'available') ?? false;
   const nextAvailability = profile.availability?.find((slot) => slot.status === 'available');
   const quoteLink = `/customer/new-job?traderId=${encodeURIComponent(profile.userId)}&traderName=${encodeURIComponent(profile.businessName)}&tradeCategory=${encodeURIComponent(categories[0] ?? '')}`;
@@ -128,8 +147,10 @@ export default function TraderProfileStorefront() {
 
   const quoteButton = profile.isPreview
     ? <Button mode="outlined" icon="flask-outline" disabled>Preview profile only</Button>
-    : !paidProfile
-      ? <Button mode="outlined" icon="lock-outline" disabled>Quote requests unavailable</Button>
+    : prelaunchProfile
+      ? <Button mode="outlined" icon="rocket-launch-outline" disabled>Quote requests open at launch</Button>
+      : !paidProfile
+        ? <Button mode="outlined" icon="lock-outline" disabled>Quote requests unavailable</Button>
       : <Button
           mode="contained"
           icon="file-document-edit-outline"
@@ -155,6 +176,10 @@ export default function TraderProfileStorefront() {
   }
 
   return <Screen>
+    {prelaunchProfile ? <AppCard style={styles.prelaunchNotice}>
+      <View style={styles.noticeRow}><View style={styles.noticeCopy}><Text variant="titleMedium" style={styles.panelTitle}>BuildPair pre-launch profile</Text><Text style={styles.muted}>You can browse this real trade profile now. Quote requests, messaging and direct contact stay locked until BuildPair launches on 15 October 2026.</Text></View>{profile.foundingTrade ? <Chip icon="rocket-launch-outline">Founding BuildPair Trade</Chip> : null}</View>
+    </AppCard> : null}
+
     {profile.shareOnly ? <AppCard style={styles.noticeCard}>
       <Text variant="titleMedium" style={styles.panelTitle}>Shared BuildPair profile</Text>
       <Text style={styles.muted}>This Starter profile was shared directly by {profile.businessName}. Starter profiles are not listed in marketplace search.</Text>
@@ -189,6 +214,7 @@ export default function TraderProfileStorefront() {
             <View style={styles.trustRow}>
               {!profile.isPreview && profile.verifiedCredentialCount ? <Chip compact icon="shield-check">Verified trader</Chip> : null}
               <Chip compact icon="map-marker-radius">{profile.radiusMiles} mile radius</Chip>
+              {profile.foundingTrade ? <Chip compact icon="rocket-launch-outline">Founding BuildPair Trade</Chip> : null}
               {profile.isSubscriptionActive ? <Chip compact icon="check-decagram">Active member</Chip> : null}
             </View>
           </View>
@@ -197,8 +223,9 @@ export default function TraderProfileStorefront() {
         <View style={styles.identityActions}>
           {paidProfile && profile.contact?.email ? <Button mode="contained" icon="message-outline" onPress={() => Linking.openURL(`mailto:${profile.contact?.email}`)}>Message</Button> : null}
           {quoteButton}
-          {paidProfile && user?.customerEnabled ? <Button mode="outlined" icon={profile.savedByViewer ? 'heart' : 'heart-outline'} loading={saving} disabled={saving} onPress={() => void toggleSaved()}>{profile.savedByViewer ? 'Saved' : 'Save'}</Button> : null}
+          {prelaunchProfile ? <Button mode="outlined" icon={savedForLaunch ? 'heart' : 'heart-outline'} onPress={() => setSavedForLaunch(toggleTraderSavedForLaunch(profile.id))}>{savedForLaunch ? 'Saved for launch' : 'Save for launch'}</Button> : paidProfile && user?.customerEnabled ? <Button mode="outlined" icon={profile.savedByViewer ? 'heart' : 'heart-outline'} loading={saving} disabled={saving} onPress={() => void toggleSaved()}>{profile.savedByViewer ? 'Saved' : 'Save'}</Button> : null}
           <View style={styles.responseLine}><View style={[styles.statusDot, isAvailable && styles.statusDotLive]} /><Text style={styles.responseText}>{isAvailable ? 'Currently taking on work' : profile.availabilitySummary || 'Availability on request'}</Text></View>
+          {profile.averageResponseHours && profile.averageResponseHours > 0 ? <Text style={styles.responseText}>BuildPair history: usually replies in about {profile.averageResponseHours < 1 ? '<1' : Math.round(profile.averageResponseHours)} hour{Math.round(profile.averageResponseHours) === 1 ? '' : 's'}</Text> : profile.responseRate && profile.responseRate > 0 ? <Text style={styles.responseText}>BuildPair response rate: {Math.round(profile.responseRate)}%</Text> : <Text style={styles.responseText}>Response history will appear after BuildPair conversations.</Text>}
         </View>
       </View>
 
@@ -374,6 +401,11 @@ export default function TraderProfileStorefront() {
       {quoteButton}
     </View>
 
+    {similarTraders.length ? <SectionCard title="Similar trades on BuildPair">
+      <Text style={styles.muted}>Other real profiles offering similar work. Compare the actual services, evidence, reviews and availability that matter to your job.</Text>
+      <View style={styles.similarGrid}>{similarTraders.map((trader) => <TraderCard key={trader.id} trader={trader} />)}</View>
+    </SectionCard> : null}
+
     <Modal visible={galleryIndex !== null} transparent animationType="fade" onRequestClose={() => setGalleryIndex(null)}>
       <View style={styles.lightboxBackdrop}>
         <View style={styles.lightboxHeader}>
@@ -516,6 +548,10 @@ const styles = StyleSheet.create({
   lightboxImage: { width: '100%', height: '100%', resizeMode: 'contain' },
   lightboxArrow: { margin: 0, flexShrink: 0 },
   lightboxHint: { color: '#D7E0E6', textAlign: 'center', paddingTop: 8 },
+  prelaunchNotice: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  noticeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  noticeCopy: { flex: 1, minWidth: 220, gap: 4 },
+  similarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   noticeCard: { gap: 6 },
   error: { color: colors.danger, fontWeight: '700' },
   flex: { flex: 1, minWidth: 0 },

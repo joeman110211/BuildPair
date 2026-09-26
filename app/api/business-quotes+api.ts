@@ -4,6 +4,7 @@ import { paymentScheduleSchema, validatePaymentSchedule } from '@/lib/payment-pl
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { appUrl } from '@/lib/stripe';
+import { hasActiveLeadAccess, tierAtLeast } from '@/lib/subscription';
 
 const itemSchema = z.object({
   description: z.string().trim().min(1).max(300),
@@ -80,6 +81,22 @@ function quoteNumber() {
   return `BP-${stamp}-${randomUUID().replace(/-/g, '').slice(0, 5).toUpperCase()}`;
 }
 
+
+async function requireBusinessQuotePlan(traderId: string) {
+  const rows = await getSql()`
+    SELECT subscription_tier AS "subscriptionTier",
+           is_subscription_active AS "isSubscriptionActive",
+           trial_ends_at AS "trialEndsAt"
+    FROM trader_profiles
+    WHERE user_id = ${traderId}
+    LIMIT 1
+  ` as unknown as { subscriptionTier: 'free' | 'core' | 'basic' | 'featured'; isSubscriptionActive: boolean; trialEndsAt: string | null }[];
+  const profile = rows[0];
+  if (!profile || !tierAtLeast(profile.subscriptionTier, 'core') || !hasActiveLeadAccess(profile)) {
+    throw new HttpError(402, 'Standalone customer quotes are included with BuildPair Core, Plus and Pro.');
+  }
+}
+
 async function listQuotes(traderId: string) {
   const rows = await getSql()`
     SELECT q.id,
@@ -145,6 +162,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
+    await requireBusinessQuotePlan(trader.id);
     const payload = businessQuoteSchema.parse(await request.json());
     const subtotal = payload.items.reduce((sum, item) => sum + Math.round(item.quantity * item.unitPrice), 0);
     if (subtotal <= 0) throw new HttpError(400, 'Add at least one priced item to the quote.');

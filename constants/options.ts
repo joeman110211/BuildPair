@@ -180,7 +180,7 @@ export const BUDGET_OPTIONS = ['Not sure / discuss', 'Under £500', '£500–£1
 export const RADIUS_OPTIONS = ['5', '10', '15', '25', '50', '75'] as const;
 export const TRADER_BIO_MIN_LENGTH = 50;
 
-// Database values remain free/basic/featured for compatibility. Product names are Starter/Plus/Pro.
+// Database values are free/core/basic/featured. Product names are Starter/Core/Plus/Pro.
 export const SUBSCRIPTION_TIERS = {
   free: {
     name: 'Starter Free',
@@ -188,7 +188,19 @@ export const SUBSCRIPTION_TIERS = {
     price: '£0',
     categoryLimit: 2,
     monthlyMarketplaceQuotes: 0,
+    savedSearchLimit: 0,
+    analyticsLevel: 'none',
     features: ['Full profile setup', 'Browse marketplace jobs', 'External profile sharing'],
+  },
+  core: {
+    name: 'BuildPair Core',
+    shortName: 'Core',
+    price: '£9.99/mo',
+    categoryLimit: 2,
+    monthlyMarketplaceQuotes: 5,
+    savedSearchLimit: 1,
+    analyticsLevel: 'basic',
+    features: ['Searchable marketplace profile', '5 marketplace opportunities per month', 'BuildPair messaging', 'Basic business stats', '1 saved job search'],
   },
   basic: {
     name: 'BuildPair Plus',
@@ -196,7 +208,9 @@ export const SUBSCRIPTION_TIERS = {
     price: '£19.99/mo',
     categoryLimit: 4,
     monthlyMarketplaceQuotes: 15,
-    features: ['Public searchable profile', '15 open-marketplace offers per month', 'Direct quote requests', 'BuildPair messaging', 'AI-assisted replies and safety tools'],
+    savedSearchLimit: 5,
+    analyticsLevel: 'standard',
+    features: ['Everything in Core', '15 open-marketplace offers per month', 'Unlimited direct quote requests', 'Google review connection', 'Full AI reply assistance', '5 saved job searches'],
   },
   featured: {
     name: 'BuildPair Pro',
@@ -204,6 +218,8 @@ export const SUBSCRIPTION_TIERS = {
     price: '£29.99/mo',
     categoryLimit: 6,
     monthlyMarketplaceQuotes: 35,
-    features: ['Everything in Plus', '35 open-marketplace offers per month', 'Modest search boost', 'Advanced analytics', 'Priority new-job alerts'],
+    savedSearchLimit: null,
+    analyticsLevel: 'advanced',
+    features: ['Everything in Plus', '35 open-marketplace offers per month', 'Modest search boost', 'Advanced analytics', 'Priority new-job alerts', 'Unlimited saved job searches'],
   },
 } as const;

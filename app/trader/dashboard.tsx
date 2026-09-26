@@ -118,8 +118,8 @@ export default function TraderDashboard() {
           <Text style={styles.muted}>{!MARKETPLACE_OPEN && profile.subscriptionTier !== 'free'
             ? `${plan.name} is reserved for launch. Your founding offer starts when BuildPair opens, so pre-launch setup does not burn any paid or free membership time.`
             : profile.subscriptionTier === 'free'
-              ? 'Your Starter profile can be shared externally and you can browse marketplace jobs. Upgrade to appear in BuildPair search and submit marketplace offers.'
-              : `${Math.max(0, offerLimit - offersUsed)} of ${offerLimit} marketplace offers remaining this month. An offer is counted when you submit an open-marketplace quote. Direct homeowner requests do not use this allowance.`}</Text>
+              ? 'Your Starter profile can be shared externally and you can browse marketplace jobs. Upgrade to Core, Plus or Pro to appear in BuildPair search after launch and use marketplace opportunities.'
+              : `${Math.max(0, offerLimit - offersUsed)} of ${offerLimit} marketplace offers remaining this month. An open-marketplace opportunity is counted when you first engage with a job. Core direct requests share its five-opportunity allowance; Plus and Pro direct requests do not use their open-market allowance.`}</Text>
         </View>
         <Chip>{!MARKETPLACE_OPEN && profile.subscriptionTier !== 'free' ? 'Reserved for launch' : paidActive ? 'Active' : profile.subscriptionTier === 'free' ? 'Starter' : 'Needs attention'}</Chip>
       </View>

@@ -1,3 +1,4 @@
+import { LAUNCH_DATE_ISO, MARKETPLACE_OPEN } from '@/lib/launch-config';
 import { jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
@@ -11,7 +12,7 @@ type FeaturedTraderRow = {
   locationLabel: string | null;
   photos: string[];
   qualifications: string[];
-  subscriptionTier: 'free' | 'basic' | 'featured';
+  subscriptionTier: 'free' | 'core' | 'basic' | 'featured';
   isSubscriptionActive: boolean;
   createdAt: string;
   averageRating: number;
@@ -35,6 +36,8 @@ function toPublicTrader(trader: FeaturedTraderRow, overrideUserId?: string) {
     ...trader,
     galleryCount: trader.photos.length,
     isOverride: trader.userId === overrideUserId,
+    prelaunchProfile: !MARKETPLACE_OPEN,
+    foundingTrade: new Date(trader.createdAt).getTime() < new Date(LAUNCH_DATE_ISO).getTime(),
   };
 }
 
@@ -120,18 +123,19 @@ export async function GET() {
     ));
 
     const paid = ranked.filter((trader) => trader.subscriptionTier !== 'free' && trader.isSubscriptionActive);
-    const paidEligible = paid.filter((trader) => new Date(trader.createdAt).getTime() < weekStart.getTime());
+    const eligible = MARKETPLACE_OPEN ? paid : ranked;
+    const paidEligible = eligible.filter((trader) => new Date(trader.createdAt).getTime() < weekStart.getTime());
 
     const overrideWeek = process.env.FEATURED_TRADER_OVERRIDE_WEEK?.trim();
     const overrideUserId = process.env.FEATURED_TRADER_OVERRIDE_USER_ID?.trim();
     const secondUserId = process.env.FEATURED_TRADER_SECOND_USER_ID?.trim();
     const override = overrideWeek === weekStartIso && overrideUserId
-      ? paid.find((trader) => trader.userId === overrideUserId)
+      ? eligible.find((trader) => trader.userId === overrideUserId)
       : undefined;
 
     const selected = override
       ?? (paidEligible.length ? paidEligible[weekSerial % paidEligible.length] : undefined)
-      ?? paid[0];
+      ?? eligible[0];
     const nextRefreshAt = new Date(weekStart.getTime() + WEEK_MS).toISOString();
 
     if (!selected) {
@@ -139,12 +143,12 @@ export async function GET() {
     }
 
     const pinnedSecond = secondUserId && secondUserId !== selected.userId
-      ? paid.find((trader) => trader.userId === secondUserId)
+      ? eligible.find((trader) => trader.userId === secondUserId)
       : undefined;
     const ordered = [
       selected,
       ...(pinnedSecond ? [pinnedSecond] : []),
-      ...paid.filter((trader) => trader.userId !== selected.userId && trader.userId !== pinnedSecond?.userId),
+      ...eligible.filter((trader) => trader.userId !== selected.userId && trader.userId !== pinnedSecond?.userId),
     ];
     const traders = ordered.slice(0, 6).map((trader) => toPublicTrader(trader, override?.userId));
 

@@ -21,20 +21,31 @@ const PLAN_COPY = {
       'Choose up to 2 main trade categories',
       'Browse matching BuildPair job posts',
       'Share your profile externally',
-      'Hidden from BuildPair search and recommendations',
-      'No BuildPair quote or messaging access',
-      'Reviews and contact links hidden on the shared Starter page',
+      'No marketplace offers or direct homeowner enquiries',
+    ],
+  },
+  core: {
+    ...SUBSCRIPTION_TIERS.core,
+    detail: [
+      'Everything in Starter',
+      'Public searchable marketplace profile',
+      'Choose up to 2 main trade categories',
+      '5 marketplace opportunities per calendar month',
+      'Direct homeowner requests use the same allowance',
+      'BuildPair messaging',
+      '1 saved job search and basic business stats',
     ],
   },
   basic: {
     ...SUBSCRIPTION_TIERS.basic,
     detail: [
-      'Everything in Starter',
-      'Public searchable profile with reviews',
+      'Everything in Core',
       'Choose up to 4 main trade categories',
       '15 open-marketplace offers per calendar month',
-      'Direct homeowner quote requests do not use your allowance',
-      'BuildPair messaging with AI reply assistance and safety moderation',
+      'Direct homeowner requests do not use your allowance',
+      'Google review connection',
+      'Full AI reply assistance',
+      '5 saved searches and full conversion analytics',
     ],
   },
   featured: {
@@ -43,9 +54,10 @@ const PLAN_COPY = {
       'Everything in Plus',
       'Choose up to 6 main trade categories',
       '35 open-marketplace offers per calendar month',
-      'Moderate priority boost in relevant search results',
-      'Advanced trader analytics',
-      'Priority new-job alert advantages',
+      'Modest relevance-aware search boost',
+      'Advanced business analytics and priority alerts',
+      'Unlimited saved searches',
+      'Availability calendar and reusable quote/message templates',
     ],
   },
 } as const;
@@ -123,18 +135,18 @@ export default function SubscriptionScreen() {
           <Text variant="titleLarge" style={styles.title}>Membership: {PLAN_COPY[activeTier].name}</Text>
           <Text style={styles.muted}>Membership controls search visibility, marketplace offers and paid-plan features. It does not mean your Stripe payout account is ready.</Text>
         </View>
-        <Chip icon={activeTier === 'free' ? 'account-outline' : activeTier === 'basic' ? 'check-decagram-outline' : 'star-circle-outline'}>{isWeb ? PLAN_COPY[activeTier].price : PLAN_COPY[activeTier].shortName}</Chip>
+        <Chip icon={activeTier === 'free' ? 'account-outline' : activeTier === 'core' ? 'briefcase-outline' : activeTier === 'basic' ? 'check-decagram-outline' : 'star-circle-outline'}>{isWeb ? PLAN_COPY[activeTier].price : PLAN_COPY[activeTier].shortName}</Chip>
       </View>
       {limit > 0 ? <View style={styles.usage}>
         <View style={styles.currentRow}><Text variant="labelLarge">Marketplace offers</Text><Text variant="labelLarge">{used} / {limit}</Text></View>
         <ProgressBar progress={usageProgress} color={colors.primary} style={styles.progress} />
-        <Text style={styles.muted}>Allowance resets {resetLabel}. An offer is counted when you submit an open-marketplace quote. Opening a job or preparing a draft does not use the allowance. Direct homeowner requests do not count.</Text>
+        <Text style={styles.muted}>Allowance resets {resetLabel}. An open-marketplace opportunity is counted when you first engage with a job by opening a conversation or sending an offer. Merely viewing a job does not use the allowance. Core direct homeowner requests use the same allowance; Plus and Pro direct requests do not.</Text>
       </View> : <Text style={styles.muted}>Starter tradespeople can browse jobs without consuming anything, but submitting an open-marketplace offer requires an active paid plan.</Text>}
     </AppCard>
 
     {!isWeb ? <AppCard>
       <Text variant="titleLarge" style={styles.title}>Mobile plan access</Text>
-      <Text style={styles.muted}>Plan purchases and plan changes are not offered inside this mobile app. If your BuildPair account already has Plus or Pro, the same entitlement and allowance are available here automatically.</Text>
+      <Text style={styles.muted}>Plan purchases and plan changes are not offered inside this mobile app. If your BuildPair account already has Core, Plus or Pro, the same entitlement and allowance are available here automatically.</Text>
     </AppCard> : null}
 
     <View style={styles.grid}>{(Object.entries(PLAN_COPY) as [SubscriptionTier, (typeof PLAN_COPY)[SubscriptionTier]][]).map(([key, tier]) => {
@@ -160,8 +172,8 @@ export default function SubscriptionScreen() {
     })}</View>
 
     {isWeb ? <AppCard>
-      <Text variant="titleLarge" style={styles.title}>Why Pro costs £10 more</Text>
-      <Text style={styles.muted}>Pro is not simply “20 more clicks”. It raises the monthly open-job allowance to 35, supports 6 main categories, adds advanced analytics and gets a measured discovery and alert advantage. Relevance, reviews, verified credentials and profile quality still matter more than simply paying for Pro.</Text>
+      <Text variant="titleLarge" style={styles.title}>Why each £10 step has to earn its place</Text>
+      <Text style={styles.muted}>Core gives occasional marketplace access instead of a large jump from free. Plus triples Core’s open-market capacity and removes direct-request usage from the allowance. Pro then raises capacity to 35, adds deeper analytics, priority tools, availability and reusable business templates. Paying more never creates a trust badge: reviews, credentials, relevance and profile quality remain separate.</Text>
     </AppCard> : null}
 
     <AppCard style={payoutsReady ? styles.payoutReady : undefined}>

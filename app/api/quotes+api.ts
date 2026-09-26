@@ -20,7 +20,7 @@ function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
   return earthRadiusMiles * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-async function ensureMarketplaceOfferAllowance(traderId: string, jobId: string, profile: { subscriptionTier: 'free' | 'basic' | 'featured' }) {
+async function ensureMarketplaceOfferAllowance(traderId: string, jobId: string, profile: { subscriptionTier: 'free' | 'core' | 'basic' | 'featured' }) {
   const sql = getSql();
   const existing = await sql`SELECT id FROM trader_job_offers WHERE job_id = ${jobId} AND trader_id = ${traderId} LIMIT 1`;
   if (existing.length) return;
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     const job = await db.query.jobs.findFirst({ where: eq(jobs.id, payload.jobId) });
     if (!job || !['open', 'quoted'].includes(job.status)) throw new HttpError(409, 'This job is not open for quotes');
     if (job.targetTraderId && job.targetTraderId !== trader.id) throw new HttpError(403, 'This direct request belongs to another tradesperson');
-    if (!hasActiveLeadAccess(profile)) throw new HttpError(402, 'BuildPair Plus or Pro is required to send quotes and use BuildPair messaging');
+    if (!hasActiveLeadAccess(profile)) throw new HttpError(402, 'An active BuildPair Core, Plus or Pro membership is required to send quotes and use pre-award messaging');
 
     const intakeRows = await getSql()`
       SELECT j.quote_intake_closed_at AS "quoteIntakeClosedAt",

@@ -5,6 +5,7 @@ import { reviews, traderProfiles, users } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { LAUNCH_DATE_ISO, MARKETPLACE_OPEN } from '@/lib/launch-config';
 import { hasActiveLeadAccess } from '@/lib/subscription';
 
 const defaultShowcase = {
@@ -59,6 +60,7 @@ export async function GET(request: Request, { id }: { id: string }) {
     if (!profile) throw new HttpError(404, 'Trader profile not found');
 
     const paidProfile = hasActiveLeadAccess(profile);
+    const prelaunchProfile = !MARKETPLACE_OPEN;
     const tradeCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
 
     let viewerId: string | null = null;
@@ -70,7 +72,7 @@ export async function GET(request: Request, { id }: { id: string }) {
     }
     const viewerIsOwner = viewerId === profile.userId;
 
-    if (!paidProfile && !viewerIsOwner) {
+    if (!paidProfile && !viewerIsOwner && !prelaunchProfile) {
       return Response.json({
         id: profile.id,
         businessName: profile.businessName,
@@ -105,7 +107,7 @@ export async function GET(request: Request, { id }: { id: string }) {
 
     const sqlClient = getSql();
     let verifiedReviews: { id: string; rating: number; comment: string; createdAt: string }[] = [];
-    if (paidProfile) {
+    if (paidProfile || prelaunchProfile || viewerIsOwner) {
       try {
         const projectReviews = await db.select({ id: reviews.id, rating: reviews.rating, comment: reviews.comment, createdAt: reviews.createdAt })
           .from(reviews).where(and(eq(reviews.traderId, profile.userId), eq(reviews.verifiedCompletion, true))).limit(50);
@@ -127,7 +129,7 @@ export async function GET(request: Request, { id }: { id: string }) {
         console.warn('[buildpair-profile] Verified reviews unavailable', { profileId: profile.id });
       }
     }
-    const reviewCount = paidProfile ? verifiedReviews.length : 0;
+    const reviewCount = paidProfile || prelaunchProfile || viewerIsOwner ? verifiedReviews.length : 0;
     const averageRating = reviewCount ? verifiedReviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount : 0;
 
     const [credentials, availability, stories] = await Promise.all([
@@ -154,17 +156,37 @@ export async function GET(request: Request, { id }: { id: string }) {
       `,
     ]);
 
+    const responseRows = await sqlClient`
+      SELECT
+        coalesce(avg(CASE WHEN EXISTS (
+          SELECT 1 FROM messages m
+          WHERE m.conversation_id = c.id AND m.sender_id = ${profile.userId}
+        ) THEN 100.0 ELSE 0.0 END), 0)::float AS "responseRate",
+        coalesce(avg(extract(epoch FROM (first_reply.created_at - c.created_at)) / 3600.0), 0)::float AS "averageResponseHours"
+      FROM conversations c
+      LEFT JOIN LATERAL (
+        SELECT m.created_at
+        FROM messages m
+        WHERE m.conversation_id = c.id AND m.sender_id = ${profile.userId}
+        ORDER BY m.created_at ASC
+        LIMIT 1
+      ) first_reply ON true
+      WHERE c.trader_id = ${profile.userId}
+    ` as unknown as { responseRate: number; averageResponseHours: number }[];
+    const responseRate = Number(responseRows[0]?.responseRate ?? 0);
+    const averageResponseHours = Number(responseRows[0]?.averageResponseHours ?? 0);
+
     let contact: { email: string | null; phone: string | null } | null = null;
     let savedByViewer = false;
-    if (viewerId && paidProfile) {
-      const mayViewContact = viewerIsOwner || Boolean((await sqlClient`
+    if (viewerId && (paidProfile || viewerIsOwner)) {
+      const mayViewContact = viewerIsOwner || (MARKETPLACE_OPEN && Boolean((await sqlClient`
         SELECT 1
         FROM jobs j
         JOIN quotes q ON q.id = j.accepted_quote_id
         WHERE j.customer_id = ${viewerId}
           AND q.trader_id = ${profile.userId}
         LIMIT 1
-      `).length);
+      `).length));
       if (mayViewContact) {
         const [owner] = await db.select({ email: users.email, phone: users.phone }).from(users).where(eq(users.id, profile.userId)).limit(1);
         contact = owner ?? null;
@@ -188,13 +210,15 @@ export async function GET(request: Request, { id }: { id: string }) {
       longitude: publicLongitude,
       tradeCategories,
       serviceSelections,
-      externalLinks: paidProfile || viewerIsOwner ? profile.externalLinks : {},
+      externalLinks: viewerIsOwner || (MARKETPLACE_OPEN && paidProfile) ? profile.externalLinks : {},
       isSubscriptionActive: paidProfile,
       isPreview: false,
       publicLocked: false,
       viewerIsOwner,
-      shareOnly: !paidProfile,
-      canRequestQuote: paidProfile,
+      prelaunchProfile,
+      foundingTrade: profile.createdAt.getTime() < new Date(LAUNCH_DATE_ISO).getTime(),
+      shareOnly: !paidProfile && !prelaunchProfile,
+      canRequestQuote: MARKETPLACE_OPEN && paidProfile,
       ...defaultShowcase,
       ...showcase,
       averageRating,
@@ -202,8 +226,10 @@ export async function GET(request: Request, { id }: { id: string }) {
       reviews: verifiedReviews,
       credentials,
       verifiedCredentialCount: credentials.length,
-      availability,
-      availabilitySummary: availability.length ? 'Upcoming availability listed' : null,
+      availability: profile.subscriptionTier === 'featured' ? availability : [],
+      availabilitySummary: profile.subscriptionTier === 'featured' && availability.length ? 'Upcoming availability listed' : null,
+      responseRate,
+      averageResponseHours,
       stories,
       savedByViewer,
       contact,

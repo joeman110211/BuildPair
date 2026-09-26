@@ -4,6 +4,7 @@ import { assertAiDailyBudget, recordAiRequest } from '@/lib/ai-audit';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { hasActiveLeadAccess, tierAtLeast } from '@/lib/subscription';
 
 const inputSchema = z.object({
   conversationId: z.string().uuid(),
@@ -63,6 +64,20 @@ export async function POST(request: Request) {
     if (!conversation) throw new HttpError(404, 'Conversation not found');
 
     const role: 'customer' | 'trader' = conversation.traderId === userId ? 'trader' : 'customer';
+    if (role === 'trader') {
+      const planRows = await sql`
+        SELECT subscription_tier AS "subscriptionTier",
+               is_subscription_active AS "isSubscriptionActive",
+               trial_ends_at AS "trialEndsAt"
+        FROM trader_profiles
+        WHERE user_id = ${userId}
+        LIMIT 1
+      ` as unknown as { subscriptionTier: 'free' | 'core' | 'basic' | 'featured'; isSubscriptionActive: boolean; trialEndsAt: string | null }[];
+      const plan = planRows[0];
+      if (!plan || !hasActiveLeadAccess(plan) || !tierAtLeast(plan.subscriptionTier, 'basic')) {
+        throw new HttpError(402, 'Full AI reply assistance is included with BuildPair Plus and Pro.');
+      }
+    }
     const base = fallback(role, conversation.jobTitle);
     const messages = await sql`
       SELECT sender_id AS "senderId", body

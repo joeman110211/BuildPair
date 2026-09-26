@@ -1,5 +1,5 @@
 export type UserRole = 'customer' | 'trader';
-export type SubscriptionTier = 'free' | 'basic' | 'featured';
+export type SubscriptionTier = 'free' | 'core' | 'basic' | 'featured';
 export type JobStatus = 'open' | 'quoted' | 'in_progress' | 'completed' | 'cancelled';
 export type QuoteStatus = 'pending' | 'accepted' | 'declined' | 'withdrawn';
 export type TraderProfileTemplate = 'classic' | 'portfolio' | 'modern';
@@ -86,7 +86,11 @@ export interface TraderProfile {
   beforeAfterProjects?: BeforeAfterProject[];
   verifiedCredentialCount?: number;
   availabilitySummary?: string | null;
+  responseRate?: number;
+  averageResponseHours?: number;
   rankingScore?: number;
+  prelaunchProfile?: boolean;
+  foundingTrade?: boolean;
   createdAt?: string;
   subscriptionTier: SubscriptionTier;
   isSubscriptionActive: boolean;

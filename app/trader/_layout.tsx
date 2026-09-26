@@ -16,6 +16,7 @@ const PRELAUNCH_SETUP_ROUTES = [
   '/trader/trust',
   '/trader/google-reviews',
   '/trader/stories',
+  '/trader/templates',
 ];
 
 function TraderPrelaunchHome() {
@@ -23,11 +24,12 @@ function TraderPrelaunchHome() {
     <AppCard style={{ backgroundColor: colors.primarySoft, borderColor: colors.primary }}>
       <Chip icon="hammer-wrench">Profile setup open</Chip>
       <Text variant="headlineSmall" style={{ color: colors.charcoal, fontWeight: '900' }}>Get everything ready before the first jobs go live.</Text>
-      <Text style={{ color: colors.text, lineHeight: 22 }}>You can complete and edit your real business profile, service area, portfolio, credentials, Google reviews and account settings now.</Text>
+      <Text style={{ color: colors.text, lineHeight: 22 }}>You can complete and edit your real public business profile, service area, portfolio, credentials, Google reviews and founding-Pro business tools now. Visitors can browse completed trade profiles before launch, but contact, quotes and marketplace messaging remain locked.</Text>
       <Text style={{ color: colors.text, lineHeight: 22 }}><Text style={{ fontWeight: '900' }}>Jobs, quotes, homeowner messaging, invoices, BuildPay, payouts and paid plan checkout are locked during pre-launch.</Text> They unlock when BuildPair officially launches.</Text>
       <Text style={{ color: colors.text, lineHeight: 22 }}>Eligible founding trades reserve <Text style={{ fontWeight: '900' }}>{FOUNDING_PRO_MONTHS} months of BuildPair Pro free</Text>. The promotional clock starts at launch, not while you are setting up.</Text>
       <Link href="/trader/onboarding" asChild><Button mode="contained" icon="account-edit-outline">Complete my launch-ready profile</Button></Link>
-      <Link href="/trader/profile" asChild><Button mode="outlined">Preview my profile</Button></Link>
+      <Link href="/trader/profile" asChild><Button mode="outlined">View my public profile</Button></Link>
+      <Link href="/trader/templates" asChild><Button mode="outlined" icon="text-box-multiple-outline">Set up Pro templates</Button></Link>
     </AppCard>
   </Screen>;
 }
@@ -69,6 +71,7 @@ export default function TraderLayout() {
     <Stack.Screen name="analytics" options={{ headerShown: false }} />
     <Stack.Screen name="saved-searches" options={{ headerShown: false }} />
     <Stack.Screen name="stories" options={{ headerShown: false }} />
+    <Stack.Screen name="templates" options={{ headerShown: false }} />
     <Stack.Screen name="jobs/[id]" options={{ title: 'Manage job' }} />
     <Stack.Screen name="onboarding" options={{ title: 'Manage your profile' }} />
     <Stack.Screen name="subscription" options={{ title: 'Plans and payouts' }} />

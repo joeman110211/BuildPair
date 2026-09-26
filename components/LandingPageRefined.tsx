@@ -19,7 +19,7 @@ const FAQS = [
   ['How do BuildPay payments work?', 'For a staged job that starts with materials, the opening card payment can fund the quoted materials and the first protected work stage together. After the tradesperson acknowledges the payment, only the materials allocation is released. Protected work stages transfer later only after their recorded completion point is reached and release is approved.'],
   ['How does BuildPair keep jobs local?', 'Tradespeople set a genuine service base and working radius. Open marketplace jobs are matched inside that area, so homeowners are not inviting quotes from businesses claiming to be local from hundreds of miles away.'],
   ['Can we arrange payment privately?', 'Yes. Either side can propose paying outside BuildPair and the other person must explicitly agree before the job switches to direct payment. The quote, messages and project record can stay in BuildPair, but BuildPair cannot process, hold, protect, refund or recover money paid outside its payment flow.'],
-  ['What memberships are available to tradespeople?', 'Starter is £0/month, BuildPair Plus is £19.99/month and BuildPair Pro is £29.99/month. Paid plans add searchable marketplace access, more quoting capacity and additional business tools.'],
+  ['What memberships are available to tradespeople?', 'Starter is £0/month, Core is £9.99/month, Plus is £19.99/month and Pro is £29.99/month. Each step adds materially more marketplace access and business tools.'],
 ] as const;
 
 function SectionHeading({ eyebrow, title, body }: { eyebrow?: string; title: string; body?: string }) {
@@ -165,7 +165,7 @@ export default function LandingPageRefined() {
 
     <View style={styles.pricingBand}>
       <View style={styles.section}>
-        <SectionHeading eyebrow="Tradesperson membership" title="Start free. Upgrade when you need more marketplace reach." body="Starter provides the core profile. Plus adds searchable marketplace access and direct quote requests. Pro adds more quoting capacity, analytics and priority tools." />
+        <SectionHeading eyebrow="Tradesperson membership" title="Start free. Pay more only when BuildPair is doing more for your business." body="Starter builds your presence, Core adds low-cost marketplace access, Plus is the everyday active-trade plan and Pro adds the strongest capacity, analytics and priority tools." />
         <PricingCards compact />
         <Link href="/(public)/pricing" asChild><Button mode="text">Compare membership plans →</Button></Link>
       </View>
