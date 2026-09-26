@@ -1,4 +1,6 @@
 import { useAuth } from '@clerk/expo';
+import type { Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
@@ -12,6 +14,7 @@ type CustomerRow = { contactKey: string; name: string; email: string | null; pho
 
 export default function TraderCustomersScreen() {
   const { getToken } = useAuth();
+  const router = useRouter();
   const [rows, setRows] = useState<CustomerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -28,7 +31,12 @@ export default function TraderCustomersScreen() {
     {!rows.length ? <EmptyState title="No customer history yet" body="Create an outside-customer quote or invoice and that customer will appear here automatically." /> : rows.map((row) => <AppCard key={row.contactKey}>
       <View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.title}>{row.name}</Text><Text style={styles.muted}>{row.email || row.phone || 'Customer details held on their documents'}</Text><Text style={styles.muted}>Last activity {new Date(row.lastActivity).toLocaleDateString('en-GB')}</Text></View><Chip>{row.quoteCount} quote{row.quoteCount === 1 ? '' : 's'}</Chip></View>
       <View style={styles.stats}><Text style={styles.stat}>Accepted quote value: <Text style={styles.strong}>{formatMoney(row.acceptedQuoteValue)}</Text></Text><Text style={styles.stat}>Invoices: <Text style={styles.strong}>{row.invoiceCount}</Text> · {formatMoney(row.invoicedValue)}</Text></View>
-      <View style={styles.actions}>{row.email ? <Button compact icon="email-outline" onPress={() => void Linking.openURL(`mailto:${row.email}`)}>Email</Button> : null}{row.phone ? <Button compact icon="phone-outline" onPress={() => void Linking.openURL(`tel:${row.phone}`)}>Call</Button> : null}</View>
+      <View style={styles.actions}>
+        <Button compact mode="contained" icon="file-document-edit-outline" onPress={() => router.push({ pathname: '/trader/quotes/new', params: { customerName: row.name, customerEmail: row.email ?? '', customerPhone: row.phone ?? '' } } as Href)}>New quote</Button>
+        {row.email ? <Button compact mode="outlined" icon="receipt-text-outline" onPress={() => router.push({ pathname: '/trader/invoices/new', params: { customerName: row.name, customerEmail: row.email } } as Href)}>New invoice</Button> : null}
+        {row.email ? <Button compact icon="email-outline" onPress={() => void Linking.openURL(`mailto:${row.email}`)}>Email</Button> : null}
+        {row.phone ? <Button compact icon="phone-outline" onPress={() => void Linking.openURL(`tel:${row.phone}`)}>Call</Button> : null}
+      </View>
     </AppCard>)}
   </Screen>;
 }
