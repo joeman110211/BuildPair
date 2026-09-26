@@ -8,7 +8,7 @@ import { getSql } from '@/lib/sql';
 import { FOUNDING_PRO_END_ISO, LAUNCH_DATE_ISO, HOMEOWNER_REGISTRATION_OPEN } from '@/lib/launch-config';
 import { assertApprovedMediaUrls } from '@/lib/media-safety';
 import { accountAccess, accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
-import { categoryChangeAllowed, categoryChangeAvailableAt } from '@/lib/subscription';
+import { categoryChangeAllowed, categoryChangeAvailableAt, traderWorkTypeLimit } from '@/lib/subscription';
 import { roleSchema, traderProfileSchema } from '@/lib/validation';
 
 export async function GET(request: Request) {
@@ -135,7 +135,12 @@ export async function PUT(request: Request) {
       throw new HttpError(403, 'Your published service base is locked to keep BuildPair jobs genuinely local. If your home or business base has moved, contact info@buildpair.co.uk to request an update. We may ask for reasonable evidence of the new location.');
     }
 
-    const categoryLimit = TRADE_CATEGORIES.length;
+    const foundingOffer = Date.now() < new Date(LAUNCH_DATE_ISO).getTime()
+      && !existingProfile?.stripeSubscriptionId
+      && !existingProfile?.trialEndsAt;
+    const categoryLimit = existingProfile
+      ? traderWorkTypeLimit(existingProfile)
+      : foundingOffer ? 6 : 2;
     if (tradeCategories.length > categoryLimit) {
       throw new HttpError(403, `A profile can contain up to ${categoryLimit} main trade categories. Remove some selections before publishing.`);
     }
@@ -152,10 +157,6 @@ export async function PUT(request: Request) {
     const categoryChangedAt = existingProfile
       ? categoriesChanged ? new Date() : existingProfile.categoriesChangedAt
       : new Date();
-
-    const foundingOffer = Date.now() < new Date(LAUNCH_DATE_ISO).getTime()
-      && !existingProfile?.stripeSubscriptionId
-      && !existingProfile?.trialEndsAt;
 
     const values = {
       businessName: payload.businessName,
