@@ -4,7 +4,7 @@ import { paymentScheduleSchema, validatePaymentSchedule } from '@/lib/payment-pl
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { appUrl } from '@/lib/stripe';
-import { hasActiveLeadAccess, tierAtLeast } from '@/lib/subscription';
+import { hasPlanSetupAccess, tierAtLeast } from '@/lib/subscription';
 
 const itemSchema = z.object({
   description: z.string().trim().min(1).max(300),
@@ -92,7 +92,7 @@ async function requireBusinessQuotePlan(traderId: string) {
     LIMIT 1
   ` as unknown as { subscriptionTier: 'free' | 'core' | 'basic' | 'featured'; isSubscriptionActive: boolean; trialEndsAt: string | null }[];
   const profile = rows[0];
-  if (!profile || !tierAtLeast(profile.subscriptionTier, 'core') || !hasActiveLeadAccess(profile)) {
+  if (!profile || !tierAtLeast(profile.subscriptionTier, 'core') || !hasPlanSetupAccess(profile, 'core')) {
     throw new HttpError(402, 'Standalone customer quotes are included with BuildPair Core, Plus and Pro.');
   }
 }
