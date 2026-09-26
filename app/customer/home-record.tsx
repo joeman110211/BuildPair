@@ -104,14 +104,35 @@ export default function HomeRecordScreen() {
   if (loading) return <LoadingScreen label="Building your home record…" />;
 
   const completed = projects.filter((project) => project.status === 'completed').length;
+  const upcomingCare = projects.flatMap((project) => project.records
+    .filter((record) => ['warranty', 'aftercare'].includes(record.entryType) && record.dueAt)
+    .map((record) => ({ project, record })))
+    .filter(({ record }) => !['done', 'approved', 'archived'].includes(record.status))
+    .sort((a, b) => new Date(a.record.dueAt!).getTime() - new Date(b.record.dueAt!).getTime());
   const openFollowUps = projects.flatMap((project) => project.records).filter((record) => ['warranty', 'aftercare', 'snag'].includes(record.entryType) && !['done', 'approved'].includes(record.status)).length;
 
-  return <Screen title="Home Record" subtitle="Projects, handover details, warranties and aftercare stay with the property instead of disappearing into old emails and camera rolls.">
+  return <Screen title="Home Record · Property Passport" subtitle="Save the property once, then keep projects, handover details, warranties, maintenance dates and repeat work attached to the home instead of scattered across old emails and camera rolls.">
     <View style={styles.stats}>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{properties.length}</Text><Text style={styles.statLabel}>Propert{properties.length === 1 ? 'y' : 'ies'}</Text></AppCard>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{completed}</Text><Text style={styles.statLabel}>Completed projects</Text></AppCard>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{openFollowUps}</Text><Text style={styles.statLabel}>Follow-ups to keep</Text></AppCard>
     </View>
+
+    <View style={styles.actions}>
+      <Button mode="contained" icon="home-edit-outline" onPress={() => router.push('/customer/properties')}>Manage saved properties</Button>
+      <Button mode="outlined" icon="bell-alert-outline" onPress={() => router.push('/customer/attention')}>Needs attention</Button>
+    </View>
+
+    {upcomingCare.length ? <AppCard style={styles.careCard}>
+      <Text style={styles.eyebrow}>UPCOMING HOME CARE</Text>
+      <Text variant="titleLarge" style={styles.title}>Warranty & maintenance dates worth remembering</Text>
+      <Text style={styles.muted}>BuildPair keeps future aftercare with the project that created it, so a useful reminder does not become another random calendar note.</Text>
+      {upcomingCare.slice(0, 5).map(({ project, record }) => <View key={record.id} style={styles.recordRow}>
+        <Chip compact icon="calendar-clock">{record.entryType === 'warranty' ? 'Warranty' : 'Aftercare'}</Chip>
+        <View style={styles.flex}><Text style={styles.recordTitle}>{record.title}</Text><Text style={styles.muted}>{project.title} · due {new Date(record.dueAt!).toLocaleDateString('en-GB')}</Text></View>
+        <Button compact mode="text" onPress={() => router.push(`/customer/jobs/${project.jobId}` as Href)}>Open</Button>
+      </View>)}
+    </AppCard> : null}
 
     {error ? <EmptyState title="Home Record needs attention" body={error} action={<Button onPress={() => void load()}>Try again</Button>} /> : null}
     {!error && !projects.length ? <EmptyState title="Your Home Record starts with your first awarded job" body="Once a job is awarded, BuildPair keeps the project record, shared handover notes, warranty details and aftercare together." action={<Button mode="contained" onPress={() => router.push('/customer/new-job')}>Post a job</Button>} /> : null}
@@ -183,4 +204,5 @@ const styles = StyleSheet.create({
   followUp: { color: colors.primaryDark, fontWeight: '700' },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   privacyCard: { backgroundColor: colors.surfaceSoft },
+  careCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
 });

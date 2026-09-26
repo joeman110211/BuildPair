@@ -22,6 +22,17 @@ type PropertyType = (typeof PROPERTY_TYPES)[number];
 type Urgency = (typeof URGENCY_OPTIONS)[number];
 type Budget = (typeof BUDGET_OPTIONS)[number];
 
+type SavedProperty = {
+  id: string;
+  nickname: string;
+  propertyType: string;
+  postcode: string;
+  addressLine1: string;
+  addressLine2: string;
+  townCity: string;
+  accessNotes: string;
+};
+
 type JobDraft = {
   step: number;
   category?: string;
@@ -41,7 +52,7 @@ export default function NewJobScreen() {
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   const router = useRouter();
-  const { traderId, traderName, tradeCategory, repeatJobId } = useLocalSearchParams<{ traderId?: string; traderName?: string; tradeCategory?: string; repeatJobId?: string }>();
+  const { traderId, traderName, tradeCategory, repeatJobId, propertyId } = useLocalSearchParams<{ traderId?: string; traderName?: string; tradeCategory?: string; repeatJobId?: string; propertyId?: string }>();
   const directRequest = Boolean(traderId);
   const initialCategory = TRADE_CATEGORIES.find((item) => item === tradeCategory);
   const draftKey = repeatJobId ? `customer-job-repeat-${repeatJobId}-${traderId ?? 'open'}` : traderId ? `customer-job-direct-${traderId}` : 'customer-job-open-v1';
@@ -62,6 +73,7 @@ export default function NewJobScreen() {
   const [draftReady, setDraftReady] = useState(false);
   const [draftStatus, setDraftStatus] = useState('');
   const [error, setError] = useState('');
+  const [selectedProperty, setSelectedProperty] = useState<SavedProperty>();
 
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
 
@@ -89,6 +101,15 @@ export default function NewJobScreen() {
           return;
         }
 
+        if (propertyId) {
+          const property = await apiFetch<SavedProperty>(`/api/customer-properties?id=${encodeURIComponent(propertyId)}`, {}, () => getTokenRef.current());
+          if (!active) return;
+          setSelectedProperty(property);
+          setPropertyType(PROPERTY_TYPES.find((item) => item === property.propertyType));
+          setPostcode(property.postcode);
+          setDraftStatus(`Using saved property: ${property.nickname} ✓`);
+        }
+
         if (repeatJobId) {
           const previous = await apiFetch<{ job: Job }>(`/api/jobs/${encodeURIComponent(repeatJobId)}`, {}, () => getTokenRef.current());
           if (!active) return;
@@ -114,7 +135,7 @@ export default function NewJobScreen() {
     }
     void restore();
     return () => { active = false; };
-  }, [directRequest, draftKey, initialCategory, repeatJobId]);
+  }, [directRequest, draftKey, initialCategory, propertyId, repeatJobId]);
 
   const draft = useMemo<JobDraft>(() => ({
     step,
@@ -169,6 +190,7 @@ export default function NewJobScreen() {
         method: 'POST',
         body: JSON.stringify({
           targetTraderId: traderId ?? null,
+          propertyId: selectedProperty?.id ?? propertyId ?? undefined,
           title: finalTitle,
           category,
           propertyType: finalPropertyType,
@@ -213,6 +235,11 @@ export default function NewJobScreen() {
   return <Screen title={STEP_TITLES[step]} subtitle={traderName ? `Direct quote request for ${traderName}` : 'Add a few clear details so tradespeople can quote accurately.'} footer={footer}>
     <View style={styles.progressBlock}><View style={styles.progressHeader}><Text style={styles.step}>Step {step + 1} of 5</Text><Text style={styles.muted}>{STEP_TITLES[step]}</Text></View><ProgressBar progress={(step + 1) / 5} color={colors.primary} style={styles.progress} /></View>
     {draftStatus ? <HelperText type="info" visible>{draftStatus}</HelperText> : null}
+
+    {selectedProperty ? <AppCard style={styles.directInfo}>
+      <Text variant="titleMedium" style={styles.title}>Saved property selected · {selectedProperty.nickname}</Text>
+      <Text style={styles.muted}>{selectedProperty.propertyType} · {selectedProperty.postcode}. The full address stays private and is copied into the private job record, not the public marketplace listing.</Text>
+    </AppCard> : null}
 
     {repeatJobId ? <AppCard style={styles.directInfo}>
       <Text variant="titleMedium" style={styles.title}>Previous job copied in</Text>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
+import { ProjectUpdateComposer } from '@/components/ProjectUpdateComposer';
 import { ProjectWorkspace } from '@/components/ProjectWorkspace';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -321,6 +322,7 @@ export default function TraderJobDetail() {
       </AppCard>;
     }) : <EmptyState title="No payment stages" body="The accepted quote does not contain payment stages." />}
 
+    {data.acceptedQuote && data.job.status === 'in_progress' ? <ProjectUpdateComposer jobId={id} role="trader" /> : null}
     {data.acceptedQuote ? <ProjectWorkspace jobId={id} role="trader" /> : null}
 
     <Text variant="titleLarge" style={styles.title}>Project timeline</Text>

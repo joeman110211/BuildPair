@@ -115,6 +115,19 @@ describe('whole-job BuildPair tools', () => {
     expect(source('app/trader/invoices/new.tsx')).toContain('presetCustomerEmail');
   });
 
+  it('keeps property, attention and project-update retention tools inside BuildPair', () => {
+    const migration = source('db/migrations/0054_retention_property_attention.sql');
+    expect(migration).toContain('customer_properties');
+    expect(migration).toContain('customer_property_jobs');
+    expect(source('app/api/customer-properties+api.ts')).toContain('Saved property');
+    expect(source('app/customer/properties.tsx')).toContain('Use for a new job');
+    expect(source('app/api/attention+api.ts')).toContain('Needs attention');
+    expect(source('components/AttentionCentre.tsx')).toContain('Nothing needs your action right now');
+    expect(source('app/api/jobs/[id]/project-update+api.ts')).toContain('project_update');
+    expect(source('components/ProjectUpdateComposer.tsx')).toContain('Report a delay / problem');
+    expect(source('app/customer/home-record.tsx')).toContain('UPCOMING HOME CARE');
+  });
+
   it('offers Project+ as a real optional trade add-on while keeping it included with Pro', () => {
     const checkout = source('app/api/stripe/project-plus/start+api.ts');
     expect(checkout).toContain("audience: z.enum(['customer','trader'])");

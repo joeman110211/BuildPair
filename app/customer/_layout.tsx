@@ -5,7 +5,8 @@ import { AppCard } from '@/components/AppCard';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { NativeBottomNav } from '@/components/NativeBottomNav';
 import { RoleGate } from '@/components/RoleGate';
-import { Screen } from '@/components/Screen';
+import { LoadingScreen, Screen } from '@/components/Screen';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { colors } from '@/constants/theme';
 import { LAUNCH_DATE_LABEL, MARKETPLACE_OPEN, waitlistHref } from '@/lib/launch';
 
@@ -22,7 +23,9 @@ function HomeownerPrelaunchLocked() {
 }
 
 export default function CustomerLayout() {
-  if (!MARKETPLACE_OPEN) return <RoleGate role="customer"><HomeownerPrelaunchLocked /></RoleGate>;
+  const { user, loading } = useCurrentUser();
+  if (!MARKETPLACE_OPEN && loading) return <LoadingScreen label="Checking internal preview access…" />;
+  if (!MARKETPLACE_OPEN && !user?.isAdmin) return <RoleGate role="customer"><HomeownerPrelaunchLocked /></RoleGate>;
   if (Platform.OS === 'web') return <RoleGate role="customer"><Slot /></RoleGate>;
 
   return <RoleGate role="customer"><View style={{ flex: 1, minHeight: 0 }}><DashboardHeader home="/customer/dashboard" /><Stack screenOptions={{ headerTintColor: '#D35400', headerShadowVisible: false }}>
@@ -31,6 +34,8 @@ export default function CustomerLayout() {
     <Stack.Screen name="profile" options={{ headerShown: false }} />
     <Stack.Screen name="saved-trades" options={{ headerShown: false }} />
     <Stack.Screen name="home-record" options={{ headerShown: false }} />
+    <Stack.Screen name="properties" options={{ headerShown: false }} />
+    <Stack.Screen name="attention" options={{ headerShown: false }} />
     <Stack.Screen name="project-plus" options={{ headerShown: false }} />
     <Stack.Screen name="claim-quote" options={{ title: 'Add accepted quote' }} />
     <Stack.Screen name="notifications" options={{ headerShown: false }} />
