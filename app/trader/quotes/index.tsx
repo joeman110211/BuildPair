@@ -55,6 +55,7 @@ export default function TraderQuotesScreen() {
   const [businessQuotes, setBusinessQuotes] = useState<BusinessQuote[]>([]);
   const [jobQuotes, setJobQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reminding, setReminding] = useState<string>();
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
@@ -86,6 +87,14 @@ export default function TraderQuotesScreen() {
     } catch (e) {
       setError(errorMessage(e));
     }
+  }
+
+  async function remindQuote(quote: BusinessQuote) {
+    try {
+      setReminding(quote.id); setError('');
+      await apiFetch('/api/business-reminders', { method: 'POST', body: JSON.stringify({ kind: 'quote', id: quote.id }) }, getToken);
+    } catch (e) { setError(errorMessage(e)); }
+    finally { setReminding(undefined); }
   }
 
   async function shareQuote(quote: BusinessQuote) {
@@ -128,6 +137,7 @@ export default function TraderQuotesScreen() {
           <Button mode="outlined" icon="open-in-new" onPress={() => void Linking.openURL(quote.shareUrl)}>Open customer view</Button>
           <Button mode="outlined" icon="file-pdf-box" onPress={() => void Linking.openURL(printUrl(quote))}>PDF / print</Button>
           {quote.customerEmail ? <Button mode="text" icon="email-outline" onPress={() => void Linking.openURL(`mailto:${encodeURIComponent(quote.customerEmail!)}?subject=${encodeURIComponent(`Quote ${quote.quoteNumber}`)}&body=${encodeURIComponent(`Hi ${quote.customerName},\n\nHere is your quote for ${quote.jobTitle}:\n${quote.shareUrl}`)}`)}>Email</Button> : null}
+          {quote.customerEmail && ['sent','viewed'].includes(quote.status) ? <Button mode="outlined" icon="bell-outline" loading={reminding === quote.id} disabled={Boolean(reminding)} onPress={() => void remindQuote(quote)}>Friendly reminder</Button> : null}
           {quote.status !== 'accepted' ? <Button mode="outlined" icon="file-replace-outline" onPress={() => void reviseQuote(quote)}>Create revision</Button> : null}
           {quote.managedJobId ? <Button mode="outlined" icon="briefcase-outline" onPress={() => router.push(`/trader/jobs/${quote.managedJobId}` as Href)}>Open managed project</Button> : null}
           {quote.customerPhone ? <Button mode="text" icon="message-text-outline" onPress={() => void Linking.openURL(`sms:${quote.customerPhone}?body=${encodeURIComponent(`Your quote for ${quote.jobTitle}: ${quote.shareUrl}`)}`)}>SMS</Button> : null}
