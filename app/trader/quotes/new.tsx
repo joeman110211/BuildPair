@@ -21,6 +21,7 @@ type AiQuote = {
 type SentJobQuote = { conversationId: string | null };
 type ItemCategory = 'labour' | 'materials' | 'other';
 type DraftItem = { key: string; description: string; category: ItemCategory; quantity: string; unitPrice: string };
+type DraftOption = { key: string; kind: 'optional' | 'alternative'; groupKey: string; label: string; description: string; priceAdjustment: string };
 type DraftStage = { key: string; title: string; amount: string; trigger: string; kind: 'materials' | 'stage' };
 type PlanMode = 'single' | 'deposit' | 'staged';
 type DepositUnit = 'amount' | 'percent';
@@ -58,6 +59,7 @@ type BusinessQuote = {
   managedJobId: string | null;
   createdAt: string;
   items: { id?: string; description: string; category: ItemCategory; quantity: number | string; unitPrice: number; lineTotal: number }[];
+  options: { id?: string; kind: 'optional' | 'alternative'; groupKey?: string | null; label: string; description?: string | null; priceAdjustment: number; selected?: boolean }[];
 };
 
 const START_DATE_OPTIONS: SelectOption[] = buildQuoteStartDateOptions(365);
@@ -105,6 +107,7 @@ export default function NewQuoteScreen() {
     { key: 'labour-1', description: 'Labour', category: 'labour', quantity: '1', unitPrice: '' },
     { key: 'materials-1', description: 'Materials', category: 'materials', quantity: '1', unitPrice: '' },
   ]);
+  const [options, setOptions] = useState<DraftOption[]>([]);
   const [vatRate, setVatRate] = useState('0');
   const [showBreakdown, setShowBreakdown] = useState(true);
   const [expectedStart, setExpectedStart] = useState('');
@@ -175,6 +178,14 @@ export default function NewQuoteScreen() {
           setNotes(draft.notes ?? '');
           setShowBreakdown(draft.showBreakdown);
           setItems(draft.items.map((item, index) => ({ key: item.id ?? `item-${index}`, description: item.description, category: item.category, quantity: String(Number(item.quantity)), unitPrice: (item.unitPrice / 100).toFixed(2) })));
+          setOptions((draft.options ?? []).map((option, index) => ({
+            key: option.id ?? `option-${index}`,
+            kind: option.kind,
+            groupKey: option.groupKey ?? '',
+            label: option.label,
+            description: option.description ?? '',
+            priceAdjustment: (option.priceAdjustment / 100).toFixed(2),
+          })));
           const depositStage = draft.paymentSchedule.find((stage) => stage.kind === 'deposit');
           const progressStages = draft.paymentSchedule.filter((stage) => stage.kind === 'stage' || stage.kind === 'materials');
           setPlanMode(progressStages.length ? 'staged' : depositStage ? 'deposit' : 'single');
@@ -308,6 +319,25 @@ export default function NewQuoteScreen() {
     setItems((current) => current.filter((_, i) => i !== index));
   }
 
+  function addOption(kind: DraftOption['kind']) {
+    setOptions((current) => [...current, {
+      key: `option-${Date.now()}-${current.length}`,
+      kind,
+      groupKey: kind === 'alternative' ? 'Alternative' : '',
+      label: '',
+      description: '',
+      priceAdjustment: '',
+    }]);
+  }
+
+  function updateOption(index: number, patch: Partial<DraftOption>) {
+    setOptions((current) => current.map((option, i) => i === index ? { ...option, ...patch } : option));
+  }
+
+  function removeOption(index: number) {
+    setOptions((current) => current.filter((_, i) => i !== index));
+  }
+
   function addStage(kind: DraftStage['kind'], title: string, trigger: string) {
     setStages((current) => [...current, { key: `stage-${Date.now()}-${current.length}`, title, amount: '', trigger, kind }]);
     setPlanMode('staged');
@@ -372,6 +402,8 @@ export default function NewQuoteScreen() {
     if ((jobTitle || job?.title || '').trim().length < 2) return 'Add a job title.';
     if (workIncluded.trim().length < QUOTE_SCOPE_MIN_LENGTH) return `Explain the work included in at least ${QUOTE_SCOPE_MIN_LENGTH} characters so the customer knows exactly what the price covers.`;
     if (!pricedItems.length || totalAmount <= 0) return 'Add at least one priced item.';
+    if (external && options.some((option) => option.label.trim().length < 2)) return 'Give every customer option a clear name.';
+    if (external && options.some((option) => poundsToPence(option.priceAdjustment) < 0)) return 'Option price adjustments cannot be negative.';
     if (!external && serviceFundingBalance <= 0) return 'A BuildPair trade quote needs a labour/service amount as well as any materials. Materials-only sales are not supported as BuildPay jobs.';
     const depositLimit = external ? totalAmount : serviceFundingBalance;
     if (planMode !== 'single' && (depositAmount < 0 || depositAmount >= depositLimit)) return `The deposit must be less than the ${external ? 'full quote total' : materialsCost > 0 ? 'work balance after materials' : 'full work balance'}.`;
@@ -426,6 +458,13 @@ export default function NewQuoteScreen() {
           durationText: durationText.trim(),
           warrantyText: warrantyText.trim(),
           items: pricedItems.map((item) => ({ description: item.description.trim(), category: item.category, quantity: Number(item.quantity), unitPrice: poundsToPence(item.unitPrice) })),
+          options: options.map((option) => ({
+            kind: option.kind,
+            groupKey: option.groupKey.trim() || undefined,
+            label: option.label.trim(),
+            description: option.description.trim() || undefined,
+            priceAdjustment: poundsToPence(option.priceAdjustment),
+          })),
           vatRate: Number(vatRate),
           paymentMethod,
           paymentTerms: paymentTerms.trim(),
@@ -502,6 +541,15 @@ export default function NewQuoteScreen() {
   if (preview) {
     return <Screen title="Preview quote" subtitle="This is what the customer will read. Check it before you send it." backHref="/trader/quotes" footer={footer}>
       <QuoteDocument quote={previewQuote} />
+      {external && options.length ? <AppCard>
+        <Text variant="titleLarge" style={styles.title}>Customer choices</Text>
+        <Text style={styles.muted}>These choices sit outside the core quoted price until the customer selects them.</Text>
+        {options.map((option) => <View key={option.key} style={styles.itemCard}>
+          <View style={styles.row}><Text style={styles.strong}>{option.label || 'Unnamed option'}</Text><Chip compact>{option.kind === 'alternative' ? 'Alternative' : 'Optional extra'}</Chip></View>
+          {option.description ? <Text style={styles.muted}>{option.description}</Text> : null}
+          <Text style={styles.strong}>+ {formatMoney(poundsToPence(option.priceAdjustment))}</Text>
+        </View>)}
+      </AppCard> : null}
       {!external ? <AppCard style={styles.protectionCard}>
         <Chip icon={buildPayRequested ? 'shield-check-outline' : 'shield-lock-outline'}>{buildPayRequested ? 'BuildPay included in this quote' : 'BuildPay not included'}</Chip>
         <Text variant="titleMedium" style={styles.title}>Payment and fee summary</Text>
@@ -574,6 +622,20 @@ export default function NewQuoteScreen() {
       </View>
       {!external ? <AppCard elevated={false} style={styles.feeCard}><Text variant="titleSmall" style={styles.title}>How BuildPay cost responsibility works</Text><Text style={styles.muted}>BuildPair's platform fee applies to labour/service only, never the quoted materials amount or VAT. If you choose to add BuildPay protection to your quote, you carry the BuildPay cost from controlled service payouts. If the homeowner requests BuildPay later, the homeowner pays the separately disclosed BuildPay service fee.</Text></AppCard> : null}
     </AppCard>
+
+    {external ? <AppCard>
+      <Text variant="titleLarge" style={styles.title}>Customer choices & optional extras</Text>
+      <Text style={styles.muted}>Keep the core quote clean, then offer upgrades or clear alternatives separately. The customer chooses before accepting, so there is one agreed record rather than a trail of texts and crossed wires.</Text>
+      {options.map((option, index) => <View key={option.key} style={styles.itemCard}>
+        <SegmentedButtons value={option.kind} onValueChange={(value) => updateOption(index, { kind: value as DraftOption['kind'], groupKey: value === 'alternative' ? (option.groupKey || 'Alternative') : '' })} buttons={[{ value: 'optional', label: 'Optional extra' }, { value: 'alternative', label: 'Alternative' }]} />
+        {option.kind === 'alternative' ? <TextInput label="Alternative group" value={option.groupKey} onChangeText={(value) => updateOption(index, { groupKey: value })} mode="outlined" placeholder="e.g. Finish choice" /> : null}
+        <TextInput label="Option name" value={option.label} onChangeText={(value) => updateOption(index, { label: value })} mode="outlined" placeholder="e.g. Upgrade to brass fittings" />
+        <TextInput label="What changes?" value={option.description} onChangeText={(value) => updateOption(index, { description: value })} mode="outlined" multiline />
+        <TextInput label="Extra price (£)" value={option.priceAdjustment} onChangeText={(value) => updateOption(index, { priceAdjustment: value })} keyboardType="decimal-pad" mode="outlined" />
+        <Button mode="text" textColor={colors.danger} onPress={() => removeOption(index)}>Remove option</Button>
+      </View>)}
+      <View style={styles.actions}><Button mode="outlined" icon="plus" onPress={() => addOption('optional')}>Optional extra</Button><Button mode="outlined" icon="swap-horizontal" onPress={() => addOption('alternative')}>Alternative</Button></View>
+    </AppCard> : null}
 
     <AppCard>
       <Text variant="titleLarge" style={styles.title}>When will you do the job?</Text>
