@@ -8,12 +8,13 @@ import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { TRADE_CATEGORIES } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
-import type { SavedJobSearch } from '@/types';
+import type { SavedJobSearch, TraderProfile } from '@/types';
 
 export default function SavedSearchesScreen() {
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   const [items, setItems] = useState<SavedJobSearch[]>([]);
+  const [profile, setProfile] = useState<TraderProfile>();
   const [name, setName] = useState('My local jobs');
   const [category, setCategory] = useState<(typeof TRADE_CATEGORIES)[number] | undefined>();
   const [keywords, setKeywords] = useState('');
@@ -26,7 +27,14 @@ export default function SavedSearchesScreen() {
 
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
   const load = useCallback(async () => {
-    try { setItems(await apiFetch<SavedJobSearch[]>('/api/saved-searches', {}, () => getTokenRef.current())); setError(''); }
+    try {
+      const token = () => getTokenRef.current();
+      const [searches, ownProfile] = await Promise.all([
+        apiFetch<SavedJobSearch[]>('/api/saved-searches', {}, token),
+        apiFetch<TraderProfile>('/api/me/profile', {}, token),
+      ]);
+      setItems(searches); setProfile(ownProfile); setError('');
+    }
     catch (e) { setError(errorMessage(e)); }
     finally { setLoading(false); }
   }, []);
@@ -56,16 +64,18 @@ export default function SavedSearchesScreen() {
   }
 
   if (loading) return <LoadingScreen label="Loading saved searches…" />;
+  const limit = profile?.subscriptionTier === 'featured' ? null : profile?.subscriptionTier === 'basic' ? 5 : profile?.subscriptionTier === 'core' ? 1 : 0;
+  const canCreate = limit === null || items.length < limit;
   return <Screen title="Saved Job Searches" subtitle="Save the work you want and BuildPair can surface matching opportunities instead of making you repeatedly hunt through the board.">
     <AppCard>
-      <Text variant="titleLarge" style={styles.title}>Create an alert</Text>
+      <View style={styles.row}><View style={styles.flex}><Text variant="titleLarge" style={styles.title}>Create an alert</Text><Text style={styles.muted}>{limit === null ? 'Pro includes unlimited saved job searches.' : limit ? `Your plan includes ${limit} saved job search${limit === 1 ? '' : 'es'}.` : 'Saved job searches start with BuildPair Core.'}</Text></View><Chip>{profile?.subscriptionTier === 'featured' ? 'Pro' : profile?.subscriptionTier === 'basic' ? 'Plus' : profile?.subscriptionTier === 'core' ? 'Core' : 'Starter'}</Chip></View>
       <TextInput mode="outlined" label="Search name" value={name} onChangeText={setName} />
       <FormSelect label="Trade category" value={category} options={TRADE_CATEGORIES} onChange={setCategory} />
       <TextInput mode="outlined" label="Keyword (optional)" value={keywords} onChangeText={setKeywords} placeholder="e.g. bathroom" />
       <TextInput mode="outlined" label="Postcode / area (optional)" value={postcode} onChangeText={setPostcode} autoCapitalize="characters" />
       <TextInput mode="outlined" label="Radius miles" value={radiusMiles} onChangeText={setRadiusMiles} keyboardType="number-pad" />
       <View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.title}>Emergency jobs only</Text><Text style={styles.muted}>Use this for a dedicated urgent-work alert.</Text></View><Switch value={emergencyOnly} onValueChange={setEmergencyOnly} /></View>
-      <Button mode="contained" icon="bell-plus-outline" loading={busy} disabled={busy || name.trim().length < 2 || !category} onPress={() => void create()}>Save job search</Button>
+      <Button mode="contained" icon="bell-plus-outline" loading={busy} disabled={busy || !canCreate || name.trim().length < 2 || !category} onPress={() => void create()}>Save job search</Button>
     </AppCard>
     {error ? <HelperText type="error" visible>{error}</HelperText> : null}
     {!items.length ? <EmptyState title="No saved searches" body="Create one above and matching jobs will start appearing as alerts." /> : items.map((item) => <AppCard key={item.id}>
