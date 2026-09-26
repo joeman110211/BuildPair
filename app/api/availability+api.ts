@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       SELECT count(*)::int AS count
       FROM trader_availability
       WHERE trader_id = ${trader.id} AND ends_at >= now()
-    ` as unknown as Array<{ count: number }>;
+    ` as unknown as { count: number }[];
     if ((countRows[0]?.count ?? 0) >= MAX_AVAILABILITY_SLOTS) throw new HttpError(409, `You can keep up to ${MAX_AVAILABILITY_SLOTS} upcoming availability slots`);
     const rows = await getSql()`
       INSERT INTO trader_availability(trader_id, starts_at, ends_at, status, note)
