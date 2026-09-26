@@ -22,7 +22,7 @@ export default function TraderCalendarScreen() {
     try { setData(await apiFetch<CalendarResult>('/api/trader-calendar', {}, getToken)); setLocked(false); setError(''); }
     catch (e) { if (e instanceof ApiError && e.status === 402) setLocked(true); else setError(errorMessage(e)); }
   }, [getToken]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
   if (!data && !locked && !error) return <LoadingScreen label="Loading calendar…" />;
   if (locked) return <Screen title="Working calendar" subtitle="The combined job calendar is included with BuildPair Plus and Pro."><AppCard><Text variant="headlineSmall" style={styles.title}>Keep jobs, visits and availability together.</Text><Text style={styles.muted}>Core can publish a simple next-available window. Plus adds a 12-week working calendar; Pro extends it to roughly six months.</Text><Button mode="contained" onPress={() => router.push('/trader/subscription')}>Compare plans</Button></AppCard></Screen>;
   if (!data) return <Screen title="Working calendar"><EmptyState title="Calendar unavailable" body={error} /></Screen>;
