@@ -4,6 +4,7 @@ import { createNotification } from '@/lib/notifications';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { canUseTraderMessaging } from '@/lib/subscription';
 
 const messageSchema = z.object({ body: z.string().trim().min(1).max(4000) });
 
@@ -15,6 +16,7 @@ type Participant = {
   traderId: string;
   moderationStatus: 'open' | 'warned' | 'restricted' | 'closed';
   moderationReason: string;
+  jobStatus: string;
 };
 type MessageRow = {
   id: string;
@@ -33,6 +35,7 @@ async function requireParticipant(conversationId: string, userId: string) {
     SELECT c.id,
            c.job_id AS "jobId",
            j.title AS "jobTitle",
+           j.status AS "jobStatus",
            c.customer_id AS "customerId",
            c.trader_id AS "traderId",
            c.moderation_status AS "moderationStatus",
@@ -76,6 +79,19 @@ export async function POST(request: Request, { id }: { id: string }) {
     const userId = await authenticatedUserId(request);
     await ensureDbUser(userId);
     const participant = await requireParticipant(id, userId);
+    if (userId === participant.traderId && ['open', 'quoted'].includes(participant.jobStatus)) {
+      const planRows = await getSql()`
+        SELECT subscription_tier AS "subscriptionTier",
+               is_subscription_active AS "isSubscriptionActive",
+               trial_ends_at AS "trialEndsAt"
+        FROM trader_profiles
+        WHERE user_id = ${userId}
+        LIMIT 1
+      ` as unknown as { subscriptionTier: 'free' | 'core' | 'basic' | 'featured'; isSubscriptionActive: boolean; trialEndsAt: string | null }[];
+      if (!planRows[0] || !canUseTraderMessaging(planRows[0])) {
+        throw new HttpError(402, 'An active BuildPair Core, Plus or Pro membership is required for pre-award trader messaging.');
+      }
+    }
     if (participant.moderationStatus === 'closed') throw new HttpError(423, 'This conversation has been closed by BuildPair moderation');
     if (participant.moderationStatus === 'restricted') throw new HttpError(423, 'Messaging is temporarily restricted while BuildPair reviews this conversation');
     await assertRateLimit(request, 'job-message', 120, 3600, userId);
