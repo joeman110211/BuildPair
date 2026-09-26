@@ -5,6 +5,21 @@ import { assertRateLimit } from '@/lib/rate-limit';
 import { getSql } from '@/lib/sql';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { invoiceSchema } from '@/lib/validation';
+import { hasActiveLeadAccess, tierAtLeast } from '@/lib/subscription';
+
+
+async function hasPaidBusinessTools(traderId: string) {
+  const rows = await getSql()`
+    SELECT subscription_tier AS "subscriptionTier",
+           is_subscription_active AS "isSubscriptionActive",
+           trial_ends_at AS "trialEndsAt"
+    FROM trader_profiles
+    WHERE user_id = ${traderId}
+    LIMIT 1
+  ` as unknown as { subscriptionTier: 'free' | 'core' | 'basic' | 'featured'; isSubscriptionActive: boolean; trialEndsAt: string | null }[];
+  const profile = rows[0];
+  return Boolean(profile && tierAtLeast(profile.subscriptionTier, 'core') && hasActiveLeadAccess(profile));
+}
 
 export async function GET(request: Request) {
   try {
@@ -48,6 +63,10 @@ export async function POST(request: Request) {
       const relationship = relationships[0];
       if (!relationship) throw new HttpError(403, 'Invoices can only be linked to BuildPair customers you have worked with');
       linkedCustomerEmail = relationship.customerEmail;
+    }
+
+    if (!jobId && !customerId && !(await hasPaidBusinessTools(trader.id))) {
+      throw new HttpError(402, 'Standalone invoicing is included with BuildPair Core, Plus and Pro. Invoices for BuildPair jobs you have already won remain available regardless of a later plan change.');
     }
 
     if (sendNow) {
