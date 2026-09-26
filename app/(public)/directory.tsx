@@ -9,6 +9,7 @@ import { TRADE_CATEGORIES } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { searchTraders, searchTradersWithFallback } from '@/lib/trade-search';
+import { recentlyViewedTraderIds } from '@/lib/trader-browse-history';
 import type { TraderProfile } from '@/types';
 
 const EXAMPLE_SEARCHES = ['tiler', 'bathroom', 'camera', 'security', 'water leak', 'wood', 'boiler', 'roof leak', 'kitchen', 'driveway'];
@@ -41,12 +42,17 @@ export default function DirectoryScreen() {
   const [error, setError] = useState('');
   const [storedIntent, setStoredIntent] = useState<StoredIntent | null>(null);
   const [aiCheckingQuery, setAiCheckingQuery] = useState('');
+  const [availabilityOnly, setAvailabilityOnly] = useState(false);
+  const [sortMode, setSortMode] = useState<'best' | 'rating' | 'responsive'>('best');
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [recentIds, setRecentIds] = useState<string[]>([]);
 
   async function load() {
     try {
       setLoading(true);
       setError('');
       setTraders(await apiFetch('/api/traders'));
+      setRecentIds(recentlyViewedTraderIds());
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -90,6 +96,29 @@ export default function DirectoryScreen() {
   );
   const fallbackActive = Boolean((trimmedQuery || trade) && exactFiltered.length === 0 && filtered.length > 0);
   const aiChecking = !trade && localFiltered.length === 0 && aiCheckingQuery === trimmedQuery;
+
+  const displayFiltered = useMemo(() => {
+    const available = availabilityOnly ? filtered.filter((trader) => Boolean(trader.availabilitySummary)) : filtered;
+    return [...available].sort((a, b) => {
+      if (sortMode === 'rating') return Number(b.averageRating || 0) - Number(a.averageRating || 0) || Number(b.reviewCount || 0) - Number(a.reviewCount || 0);
+      if (sortMode === 'responsive') {
+        const aHours = a.averageResponseHours && a.averageResponseHours > 0 ? a.averageResponseHours : Number.POSITIVE_INFINITY;
+        const bHours = b.averageResponseHours && b.averageResponseHours > 0 ? b.averageResponseHours : Number.POSITIVE_INFINITY;
+        return aHours - bHours || Number(b.responseRate || 0) - Number(a.responseRate || 0);
+      }
+      return Number(b.rankingScore || 0) - Number(a.rankingScore || 0);
+    });
+  }, [availabilityOnly, filtered, sortMode]);
+  const compareTraders = useMemo(() => compareIds.map((id) => traders.find((trader) => trader.id === id)).filter((trader): trader is TraderProfile => Boolean(trader)), [compareIds, traders]);
+  const recentTraders = useMemo(() => recentIds.map((id) => traders.find((trader) => trader.id === id)).filter((trader): trader is TraderProfile => Boolean(trader)).slice(0, 4), [recentIds, traders]);
+
+  function toggleCompare(trader: TraderProfile) {
+    setCompareIds((current) => {
+      if (current.includes(trader.id)) return current.filter((id) => id !== trader.id);
+      if (current.length >= 3) return [...current.slice(1), trader.id];
+      return [...current, trader.id];
+    });
+  }
 
   useEffect(() => {
     if (trade || trimmedQuery.length < 2 || localFiltered.length > 0) return undefined;
@@ -151,16 +180,15 @@ export default function DirectoryScreen() {
     </View>
 
     <View style={styles.filterChips}>
-      <Chip>Smart intent matching</Chip>
-      <Chip>Typo tolerant</Chip>
-      <Chip>Related services</Chip>
-      <Chip>AI fallback</Chip>
-      <Chip>Never dead-ends</Chip>
+      <Chip selected={sortMode === 'best'} showSelectedCheck onPress={() => setSortMode('best')}>Best match</Chip>
+      <Chip selected={sortMode === 'rating'} showSelectedCheck onPress={() => setSortMode('rating')}>Highest rated</Chip>
+      <Chip selected={sortMode === 'responsive'} showSelectedCheck onPress={() => setSortMode('responsive')}>Most responsive</Chip>
+      <Chip selected={availabilityOnly} showSelectedCheck icon="calendar-check-outline" onPress={() => setAvailabilityOnly((value) => !value)}>Available soon</Chip>
     </View>
 
     <View style={styles.resultsHeader}>
       <View style={styles.resultsCopy}>
-        <Text variant="titleLarge" style={styles.title}>{loading ? 'Finding local trades' : `${filtered.length} trade${filtered.length === 1 ? '' : 's'} found`}</Text>
+        <Text variant="titleLarge" style={styles.title}>{loading ? 'Finding local trades' : `${displayFiltered.length} trade${displayFiltered.length === 1 ? '' : 's'} found`}</Text>
         {loading ? <Text style={styles.muted}>Checking active BuildPair trade profiles. This page will always resolve to live results, a clear empty state or an error with a retry option.</Text> : null}
         {!loading && query && !fallbackActive ? <Text style={styles.muted}>Best matches for “{query}” are shown first.</Text> : null}
         {!loading && fallbackActive ? <Text style={styles.muted}>No exact wording match, so BuildPair is showing the closest available trades instead of leaving you at a dead end.</Text> : null}
@@ -174,12 +202,31 @@ export default function DirectoryScreen() {
 
     {loading ? <View style={styles.loadingState} accessibilityLiveRegion="polite"><Text style={styles.loadingTitle}>Checking the directory…</Text><Text style={styles.muted}>Active local trade profiles will appear here as soon as the directory check completes.</Text></View> : null}
     {!loading && error ? <EmptyState title="Directory unavailable" body={error} action={<Button onPress={() => load()}>Try again</Button>} /> : null}
-    {!loading && !error && !filtered.length
-      ? <EmptyState title="Trades are being added" body="There are no active paid trade profiles available to show yet. New BuildPair profiles will appear here automatically as they go live." />
+    {!loading && !error && !displayFiltered.length
+      ? <EmptyState title="No trades match these filters" body={availabilityOnly ? 'There are profiles matching your search, but none currently show upcoming availability. Turn off the availability filter to see the wider directory.' : 'Real BuildPair trade profiles appear here as they are completed. Try a broader trade or search term.'} />
       : null}
-    {!loading && !error && filtered.length
-      ? <View style={styles.grid}>{filtered.map((trader) => <TraderCard key={trader.id} trader={trader} />)}</View>
+
+    {compareTraders.length ? <View style={styles.comparePanel}>
+      <View style={styles.compareHeader}><View style={styles.compareCopy}><Text variant="titleLarge" style={styles.title}>Compare tradespeople</Text><Text style={styles.muted}>Compare up to three profiles side by side. Membership is shown as a product level, not a trust score.</Text></View><Button mode="text" onPress={() => setCompareIds([])}>Clear comparison</Button></View>
+      <View style={styles.compareGrid}>{compareTraders.map((trader) => <View key={trader.id} style={styles.compareCard}>
+        <Text variant="titleMedium" style={styles.compareTitle}>{trader.businessName}</Text>
+        <Text style={styles.compareLine}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
+        <Text style={styles.compareLine}>{trader.reviewCount ? `${Number(trader.averageRating || 0).toFixed(1)} ★ · ${trader.reviewCount} reviews` : 'New to BuildPair'}</Text>
+        <Text style={styles.compareLine}>{trader.verifiedCredentialCount ?? 0} verified credential{(trader.verifiedCredentialCount ?? 0) === 1 ? '' : 's'}</Text>
+        <Text style={styles.compareLine}>{trader.availabilitySummary || 'Availability on request'}</Text>
+        <Button compact onPress={() => toggleCompare(trader)}>Remove</Button>
+      </View>)}</View>
+    </View> : null}
+
+    {!loading && !error && displayFiltered.length
+      ? <View style={styles.grid}>{displayFiltered.map((trader) => <TraderCard key={trader.id} trader={trader} compareSelected={compareIds.includes(trader.id)} onToggleCompare={toggleCompare} />)}</View>
       : null}
+
+    {!loading && recentTraders.length ? <View style={styles.recentBlock}>
+      <Text variant="titleLarge" style={styles.title}>Recently viewed</Text>
+      <Text style={styles.muted}>Profiles you opened recently on this device.</Text>
+      <View style={styles.recentGrid}>{recentTraders.map((trader) => <TraderCard key={`recent-${trader.id}`} trader={trader} />)}</View>
+    </View> : null}
 
     <Text variant="bodySmall" style={styles.disclaimer}>BuildPair distinguishes verified reviews from information supplied by tradespeople. Check qualifications, registrations and insurance that matter for your particular job before appointing anyone.</Text>
   </Screen>;
@@ -202,5 +249,14 @@ const styles = StyleSheet.create({
   loadingState: { minHeight: 150, alignItems: 'center', justifyContent: 'center', gap: 6, padding: 20, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSoft },
   loadingTitle: { color: colors.charcoal, fontWeight: '900', fontSize: 18 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
+  comparePanel: { gap: 12, padding: 16, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSoft },
+  compareHeader: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
+  compareCopy: { flex: 1, minWidth: 220, gap: 3 },
+  compareGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  compareCard: { flex: 1, minWidth: 220, gap: 6, borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised, padding: 14 },
+  compareTitle: { color: colors.charcoal, fontWeight: '900' },
+  compareLine: { color: colors.muted, lineHeight: 20 },
+  recentBlock: { gap: 10, marginTop: 8 },
+  recentGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
   disclaimer: { textAlign: 'center', color: colors.muted, marginTop: 8, lineHeight: 19 },
 });
