@@ -128,7 +128,7 @@ export default function TraderQuotesScreen() {
           <Button mode="outlined" icon="open-in-new" onPress={() => void Linking.openURL(quote.shareUrl)}>Open customer view</Button>
           <Button mode="outlined" icon="file-pdf-box" onPress={() => void Linking.openURL(printUrl(quote))}>PDF / print</Button>
           {quote.customerEmail ? <Button mode="text" icon="email-outline" onPress={() => void Linking.openURL(`mailto:${encodeURIComponent(quote.customerEmail!)}?subject=${encodeURIComponent(`Quote ${quote.quoteNumber}`)}&body=${encodeURIComponent(`Hi ${quote.customerName},\n\nHere is your quote for ${quote.jobTitle}:\n${quote.shareUrl}`)}`)}>Email</Button> : null}
-          {quote.status !== 'accepted' && quote.status !== 'draft' ? <Button mode="outlined" icon="file-replace-outline" onPress={() => void reviseQuote(quote)}>Create revision</Button> : null}
+          {quote.status !== 'accepted' ? <Button mode="outlined" icon="file-replace-outline" onPress={() => void reviseQuote(quote)}>Create revision</Button> : null}
           {quote.managedJobId ? <Button mode="outlined" icon="briefcase-outline" onPress={() => router.push(`/trader/jobs/${quote.managedJobId}` as Href)}>Open managed project</Button> : null}
           {quote.customerPhone ? <Button mode="text" icon="message-text-outline" onPress={() => void Linking.openURL(`sms:${quote.customerPhone}?body=${encodeURIComponent(`Your quote for ${quote.jobTitle}: ${quote.shareUrl}`)}`)}>SMS</Button> : null}
         </>}
