@@ -64,6 +64,7 @@ export async function GET(request: Request) {
     ] = await Promise.all([
       sql`
         SELECT
+          coalesce(sum(event_count) FILTER (WHERE event_type = 'visit_start'), 0)::bigint AS sessions,
           coalesce(sum(event_count) FILTER (WHERE event_type = 'page_view'), 0)::bigint AS "pageViews",
           coalesce(sum(event_count) FILTER (WHERE event_type = 'click'), 0)::bigint AS clicks,
           coalesce(sum(event_count) FILTER (WHERE event_type = 'scroll'), 0)::bigint AS scrolls,
@@ -139,13 +140,13 @@ export async function GET(request: Request) {
         LIMIT 40
       `,
       sql`
-        SELECT landing_path AS path, count(*)::int AS sessions, count(DISTINCT visitor_id)::int AS visitors,
-               count(*) FILTER (WHERE converted)::int AS conversions
-        FROM visitor_sessions
-        WHERE started_at >= now() - (${days}::int * interval '1 day')
-          AND coalesce(landing_path, '') <> ''
-        GROUP BY landing_path
-        ORDER BY sessions DESC, visitors DESC
+        SELECT dimensions->>'path' AS path, sum(event_count)::bigint AS sessions
+        FROM visitor_analytics_hourly
+        WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND event_type = 'visit_start'
+          AND coalesce(dimensions->>'path', '') <> ''
+        GROUP BY dimensions->>'path'
+        ORDER BY sessions DESC
         LIMIT 30
       `,
       sql`
@@ -163,44 +164,43 @@ export async function GET(request: Request) {
       `,
       sql`
         SELECT
-          coalesce(nullif(referrer_host, ''), 'Direct / unknown') AS "referrerHost",
-          coalesce(acquisition->>'utmSource', '') AS "utmSource",
-          coalesce(acquisition->>'utmMedium', '') AS "utmMedium",
-          coalesce(acquisition->>'utmCampaign', '') AS "utmCampaign",
-          count(*)::int AS sessions,
-          count(DISTINCT visitor_id)::int AS visitors,
-          count(*) FILTER (WHERE converted)::int AS conversions
-        FROM visitor_sessions
-        WHERE started_at >= now() - (${days}::int * interval '1 day')
+          coalesce(nullif(dimensions->>'referrerHost', ''), 'Direct / unknown') AS "referrerHost",
+          coalesce(dimensions->>'utmSource', '') AS "utmSource",
+          coalesce(dimensions->>'utmMedium', '') AS "utmMedium",
+          coalesce(dimensions->>'utmCampaign', '') AS "utmCampaign",
+          sum(event_count)::bigint AS sessions
+        FROM visitor_analytics_hourly
+        WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND event_type = 'visit_start'
         GROUP BY 1, 2, 3, 4
-        ORDER BY sessions DESC, visitors DESC
+        ORDER BY sessions DESC
         LIMIT 60
       `,
       sql`
         SELECT
-          coalesce(nullif(device->>'deviceType', ''), 'unknown') AS "deviceType",
-          coalesce(nullif(device->>'browser', ''), 'unknown') AS browser,
-          coalesce(nullif(device->>'os', ''), 'unknown') AS os,
-          count(*)::int AS sessions,
-          count(DISTINCT visitor_id)::int AS visitors
-        FROM visitor_sessions
-        WHERE started_at >= now() - (${days}::int * interval '1 day')
+          coalesce(nullif(dimensions->>'deviceType', ''), 'unknown') AS "deviceType",
+          coalesce(nullif(dimensions->>'browser', ''), 'unknown') AS browser,
+          coalesce(nullif(dimensions->>'os', ''), 'unknown') AS os,
+          sum(event_count)::bigint AS sessions
+        FROM visitor_analytics_hourly
+        WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND event_type = 'visit_start'
         GROUP BY 1, 2, 3
-        ORDER BY visitors DESC, sessions DESC
+        ORDER BY sessions DESC
         LIMIT 40
       `,
       sql`
         SELECT
-          coalesce(geo->>'country', '') AS country,
-          coalesce(geo->>'region', '') AS region,
-          coalesce(geo->>'city', '') AS city,
-          coalesce(device->>'timezone', '') AS timezone,
-          count(*)::int AS sessions,
-          count(DISTINCT visitor_id)::int AS visitors
-        FROM visitor_sessions
-        WHERE started_at >= now() - (${days}::int * interval '1 day')
+          coalesce(dimensions->>'country', '') AS country,
+          coalesce(dimensions->>'region', '') AS region,
+          coalesce(dimensions->>'city', '') AS city,
+          coalesce(dimensions->>'geoTimezone', dimensions->>'timezone', '') AS timezone,
+          sum(event_count)::bigint AS sessions
+        FROM visitor_analytics_hourly
+        WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND event_type = 'visit_start'
         GROUP BY 1, 2, 3, 4
-        ORDER BY visitors DESC, sessions DESC
+        ORDER BY sessions DESC
         LIMIT 40
       `,
       sql`
@@ -255,16 +255,14 @@ export async function GET(request: Request) {
     const tracking = trackingRows[0] ?? {};
     const signups = signupRows[0]?.signups ?? 0;
 
-    const channelMap = new Map<string, { channel: string; sessions: number; visitors: number; conversions: number }>();
+    const channelMap = new Map<string, { channel: string; sessions: number }>();
     for (const row of acquisitionRows as Record<string, unknown>[]) {
       const channel = channelFor(row.referrerHost, row.utmSource, row.utmMedium);
-      const existing = channelMap.get(channel) ?? { channel, sessions: 0, visitors: 0, conversions: 0 };
+      const existing = channelMap.get(channel) ?? { channel, sessions: 0 };
       existing.sessions += asNumber(row.sessions);
-      existing.visitors += asNumber(row.visitors);
-      existing.conversions += asNumber(row.conversions);
       channelMap.set(channel, existing);
     }
-    const sourceChannels = [...channelMap.values()].sort((a, b) => b.sessions - a.sessions || b.visitors - a.visitors);
+    const sourceChannels = [...channelMap.values()].sort((a, b) => b.sessions - a.sessions);
 
     const recent = (recentSessions as Record<string, unknown>[]).map((session) => ({
       ...session,
@@ -274,7 +272,22 @@ export async function GET(request: Request) {
     return Response.json({
       storageReady: true,
       days,
-      summary: { ...summary, ...sessionSummary, ...tracking, signups },
+      summary: {
+        ...sessionSummary,
+        ...summary,
+        ...tracking,
+        signups,
+        detailedSessions: sessionSummary.sessions ?? 0,
+        detailedUniqueVisitors: sessionSummary.uniqueVisitors ?? 0,
+        detailedNewVisitors: sessionSummary.newVisitors ?? 0,
+        detailedReturningVisitors: sessionSummary.returningVisitors ?? 0,
+        detailedReturningSessions: sessionSummary.returningSessions ?? 0,
+        detailedActiveNow: sessionSummary.activeNow ?? 0,
+        detailedConvertedSessions: sessionSummary.convertedSessions ?? 0,
+        detailedEngagedSessions: sessionSummary.engagedSessions ?? 0,
+        detailedPagesPerSession: sessionSummary.pagesPerSession ?? 0,
+        detailedAvgSessionSeconds: sessionSummary.avgSessionSeconds ?? 0,
+      },
       topPages,
       topLandingPages,
       topClicks,
