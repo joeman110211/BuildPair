@@ -211,3 +211,62 @@ export async function sendSubscriptionReceiptOnce(args: {
   const html = shell(`<p style="font-size:16px;line-height:24px;margin:0 0 14px">${escapeHtml(hello)}</p><h1 style="font-size:28px;line-height:34px;margin:0 0 16px">${escapeHtml(plan.name)} is active</h1><p style="font-size:16px;line-height:24px;color:#425466;margin:0 0 20px">Thanks for subscribing. Here is a record of what you have signed up for.</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F9FA;border-radius:12px;padding:16px"><tr><td style="padding:6px 0;color:#667085">Payment received</td><td align="right" style="padding:6px 0;font-weight:700">${escapeHtml(paid)}</td></tr><tr><td style="padding:6px 0;color:#667085">Plan</td><td align="right" style="padding:6px 0;font-weight:700">${escapeHtml(plan.name)}</td></tr><tr><td style="padding:6px 0;color:#667085">Billing</td><td align="right" style="padding:6px 0;font-weight:700">Monthly</td></tr>${args.invoiceNumber ? `<tr><td style="padding:6px 0;color:#667085">Receipt / invoice</td><td align="right" style="padding:6px 0;font-weight:700">${escapeHtml(args.invoiceNumber)}</td></tr>` : ''}${nextDate ? `<tr><td style="padding:6px 0;color:#667085">Next renewal</td><td align="right" style="padding:6px 0;font-weight:700">${escapeHtml(nextDate)}</td></tr>` : ''}</table><h2 style="font-size:20px;margin:24px 0 10px">What you get</h2><ul style="font-size:15px;line-height:22px;color:#425466;padding-left:20px">${featuresHtml}</ul>${receiptButton}${button('Manage membership', manageUrl)}<p style="font-size:13px;line-height:20px;color:#667085">Your membership renews automatically each month until cancelled. Stripe securely processes the payment. This email confirms your BuildPair subscription; use the linked Stripe invoice/receipt for the payment record when available.</p>`);
   return sendOnce(`subscription:${args.subscriptionId}:purchase`, 'subscription_purchase', { to: args.email, subject, text, html });
 }
+
+
+export async function sendQuoteReminderOnce(args: {
+  eventKey: string;
+  email: string;
+  customerName?: string | null;
+  businessName: string;
+  quoteNumber: string;
+  jobTitle: string;
+  totalAmount: number;
+  shareUrl: string;
+  validUntil?: string | null;
+}) {
+  const hello = greeting(args.customerName);
+  const valid = args.validUntil ? new Date(args.validUntil).toLocaleDateString('en-GB') : null;
+  const subject = `Reminder: quote ${args.quoteNumber} from ${args.businessName}`;
+  const text = `${hello}\n\nJust a reminder that ${args.businessName} sent you quote ${args.quoteNumber} for ${args.jobTitle}.\n\nQuote total: ${money(args.totalAmount)}${valid ? `\nValid until: ${valid}` : ''}\n\nReview the quote: ${args.shareUrl}\n\nThis is an optional BuildPair reminder. The tradesperson can see whether the quote was viewed, but BuildPair will not keep pestering you indefinitely.\n\nBuildPair`;
+  const html = shell(`<p style="font-size:16px;line-height:24px;margin:0 0 14px">${escapeHtml(hello)}</p><h1 style="font-size:26px;line-height:32px;margin:0 0 14px">A quick quote reminder</h1><p style="font-size:16px;line-height:24px;color:#425466;margin:0"><strong>${escapeHtml(args.businessName)}</strong> sent you quote <strong>${escapeHtml(args.quoteNumber)}</strong> for ${escapeHtml(args.jobTitle)}.</p><div style="background:#FFF7F0;border-radius:12px;padding:18px;margin-top:18px"><strong style="font-size:20px">${escapeHtml(money(args.totalAmount))}</strong>${valid ? `<p style="margin:6px 0 0;color:#667085">Valid until ${escapeHtml(valid)}</p>` : ''}</div>${button('Review quote', args.shareUrl)}<p style="font-size:13px;line-height:20px;color:#667085">This is an optional BuildPair reminder. Automatic reminders are deliberately limited so customers are not spammed.</p>`);
+  return sendOnce(args.eventKey, 'quote_reminder', { to: args.email, subject, text, html });
+}
+
+export async function sendInvoiceReminderOnce(args: {
+  eventKey: string;
+  email: string;
+  customerName?: string | null;
+  businessName: string;
+  invoiceNumber: string;
+  totalAmount: number;
+  dueAt?: string | Date | null;
+  overdue?: boolean;
+}) {
+  const hello = greeting(args.customerName);
+  const due = args.dueAt ? new Date(args.dueAt).toLocaleDateString('en-GB') : null;
+  const subject = args.overdue
+    ? `Invoice ${args.invoiceNumber} is overdue · ${args.businessName}`
+    : `Reminder: invoice ${args.invoiceNumber} from ${args.businessName}`;
+  const status = args.overdue ? 'is now overdue' : due ? `is due on ${due}` : 'is still outstanding';
+  const text = `${hello}\n\nA payment reminder from ${args.businessName}: invoice ${args.invoiceNumber} for ${money(args.totalAmount)} ${status}.\n\nIf you have already paid, no action is needed. If there is a problem with the invoice, contact the tradesperson before making payment.\n\nBuildPair`;
+  const html = shell(`<p style="font-size:16px;line-height:24px;margin:0 0 14px">${escapeHtml(hello)}</p><h1 style="font-size:26px;line-height:32px;margin:0 0 14px">${args.overdue ? 'Invoice overdue' : 'Invoice reminder'}</h1><p style="font-size:16px;line-height:24px;color:#425466;margin:0">A payment reminder from <strong>${escapeHtml(args.businessName)}</strong>.</p><div style="background:#FFF7F0;border-radius:12px;padding:18px;margin-top:18px"><p style="margin:0;color:#667085">Invoice ${escapeHtml(args.invoiceNumber)}</p><strong style="font-size:22px">${escapeHtml(money(args.totalAmount))}</strong><p style="margin:6px 0 0;color:#667085">${escapeHtml(status)}</p></div><p style="font-size:14px;line-height:21px;color:#667085">If you have already paid, no action is needed. If something is wrong with the invoice, contact the tradesperson before making payment.</p>`);
+  return sendOnce(args.eventKey, 'invoice_reminder', { to: args.email, subject, text, html });
+}
+
+export async function sendAftercareReminderOnce(args: {
+  eventKey: string;
+  email: string;
+  customerName?: string | null;
+  businessName: string;
+  jobTitle: string;
+  title: string;
+  note?: string | null;
+  projectUrl?: string | null;
+}) {
+  const hello = greeting(args.customerName);
+  const subject = `${args.title} · ${args.businessName}`;
+  const text = `${hello}\n\nA BuildPair aftercare reminder from ${args.businessName} about ${args.jobTitle}:\n\n${args.title}${args.note ? `\n${args.note}` : ''}${args.projectUrl ? `\n\nOpen the project record: ${args.projectUrl}` : ''}\n\nBuildPair`;
+  const action = args.projectUrl ? button('Open project record', args.projectUrl) : '';
+  const html = shell(`<p style="font-size:16px;line-height:24px;margin:0 0 14px">${escapeHtml(hello)}</p><h1 style="font-size:26px;line-height:32px;margin:0 0 14px">${escapeHtml(args.title)}</h1><p style="font-size:16px;line-height:24px;color:#425466;margin:0">An aftercare reminder from <strong>${escapeHtml(args.businessName)}</strong> about ${escapeHtml(args.jobTitle)}.</p>${args.note ? `<div style="background:#FFF7F0;border-radius:12px;padding:18px;margin-top:18px">${escapeHtml(args.note)}</div>` : ''}${action}`);
+  return sendOnce(args.eventKey, 'aftercare_reminder', { to: args.email, subject, text, html });
+}
