@@ -225,6 +225,7 @@ export default function TraderProfileStorefront() {
           {quoteButton}
           {prelaunchProfile ? <Button mode="outlined" icon={savedForLaunch ? 'heart' : 'heart-outline'} onPress={() => setSavedForLaunch(toggleTraderSavedForLaunch(profile.id))}>{savedForLaunch ? 'Saved for launch' : 'Save for launch'}</Button> : paidProfile && user?.customerEnabled ? <Button mode="outlined" icon={profile.savedByViewer ? 'heart' : 'heart-outline'} loading={saving} disabled={saving} onPress={() => void toggleSaved()}>{profile.savedByViewer ? 'Saved' : 'Save'}</Button> : null}
           <View style={styles.responseLine}><View style={[styles.statusDot, isAvailable && styles.statusDotLive]} /><Text style={styles.responseText}>{isAvailable ? 'Currently taking on work' : profile.availabilitySummary || 'Availability on request'}</Text></View>
+          {profile.averageResponseHours && profile.averageResponseHours > 0 ? <Text style={styles.responseText}>BuildPair history: usually replies in about {profile.averageResponseHours < 1 ? '<1' : Math.round(profile.averageResponseHours)} hour{Math.round(profile.averageResponseHours) === 1 ? '' : 's'}</Text> : profile.responseRate && profile.responseRate > 0 ? <Text style={styles.responseText}>BuildPair response rate: {Math.round(profile.responseRate)}%</Text> : <Text style={styles.responseText}>Response history will appear after BuildPair conversations.</Text>}
         </View>
       </View>
 
