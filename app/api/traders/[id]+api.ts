@@ -143,7 +143,7 @@ export async function GET(request: Request, { id }: { id: string }) {
         LIMIT 50
       `,
       sqlClient`
-        SELECT id, starts_at AS "startsAt", ends_at AS "endsAt", status, note
+        SELECT id, starts_at AS "startsAt", ends_at AS "endsAt", status, NULL::text AS note
         FROM trader_availability
         WHERE trader_id = ${profile.userId} AND ends_at >= now() AND status = 'available'
         ORDER BY starts_at ASC LIMIT 12
@@ -226,8 +226,8 @@ export async function GET(request: Request, { id }: { id: string }) {
       reviews: verifiedReviews,
       credentials,
       verifiedCredentialCount: credentials.length,
-      availability: profile.subscriptionTier === 'featured' ? availability : [],
-      availabilitySummary: profile.subscriptionTier === 'featured' && availability.length ? 'Upcoming availability listed' : null,
+      availability: profile.subscriptionTier !== 'free' ? availability : [],
+      availabilitySummary: profile.subscriptionTier !== 'free' && availability.length ? 'Upcoming availability listed' : null,
       responseRate,
       averageResponseHours,
       stories,
