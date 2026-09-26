@@ -52,6 +52,11 @@ export async function POST(request: Request) {
       SELECT ${id}, description, category, quantity, unit_price, line_total, sort_order
       FROM business_quote_items WHERE quote_id = ${quoteId}
     `;
+    await getSql()`
+      INSERT INTO business_quote_options(quote_id, kind, title, description, price_delta, sort_order)
+      SELECT ${id}, kind, title, description, price_delta, sort_order
+      FROM business_quote_options WHERE quote_id = ${quoteId}
+    `;
     return Response.json({ id, revisionNumber: Number(source.revision_number ?? 1) + 1 }, { status: 201 });
   } catch (error) {
     return jsonError(error);
