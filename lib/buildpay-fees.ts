@@ -24,9 +24,12 @@ export function buildPayServiceCostFixedPence() {
   return Math.round(numberSetting('BUILDPAY_SERVICE_COST_FIXED_PENCE', 20, 0, 1000));
 }
 
-export function buildPayFeeModeForRequest(requestedBy: BuildPayRequestedBy, traderChoice?: BuildPayFeeMode | null): BuildPayFeeMode {
-  if (requestedBy === 'customer') return 'customer_pays';
-  return traderChoice === 'trader_absorbs' ? 'trader_absorbs' : 'customer_pays';
+export function buildPayFeeModeForRequest(requestedBy: BuildPayRequestedBy, _traderChoice?: BuildPayFeeMode | null): BuildPayFeeMode {
+  // Commercial rule: the party who asks to add BuildPay carries its cost.
+  // A tradesperson-requested protected schedule is absorbed from controlled
+  // service payouts; homeowner-requested protection is added transparently
+  // to the homeowner's BuildPay total.
+  return requestedBy === 'trader' ? 'trader_absorbs' : 'customer_pays';
 }
 
 /**
