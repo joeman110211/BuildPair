@@ -45,9 +45,16 @@ export function traderWorkTypeLimit(profile?: {
   subscriptionTier?: TraderWorkTypeTier | null;
   tradeCategories?: readonly string[] | null;
 }) {
-  const planLimit = TRADER_WORK_TYPE_LIMITS[profile?.subscriptionTier ?? 'free'];
-  const existingAllowance = profile?.tradeCategories?.length ?? 0;
-  return Math.max(planLimit, existingAllowance);
+  return TRADER_WORK_TYPE_LIMITS[profile?.subscriptionTier ?? 'free'];
+}
+
+export function effectiveTraderCategories<T extends string>(
+  profile: { subscriptionTier?: TraderWorkTypeTier | null },
+  categories?: readonly T[] | null,
+  fallback?: T | null,
+) {
+  const source = categories?.length ? categories : fallback ? [fallback] : [];
+  return [...new Set(source)].slice(0, traderWorkTypeLimit(profile));
 }
 
 export function traderMonthlyQuoteLimit(profile?: { subscriptionTier?: TraderWorkTypeTier | null }) {
