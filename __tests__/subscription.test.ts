@@ -5,24 +5,43 @@ import {
   categoryChangeAvailableAt,
   hasActiveLeadAccess,
   traderMonthlyQuoteLimit,
+  traderSavedSearchLimit,
   traderWorkTypeLimit,
+  tierAtLeast,
   TRADER_MONTHLY_QUOTE_LIMITS,
+  TRADER_SAVED_SEARCH_LIMITS,
   TRADER_WORK_TYPE_LIMITS,
 } from '@/lib/subscription';
 
 describe('BuildPair trade plan entitlements', () => {
-  it('uses the agreed 2, 4, 6 main-category ladder', () => {
-    expect(TRADER_WORK_TYPE_LIMITS).toEqual({ free: 2, basic: 4, featured: 6 });
+  it('uses the agreed 2, 2, 4, 6 main-category ladder', () => {
+    expect(TRADER_WORK_TYPE_LIMITS).toEqual({ free: 2, core: 2, basic: 4, featured: 6 });
     expect(traderWorkTypeLimit()).toBe(2);
+    expect(traderWorkTypeLimit({ subscriptionTier: 'core' })).toBe(2);
     expect(traderWorkTypeLimit({ subscriptionTier: 'basic' })).toBe(4);
     expect(traderWorkTypeLimit({ subscriptionTier: 'featured' })).toBe(6);
   });
 
-  it('uses the agreed 0, 15, 35 marketplace-offer ladder', () => {
-    expect(TRADER_MONTHLY_QUOTE_LIMITS).toEqual({ free: 0, basic: 15, featured: 35 });
+  it('uses the agreed 0, 5, 15, 35 marketplace-opportunity ladder', () => {
+    expect(TRADER_MONTHLY_QUOTE_LIMITS).toEqual({ free: 0, core: 5, basic: 15, featured: 35 });
     expect(traderMonthlyQuoteLimit()).toBe(0);
+    expect(traderMonthlyQuoteLimit({ subscriptionTier: 'core' })).toBe(5);
     expect(traderMonthlyQuoteLimit({ subscriptionTier: 'basic' })).toBe(15);
     expect(traderMonthlyQuoteLimit({ subscriptionTier: 'featured' })).toBe(35);
+  });
+
+  it('uses 0, 1, 5, unlimited saved-search limits', () => {
+    expect(TRADER_SAVED_SEARCH_LIMITS).toEqual({ free: 0, core: 1, basic: 5, featured: null });
+    expect(traderSavedSearchLimit({ subscriptionTier: 'core' })).toBe(1);
+    expect(traderSavedSearchLimit({ subscriptionTier: 'basic' })).toBe(5);
+    expect(traderSavedSearchLimit({ subscriptionTier: 'featured' })).toBeNull();
+  });
+
+  it('orders plan entitlements without turning membership into trust', () => {
+    expect(tierAtLeast('core', 'core')).toBe(true);
+    expect(tierAtLeast('core', 'basic')).toBe(false);
+    expect(tierAtLeast('basic', 'core')).toBe(true);
+    expect(tierAtLeast('featured', 'basic')).toBe(true);
   });
 
   it('keeps Starter Free browse-only even when an old active flag exists', () => {
@@ -30,6 +49,7 @@ describe('BuildPair trade plan entitlements', () => {
   });
 
   it('requires an active paid subscription for marketplace/direct lead access', () => {
+    expect(hasActiveLeadAccess({ subscriptionTier: 'core', isSubscriptionActive: true })).toBe(true);
     expect(hasActiveLeadAccess({ subscriptionTier: 'basic', isSubscriptionActive: true })).toBe(true);
     expect(hasActiveLeadAccess({ subscriptionTier: 'featured', isSubscriptionActive: true })).toBe(true);
     expect(hasActiveLeadAccess({ subscriptionTier: 'basic', isSubscriptionActive: false })).toBe(false);
