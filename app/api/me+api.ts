@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   try {
     const userId = await authenticatedUserId(request);
     const user = await ensureDbUser(userId);
-    const modes = await accountModes(userId);
+    const [access, modes] = await Promise.all([accountAccess(userId), accountModes(userId)]);
     return Response.json({ ...user, ...modes, isAdmin: access.isAdmin, isSuspended: access.isSuspended });
   } catch (error) { return jsonError(error); }
 }
@@ -26,9 +26,9 @@ export async function PATCH(request: Request) {
     const payload = roleSchema.parse(await request.json());
     const before = await accountModes(userId);
     const wasEnabled = payload.role === 'customer' ? before.customerEnabled : before.traderEnabled;
-    const access = await accountAccess(userId);
+    const currentAccess = await accountAccess(userId);
 
-    if (payload.role === 'customer' && !HOMEOWNER_REGISTRATION_OPEN && !access.isAdmin) {
+    if (payload.role === 'customer' && !HOMEOWNER_REGISTRATION_OPEN && !currentAccess.isAdmin) {
       throw new HttpError(403, 'Homeowner account creation is closed until BuildPair launches.');
     }
 
