@@ -34,9 +34,9 @@ export function PhotoUploader({
       setBusy(true);
       setError('');
       const remaining = max - photos.length;
-      const { urls, failed } = await pickAndUploadImages(kind, getToken, Math.min(10, remaining));
+      const { urls, failed, failureMessage } = await pickAndUploadImages(kind, getToken, Math.min(10, remaining));
       if (urls.length) onChange([...photos, ...urls].slice(0, max));
-      if (failed) setError(`${failed} selected photo${failed === 1 ? '' : 's'} could not be uploaded.`);
+      if (failed) setError(failureMessage || `${failed} selected photo${failed === 1 ? '' : 's'} could not be uploaded.`);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -53,6 +53,7 @@ export function PhotoUploader({
       <Button mode="outlined" icon="image-plus" contentStyle={styles.addButton} loading={busy} disabled={busy || photos.length >= max} onPress={addPhoto}>{displayButtonLabel}</Button>
     </View>
     {max > 1 ? <Text variant="bodySmall" style={styles.muted}>Select up to 10 at once and keep adding batches until you reach {max}.</Text> : null}
+    <Text variant="bodySmall" style={styles.safety}>BuildPair checks uploads for unsafe content and visible phone numbers, email addresses, exact addresses and sensitive documents before they are stored.</Text>
     {photos.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.gallery}>
       {photos.map((uri, index) => <View key={`${uri}-${index}`} style={styles.photoWrap}>
         <Image source={{ uri }} style={styles.photo} />
@@ -74,4 +75,5 @@ const styles = StyleSheet.create({
   photo: { width: 150, height: 110, borderRadius: radii.md, backgroundColor: colors.surfaceStrong },
   empty: { minHeight: 72, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border, borderRadius: radii.md, backgroundColor: colors.surfaceSoft, padding: spacing.lg, justifyContent: 'center', alignItems: 'center' },
   muted: { color: colors.muted, lineHeight: 20 },
+  safety: { color: colors.muted, lineHeight: 19 },
 });
