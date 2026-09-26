@@ -42,7 +42,7 @@ const linkGroups = [
       ['Terms & Conditions', '/(public)/terms'],
       ['Privacy Policy', '/(public)/privacy'],
       ['Delete account', '/(public)/delete-account'],
-      ['Cookie Policy', '/(public)/cookies'],
+      ['Cookie & analytics choices', '/(public)/cookies'],
       ['Disclaimer', '/(public)/disclaimer'],
     ],
   },

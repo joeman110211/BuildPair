@@ -3,7 +3,7 @@ import { usePathname } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 
-type EventType = 'page_view' | 'click' | 'scroll' | 'page_time' | 'form_interaction' | 'form_submit' | 'heartbeat';
+type EventType = 'visit_start' | 'page_view' | 'click' | 'scroll' | 'page_time' | 'form_interaction' | 'form_submit' | 'heartbeat';
 type EventDetails = Record<string, string | number | boolean | null>;
 type TrackingMode = 'off' | 'aggregate' | 'anonymous';
 
@@ -43,12 +43,12 @@ function trackingMode(): TrackingMode {
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean; doNotTrack?: string | null };
   if (nav.globalPrivacyControl === true || nav.doNotTrack === '1') return 'off';
 
-  // Preserve choices made under the old analytics panel. New visitors use the
-  // privacy-conscious anonymous session analytics by default, without a popup.
+  // Basic aggregate analytics is the default. A persistent anonymous visitor
+  // identity is used only when the visitor has explicitly chosen detailed analytics.
   const previousChoice = legacyChoice();
   if (previousChoice === 'off') return 'off';
-  if (previousChoice === 'basic') return 'aggregate';
-  return 'anonymous';
+  if (previousChoice === 'detailed') return 'anonymous';
+  return 'aggregate';
 }
 
 function randomId() {
@@ -99,6 +99,23 @@ function existingIdentity() {
     const firstSeenAt = parsed.createdAt || parsed.consentedAt || '';
     return parsed.id && firstSeenAt ? { visitorId: parsed.id, sessionId, firstSeenAt } : null;
   } catch { return null; }
+}
+
+function discardDetailedIdentity(requestDeletion = true) {
+  if (!onWeb()) return;
+  try {
+    const raw = window.localStorage.getItem(VISITOR_KEY);
+    if (requestDeletion && raw) {
+      const parsed = JSON.parse(raw) as Partial<StoredVisitor>;
+      if (parsed.id) post({ action: 'withdraw', visitorId: parsed.id });
+    }
+  } catch { /* malformed or unavailable browser storage */ }
+
+  try {
+    window.localStorage.removeItem(VISITOR_KEY);
+    window.sessionStorage.removeItem(SESSION_KEY);
+    window.sessionStorage.removeItem(SIGNUP_INTENT_KEY);
+  } catch { /* browser storage may be unavailable */ }
 }
 
 function browserName(userAgent: string) {
@@ -212,6 +229,14 @@ export function VisitorAnalytics() {
   const previousPath = useRef<string | null>(null);
   const pageStartedAt = useRef(0);
   const conversionSent = useRef(false);
+  const visitStarted = useRef(false);
+
+  useEffect(() => {
+    if (!onWeb()) return;
+    // Earlier builds created a 90-day anonymous ID for new visitors by default.
+    // Remove that legacy identity unless detailed analytics was explicitly chosen.
+    if (legacyChoice() !== 'detailed') discardDetailedIdentity(true);
+  }, []);
 
   const sendEvent = useCallback((eventType: EventType, path: string, target?: string, targetPath?: string, value?: number, details?: EventDetails) => {
     if (!onWeb() || isSignedIn) return;
@@ -243,6 +268,10 @@ export function VisitorAnalytics() {
     pageStartedAt.current = now;
     if (pathname.includes('sign-up')) {
       try { window.sessionStorage.setItem(SIGNUP_INTENT_KEY, '1'); } catch { /* best effort */ }
+    }
+    if (!visitStarted.current) {
+      visitStarted.current = true;
+      sendEvent('visit_start', pathname);
     }
     sendEvent('page_view', pathname);
   }, [isSignedIn, pathname, sendEvent]);
