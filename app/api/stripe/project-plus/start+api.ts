@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       client_reference_id: userId,
       line_items: [lineItem],
       allow_promotion_codes: true,
-      success_url: `${appUrl()}${returnPath}?subscription=complete`,
+      success_url: `${appUrl()}/api/stripe/project-plus/confirm?session_id={CHECKOUT_SESSION_ID}&audience=${audience}`,
       cancel_url: `${appUrl()}${returnPath}?subscription=cancelled`,
       metadata: { buildpairUserId: userId, buildpairProduct: 'project_plus', audience },
       subscription_data: { metadata: { buildpairUserId: userId, buildpairProduct: 'project_plus', audience } },
