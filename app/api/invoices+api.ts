@@ -5,7 +5,7 @@ import { assertRateLimit } from '@/lib/rate-limit';
 import { getSql } from '@/lib/sql';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { invoiceSchema } from '@/lib/validation';
-import { hasActiveLeadAccess, tierAtLeast } from '@/lib/subscription';
+import { hasPlanSetupAccess, tierAtLeast } from '@/lib/subscription';
 
 
 async function hasPaidBusinessTools(traderId: string) {
@@ -18,7 +18,7 @@ async function hasPaidBusinessTools(traderId: string) {
     LIMIT 1
   ` as unknown as { subscriptionTier: 'free' | 'core' | 'basic' | 'featured'; isSubscriptionActive: boolean; trialEndsAt: string | null }[];
   const profile = rows[0];
-  return Boolean(profile && tierAtLeast(profile.subscriptionTier, 'core') && hasActiveLeadAccess(profile));
+  return Boolean(profile && tierAtLeast(profile.subscriptionTier, 'core') && hasPlanSetupAccess(profile, 'core'));
 }
 
 export async function GET(request: Request) {
@@ -70,9 +70,13 @@ export async function POST(request: Request) {
     }
 
     if (sendNow) {
-      if (!jobId || !customerId) throw new HttpError(400, 'Email delivery is only available for an invoice linked to a won BuildPair job and customer');
-      if (!linkedCustomerEmail || linkedCustomerEmail.toLowerCase() !== payload.customerEmail.toLowerCase()) {
-        throw new HttpError(400, 'Invoice email must match the customer email on the BuildPair account');
+      if (jobId || customerId) {
+        if (!jobId || !customerId) throw new HttpError(400, 'A linked BuildPair invoice must include both the job and customer');
+        if (!linkedCustomerEmail || linkedCustomerEmail.toLowerCase() !== payload.customerEmail.toLowerCase()) {
+          throw new HttpError(400, 'Invoice email must match the customer email on the BuildPair account');
+        }
+      } else if (!(await hasPaidBusinessTools(trader.id))) {
+        throw new HttpError(402, 'Sending standalone customer invoices is included with BuildPair Core, Plus and Pro.');
       }
       await assertRateLimit(request, 'send-invoice-email', 20, 86400, trader.id);
     }

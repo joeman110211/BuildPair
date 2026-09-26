@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text } from 'react-native-paper';
@@ -6,6 +6,7 @@ import { AppCard } from '@/components/AppCard';
 import { QuoteDocument, type QuoteDocumentData, type QuoteDocumentItem } from '@/components/QuoteDocument';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
+import { MARKETPLACE_OPEN } from '@/lib/launch';
 import { apiFetch, errorMessage } from '@/lib/api';
 import type { PaymentStagePlan } from '@/types';
 
@@ -23,6 +24,9 @@ type PublicQuote = QuoteDocumentData & {
   createdAt: string;
   items: QuoteDocumentItem[];
   paymentSchedule: PaymentStagePlan[];
+  managedJobId: string | null;
+  managedProjectEligible: boolean;
+  revisionNumber: number;
 };
 
 export default function PublicQuoteScreen() {
@@ -79,7 +83,10 @@ export default function PublicQuoteScreen() {
   const apiOrigin = webOrigin || process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '') || 'https://www.buildpair.co.uk';
   const printUrl = `${apiOrigin}/api/public/quotes/${encodeURIComponent(token)}/print?download=1`;
 
-  return <Screen title={`Quote from ${quote.businessName}`} subtitle={`${quote.quoteNumber} · ${quote.jobTitle}`}>
+  const claimReturnTo = `/customer/claim-quote?token=${encodeURIComponent(token)}`;
+  const claimHref = `/auth/sign-in?mode=customer&returnTo=${encodeURIComponent(claimReturnTo)}` as const;
+
+  return <Screen title={`Quote from ${quote.businessName}`} subtitle={`${quote.quoteNumber} · Revision ${quote.revisionNumber || 1} · ${quote.jobTitle}`}>
     <View style={styles.statusRow}>
       <Chip icon={quote.status === 'accepted' ? 'check-circle-outline' : quote.status === 'declined' ? 'close-circle-outline' : 'eye-outline'}>
         {quote.status === 'accepted' ? 'Accepted' : quote.status === 'declined' ? 'Declined' : 'Ready to review'}
@@ -93,7 +100,8 @@ export default function PublicQuoteScreen() {
       {quote.status === 'accepted' ? <>
         <Text variant="titleLarge" style={styles.title}>Quote accepted</Text>
         <Text>The tradesperson can now continue the job from this agreed quote. Keep this link for your records.</Text>
-        {quote.paymentMethod === 'buildpair' ? <Text style={styles.muted}>This quote proposes BuildPair payments. Payment setup is handled separately after acceptance and only becomes available when the tradesperson has completed payout setup.</Text> : null}
+        {quote.paymentMethod === 'buildpair' ? <Text style={styles.muted}>This quote proposes staged BuildPay. Once this accepted quote is added to a homeowner BuildPair account, its agreed stages become the managed project payment schedule.</Text> : <Text style={styles.muted}>This quote records direct payment terms. You can still bring the project into BuildPair for the timeline, variations, snagging, documents, completion and review.</Text>}
+        {quote.managedJobId ? <Chip icon="briefcase-check-outline">Managed BuildPair project created</Chip> : quote.managedProjectEligible ? (MARKETPLACE_OPEN ? <Link href={claimHref} asChild><Button mode="contained" icon="briefcase-plus-outline">Add this accepted job to BuildPair</Button></Link> : <Text style={styles.muted}>Full homeowner project management opens on 15 October 2026. Keep this secure quote link and claim the accepted project at launch.</Text>) : <Text style={styles.muted}>This quote remains your accepted record, but it was created using a plan that did not include conversion into a managed BuildPair project.</Text>}
       </> : quote.status === 'declined' ? <>
         <Text variant="titleLarge" style={styles.title}>Quote declined</Text>
         <Text>The tradesperson will see that you declined this quote.</Text>

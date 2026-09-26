@@ -29,7 +29,7 @@ export default function PricingPage() {
       <View style={styles.explainerGrid}>
         <View style={[styles.explainer, { backgroundColor: colors.primarySoft }]}>
           <Text variant="titleLarge" style={styles.explainerTitle}>What counts as an offer?</Text>
-          <Text style={styles.explainerText}>The monthly allowance applies when a tradesperson submits an offer to an open marketplace job. Simply viewing a job does not use an allowance, and the same trader/job combination cannot consume it twice.</Text>
+          <Text style={styles.explainerText}>An open-marketplace opportunity is counted when a tradesperson first engages with a job by opening the job conversation or sending an offer. Simply viewing a job does not use an allowance, and the same trader/job combination cannot consume it twice.</Text>
         </View>
         <View style={[styles.explainer, { backgroundColor: colors.accentSoft }]}>
           <Text variant="titleLarge" style={styles.explainerTitle}>Direct requests scale with the plan</Text>
@@ -37,13 +37,19 @@ export default function PricingPage() {
         </View>
         <View style={[styles.explainer, { backgroundColor: colors.navySoft }]}>
           <Text variant="titleLarge" style={styles.explainerTitle}>Categories stay meaningful</Text>
-          <Text style={styles.explainerText}>Plan limits apply to broad main trade categories. Services within an already-selected category can be updated separately, while main-category changes use a 14-day cooldown to discourage constant category switching purely to chase individual jobs.</Text>
+          <Text style={styles.explainerText}>Plan limits apply to broad main trade categories. Each selected main category must have at least one genuine service/subcategory chosen, and the tradesperson can select up to every relevant service inside that category without using another plan slot. Main-category changes use a 14-day cooldown to discourage constant switching purely to chase individual jobs.</Text>
         </View>
       </View>
 
       <View style={styles.notice}>
+        <Text variant="titleMedium" style={styles.noticeTitle}>Business tools are part of the membership value</Text>
+        <Text style={styles.noticeText}>Core can quote and invoice customers found outside BuildPair. Plus adds the fuller Quote Builder, outside-customer managed projects, a working calendar and staged BuildPay once the customer claims an accepted quote. Pro adds the longest availability horizon, advanced project tools and Project+ planning.</Text>
+        <Link href="/(public)/updates" asChild><Button mode="text">See what has just been added</Button></Link>
+      </View>
+
+      <View style={styles.notice}>
         <Text variant="titleMedium" style={styles.noticeTitle}>BuildPair job payment fee</Text>
-        <Text style={styles.noticeText}>For jobs using BuildPay, the fee responsibility and exact amount are shown before the payment arrangement is confirmed. Customer-paid BuildPay fees are added to the amount collected. Where a tradesperson chooses to absorb the fee, the relevant deduction is shown in the payout record. BuildPair keeps the contract amount and payment-fee breakdown visible so both sides can see what was agreed.</Text>
+        <Text style={styles.noticeText}>For jobs using BuildPay, the party who asks to add BuildPay carries its cost. Tradesperson-requested BuildPay is absorbed from controlled service payouts; homeowner-requested BuildPay adds the separately disclosed service fee to the homeowner total. BuildPair keeps the contract amount and payment-fee responsibility visible so both sides can see what was agreed.</Text>
         <Link href="/(public)/payments" asChild><Button mode="text">Read how BuildPair payments work</Button></Link>
       </View>
 

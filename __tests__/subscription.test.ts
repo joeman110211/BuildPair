@@ -4,10 +4,12 @@ import {
   categoryChangeAllowed,
   categoryChangeAvailableAt,
   hasActiveLeadAccess,
+  traderAvailabilityEntitlement,
   traderMonthlyQuoteLimit,
   traderSavedSearchLimit,
   traderWorkTypeLimit,
   tierAtLeast,
+  TRADER_AVAILABILITY,
   TRADER_MONTHLY_QUOTE_LIMITS,
   TRADER_SAVED_SEARCH_LIMITS,
   TRADER_WORK_TYPE_LIMITS,
@@ -35,6 +37,18 @@ describe('BuildPair trade plan entitlements', () => {
     expect(traderSavedSearchLimit({ subscriptionTier: 'core' })).toBe(1);
     expect(traderSavedSearchLimit({ subscriptionTier: 'basic' })).toBe(5);
     expect(traderSavedSearchLimit({ subscriptionTier: 'featured' })).toBeNull();
+  });
+
+  it('scales optional public availability without exposing a private diary', () => {
+    expect(TRADER_AVAILABILITY).toEqual({
+      free: { horizonDays: 0, maxSlots: 0, label: 'Not included' },
+      core: { horizonDays: 60, maxSlots: 1, label: 'Next available window' },
+      basic: { horizonDays: 84, maxSlots: 24, label: '12-week calendar' },
+      featured: { horizonDays: 183, maxSlots: 180, label: '6-month calendar' },
+    });
+    expect(traderAvailabilityEntitlement({ subscriptionTier: 'core' }).maxSlots).toBe(1);
+    expect(traderAvailabilityEntitlement({ subscriptionTier: 'basic' }).horizonDays).toBe(84);
+    expect(traderAvailabilityEntitlement({ subscriptionTier: 'featured' }).horizonDays).toBe(183);
   });
 
   it('orders plan entitlements without turning membership into trust', () => {

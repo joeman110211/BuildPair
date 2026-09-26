@@ -10,7 +10,7 @@ import { LAUNCH_DATE_LABEL, MARKETPLACE_OPEN, waitlistHref } from '@/lib/launch'
 
 // Trader discovery is intentionally public before launch so founding profiles can be browsed.
 // Transactional homeowner marketplace routes stay locked until launch.
-const MARKETPLACE_PATHS = ['/jobs', '/quote'];
+const MARKETPLACE_PATHS = ['/jobs'];
 
 function PublicMarketplaceLocked() {
   return <Screen title="BuildPair marketplace opens at launch" subtitle={`Launching ${LAUNCH_DATE_LABEL}.`}>

@@ -10,7 +10,6 @@ import { QuoteDocument, type QuoteDocumentData } from '@/components/QuoteDocumen
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { buildPayCustomerFee, plannedBuildPayChargeCount } from '@/lib/buildpay-fees';
 import { formatMoney, poundsToPence } from '@/lib/money';
 import { buildQuoteStartDateOptions, closestQuoteDuration, QUOTE_DURATION_OPTIONS, QUOTE_SCOPE_MIN_LENGTH } from '@/lib/quote-options';
 import type { BuildPayFeeMode, Job, PaymentStagePlan, TraderProfile } from '@/types';
@@ -35,6 +34,7 @@ type BusinessQuote = {
   customerEmail: string | null;
   customerPhone: string | null;
   jobTitle: string;
+  tradeCategory: string | null;
   jobAddress: string | null;
   workIncluded: string;
   notIncluded: string | null;
@@ -54,6 +54,8 @@ type BusinessQuote = {
   status: string;
   shareToken: string;
   shareUrl: string;
+  revisionNumber: number;
+  managedJobId: string | null;
   createdAt: string;
   items: { id?: string; description: string; category: ItemCategory; quantity: number | string; unitPrice: number; lineTotal: number }[];
 };
@@ -94,6 +96,7 @@ export default function NewQuoteScreen() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [jobTitle, setJobTitle] = useState(title ?? '');
+  const [externalTradeCategory, setExternalTradeCategory] = useState('');
   const [jobAddress, setJobAddress] = useState('');
   const [workIncluded, setWorkIncluded] = useState('');
   const [notIncluded, setNotIncluded] = useState('');
@@ -113,7 +116,7 @@ export default function NewQuoteScreen() {
   const [depositValue, setDepositValue] = useState('');
   const [stages, setStages] = useState<DraftStage[]>([]);
   const [requestBuildPay, setRequestBuildPay] = useState(false);
-  const [buildPayFeeMode, setBuildPayFeeMode] = useState<BuildPayFeeMode>('customer_pays');
+  const buildPayFeeMode: BuildPayFeeMode = 'trader_absorbs';
   const [paymentMethod, setPaymentMethod] = useState<'external' | 'buildpair'>('external');
   const [paymentTerms, setPaymentTerms] = useState('Payment due in line with the agreed payment schedule. Any extra chargeable work must be agreed before it is carried out.');
   const [warrantyText, setWarrantyText] = useState('');
@@ -137,6 +140,7 @@ export default function NewQuoteScreen() {
         const ownProfile = await apiFetch<TraderProfile>('/api/me/profile', {}, tokenGetter);
         if (!active) return;
         setProfile(ownProfile);
+        setExternalTradeCategory((current) => current || ownProfile.tradeCategory);
         const templates = await apiFetch<TraderTemplate[]>('/api/trader-templates', {}, tokenGetter).catch(() => []);
         if (active) setQuoteTemplates(templates.filter((item) => item.kind === 'quote'));
 
@@ -158,6 +162,7 @@ export default function NewQuoteScreen() {
           setCustomerEmail(draft.customerEmail ?? '');
           setCustomerPhone(draft.customerPhone ?? '');
           setJobTitle(draft.jobTitle);
+          setExternalTradeCategory(draft.tradeCategory || ownProfile.tradeCategory);
           setJobAddress(draft.jobAddress ?? '');
           setWorkIncluded(draft.workIncluded);
           setNotIncluded(draft.notIncluded ?? '');
@@ -196,6 +201,7 @@ export default function NewQuoteScreen() {
   const serviceCost = labourOnlyCost + overheadCost;
   const serviceFundingBalance = totalAmount - materialsCost;
   const payoutReady = Boolean(profile?.stripeAccountId && profile.stripePayoutsEnabled);
+  const plusBusinessTools = profile?.subscriptionTier === 'basic' || profile?.subscriptionTier === 'featured';
   const effectiveNotIncluded = useMemo(() => {
     const exclusions = notIncluded.trim();
     if (!subjectToInspection) return exclusions;
@@ -262,12 +268,6 @@ export default function NewQuoteScreen() {
   }, [depositAmount, external, finalAmount, materialsCost, planMode, stages, totalAmount]);
 
   const buildPayRequested = !external && (requestBuildPay || planMode !== 'single');
-  const buildPayPreview = useMemo(() => {
-    if (!buildPayRequested || totalAmount <= 0 || serviceCost <= 0 || !paymentSchedule.length) return null;
-    return buildPayCustomerFee({ contractAmount: totalAmount, laborServiceAmount: serviceCost, plannedChargeCount: plannedBuildPayChargeCount(paymentSchedule) });
-  }, [buildPayRequested, paymentSchedule, serviceCost, totalAmount]);
-  const homeownerAllInTotal = buildPayRequested && buildPayFeeMode === 'customer_pays' ? totalAmount + (buildPayPreview?.customerFee ?? 0) : totalAmount;
-
   const validUntil = useMemo(() => new Date(Date.now() + Number(validDays) * 24 * 60 * 60 * 1000).toISOString(), [validDays]);
   const previewQuote = useMemo<QuoteDocumentData>(() => ({
     businessName: profile?.businessName ?? 'Your business',
@@ -329,6 +329,10 @@ export default function NewQuoteScreen() {
   }
 
   async function buildWithAi() {
+    if (!plusBusinessTools) {
+      setError('AI quote drafting is included with BuildPair Plus and Pro.');
+      return;
+    }
     const description = (workIncluded || job?.description || `Customer requested ${jobTitle}`).trim();
     if ((jobTitle || job?.title || '').trim().length < 3 || description.length < 10) {
       setError('Add a short job title and a few words about the work before asking AI to draft it.');
@@ -364,6 +368,7 @@ export default function NewQuoteScreen() {
 
   function validate() {
     if (external && customerName.trim().length < 2) return 'Add the customer name.';
+    if (external && !externalTradeCategory) return 'Choose the main trade category for this job.';
     if ((jobTitle || job?.title || '').trim().length < 2) return 'Add a job title.';
     if (workIncluded.trim().length < QUOTE_SCOPE_MIN_LENGTH) return `Explain the work included in at least ${QUOTE_SCOPE_MIN_LENGTH} characters so the customer knows exactly what the price covers.`;
     if (!pricedItems.length || totalAmount <= 0) return 'Add at least one priced item.';
@@ -380,6 +385,7 @@ export default function NewQuoteScreen() {
     if (!external && !durationDays) return 'Choose roughly how long the job should take.';
     if (!external && !proposedStartDate) return 'Choose when you expect to start.';
     if (!external && buildPayRequested && !payoutReady) return 'BuildPay cannot be included in this quote until Stripe has confirmed your payout setup. Finish payout setup or use a single direct-payment quote for now.';
+    if (external && paymentMethod === 'buildpair' && !plusBusinessTools) return 'Outside-customer BuildPay and managed projects are included with BuildPair Plus and Pro.';
     if (external && paymentMethod === 'buildpair' && !payoutReady) return 'BuildPay is not available until Stripe has confirmed payout readiness. Use direct payment for now or finish payout setup first.';
     return '';
   }
@@ -412,6 +418,7 @@ export default function NewQuoteScreen() {
           customerEmail: customerEmail.trim(),
           customerPhone: customerPhone.trim(),
           jobTitle: jobTitle.trim(),
+          tradeCategory: externalTradeCategory,
           jobAddress: jobAddress.trim(),
           workIncluded: workIncluded.trim(),
           notIncluded: effectiveNotIncluded,
@@ -502,9 +509,9 @@ export default function NewQuoteScreen() {
         {buildPayRequested ? <>
           <View style={styles.totalBox}>
             <View style={styles.row}><Text style={styles.strong}>Your work price</Text><Text style={styles.strong}>{formatMoney(totalAmount)}</Text></View>
-            {buildPayFeeMode === 'customer_pays' ? <><View style={styles.row}><Text>Estimated BuildPay service fee</Text><Text>{formatMoney(buildPayPreview?.customerFee ?? 0)}</Text></View><View style={styles.row}><Text variant="titleMedium" style={styles.title}>Homeowner all-in total</Text><Text variant="titleMedium" style={styles.total}>{formatMoney(homeownerAllInTotal)}</Text></View></> : <><View style={styles.row}><Text>BuildPay fee charged to homeowner</Text><Text>{formatMoney(0)}</Text></View><View style={styles.row}><Text variant="titleMedium" style={styles.title}>Homeowner all-in total</Text><Text variant="titleMedium" style={styles.total}>{formatMoney(totalAmount)}</Text></View></>}
+            <View style={styles.row}><Text>BuildPay fee charged to homeowner</Text><Text>{formatMoney(0)}</Text></View><View style={styles.row}><Text variant="titleMedium" style={styles.title}>Homeowner all-in total</Text><Text variant="titleMedium" style={styles.total}>{formatMoney(totalAmount)}</Text></View>
           </View>
-          <Text style={styles.muted}>{buildPayFeeMode === 'customer_pays' ? 'The homeowner sees the work price, BuildPay service fee and all-in total before accepting. Your contract price is not reduced by that fee.' : `You are choosing to absorb BuildPay costs. The homeowner pays your ${formatMoney(totalAmount)} work price; BuildPair's labour/service fee and actual Stripe processing costs are recovered from controlled service payouts.`}</Text>
+          <Text style={styles.muted}>{`You requested BuildPay, so you carry its costs. The homeowner pays your ${formatMoney(totalAmount)} work price; BuildPair's labour/service fee and actual Stripe processing costs are recovered from controlled service payouts.`}</Text>
         </> : <Text style={styles.muted}>The homeowner can accept this quote at the work price and choose direct payment. If they later request optional BuildPay, BuildPair will show them its service fee and all-in total before they confirm it.</Text>}
       </AppCard> : null}
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
@@ -522,6 +529,8 @@ export default function NewQuoteScreen() {
       <TextInput label="Customer name" value={customerName} onChangeText={setCustomerName} mode="outlined" />
       <View style={styles.row}><TextInput style={styles.flexField} label="Email (optional)" value={customerEmail} onChangeText={setCustomerEmail} keyboardType="email-address" autoCapitalize="none" mode="outlined" /><TextInput style={styles.flexField} label="Mobile (optional)" value={customerPhone} onChangeText={setCustomerPhone} keyboardType="phone-pad" mode="outlined" /></View>
       <TextInput label="Job address (optional)" value={jobAddress} onChangeText={setJobAddress} mode="outlined" />
+      <QuoteDropdown label="Main trade category" value={externalTradeCategory} options={(profile?.tradeCategories?.length ? profile.tradeCategories : [profile?.tradeCategory].filter(Boolean) as string[]).map((value) => ({ value, label: value }))} placeholder="Choose category" onSelect={setExternalTradeCategory} />
+      <Text style={styles.muted}>This category is used if the customer later brings this accepted quote into BuildPair as a managed project.</Text>
     </AppCard> : job ? <AppCard>
       <View style={styles.row}><View style={styles.flex}><Text variant="titleLarge" style={styles.title}>{job.title}</Text><Text style={styles.muted}>{job.postcode || job.locationLabel || 'BuildPair job'} · {job.budgetRange}</Text></View><Chip>{job.category}</Chip></View>
       <Text style={styles.body}>{job.description}</Text>
@@ -542,7 +551,7 @@ export default function NewQuoteScreen() {
       </View> : null}
       <TextInput label="Not included (optional)" value={notIncluded} onChangeText={setNotIncluded} mode="outlined" multiline numberOfLines={3} placeholder="e.g. Decorating, hidden defects, extra work not listed above" />
       {subjectToInspection ? <HelperText type="info">Inspection caveat added to the customer-facing quote.</HelperText> : null}
-      <Button mode="contained-tonal" icon="creation" loading={aiBusy} disabled={aiBusy} onPress={() => void buildWithAi()}>Help me draft the wording with AI</Button>
+      <Button mode="contained-tonal" icon="creation" loading={aiBusy} disabled={aiBusy || !plusBusinessTools} onPress={() => void buildWithAi()}>{plusBusinessTools ? 'Help me draft the wording with AI' : 'AI quote drafting · Plus'}</Button>
     </AppCard>
 
     <AppCard>
@@ -563,7 +572,7 @@ export default function NewQuoteScreen() {
         {!external ? <><View style={styles.row}><Text>Materials</Text><Text>{formatMoney(materialsCost)}</Text></View><View style={styles.row}><Text>Labour</Text><Text>{formatMoney(labourOnlyCost)}</Text></View>{overheadCost > 0 ? <View style={styles.row}><Text>Site / overhead</Text><Text>{formatMoney(overheadCost)}</Text></View> : null}</> : null}
         <View style={styles.row}><Text>Subtotal</Text><Text>{formatMoney(subtotal)}</Text></View>{vatAmount ? <View style={styles.row}><Text>VAT</Text><Text>{formatMoney(vatAmount)}</Text></View> : null}<View style={styles.row}><Text variant="titleLarge" style={styles.title}>Work price</Text><Text variant="headlineSmall" style={styles.total}>{formatMoney(totalAmount)}</Text></View>
       </View>
-      {!external ? <AppCard elevated={false} style={styles.feeCard}><Text variant="titleSmall" style={styles.title}>How BuildPair fees work</Text><Text style={styles.muted}>BuildPair's platform fee applies to labour/service only, never the quoted materials amount or VAT. If you include BuildPay below, you decide whether the homeowner pays the disclosed BuildPay service fee on top or you absorb the agreed costs from your controlled service payouts.</Text></AppCard> : null}
+      {!external ? <AppCard elevated={false} style={styles.feeCard}><Text variant="titleSmall" style={styles.title}>How BuildPay cost responsibility works</Text><Text style={styles.muted}>BuildPair's platform fee applies to labour/service only, never the quoted materials amount or VAT. If you choose to add BuildPay protection to your quote, you carry the BuildPay cost from controlled service payouts. If the homeowner requests BuildPay later, the homeowner pays the separately disclosed BuildPay service fee.</Text></AppCard> : null}
     </AppCard>
 
     <AppCard>
@@ -609,25 +618,27 @@ export default function NewQuoteScreen() {
         <View style={styles.switchRow}>
           <View style={styles.flex}>
             <Text variant="titleMedium" style={styles.title}>{planMode === 'single' ? 'Include BuildPay in this quote' : 'BuildPay included with protected stages'}</Text>
-            <Text style={styles.muted}>{planMode === 'single' ? 'Optional. Turn this on if you want the single work balance protected through BuildPay.' : 'A deposit or staged-payment proposal uses BuildPay, so the fee responsibility must be agreed as part of the quote.'}</Text>
+            <Text style={styles.muted}>{planMode === 'single' ? 'Optional. Turn this on if you want the single work balance protected through BuildPay.' : 'Because you are proposing the protected deposit/stages, the BuildPay cost is yours rather than an extra charge to the homeowner.'}</Text>
           </View>
           <Switch value={buildPayRequested} disabled={planMode !== 'single'} onValueChange={setRequestBuildPay} />
         </View>
         {buildPayRequested ? <>
           {!payoutReady ? <HelperText type="error">Finish Stripe payout setup before sending a quote that includes BuildPay.</HelperText> : null}
-          <Text variant="labelLarge" style={styles.label}>Who carries the BuildPay cost?</Text>
-          <SegmentedButtons value={buildPayFeeMode} onValueChange={(value) => setBuildPayFeeMode(value as BuildPayFeeMode)} buttons={[{ value: 'customer_pays', label: 'Add fee on top' }, { value: 'trader_absorbs', label: 'I absorb it' }]} />
+          <Chip icon="account-arrow-left-outline">Tradesperson-requested · you carry the BuildPay cost</Chip>
           <View style={styles.totalBox}>
-            <View style={styles.row}><Text>Your work price</Text><Text>{formatMoney(totalAmount)}</Text></View>
-            {buildPayFeeMode === 'customer_pays' ? <><View style={styles.row}><Text>Estimated BuildPay service fee</Text><Text>{formatMoney(buildPayPreview?.customerFee ?? 0)}</Text></View><View style={styles.row}><Text variant="titleMedium" style={styles.title}>Homeowner sees</Text><Text variant="titleMedium" style={styles.total}>{formatMoney(homeownerAllInTotal)}</Text></View></> : <><View style={styles.row}><Text>BuildPay fee added to homeowner</Text><Text>{formatMoney(0)}</Text></View><View style={styles.row}><Text variant="titleMedium" style={styles.title}>Homeowner sees</Text><Text variant="titleMedium" style={styles.total}>{formatMoney(totalAmount)}</Text></View></>}
+            <View style={styles.row}><Text>Your quoted work price</Text><Text>{formatMoney(totalAmount)}</Text></View>
+            <View style={styles.row}><Text>BuildPay fee added to homeowner</Text><Text>{formatMoney(0)}</Text></View>
+            <View style={styles.row}><Text variant="titleMedium" style={styles.title}>Homeowner sees</Text><Text variant="titleMedium" style={styles.total}>{formatMoney(totalAmount)}</Text></View>
           </View>
-          {buildPayFeeMode === 'customer_pays' ? <Text style={styles.muted}>Leave your work price as it is if you want to receive that full contract amount. If you want the homeowner's all-in figure to hit a particular number, adjust your work price above until this all-in total lands where you want it.</Text> : <Text style={styles.muted}>The homeowner's total stays at your work price. BuildPair's labour/service fee and actual Stripe processing costs are recovered from controlled service payouts. The figure shown for customer-paid mode is only a useful comparison because actual card processing can vary.</Text>}
-          <HelperText type="info">The homeowner-facing amount is described as a BuildPay service fee, not a card surcharge. The final all-in total is shown before acceptance.</HelperText>
+          <Text style={styles.muted}>Because you requested BuildPay, the homeowner's contract total stays at your quoted work price. BuildPair's agreed labour/service fee and actual payment-processing costs are recovered from controlled service payouts.</Text>
+          <HelperText type="info">If the homeowner requests BuildPay instead, BuildPair shows their separate service fee and all-in total before they confirm it.</HelperText>
         </> : <Text style={styles.muted}>No BuildPay fee is attached to this quote. If the homeowner later requests BuildPay protection, they will be responsible for the disclosed BuildPay service fee.</Text>}
       </AppCard> : null}
       {external ? <>
         <Text variant="labelLarge" style={styles.label}>Payment method</Text>
-        <SegmentedButtons value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'external' | 'buildpair')} buttons={[{ value: 'external', label: 'Paid directly' }, { value: 'buildpair', label: 'BuildPay', disabled: !payoutReady }]} />
+        <SegmentedButtons value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'external' | 'buildpair')} buttons={[{ value: 'external', label: 'Paid directly' }, { value: 'buildpair', label: 'BuildPay', disabled: !payoutReady || !plusBusinessTools }]} />
+        {!plusBusinessTools ? <HelperText type="info">Core can quote and invoice outside customers. Converting an accepted outside quote into a managed BuildPair project with staged BuildPay is included with Plus and Pro.</HelperText> : null}
+        {paymentMethod === 'buildpair' ? <HelperText type="info">You are asking to use BuildPay for this outside customer, so you carry the BuildPay cost. After the customer accepts and claims the project, the agreed stages move into the normal BuildPay project flow.</HelperText> : null}
         {!payoutReady ? <HelperText type="info">BuildPay is unavailable until Stripe has confirmed that payouts are enabled. You can still create, send and track quotes normally.</HelperText> : null}
       </> : null}
     </AppCard>

@@ -55,12 +55,16 @@ services:
         sync: false
       - key: STRIPE_FEATURED_PRICE_ID
         sync: false
+      - key: STRIPE_PROJECT_PLUS_PRICE_ID
+        sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
       - key: STRIPE_CONNECT_WEBHOOK_SECRET
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: GEMINI_IMAGE_MODEL
+        value: gemini-2.5-flash-image
       - key: RESEND_API_KEY
         sync: false
       - key: ADMIN_CLERK_USER_IDS

@@ -20,10 +20,11 @@ afterEach(() => {
 });
 
 describe('BuildPay fee responsibility', () => {
-  it('forces homeowner-requested BuildPay to customer-paid mode', () => {
+  it('charges the party who requested BuildPay', () => {
     expect(buildPayFeeModeForRequest('customer', 'trader_absorbs')).toBe('customer_pays');
+    expect(buildPayFeeModeForRequest('customer', 'customer_pays')).toBe('customer_pays');
     expect(buildPayFeeModeForRequest('trader', 'trader_absorbs')).toBe('trader_absorbs');
-    expect(buildPayFeeModeForRequest('trader', 'customer_pays')).toBe('customer_pays');
+    expect(buildPayFeeModeForRequest('trader', 'customer_pays')).toBe('trader_absorbs');
   });
 
   it('grosses up a £2,000 labour-only job so the service allowance covers the fee on the fee', () => {

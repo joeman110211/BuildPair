@@ -169,7 +169,6 @@ export default function TraderOnboarding() {
   const [error, setError] = useState('');
 
   const tradeCategory = tradeCategories[0];
-  const selectedServiceCount = useMemo(() => tradeCategories.reduce((sum, category) => sum + (serviceSelections[category]?.length ?? 0), 0), [serviceSelections, tradeCategories]);
   const everyCategoryHasService = tradeCategories.every((category) => (serviceSelections[category]?.length ?? 0) > 0);
   const serviceAreas = useMemo(() => serviceAreasText.split(/[,\n]/).map((value) => value.trim()).filter(Boolean).slice(0, 20), [serviceAreasText]);
   const qualifications = useMemo(() => qualificationsText.split('\n').map((value) => value.trim()).filter(Boolean), [qualificationsText]);

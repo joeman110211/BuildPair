@@ -46,9 +46,9 @@ export function TradeCategorySelector({
     if (selected) {
       delete nextServices[category];
     } else {
-      // Choosing one main trade category means choosing the whole category.
-      // Traders can then untick individual services they genuinely do not offer.
-      nextServices[category] = [...SUB_SKILLS[category]];
+      // A main category uses one plan slot. Services inside it are chosen
+      // deliberately so marketplace matching reflects work the trader actually offers.
+      nextServices[category] = [];
       setExpanded(category);
     }
     onServicesChange(nextServices);
@@ -71,9 +71,9 @@ export function TradeCategorySelector({
     <View style={styles.summary}>
       <View style={styles.summaryText}>
         <Text variant="titleMedium" style={styles.summaryTitle}>{selectedCategories.length} of {categoryLimit} main trade categories selected</Text>
-        <Text style={styles.muted}>Each main category counts as one plan choice. Selecting it includes every service in that category by default. Untick only the services you do not offer.</Text>
+        <Text style={styles.muted}>Each main category counts as one plan choice. Inside every selected category, choose at least one service and up to every service you genuinely offer. Subcategories do not use extra plan slots.</Text>
       </View>
-      <Chip icon="briefcase-outline">Starter 2 · Plus 4 · Pro 6 main categories</Chip>
+      <Chip icon="briefcase-outline">Starter/Core 2 · Plus 4 · Pro 6 main categories</Chip>
     </View>
 
     {changeLockedUntil ? <View style={styles.lockNotice}>
@@ -110,7 +110,7 @@ export function TradeCategorySelector({
                     : `${services.length} of ${allServices.length} services selected`
                   : categoryDisabled && maxReached
                     ? 'Plan main-category limit reached'
-                    : 'Select this whole trade category'}</Text>
+                    : 'Select category, then choose its services'}</Text>
               </View>
             </Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel={`${open ? 'Hide' : 'Show'} ${category} services`} onPress={() => setExpanded(open ? null : category)} style={styles.expandButton}>
@@ -119,8 +119,8 @@ export function TradeCategorySelector({
           </View>
 
           {open ? <View style={styles.servicesBlock}>
-            {!selected ? <Text style={styles.serviceHint}>Select {category} to include the whole category. You can then untick anything you do not offer.</Text> : <View style={styles.serviceControls}>
-              <Text style={styles.serviceHint}>{wholeCategorySelected ? 'All services in this category are included.' : 'You have excluded some services from this category.'}</Text>
+            {!selected ? <Text style={styles.serviceHint}>Select {category} first, then choose the services you actually offer.</Text> : <View style={styles.serviceControls}>
+              <Text style={styles.serviceHint}>{services.length === 0 ? 'Choose at least one service in this category.' : wholeCategorySelected ? 'All services in this category are selected.' : `${services.length} of ${allServices.length} services selected. Add as many as genuinely apply.`}</Text>
               {!wholeCategorySelected ? <Pressable accessibilityRole="button" onPress={() => selectWholeCategory(category)} style={styles.selectAllButton}>
                 <Text style={styles.selectAllText}>Select whole category</Text>
               </Pressable> : null}

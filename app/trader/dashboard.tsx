@@ -168,7 +168,11 @@ export default function TraderDashboard() {
     <View style={styles.quickActions}>
       <Link href="/trader/job-board" asChild><Button mode="contained" contentStyle={styles.actionButton}>Find jobs</Button></Link>
       <Link href="/trader/my-jobs" asChild><Button mode="outlined" contentStyle={styles.actionButton}>My active jobs</Button></Link>
+      <Link href="/trader/quotes" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Quote any customer</Button></Link>
       <Link href="/trader/invoices/new" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Create invoice</Button></Link>
+      <Link href="/trader/customers" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Customer book</Button></Link>
+      <Link href="/trader/calendar" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Working calendar</Button></Link>
+      <Link href="/trader/project-plus" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Project+ planner</Button></Link>
       <Link href="/trader/profile" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Manage profile</Button></Link>
       <Button mode="outlined" contentStyle={styles.actionButton} onPress={() => router.push(`/(public)/traders/${profile.id}` as Href)}>View public profile</Button>
     </View>

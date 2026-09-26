@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
+import { ProjectWorkspace } from '@/components/ProjectWorkspace';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
@@ -319,6 +320,8 @@ export default function TraderJobDetail() {
         {paymentMode === 'external' && stage.status === 'paid' ? <Text style={styles.success}>Direct payment recorded ✓ Both sides confirmed it. BuildPair did not handle the money.</Text> : null}
       </AppCard>;
     }) : <EmptyState title="No payment stages" body="The accepted quote does not contain payment stages." />}
+
+    {data.acceptedQuote ? <ProjectWorkspace jobId={id} role="trader" /> : null}
 
     <Text variant="titleLarge" style={styles.title}>Project timeline</Text>
     {data.timeline?.length ? <AppCard>{data.timeline.map((event, index) => <View key={event.id} style={styles.timelineRow}><View style={styles.dot} /><View style={styles.flex}><Text variant="titleSmall" style={styles.title}>{event.title}</Text>{event.description ? <Text style={styles.muted}>{event.description}</Text> : null}<Text variant="bodySmall" style={styles.muted}>{new Date(event.createdAt).toLocaleString('en-GB')}</Text></View>{index < data.timeline.length - 1 ? <View style={styles.line} /> : null}</View>)}</AppCard> : <EmptyState title="No timeline events yet" body="Job progress and approved changes will appear here." />}

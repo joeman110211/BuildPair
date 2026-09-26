@@ -57,6 +57,12 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
   const items: CompactNavItem[] = [
     { label: 'Profile', sectionLabel: 'Your account', onPress: () => go(profileHref) },
     { label: 'Account & security', onPress: () => go(settingsHref) },
+    ...(currentMode === 'trader' ? [
+      { label: 'Quotes', sectionLabel: 'Business tools', dividerBefore: true, onPress: () => go('/trader/quotes') },
+      { label: 'Customer book', onPress: () => go('/trader/customers') },
+      { label: 'Working calendar', onPress: () => go('/trader/calendar') },
+      { label: 'Project+ planner', onPress: () => go('/trader/project-plus') },
+    ] satisfies CompactNavItem[] : [{ label: 'Project+ planner', sectionLabel: 'Planning', dividerBefore: true, onPress: () => go('/customer/project-plus') } satisfies CompactNavItem]),
     { label: unreadMessages ? `Messages (${unreadMessages > 99 ? '99+' : unreadMessages})` : 'Messages', sectionLabel: 'Activity', dividerBefore: true, onPress: () => go(messagesHref) },
     { label: unreadNotifications ? `Notifications (${unreadNotifications > 99 ? '99+' : unreadNotifications})` : 'Notifications', onPress: () => go(notificationsHref) },
     { label: modeAction, sectionLabel: 'Account mode', dividerBefore: true, disabled: switchingMode, onPress: () => void changeMode() },

@@ -61,7 +61,12 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
     { label: 'Dashboard', onPress: () => go(home) },
     { label: findLabel, onPress: () => go(findHref) },
     { label: 'Jobs', onPress: () => go(jobsHref) },
-    ...(currentMode === 'trader' ? [{ label: 'Quotes', onPress: () => go(quotesHref) } satisfies CompactNavItem] : []),
+    ...(currentMode === 'trader' ? [
+      { label: 'Quotes', onPress: () => go(quotesHref) },
+      { label: 'Customer book', onPress: () => go('/trader/customers') },
+      { label: 'Working calendar', onPress: () => go('/trader/calendar') },
+      { label: 'Project+ planner', onPress: () => go('/trader/project-plus') },
+    ] satisfies CompactNavItem[] : [{ label: 'Project+ planner', onPress: () => go('/customer/project-plus') } satisfies CompactNavItem]),
     { label: messageLabel, onPress: () => go(messagesHref) },
     { label: notificationLabel, onPress: () => go(notificationsHref) },
     { label: 'Profile', sectionLabel: 'Your account', dividerBefore: true, onPress: () => go(profileHref) },

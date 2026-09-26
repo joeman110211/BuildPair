@@ -26,6 +26,9 @@ export default function TraderTrustScreen() {
   const [referenceNumber, setReferenceNumber] = useState('');
   const [expiresDate, setExpiresDate] = useState('');
   const [evidence, setEvidence] = useState<string[]>([]);
+  const [availabilityStart, setAvailabilityStart] = useState('');
+  const [availabilityEnd, setAvailabilityEnd] = useState('');
+  const [availabilityNote, setAvailabilityNote] = useState('Available for new work');
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -73,6 +76,19 @@ export default function TraderTrustScreen() {
     finally { setBusy(false); }
   }
 
+  async function addAvailabilityRange() {
+    try {
+      setBusy(true); setError('');
+      const start = new Date(`${availabilityStart.trim()}T08:00:00`);
+      const end = new Date(`${availabilityEnd.trim() || availabilityStart.trim()}T18:00:00`);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) throw new Error('Enter availability dates as YYYY-MM-DD.');
+      await apiFetch('/api/availability', { method: 'POST', body: JSON.stringify({ startsAt: start.toISOString(), endsAt: end.toISOString(), status: 'available', note: availabilityNote.trim() || 'Available for new work' }) }, () => getTokenRef.current());
+      setAvailabilityStart(''); setAvailabilityEnd(''); setAvailabilityNote('Available for new work');
+      await load();
+    } catch (e) { setError(errorMessage(e)); }
+    finally { setBusy(false); }
+  }
+
   async function removeAvailability(id: string) {
     try {
       await apiFetch('/api/availability', { method: 'DELETE', body: JSON.stringify({ id }) }, () => getTokenRef.current());
@@ -82,7 +98,14 @@ export default function TraderTrustScreen() {
 
   if (loading) return <LoadingScreen label="Loading trust settings…" />;
   const verified = credentials.filter((credential) => credential.status === 'verified');
-  const proAvailability = profile?.subscriptionTier === 'featured';
+  const availabilityTier = profile?.subscriptionTier ?? 'free';
+  const availabilityPlan = availabilityTier === 'featured'
+    ? { name: 'Pro', horizon: '6 months', max: 'up to 180 availability windows' }
+    : availabilityTier === 'basic'
+      ? { name: 'Plus', horizon: '12 weeks', max: 'up to 24 availability windows' }
+      : availabilityTier === 'core'
+        ? { name: 'Core', horizon: '60 days', max: 'your next available window' }
+        : null;
   return <Screen title="Trust & Availability" subtitle="Show homeowners what has actually been checked and when you can realistically take new work.">
     <View style={styles.stats}>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{verified.length}</Text><Text style={styles.muted}>verified credentials</Text></AppCard>
@@ -112,13 +135,21 @@ export default function TraderTrustScreen() {
     </AppCard>)}
 
     <AppCard>
-      <View style={styles.row}><View style={styles.flex}><Text variant="titleLarge" style={styles.title}>Availability calendar</Text><Text style={styles.muted}>Pro can publish upcoming availability so homeowners can see when you are realistically open to new work. A current availability slot also opts you into nearby emergency-job broadcasts while that slot is active.</Text></View><Chip icon="star-circle-outline">BuildPair Pro</Chip></View>
-      {proAvailability ? <View style={styles.actions}>
-        <Button mode="outlined" disabled={busy} onPress={() => void addAvailability(0)}>Available today</Button>
-        <Button mode="outlined" disabled={busy} onPress={() => void addAvailability(1)}>Tomorrow</Button>
-        <Button mode="outlined" disabled={busy} onPress={() => void addAvailability(2)}>In 2 days</Button>
-        <Button mode="outlined" disabled={busy} onPress={() => void addAvailability(7)}>Next week</Button>
-      </View> : <Text style={styles.muted}>Your existing verified credentials are never hidden by plan. Publishing availability is a Pro business feature rather than a trust signal.</Text>}
+      <View style={styles.row}><View style={styles.flex}><Text variant="titleLarge" style={styles.title}>Optional public availability</Text><Text style={styles.muted}>Publish only the windows when you want new enquiries. Homeowners see availability windows, never private diary entries, customer names, job addresses or your personal calendar.</Text></View>{availabilityPlan ? <Chip icon="calendar-check-outline">{availabilityPlan.name} · {availabilityPlan.horizon}</Chip> : <Chip icon="lock-outline">Paid plans</Chip>}</View>
+      {availabilityPlan ? <>
+        <Text style={styles.muted}>{availabilityPlan.name} includes {availabilityPlan.max}. You can remove or replace availability whenever your workload changes.</Text>
+        <View style={styles.actions}>
+          <Button mode="outlined" disabled={busy} onPress={() => void addAvailability(0)}>Today</Button>
+          <Button mode="outlined" disabled={busy} onPress={() => void addAvailability(1)}>Tomorrow</Button>
+          <Button mode="outlined" disabled={busy} onPress={() => void addAvailability(7)}>Next week</Button>
+        </View>
+        <View style={styles.twoCol}>
+          <TextInput style={styles.flex} mode="outlined" label="Available from YYYY-MM-DD" value={availabilityStart} onChangeText={setAvailabilityStart} keyboardType="numbers-and-punctuation" />
+          <TextInput style={styles.flex} mode="outlined" label="Available until YYYY-MM-DD" value={availabilityEnd} onChangeText={setAvailabilityEnd} keyboardType="numbers-and-punctuation" />
+        </View>
+        <TextInput mode="outlined" label="Private note for you (not shown publicly)" value={availabilityNote} onChangeText={setAvailabilityNote} maxLength={300} />
+        <Button mode="contained" icon="calendar-plus" disabled={busy || availabilityStart.trim().length !== 10} loading={busy} onPress={() => void addAvailabilityRange()}>Publish availability window</Button>
+      </> : <Text style={styles.muted}>Availability publishing starts with BuildPair Core. Trust evidence and verified credentials remain separate from membership and are never hidden because someone is on a lower plan.</Text>}
     </AppCard>
 
     {!availability.length ? <EmptyState title="No availability published" body="Add a day above when you are ready for new enquiries." /> : availability.map((slot) => <AppCard key={slot.id}>
@@ -137,5 +168,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' },
   flex: { flex: 1, minWidth: 220, gap: 4 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  twoCol: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   sectionHeading: { marginTop: 4 },
 });
