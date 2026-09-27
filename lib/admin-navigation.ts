@@ -24,6 +24,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     description: 'The fastest route to the owner overview or a plain-English answer.',
     items: [
       ADMIN_OVERVIEW_ITEM,
+      { href: '/admin/qa-lab', label: 'QA Lab', shortLabel: 'QA Lab', description: 'Preview homeowner, trade, public and admin screens, then jump to the real records needed for transactional states.' },
       { href: '/admin/assistant', label: 'Admin Assistant', shortLabel: 'Assistant', description: 'Ask plain-English questions about BuildPair, marketplace context, errors or changes you want to make.' },
     ],
   },
