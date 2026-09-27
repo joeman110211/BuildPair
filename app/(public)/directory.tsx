@@ -248,7 +248,7 @@ export default function DirectoryScreen() {
     {compareTraders.length ? <View style={styles.compareDockSpacer} /> : null}
 
     {compareTraders.length ? <Portal>
-      <View pointerEvents="box-none" style={styles.compareDockShell}>
+      <View pointerEvents="box-none" style={[styles.compareDockShell, compactCompareDock && styles.compareDockShellCompact]}>
         <View style={[styles.compareDock, compactCompareDock && styles.compareDockCompact]}>
           <View style={[styles.compareDockCopy, compactCompareDock && styles.compareDockCopyCompact]}>
             <Text style={styles.compareDockCount}>{compareTraders.length} trade{compareTraders.length === 1 ? '' : 's'} selected</Text>
@@ -288,8 +288,9 @@ const styles = StyleSheet.create({
   compareCard: { flex: 1, minWidth: 220, gap: 6, borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised, padding: 14 },
   compareTitle: { color: colors.charcoal, fontWeight: '900' },
   compareLine: { color: colors.muted, lineHeight: 20 },
-  compareDockSpacer: { height: 86 },
-  compareDockShell: { position: 'absolute', left: 0, right: 0, bottom: 14, alignItems: 'center', paddingHorizontal: 12 },
+  compareDockSpacer: { height: 124 },
+  compareDockShell: { position: 'absolute', left: 0, right: 0, bottom: 14, zIndex: 40, alignItems: 'center', paddingHorizontal: 12 },
+  compareDockShellCompact: { bottom: 86 },
   compareDock: { width: '100%', maxWidth: 760, minHeight: 70, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: '#E8C9AD', backgroundColor: '#FFF9F3', shadowColor: '#000000', shadowOpacity: 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 7 }, elevation: 8 },
   compareDockCompact: { minHeight: 0, flexDirection: 'column', alignItems: 'stretch', gap: 9, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 17 },
   compareDockCopy: { flex: 1, minWidth: 220, gap: 2 },
