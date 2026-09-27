@@ -54,8 +54,8 @@ export function PublicFooter() {
     <View style={styles.flowStrip}>
       <View style={styles.flowCopy}>
         <Text style={styles.flowEyebrow}>A FLEXIBLE JOB FLOW</Text>
-        <Text style={styles.flowTitle}>Visit in person. Compare structured quotes. Choose how you pay.</Text>
-        <Text style={styles.flowText}>A tradesperson can visit before quoting. Homeowners can compare active quotes and stop new ones when they have enough. After one quote is accepted, use BuildPay for supported staged payments or, if both sides agree, arrange payment privately while keeping the project record.</Text>
+        <Text style={styles.flowTitle}>Visit first if needed. Compare clear quotes. Choose how you pay.</Text>
+        <Text style={styles.flowText}>A tradesperson can visit before quoting. Homeowners can compare structured quotes and pause new responses when they have enough. After a quote is accepted, use BuildPay for supported staged payments or mutually agree to pay privately while keeping the project record.</Text>
       </View>
       <View style={styles.flowLinks}>
         <Link href="/(public)/how-it-works" asChild><Pressable style={styles.flowButton}><Text style={styles.flowButtonText}>How it works</Text></Pressable></Link>
@@ -70,8 +70,8 @@ export function PublicFooter() {
           </Pressable>
         </Link>
         <Text style={styles.tagline}>Find the trade. Manage the job. Keep the record.</Text>
-        <Text style={styles.description}>A UK marketplace and project platform connecting homeowners with local tradespeople. Search, quotes, messages, agreed changes, payment stages and project history stay connected.</Text>
-        <Text style={styles.description}>Supported BuildPay payments are processed through Stripe. Private payment arrangements sit outside BuildPay and its in-platform payment workflow.</Text>
+        <Text style={styles.description}>A UK marketplace and project platform connecting homeowners with local tradespeople. Search, quotes, messages, agreed changes, payments and project history stay together.</Text>
+        <Text style={styles.description}>BuildPay payments are processed through Stripe. Payments arranged privately sit outside BuildPair’s in-platform payment protection and recovery process.</Text>
         <View style={styles.contactPill}><Text style={styles.contactText}>info@buildpair.co.uk</Text></View>
       </View>
       {linkGroups.map((group) => <View key={group.title} style={styles.group}>
@@ -94,16 +94,16 @@ const styles = StyleSheet.create({
   flowEyebrow: { color: colors.secondary, fontSize: 11, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
   flowTitle: { color: '#FFFFFF', fontSize: 20, lineHeight: 26, fontWeight: '900' },
   flowText: { color: '#D4D9DD', lineHeight: 21, fontSize: 13 },
-  flowLinks: { minWidth: 190, gap: spacing.sm },
-  flowButton: { borderRadius: radii.pill, backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, alignItems: 'center' },
+  flowLinks: { minWidth: 190, gap: spacing.sm, alignItems: 'stretch' },
+  flowButton: { minHeight: 44, borderRadius: radii.pill, backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, alignItems: 'center', justifyContent: 'center' },
   flowButtonText: { color: '#FFFFFF', fontWeight: '900' },
-  flowButtonAlt: { borderRadius: radii.pill, borderWidth: 1, borderColor: '#FFFFFF', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, alignItems: 'center' },
+  flowButtonAlt: { minHeight: 44, borderRadius: radii.pill, borderWidth: 1, borderColor: '#FFFFFF', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, alignItems: 'center', justifyContent: 'center' },
   flowButtonAltText: { color: '#FFFFFF', fontWeight: '900' },
   inner: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xxxl, justifyContent: 'space-between' },
   brandBlock: { flex: 2, minWidth: 260, maxWidth: 430, gap: spacing.sm },
   logoCard: { alignSelf: 'flex-start', backgroundColor: '#FFFFFF', borderRadius: radii.md, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, overflow: 'hidden' },
   tagline: { color: '#FFE6D5', lineHeight: 23, fontWeight: '800' },
-  description: { color: '#C8CDD1', lineHeight: 21, fontSize: 13, maxWidth: 420 },
+  description: { color: '#C8CDD1', lineHeight: 21, fontSize: 13, maxWidth: 400 },
   contactPill: { alignSelf: 'flex-start', marginTop: spacing.xs, borderRadius: radii.pill, backgroundColor: '#343B43', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   contactText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
   small: { color: '#B7BDC2', lineHeight: 20, fontSize: 12 },
