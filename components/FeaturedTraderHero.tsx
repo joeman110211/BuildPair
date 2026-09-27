@@ -2,7 +2,7 @@ import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ImageBackground, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { LatestJobsShowcase } from '@/components/LatestJobsShowcase';
 import { colors } from '@/constants/theme';
 import { apiFetch } from '@/lib/api';
@@ -58,13 +58,13 @@ function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
     >
       <View style={styles.cardShade} />
       <View style={styles.cardTopRow}>
-        <View style={styles.featuredBadge}><Text style={styles.featuredBadgeText}>FEATURED TRADE</Text></View>
+        <View style={styles.featuredBadge}><Text style={styles.featuredBadgeText}>{trader.foundingTrade ? 'FOUNDING TRADE' : 'BUILDPAIR TRADE'}</Text></View>
         <View style={styles.planBadge}><Text style={styles.planBadgeText}>{membership}</Text></View>
       </View>
       <View style={styles.cardInfo}>
         <Text numberOfLines={2} style={styles.businessName}>{trader.businessName}</Text>
         <Text numberOfLines={2} style={styles.tradeLine}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
-        <Text numberOfLines={1} style={styles.metaLine}>{reputation}</Text>
+        <Text numberOfLines={1} style={styles.metaLine}>{reputation}{trader.prelaunchProfile ? ' · Profile live before launch' : ''}</Text>
         <View style={styles.cardFoot}>
           <Text style={styles.activityText}>{trader.completedJobs > 0 ? `${trader.completedJobs} completed` : `${trader.galleryCount} work photos`}</Text>
           <Text style={styles.viewText}>View →</Text>
@@ -75,7 +75,6 @@ function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
 }
 
 export function FeaturedTraderHero({ wide }: { wide: boolean }) {
-  const router = useRouter();
   const { width } = useWindowDimensions();
   const [traders, setTraders] = useState<FeaturedTrader[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -109,8 +108,8 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
     return <View style={[styles.wrapper, wide && styles.wrapperWide]}>
       <View style={[styles.preloadCard, wide && styles.wrapperWide]}>
         <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
-        <Text style={styles.preloadTitle}>Real BuildPair profiles are loading.</Text>
-        <Text style={styles.preloadText}>Current Surrey trade profiles appear here as they become available.</Text>
+        <Text style={styles.preloadTitle}>Featured BuildPair profiles.</Text>
+        <Text style={styles.preloadText}>Live local trade profiles appear here as they become available. BuildPair loads current directory profiles rather than using placeholder listings.</Text>
       </View>
       <LatestJobsShowcase wide={wide} />
     </View>;
@@ -122,9 +121,8 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
         <View style={styles.emptyShade} />
         <View style={styles.emptyCopy}>
           <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
-          <Text style={styles.emptyTitle}>Your business could be featured here.</Text>
-          <Text style={styles.emptyText}>Create a professional BuildPair profile, show the work you do and make it easier for local homeowners to find you.</Text>
-          <Button mode="contained" buttonColor={colors.primary} style={styles.emptyButton} onPress={() => router.push('/auth/sign-up?mode=trader')}>Create trade profile</Button>
+          <Text style={styles.emptyTitle}>Real profiles. Real work. No placeholder listings.</Text>
+          <Text style={styles.emptyText}>BuildPair trade profiles appear here automatically as they become available.</Text>
         </View>
       </ImageBackground>
       <LatestJobsShowcase wide={wide} />
@@ -158,7 +156,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
     >
       {pages.map((page, pageIndex) => <View key={`featured-page-${pageIndex}`} style={[styles.page, { width: pageWidth }]}>
         {page.map((trader) => <FeaturedCard key={trader.id} trader={trader} />)}
-        {page.length < pageSize ? Array.from({ length: pageSize - page.length }).map((_, index) => <Pressable key={`spacer-${index}`} style={styles.recruitmentSpacer} onPress={() => router.push('/auth/sign-up?mode=trader')} accessibilityRole="button"><Text style={styles.recruitmentEyebrow}>BUILDPAIR TRADES</Text><Text style={styles.recruitmentTitle}>Your business could be here.</Text><Text style={styles.recruitmentText}>Create your trade profile and show local homeowners what you do.</Text><Text style={styles.recruitmentLink}>Create profile →</Text></Pressable>) : null}
+        {page.length < pageSize ? Array.from({ length: pageSize - page.length }).map((_, index) => <View key={`spacer-${index}`} style={styles.cardSpacer} />) : null}
       </View>)}
     </ScrollView>
 
@@ -181,11 +179,7 @@ const styles = StyleSheet.create({
   page: { flexDirection: 'row', gap: 10, paddingHorizontal: 1 },
   cardPressable: { flex: 1, minWidth: 0, height: 320, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.navySoft },
   cardPressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
-  recruitmentSpacer: { flex: 1, minWidth: 0, height: 320, borderRadius: 24, padding: 18, justifyContent: 'flex-end', gap: 7, backgroundColor: '#FFF5EC', borderWidth: 1, borderColor: '#E8B98F' },
-  recruitmentEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
-  recruitmentTitle: { color: colors.charcoal, fontSize: 20, lineHeight: 24, fontWeight: '900' },
-  recruitmentText: { color: colors.muted, lineHeight: 19 },
-  recruitmentLink: { color: colors.primaryDark, fontWeight: '900', marginTop: 3 },
+  cardSpacer: { flex: 1, minWidth: 0 },
   cardImage: { flex: 1, justifyContent: 'space-between', padding: 12 },
   cardImageRadius: { borderRadius: 24 },
   cardShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(8,21,31,0.36)', borderRadius: 24 },
@@ -216,5 +210,4 @@ const styles = StyleSheet.create({
   emptyEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
   emptyTitle: { color: '#FFFFFF', fontSize: 22, lineHeight: 27, fontWeight: '900' },
   emptyText: { color: '#DCE7EE', lineHeight: 20 },
-  emptyButton: { alignSelf: 'flex-start', marginTop: 4, borderRadius: 14 },
 });

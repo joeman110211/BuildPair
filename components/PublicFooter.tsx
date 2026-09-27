@@ -63,8 +63,8 @@ export function PublicFooter() {
             </Pressable>
           </Link>
         </View>
-        <Text style={[styles.tagline, compact && styles.taglineCompact]}>Built around the project, not the lead.</Text>
-        <Text style={[styles.description, compact && styles.descriptionCompact]}>A UK marketplace and project platform connecting local trades, structured quotes, project communication, payments and job history in one place.</Text>
+        <Text style={[styles.tagline, compact && styles.taglineCompact]}>Find the trade. Manage the job. Keep the record.</Text>
+        <Text style={[styles.description, compact && styles.descriptionCompact]}>A UK marketplace and project platform connecting homeowners with local tradespeople, quotes, messages, payments and project history in one place.</Text>
         <View style={[styles.contactPill, compact && styles.contactPillCompact]}><Text style={styles.contactText}>info@buildpair.co.uk</Text></View>
       </View>
       {linkGroups.map((group) => <View key={group.title} style={[styles.group, compact && styles.groupCompact]}>

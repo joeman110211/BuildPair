@@ -109,24 +109,7 @@ export function LatestJobsShowcase({ wide }: { wide: boolean }) {
     </View>;
   }
 
-  if (!jobs.length) {
-    return <View style={[styles.section, wide && styles.sectionWide]}>
-      <View style={styles.headingRow}>
-        <View style={styles.headingCopy}>
-          <Text style={styles.eyebrow}>LATEST JOBS</Text>
-          <Text variant="headlineSmall" style={styles.title}>No public jobs are available right now.</Text>
-          <Text style={styles.muted}>New homeowner projects appear here when they are posted. BuildPair only shows genuine marketplace jobs rather than filling the page with demo listings.</Text>
-        </View>
-      </View>
-      <View style={styles.emptyJobsCard}>
-        <View style={styles.emptyJobsCopy}>
-          <Text variant="titleMedium" style={styles.jobTitle}>Looking for local work?</Text>
-          <Text style={styles.description}>Create your trade profile, set the area you genuinely cover and check the Job Board for new matching opportunities.</Text>
-        </View>
-        <Button mode="contained" style={styles.button} contentStyle={styles.buttonContent} onPress={() => router.push('/auth/sign-up?mode=trader')}>Create trade profile</Button>
-      </View>
-    </View>;
-  }
+  if (!jobs.length) return null;
 
   const updatePage = (offsetX: number) => {
     const next = Math.max(0, Math.min(pages.length - 1, Math.round(offsetX / pageWidth)));
@@ -207,8 +190,6 @@ const styles = StyleSheet.create({
   muted: { color: colors.muted, lineHeight: 20, maxWidth: 720 },
   preloadCard: { minHeight: 110, alignItems: 'center', justifyContent: 'center', borderRadius: 18, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSoft, padding: 16 },
   preloadText: { color: colors.muted, fontWeight: '800', textAlign: 'center' },
-  emptyJobsCard: { borderRadius: 20, borderWidth: 1, borderColor: '#E8B98F', backgroundColor: '#FFF8F2', padding: 17, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14 },
-  emptyJobsCopy: { flex: 1, minWidth: 220, maxWidth: 720, gap: 6 },
   carousel: { width: '100%', maxWidth: 1140 },
   carouselContent: { alignItems: 'stretch' },
   page: { flexDirection: 'row', gap: 10, paddingHorizontal: 1 },
