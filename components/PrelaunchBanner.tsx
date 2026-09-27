@@ -1,7 +1,7 @@
 import { Link } from 'expo-router';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
-import { colors, spacing } from '@/constants/theme';
+import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { LAUNCH_DATE_LABEL, waitlistHref } from '@/lib/launch';
 
 export function PrelaunchBanner() {
@@ -25,13 +25,13 @@ export function PrelaunchBanner() {
       </View>
       <View style={[styles.actions, compact && styles.actionsCompact]}>
         <Link href={waitlistHref('trader', 'homepage-banner')} asChild>
-          <Button mode="contained" icon="account-clock-outline" style={[styles.actionButton, compact && styles.primaryActionCompact]} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>Create my trade profile</Button>
+          <Button mode="contained" icon="account-clock-outline" style={styles.actionButton} contentStyle={styles.actionContent}>Create my trade profile</Button>
         </Link>
         <Link href="/(public)/rewards" asChild>
-          <Button mode="outlined" style={[styles.actionButton, compact && styles.secondaryActionCompact]} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>Founding rewards</Button>
+          <Button mode="outlined" style={styles.actionButton} contentStyle={styles.actionContent}>Founding rewards</Button>
         </Link>
         <Link href="/auth/sign-in" asChild>
-          <Button mode="text" style={[styles.actionButton, compact && styles.secondaryActionCompact]} contentStyle={[styles.actionContent, compact && styles.actionContentCompact]}>Sign in</Button>
+          <Button mode="outlined" style={styles.actionButton} contentStyle={styles.actionContent}>Sign in</Button>
         </Link>
       </View>
     </View>
@@ -65,11 +65,8 @@ const styles = StyleSheet.create({
   strong: { color: colors.charcoal, fontWeight: '900' },
   small: { color: colors.muted, lineHeight: 17, fontSize: 12 },
   smallCompact: { lineHeight: 15, fontSize: 11 },
-  actions: { minWidth: 230, gap: spacing.sm, alignItems: 'stretch' },
-  actionsCompact: { minWidth: 0, width: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  actionButton: { borderRadius: 999 },
-  primaryActionCompact: { width: '100%' },
-  secondaryActionCompact: { flexGrow: 1, flexBasis: 145, minWidth: 0 },
-  actionContent: { minHeight: 44 },
-  actionContentCompact: { minHeight: 38 },
+  actions: { width: 250, maxWidth: '100%', gap: spacing.sm, alignItems: 'stretch' },
+  actionsCompact: { minWidth: 0, width: '100%', flexDirection: 'column', flexWrap: 'nowrap', gap: 8 },
+  actionButton: { width: '100%', borderRadius: radii.pill },
+  actionContent: { minHeight: controlHeights.prominent, paddingHorizontal: 10 },
 });
