@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/expo';
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Image, Linking, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Chip, Divider, IconButton, Text } from 'react-native-paper';
+import { Button, Divider, IconButton, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { GoogleReviewsPublicCard } from '@/components/GoogleReviewsPublicCard';
 import { TraderCard } from '@/components/TraderCard';
@@ -166,6 +166,12 @@ export default function TraderProfileStorefront() {
   const showCredentials = showOverview || activeSection === 'credentials';
   const showAbout = showOverview;
   const selectedGalleryPhoto = galleryIndex === null ? null : galleryPhotos[galleryIndex];
+  const trustItems = [
+    !profile.isPreview && profile.verifiedCredentialCount ? 'Verified trader' : null,
+    `${profile.radiusMiles} mile radius`,
+    profile.foundingTrade ? 'Founding BuildPair trade' : null,
+    profile.isSubscriptionActive ? 'Active member' : null,
+  ].filter(Boolean).join(' · ');
 
   function changeGalleryPhoto(delta: number) {
     if (!galleryPhotos.length) return;
@@ -177,7 +183,7 @@ export default function TraderProfileStorefront() {
 
   return <Screen>
     {prelaunchProfile ? <AppCard style={styles.prelaunchNotice}>
-      <View style={styles.noticeRow}><View style={styles.noticeCopy}><Text variant="titleMedium" style={styles.panelTitle}>BuildPair pre-launch profile</Text><Text style={styles.muted}>You can browse this real trade profile now. Quote requests, messaging and direct contact stay locked until BuildPair launches on 15 October 2026.</Text></View>{profile.foundingTrade ? <Chip icon="rocket-launch-outline">Founding BuildPair Trade</Chip> : null}</View>
+      <View style={styles.noticeRow}><View style={styles.noticeCopy}><Text variant="titleMedium" style={styles.panelTitle}>BuildPair pre-launch profile</Text><Text style={styles.muted}>You can browse this real trade profile now. Quote requests, messaging and direct contact stay locked until BuildPair launches on 15 October 2026.</Text></View>{profile.foundingTrade ? <Text style={styles.noticeBadge}>Founding BuildPair Trade</Text> : null}</View>
     </AppCard> : null}
 
     {profile.shareOnly ? <AppCard style={styles.noticeCard}>
@@ -211,12 +217,7 @@ export default function TraderProfileStorefront() {
               <Text style={styles.stars}>★★★★★</Text>
               <Text style={styles.ratingText}>{profile.averageRating.toFixed(1)} ({profile.reviewCount} review{profile.reviewCount === 1 ? '' : 's'})</Text>
             </View>
-            <View style={styles.trustRow}>
-              {!profile.isPreview && profile.verifiedCredentialCount ? <Chip compact icon="shield-check">Verified trader</Chip> : null}
-              <Chip compact icon="map-marker-radius">{profile.radiusMiles} mile radius</Chip>
-              {profile.foundingTrade ? <Chip compact icon="rocket-launch-outline">Founding BuildPair Trade</Chip> : null}
-              {profile.isSubscriptionActive ? <Chip compact icon="check-decagram">Active member</Chip> : null}
-            </View>
+            <Text style={styles.trustLine}>{trustItems}</Text>
           </View>
         </View>
 
@@ -278,20 +279,16 @@ export default function TraderProfileStorefront() {
         {showServices ? <SectionCard title="Trades & Services">
           <View style={styles.listBlock}>
             <Text variant="titleMedium" style={styles.listHeading}>Trade categories</Text>
-            <View style={styles.serviceTags}>
-              {visibleCategories.map((category) => <Chip key={category} icon="hammer-wrench" style={styles.serviceChip}>{category}</Chip>)}
-            </View>
-            {hiddenCategoryCount ? <Button compact mode="text" icon={showAllCategories ? 'chevron-up' : 'chevron-down'} onPress={() => setShowAllCategories((value) => !value)}>
+            <Text style={styles.serviceListText}>{visibleCategories.join(' · ')}</Text>
+            {hiddenCategoryCount ? <Button compact mode="text" onPress={() => setShowAllCategories((value) => !value)}>
               {showAllCategories ? 'Show fewer categories' : `Show ${hiddenCategoryCount} more categor${hiddenCategoryCount === 1 ? 'y' : 'ies'}`}
             </Button> : null}
           </View>
           <Divider />
           <View style={styles.listBlock}>
             <Text variant="titleMedium" style={styles.listHeading}>Services</Text>
-            <View style={styles.serviceTags}>
-              {visibleServices.length ? visibleServices.map((service, index) => <Chip key={`${service}-${index}`} icon="check-circle-outline" style={styles.serviceChip}>{service}</Chip>) : visibleCategories.map((category) => <Chip key={category} icon="check-circle-outline" style={styles.serviceChip}>{category}</Chip>)}
-            </View>
-            {hiddenServiceCount ? <Button compact mode="text" icon={showAllServices ? 'chevron-up' : 'chevron-down'} onPress={() => setShowAllServices((value) => !value)}>
+            <Text style={styles.serviceListText}>{(visibleServices.length ? visibleServices : visibleCategories).join(' · ')}</Text>
+            {hiddenServiceCount ? <Button compact mode="text" onPress={() => setShowAllServices((value) => !value)}>
               {showAllServices ? 'Show fewer services' : `Show ${hiddenServiceCount} more services`}
             </Button> : null}
           </View>
@@ -455,7 +452,7 @@ const styles = StyleSheet.create({
   ratingLine: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 7 },
   stars: { color: '#F4A000', fontWeight: '900', letterSpacing: 1 },
   ratingText: { color: colors.charcoalSoft, fontWeight: '700' },
-  trustRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 4 },
+  trustLine: { color: colors.muted, fontSize: 12, lineHeight: 18, fontWeight: '700', marginTop: 2 },
   identityActions: { minWidth: 250, gap: 9, alignItems: 'stretch' },
   responseLine: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   statusDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: '#AAB4BB' },
@@ -502,8 +499,7 @@ const styles = StyleSheet.create({
   linkText: { color: colors.primary, fontWeight: '800' },
   listBlock: { gap: 8 },
   listHeading: { color: colors.charcoal, fontWeight: '900' },
-  serviceTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  serviceChip: { backgroundColor: '#FFFFFF' },
+  serviceListText: { color: colors.charcoalSoft, lineHeight: 22 },
   reviewSummary: { paddingBottom: 4 },
   bigRating: { color: colors.charcoal, fontSize: 42, lineHeight: 48, fontWeight: '900' },
   reviewItem: { flexDirection: 'row', gap: 12, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border },
@@ -551,6 +547,7 @@ const styles = StyleSheet.create({
   prelaunchNotice: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
   noticeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   noticeCopy: { flex: 1, minWidth: 220, gap: 4 },
+  noticeBadge: { color: colors.primaryDark, backgroundColor: '#FFFFFF', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, fontSize: 11, fontWeight: '800' },
   similarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   noticeCard: { gap: 6 },
   error: { color: colors.danger, fontWeight: '700' },
