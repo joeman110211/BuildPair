@@ -16,8 +16,8 @@ export function PrelaunchBanner() {
           <Chip compact icon="rocket-launch-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Launching {LAUNCH_DATE_LABEL}</Chip>
           <Chip compact icon="gift-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Founding 50 Surrey trades</Chip>
         </View>
-        <Text style={[styles.title, compact && styles.titleCompact]}>Surrey trades can set up now. BuildPair launches {LAUNCH_DATE_LABEL}.</Text>
-        <Text style={[styles.body, compact && styles.bodyCompact]}>We’re onboarding the first 50 Surrey trades before launch. Create your profile now, add your services, service area, portfolio and trust details, and be ready when the marketplace opens.</Text>
+        <Text style={[styles.title, compact && styles.titleCompact]}>We’re getting the first 50 Surrey trades set up before launch.</Text>
+        <Text style={[styles.body, compact && styles.bodyCompact]}>Create your profile now, add your services, service area, portfolio and trust details, and be ready when BuildPair opens on {LAUNCH_DATE_LABEL}.</Text>
         <Text style={[styles.reputation, compact && styles.reputationCompact]}><Text style={styles.strong}>Pre-launch is profile setup only.</Text> Jobs, quoting, homeowner messaging, BuildPay and paid subscriptions remain locked until launch.</Text>
         <View style={[styles.offerBox, compact && styles.offerBoxCompact]}>
           <Text style={[styles.offer, compact && styles.offerCompact]}><Text style={styles.strong}>Founding 50 Surrey trades receive 3 months of BuildPair Pro free from launch day.</Text> There are no pay-per-lead charges and no pre-launch subscription fee.</Text>
