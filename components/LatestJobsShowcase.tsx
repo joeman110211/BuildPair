@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   cardFoot: { marginTop: 'auto', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 7 },
   urgency: { flexShrink: 1, color: colors.charcoalSoft, fontSize: 10, fontWeight: '800' },
   openText: { flexShrink: 0, color: colors.primary, fontSize: 11, fontWeight: '900' },
-  button: { borderRadius: radii.pill },
+  button: { borderRadius: radii.md },
   buttonContent: { minHeight: controlHeights.standard },
   footer: { minHeight: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingHorizontal: 2, marginTop: 2 },
   swipeHint: { flexShrink: 1, color: colors.muted, fontSize: 11, fontWeight: '700' },
