@@ -115,7 +115,7 @@ function AuthenticatedHeader() {
     <HeaderBrand />
     <View style={styles.actions}>
       <DesktopNav />
-      {isSignedIn ? <><Button mode="contained" contentStyle={styles.primaryAction} onPress={() => void openDashboard()}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href={waitlistHref(null, 'header')} asChild><Button mode="contained" contentStyle={styles.primaryAction}>Create account</Button></Link><NavMenu /></>}
+      {isSignedIn ? <><Button mode="contained" style={styles.headerActionButton} contentStyle={styles.primaryAction} onPress={() => void openDashboard()}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href={waitlistHref(null, 'header')} asChild><Button mode="contained" style={styles.headerActionButton} contentStyle={styles.primaryAction}>Create account</Button></Link><NavMenu /></>}
     </View>
   </View>;
 }
@@ -124,7 +124,7 @@ function PreviewHeader() {
   const { width } = useWindowDimensions();
   const compact = width < 1040;
   if (compact) return <CompactShell menu={<NavMenu preview />} />;
-  return <View style={styles.header}><HeaderBrand /><View style={styles.actions}><DesktopNav /><Link href={waitlistHref(null, 'preview-header')} asChild><Button mode="contained" contentStyle={styles.primaryAction}>Create account</Button></Link><Text variant="bodySmall" style={styles.preview}>Public preview</Text><NavMenu preview /></View></View>;
+  return <View style={styles.header}><HeaderBrand /><View style={styles.actions}><DesktopNav /><Link href={waitlistHref(null, 'preview-header')} asChild><Button mode="contained" style={styles.headerActionButton} contentStyle={styles.primaryAction}>Create account</Button></Link><Text variant="bodySmall" style={styles.preview}>Public preview</Text><NavMenu preview /></View></View>;
 }
 
 export function PublicHeader() {
@@ -142,6 +142,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs, justifyContent: 'flex-end' },
   desktopNav: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
   navButtonContent: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xxs },
+  headerActionButton: { borderRadius: radii.md },
   primaryAction: { minHeight: controlHeights.standard, paddingHorizontal: spacing.sm },
   preview: { opacity: 0.62, marginLeft: spacing.xxs },
   quickNavShell: { height: 48, minHeight: 48, flexShrink: 0, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5', overflow: 'hidden' },
