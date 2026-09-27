@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   limitMark: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   limitMarkText: { color: colors.muted, fontWeight: '900', fontSize: 13 },
   limitText: { color: colors.muted, lineHeight: 21, flex: 1, minWidth: 0 },
-  button: { borderRadius: radii.pill },
+  button: { borderRadius: radii.md },
   buttonContent: { minHeight: controlHeights.prominent, paddingHorizontal: 10 },
   launchNote: { color: colors.primaryDark, fontSize: 13, lineHeight: 20, textAlign: 'center', fontWeight: '800', maxWidth: 820, alignSelf: 'center' },
   note: { color: colors.muted, fontSize: 12, lineHeight: 19, textAlign: 'center', maxWidth: 780, alignSelf: 'center' },
