@@ -29,6 +29,7 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
     : undefined);
   const showBack = canGoBack || Boolean(sectionBackHref);
   const footerInScroll = Boolean(footer && scroll && width < 900);
+  const compact = width < 720;
   const contentPadding = width < 520 ? styles.contentMobile : width < 900 ? styles.contentTablet : styles.contentDesktop;
 
   function goBack() {
@@ -40,9 +41,9 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
   }
 
   const content = (
-    <View style={[styles.content, contentPadding]}>
+    <View style={[styles.content, compact && styles.contentCompact, contentPadding]}>
       {showBack ? <View style={styles.backRow}><Button icon="arrow-left" mode="text" compact onPress={goBack}>Back</Button></View> : null}
-      {title || subtitle ? <View style={styles.headingBlock}>
+      {title || subtitle ? <View style={[styles.headingBlock, compact && styles.headingBlockCompact]}>
         {title ? <Text variant="headlineMedium" style={styles.title}>{title}</Text> : null}
         {subtitle ? <Text variant="bodyLarge" style={styles.subtitle}>{subtitle}</Text> : null}
       </View> : null}
@@ -84,11 +85,13 @@ const styles = StyleSheet.create({
   scrollWithFooter: { paddingBottom: spacing.xxxl },
   staticBody: { flex: 1, minHeight: 0 },
   content: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', paddingTop: spacing.xxl, paddingBottom: spacing.huge, gap: spacing.xxl },
+  contentCompact: { paddingTop: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.lg },
   contentMobile: { paddingHorizontal: spacing.lg },
   contentTablet: { paddingHorizontal: spacing.xxl },
   contentDesktop: { paddingHorizontal: spacing.xxxl },
   backRow: { alignSelf: 'flex-start', marginBottom: -spacing.md },
   headingBlock: { width: '100%', maxWidth: layout.readingMaxWidth, alignSelf: 'center', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.xs, paddingVertical: spacing.xxs },
+  headingBlockCompact: { gap: spacing.xs, paddingVertical: 0 },
   title: { color: colors.charcoal, fontWeight: '900', letterSpacing: -0.7, textAlign: 'center' },
   subtitle: { color: colors.muted, lineHeight: 24, textAlign: 'center' },
   inlineFooter: { width: '100%', borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, paddingHorizontal: spacing.md, paddingVertical: spacing.md, marginTop: spacing.xs, marginBottom: 78 },
