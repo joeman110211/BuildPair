@@ -1,11 +1,11 @@
 import { useAuth } from '@clerk/expo';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { FormSelect } from '@/components/FormSelect';
 import { PublicFooter } from '@/components/PublicFooter';
-import { colors } from '@/constants/theme';
+import { colors, publicResponsiveMetrics } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { useAuthAvailable } from '@/lib/auth-availability';
 
@@ -139,11 +139,13 @@ function ReportForm() {
 
 export default function ReportPage() {
   const authAvailable = useAuthAvailable();
+  const { width } = useWindowDimensions();
+  const metrics = publicResponsiveMetrics(width);
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
-    <View style={styles.hero}>
+    <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroInner}>
-        <Text style={styles.eyebrow}>Marketplace reporting</Text>
-        <Text variant="displaySmall" style={styles.heroTitle}>Report a marketplace concern.</Text>
+        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Marketplace reporting</Text>
+        <Text variant="displaySmall" style={[styles.heroTitle, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Report a marketplace concern.</Text>
         <Text variant="bodyLarge" style={styles.heroBody}>The same reporting standard applies to homeowners and tradespeople. BuildPair reviews relevant information before deciding whether action is appropriate.</Text>
       </View>
     </View>
@@ -167,6 +169,7 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
   hero: { backgroundColor: colors.charcoal, paddingHorizontal: 20, paddingVertical: 54 },
+  heroMobile: { paddingHorizontal: 16, paddingVertical: 40 },
   heroInner: { width: '100%', maxWidth: 900, alignSelf: 'center', gap: 10 },
   eyebrow: { color: colors.secondary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.1 },
   heroTitle: { color: '#FFFFFF', fontWeight: '900', letterSpacing: -1 },
