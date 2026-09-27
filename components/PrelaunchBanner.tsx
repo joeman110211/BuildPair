@@ -1,10 +1,11 @@
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { LAUNCH_DATE_LABEL, waitlistHref } from '@/lib/launch';
 
 export function PrelaunchBanner() {
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const compact = width < 720;
 
@@ -23,7 +24,13 @@ export function PrelaunchBanner() {
         </View>
         <Text style={[styles.small, compact && styles.smallCompact]}>Homeowner registration opens when the marketplace launches.</Text>
       </View>
-      <View style={[styles.actions, compact && styles.actionsCompact]}>
+      {compact ? <View style={[styles.actions, styles.actionsCompact]}>
+        <Button mode="contained" icon="account-clock-outline" style={styles.actionButton} contentStyle={styles.actionContent} onPress={() => router.push(waitlistHref('trader', 'homepage-banner'))}>Create trade profile</Button>
+        <View style={styles.actionRow}>
+          <Button mode="outlined" style={[styles.actionButton, styles.halfAction]} contentStyle={styles.actionContent} onPress={() => router.push('/(public)/rewards')}>Founding rewards</Button>
+          <Button mode="outlined" style={[styles.actionButton, styles.halfAction]} contentStyle={styles.actionContent} onPress={() => router.push('/auth/sign-in')}>Sign in</Button>
+        </View>
+      </View> : <View style={styles.actions}>
         <Link href={waitlistHref('trader', 'homepage-banner')} asChild>
           <Button mode="contained" icon="account-clock-outline" style={styles.actionButton} contentStyle={styles.actionContent}>Create my trade profile</Button>
         </Link>
@@ -33,7 +40,7 @@ export function PrelaunchBanner() {
         <Link href="/auth/sign-in" asChild>
           <Button mode="outlined" style={styles.actionButton} contentStyle={styles.actionContent}>Sign in</Button>
         </Link>
-      </View>
+      </View>}
     </View>
   </View>;
 }
@@ -67,6 +74,8 @@ const styles = StyleSheet.create({
   smallCompact: { lineHeight: 15, fontSize: 11 },
   actions: { width: 250, maxWidth: '100%', gap: spacing.sm, alignItems: 'stretch' },
   actionsCompact: { minWidth: 0, width: '100%', flexDirection: 'column', flexWrap: 'nowrap', gap: 8 },
-  actionButton: { width: '100%', borderRadius: radii.pill },
-  actionContent: { minHeight: controlHeights.prominent, paddingHorizontal: 10 },
+  actionRow: { width: '100%', flexDirection: 'row', alignItems: 'stretch', gap: 8 },
+  actionButton: { width: '100%', borderRadius: radii.md },
+  halfAction: { flex: 1, width: 'auto', minWidth: 0 },
+  actionContent: { minHeight: controlHeights.standard, paddingHorizontal: 8 },
 });
