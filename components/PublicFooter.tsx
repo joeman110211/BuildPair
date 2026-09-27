@@ -56,11 +56,13 @@ export function PublicFooter() {
     <View style={[styles.accentLine, compact && styles.accentLineCompact]} />
     <View style={[styles.inner, compact && styles.innerCompact]}>
       <View style={[styles.brandBlock, compact && styles.brandBlockCompact]}>
-        <Link href="/" asChild>
-          <Pressable style={[styles.logoCard, compact && styles.logoCardCompact]} accessibilityLabel="BuildPair home">
-            <BuildPairLogo style={compact ? styles.logoCompact : undefined} />
-          </Pressable>
-        </Link>
+        <View style={[styles.logoCard, compact && styles.logoCardCompact]}>
+          <Link href="/" asChild>
+            <Pressable style={styles.logoPressable} accessibilityLabel="BuildPair home">
+              <BuildPairLogo style={compact ? styles.logoCompact : undefined} />
+            </Pressable>
+          </Link>
+        </View>
         <Text style={[styles.tagline, compact && styles.taglineCompact]}>Find the trade. Manage the job. Keep the record.</Text>
         <Text style={[styles.description, compact && styles.descriptionCompact]}>A UK marketplace and project platform connecting homeowners with local tradespeople, quotes, messages, payments and project history in one place.</Text>
         <View style={[styles.contactPill, compact && styles.contactPillCompact]}><Text style={styles.contactText}>info@buildpair.co.uk</Text></View>
@@ -87,8 +89,9 @@ const styles = StyleSheet.create({
   brandBlock: { flex: 2, minWidth: 260, maxWidth: 430, gap: spacing.sm },
   brandBlockCompact: { flexBasis: '100%', minWidth: 0, maxWidth: '100%', gap: 8 },
   logoCard: { alignSelf: 'flex-start', backgroundColor: '#FFFFFF', borderRadius: radii.md, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, overflow: 'hidden' },
-  logoCardCompact: { borderRadius: 12, paddingHorizontal: 6, paddingVertical: 4 },
-  logoCompact: { width: 205, height: 56 },
+  logoCardCompact: { borderRadius: radii.md, paddingHorizontal: 6, paddingVertical: 4 },
+  logoPressable: { alignItems: 'center', justifyContent: 'center' },
+  logoCompact: { width: 188, height: 52 },
   tagline: { color: '#FFE6D5', lineHeight: 23, fontWeight: '800' },
   taglineCompact: { lineHeight: 20, fontSize: 13 },
   description: { color: '#C8CDD1', lineHeight: 21, fontSize: 13, maxWidth: 400 },
