@@ -59,11 +59,17 @@ export default function LandingPageRefined() {
           <TextInput mode="outlined" value={search} onChangeText={setSearch} onSubmitEditing={() => goSearch(search)} placeholder="Describe the job, e.g. bathroom tiling" outlineStyle={styles.inputOutline} />
           <Button mode="contained" style={[styles.buttonBase, styles.buttonFull]} contentStyle={styles.buttonContent} onPress={() => goSearch(search)}>Find a trade</Button>
         </View>
-        <View style={[styles.heroActions, mobile && styles.actionStack]} testID="home-hero-actions">
-          <Link href={waitlistHref('customer', 'homepage-hero')} asChild><Button mode="outlined" style={[styles.buttonBase, styles.heroActionButton, mobile && styles.buttonFull]} contentStyle={styles.buttonContent}>Join homeowner launch list</Button></Link>
-          <Link href={waitlistHref('trader', 'homepage-hero-trader')} asChild><Button mode="contained" style={[styles.buttonBase, styles.heroActionButton, mobile && styles.buttonFull]} contentStyle={styles.buttonContent}>Create trade profile</Button></Link>
-          <Link href="/(public)/how-it-works" asChild><Button mode="outlined" style={[styles.buttonBase, styles.heroActionButton, mobile && styles.buttonFull]} contentStyle={styles.buttonContent}>How it works</Button></Link>
-        </View>
+        {mobile ? <View style={styles.heroActions} testID="home-hero-actions">
+          <Button mode="outlined" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('customer', 'homepage-hero'))}>Homeowner launch list</Button>
+          <View style={styles.mobileActionRow}>
+            <Button mode="contained" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-hero-trader'))}>Create trade profile</Button>
+            <Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/how-it-works')}>How it works</Button>
+          </View>
+        </View> : <View style={styles.heroActions} testID="home-hero-actions">
+          <Link href={waitlistHref('customer', 'homepage-hero')} asChild><Button mode="outlined" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Join homeowner launch list</Button></Link>
+          <Link href={waitlistHref('trader', 'homepage-hero-trader')} asChild><Button mode="contained" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Create trade profile</Button></Link>
+          <Link href="/(public)/how-it-works" asChild><Button mode="outlined" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>How it works</Button></Link>
+        </View>}
       </View>
     </View>
 
@@ -92,13 +98,13 @@ export default function LandingPageRefined() {
             <Text style={styles.audienceEyebrow}>FOR HOMEOWNERS</Text>
             <Text variant="headlineSmall" style={styles.cardTitle}>Find the right tradesperson and stay in control of the job.</Text>
             <Text style={styles.cardText}>Describe the work, compare suitable tradespeople and structured quotes, then keep messages, agreed changes and payment stages attached to the same project.</Text>
-            <View style={[styles.audienceActions, mobile && styles.actionStack]}><Button mode="contained" style={[styles.buttonBase, mobile && styles.buttonFull]} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('customer', 'homepage-audience')} asChild><Button mode="outlined" style={[styles.buttonBase, mobile && styles.buttonFull]} contentStyle={styles.buttonContent}>Join homeowner launch list</Button></Link></View>
+            {mobile ? <View style={styles.audienceActions}><View style={styles.mobileActionRow}><Button mode="contained" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('customer', 'homepage-audience'))}>Join launch list</Button></View></View> : <View style={styles.audienceActions}><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('customer', 'homepage-audience')} asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>Join homeowner launch list</Button></Link></View>}
           </View>
           <View style={[styles.audienceCard, styles.tradeAudienceCard]}>
             <Text style={[styles.audienceEyebrow, styles.tradeAudienceEyebrow]}>FOR TRADESPEOPLE</Text>
             <Text variant="headlineSmall" style={styles.cardTitle}>Present your business professionally, quote clearly and manage work in one place.</Text>
             <Text style={styles.cardText}>Build your profile, find relevant local opportunities, arrange site visits where needed, send structured quotes and keep the project organised after the work is won.</Text>
-            <View style={[styles.audienceActions, mobile && styles.actionStack]}><Link href={waitlistHref('trader', 'homepage-trade-card')} asChild><Button mode="contained" style={[styles.buttonBase, mobile && styles.buttonFull]} contentStyle={styles.buttonContent}>Create my trade profile</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" style={[styles.buttonBase, mobile && styles.buttonFull]} contentStyle={styles.buttonContent}>See trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined" style={[styles.buttonBase, mobile && styles.buttonFull]} contentStyle={styles.buttonContent}>View membership</Button></Link></View>
+            {mobile ? <View style={styles.audienceActions}><Button mode="contained" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-trade-card'))}>Create trade profile</Button><View style={styles.mobileActionRow}><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/for-tradespeople')}>Trade features</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/pricing')}>Membership</Button></View></View> : <View style={styles.audienceActions}><Link href={waitlistHref('trader', 'homepage-trade-card')} asChild><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent}>Create my trade profile</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>See trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>View membership</Button></Link></View>}
           </View>
         </View>
       </View>
@@ -221,7 +227,7 @@ export default function LandingPageRefined() {
     <View style={styles.section}>
       <View style={styles.finalCta}>
         <View style={styles.finalCopy}><Text style={styles.finalEyebrow}>BUILDPAIR UK</Text><Text variant="headlineSmall" style={styles.finalTitle}>Find the trade. Agree the work. Keep the whole job connected.</Text><Text style={styles.finalText}>Search, compare structured quotes, message, manage changes and complete the project in one place.</Text></View>
-        <View style={[styles.finalButtons, mobile && styles.actionStack]}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} style={[styles.buttonBase, mobile && styles.buttonFull]} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('trader', 'homepage-final-trader')} asChild><Button mode="outlined" textColor="#FFFFFF" style={[styles.buttonBase, styles.finalOutline, mobile && styles.buttonFull]} contentStyle={styles.buttonContent}>Create trade profile</Button></Link></View>
+        {mobile ? <View style={styles.finalButtons}><View style={styles.mobileActionRow}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Button mode="outlined" textColor="#FFFFFF" style={[styles.buttonBase, styles.finalOutline, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-final-trader'))}>Trade profile</Button></View></View> : <View style={styles.finalButtons}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} style={styles.buttonBase} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('trader', 'homepage-final-trader')} asChild><Button mode="outlined" textColor="#FFFFFF" style={[styles.buttonBase, styles.finalOutline]} contentStyle={styles.buttonContent}>Create trade profile</Button></Link></View>}
       </View>
     </View>
 
@@ -248,12 +254,14 @@ const styles = StyleSheet.create({
   heroBenefitText: { flexShrink: 1, color: colors.charcoalSoft, fontSize: 12, fontWeight: '800' },
   heroSearch: { gap: 10, width: '100%', maxWidth: 700 },
   inputOutline: { borderRadius: 16 },
-  buttonBase: { borderRadius: radii.pill, maxWidth: '100%' },
-  buttonContent: { minHeight: controlHeights.prominent, paddingHorizontal: 10 },
+  buttonBase: { borderRadius: radii.md, maxWidth: '100%' },
+  buttonContent: { minHeight: controlHeights.standard, paddingHorizontal: 8 },
   buttonFull: { width: '100%' },
-  actionStack: { width: '100%', flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch', gap: 10 },
-  heroActions: { width: '100%', maxWidth: '100%', minWidth: 0, minHeight: 44, flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', alignItems: 'center' },
-  heroActionButton: { minWidth: 190, maxWidth: '100%' },
+  mobileWideAction: { width: '100%' },
+  mobileActionRow: { width: '100%', flexDirection: 'row', alignItems: 'stretch', gap: 8 },
+  mobileHalfAction: { flex: 1, minWidth: 0 },
+  heroActions: { width: '100%', maxWidth: 700, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', alignItems: 'center' },
+  heroActionButton: { minWidth: 180, maxWidth: '100%' },
   featuredBand: { backgroundColor: '#FFFFFF' },
   featuredSection: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingTop: 28, paddingBottom: 46, gap: 20 },
   section: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 46, gap: 24 },
@@ -306,6 +314,6 @@ const styles = StyleSheet.create({
   finalEyebrow: { color: '#FFD7BA', fontSize: 11, fontWeight: '900', letterSpacing: 1.2 },
   finalTitle: { color: '#FFFFFF', fontWeight: '900' },
   finalText: { color: '#DCE7EE', lineHeight: 22 },
-  finalButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, minWidth: 220 },
+  finalButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, minWidth: 220 },
   finalOutline: { borderColor: '#FFFFFF', maxWidth: '100%' },
 });
