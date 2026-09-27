@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Button, Chip, Text, TextInput } from 'react-native-paper';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Button, Chip, Portal, Text, TextInput } from 'react-native-paper';
 import { FormSelect } from '@/components/FormSelect';
 import { EmptyState, Screen } from '@/components/Screen';
 import { TraderCard } from '@/components/TraderCard';
@@ -33,6 +33,8 @@ function firstParam(value: string | string[] | undefined) {
 
 export default function DirectoryScreen() {
   const params = useLocalSearchParams<{ q?: string | string[]; trade?: string | string[] }>();
+  const { width } = useWindowDimensions();
+  const compactCompareDock = width < 640;
   const initialQuery = firstParam(params.q) || '';
   const initialTrade = firstParam(params.trade);
   const [traders, setTraders] = useState<TraderProfile[]>([]);
@@ -115,9 +117,14 @@ export default function DirectoryScreen() {
   function toggleCompare(trader: TraderProfile) {
     setCompareIds((current) => {
       if (current.includes(trader.id)) return current.filter((id) => id !== trader.id);
-      if (current.length >= 3) return [...current.slice(1), trader.id];
+      if (current.length >= 3) return current;
       return [...current, trader.id];
     });
+  }
+
+  function scrollToComparison() {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    document.getElementById('trade-comparison-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   useEffect(() => {
@@ -206,7 +213,7 @@ export default function DirectoryScreen() {
       ? <EmptyState title="No trades match these filters" body={availabilityOnly ? 'There are profiles matching your search, but none currently show upcoming availability. Turn off the availability filter to see the wider directory.' : 'Real BuildPair trade profiles appear here as they are completed. Try a broader trade or search term.'} />
       : null}
 
-    {compareTraders.length ? <View style={styles.comparePanel}>
+    {compareTraders.length >= 2 ? <View nativeID="trade-comparison-panel" style={styles.comparePanel}>
       <View style={styles.compareHeader}><View style={styles.compareCopy}><Text variant="titleLarge" style={styles.title}>Compare tradespeople</Text><Text style={styles.muted}>Compare up to three profiles side by side. Membership is shown as a product level, not a trust score.</Text></View><Button mode="text" onPress={() => setCompareIds([])}>Clear comparison</Button></View>
       <View style={styles.compareGrid}>{compareTraders.map((trader) => <View key={trader.id} style={styles.compareCard}>
         <Text variant="titleMedium" style={styles.compareTitle}>{trader.businessName}</Text>
@@ -219,7 +226,16 @@ export default function DirectoryScreen() {
     </View> : null}
 
     {!loading && !error && displayFiltered.length
-      ? <View style={styles.grid}>{displayFiltered.map((trader) => <TraderCard key={trader.id} trader={trader} compareSelected={compareIds.includes(trader.id)} onToggleCompare={toggleCompare} />)}</View>
+      ? <View style={styles.grid}>{displayFiltered.map((trader) => {
+        const compareSelected = compareIds.includes(trader.id);
+        return <TraderCard
+          key={trader.id}
+          trader={trader}
+          compareSelected={compareSelected}
+          compareDisabled={!compareSelected && compareIds.length >= 3}
+          onToggleCompare={toggleCompare}
+        />;
+      })}</View>
       : null}
 
     {!loading && recentTraders.length ? <View style={styles.recentBlock}>
@@ -229,6 +245,22 @@ export default function DirectoryScreen() {
     </View> : null}
 
     <Text variant="bodySmall" style={styles.disclaimer}>BuildPair distinguishes verified reviews from information supplied by tradespeople. Check qualifications, registrations and insurance that matter for your particular job before appointing anyone.</Text>
+    {compareTraders.length ? <View style={styles.compareDockSpacer} /> : null}
+
+    {compareTraders.length ? <Portal>
+      <View pointerEvents="box-none" style={[styles.compareDockShell, compactCompareDock && styles.compareDockShellCompact]}>
+        <View style={[styles.compareDock, compactCompareDock && styles.compareDockCompact]}>
+          <View style={[styles.compareDockCopy, compactCompareDock && styles.compareDockCopyCompact]}>
+            <Text style={styles.compareDockCount}>{compareTraders.length} trade{compareTraders.length === 1 ? '' : 's'} selected</Text>
+            <Text style={styles.compareDockHint}>{compareTraders.length < 2 ? 'Select another trade to compare.' : compareTraders.length === 3 ? 'Maximum 3 selected. Ready to compare.' : 'Ready to compare side by side.'}</Text>
+          </View>
+          <View style={[styles.compareDockActions, compactCompareDock && styles.compareDockActionsCompact]}>
+            <Button compact mode="text" onPress={() => setCompareIds([])}>Clear</Button>
+            <Button mode="contained" icon="compare-horizontal" disabled={compareTraders.length < 2} onPress={scrollToComparison}>Compare now</Button>
+          </View>
+        </View>
+      </View>
+    </Portal> : null}
   </Screen>;
 }
 
@@ -256,6 +288,17 @@ const styles = StyleSheet.create({
   compareCard: { flex: 1, minWidth: 220, gap: 6, borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised, padding: 14 },
   compareTitle: { color: colors.charcoal, fontWeight: '900' },
   compareLine: { color: colors.muted, lineHeight: 20 },
+  compareDockSpacer: { height: 124 },
+  compareDockShell: { position: 'absolute', left: 0, right: 0, bottom: 14, zIndex: 40, alignItems: 'center', paddingHorizontal: 12 },
+  compareDockShellCompact: { bottom: 86 },
+  compareDock: { width: '100%', maxWidth: 760, minHeight: 70, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: '#E8C9AD', backgroundColor: '#FFF9F3', shadowColor: '#000000', shadowOpacity: 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 7 }, elevation: 8 },
+  compareDockCompact: { minHeight: 0, flexDirection: 'column', alignItems: 'stretch', gap: 9, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 17 },
+  compareDockCopy: { flex: 1, minWidth: 220, gap: 2 },
+  compareDockCopyCompact: { minWidth: 0 },
+  compareDockCount: { color: colors.charcoal, fontWeight: '900', fontSize: 15 },
+  compareDockHint: { color: colors.muted, fontSize: 12, lineHeight: 16 },
+  compareDockActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  compareDockActionsCompact: { width: '100%', justifyContent: 'flex-end' },
   recentBlock: { gap: 10, marginTop: 8 },
   recentGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
   disclaimer: { textAlign: 'center', color: colors.muted, marginTop: 8, lineHeight: 19 },

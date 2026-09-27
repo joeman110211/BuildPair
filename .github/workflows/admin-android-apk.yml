@@ -8,20 +8,6 @@ on:
         required: false
         default: 'https://buildpair.onrender.com'
         type: string
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/admin-android-apk.yml'
-      - 'app/admin/**'
-      - 'app/auth/**'
-      - 'app/(public)/index.tsx'
-      - 'components/AdminGate.tsx'
-      - 'components/Screen.tsx'
-      - 'hooks/useCurrentUser.ts'
-      - 'lib/api.ts'
-      - 'app.json'
-      - 'package.json'
-      - 'package-lock.json'
 
 permissions:
   contents: read
