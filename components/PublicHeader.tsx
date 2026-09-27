@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   quickNavShell: { height: 48, minHeight: 48, flexShrink: 0, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5', overflow: 'hidden' },
   quickNav: { flexGrow: 0, height: 48 },
   quickNavContent: { minHeight: 48, minWidth: '100%', paddingHorizontal: 4, gap: 0, alignItems: 'center', justifyContent: 'space-around' },
-  quickButton: { borderRadius: radii.pill },
+  quickButton: { borderRadius: radii.md },
   quickButtonContent: { minHeight: 36, paddingHorizontal: 2 },
   quickButtonLabel: { fontSize: 12, marginHorizontal: 0 },
 });
