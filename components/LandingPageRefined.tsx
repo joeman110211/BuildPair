@@ -57,14 +57,10 @@ export default function LandingPageRefined() {
         </View>
         <View style={styles.heroSearch}>
           <TextInput mode="outlined" value={search} onChangeText={setSearch} onSubmitEditing={() => goSearch(search)} placeholder="Describe the job, e.g. bathroom tiling" outlineStyle={styles.inputOutline} />
-          <Button mode="contained" style={[styles.buttonBase, styles.buttonFull]} contentStyle={styles.buttonContent} onPress={() => goSearch(search)}>Find a trade</Button>
+          <Button mode="contained" style={[styles.buttonBase, styles.buttonFull]} contentStyle={[styles.buttonContent, mobile && styles.mobilePrimaryContent]} onPress={() => goSearch(search)}>Find a trade</Button>
         </View>
-        {mobile ? <View style={styles.heroActions} testID="home-hero-actions">
-          <Button mode="outlined" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('customer', 'homepage-hero'))}>Homeowner launch list</Button>
-          <View style={styles.mobileActionRow}>
-            <Button mode="contained" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-hero-trader'))}>Create trade profile</Button>
-            <Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/how-it-works')}>How it works</Button>
-          </View>
+        {mobile ? <View style={styles.mobileHeroSecondary} testID="home-hero-actions">
+          <Button mode="text" compact textColor={colors.primaryDark} style={styles.mobileHeroLink} contentStyle={styles.mobileHeroLinkContent} onPress={() => router.push(waitlistHref('customer', 'homepage-hero'))}>Join homeowner launch list</Button>
         </View> : <View style={styles.heroActions} testID="home-hero-actions">
           <Link href={waitlistHref('customer', 'homepage-hero')} asChild><Button mode="outlined" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Join homeowner launch list</Button></Link>
           <Link href={waitlistHref('trader', 'homepage-hero-trader')} asChild><Button mode="contained" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Create trade profile</Button></Link>
@@ -257,6 +253,10 @@ const styles = StyleSheet.create({
   buttonBase: { borderRadius: radii.md, maxWidth: '100%' },
   buttonContent: { minHeight: controlHeights.standard, paddingHorizontal: 8 },
   buttonFull: { width: '100%' },
+  mobilePrimaryContent: { minHeight: 44 },
+  mobileHeroSecondary: { width: '100%', alignItems: 'center', marginTop: -2 },
+  mobileHeroLink: { alignSelf: 'center', borderRadius: radii.md },
+  mobileHeroLinkContent: { minHeight: 36, paddingHorizontal: 6 },
   mobileWideAction: { width: '100%' },
   mobileActionRow: { width: '100%', flexDirection: 'row', alignItems: 'stretch', gap: 8 },
   mobileHalfAction: { flex: 1, minWidth: 0 },
