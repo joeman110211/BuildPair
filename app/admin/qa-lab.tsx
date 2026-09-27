@@ -177,7 +177,7 @@ export default function AdminQaLab() {
   const [busyMode, setBusyMode] = useState<Mode | null>(null);
   const [actionError, setActionError] = useState('');
 
-  const viewport = VIEWPORTS.find((item) => item.key === viewportKey) ?? VIEWPORTS[0];
+  const viewport = VIEWPORTS.find((item) => item.key === viewportKey) ?? VIEWPORTS[0]!;
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return ROUTES.filter((item) => {
