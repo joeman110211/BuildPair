@@ -121,8 +121,8 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
         <View style={styles.emptyShade} />
         <View style={styles.emptyCopy}>
           <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
-          <Text style={styles.emptyTitle}>Real profiles. Real work. No placeholder listings.</Text>
-          <Text style={styles.emptyText}>BuildPair trade profiles appear here automatically as they become available.</Text>
+          <Text style={styles.emptyTitle}>Your business could be featured here.</Text>
+          <Text style={styles.emptyText}>Create your BuildPair trade profile, show homeowners the work you do and you could appear here as the marketplace grows.</Text>
         </View>
       </ImageBackground>
       <LatestJobsShowcase wide={wide} />
