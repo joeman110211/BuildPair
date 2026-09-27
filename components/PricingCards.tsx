@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   limitMarkText: { color: colors.muted, fontWeight: '900', fontSize: 13 },
   limitText: { color: colors.muted, lineHeight: 21, flex: 1, minWidth: 0 },
   button: { borderRadius: radii.pill },
-  buttonContent: { minHeight: controlHeights.standard },
+  buttonContent: { minHeight: controlHeights.prominent, paddingHorizontal: 10 },
   launchNote: { color: colors.primaryDark, fontSize: 13, lineHeight: 20, textAlign: 'center', fontWeight: '800', maxWidth: 820, alignSelf: 'center' },
   note: { color: colors.muted, fontSize: 12, lineHeight: 19, textAlign: 'center', maxWidth: 780, alignSelf: 'center' },
 });
