@@ -22,7 +22,7 @@ export async function POST(request: Request) {
         email: trader.email ?? undefined,
         capabilities: { transfers: { requested: true } },
         metadata: { buildpairUserId: trader.id, buildpairRole: 'tradesperson_recipient' },
-      });
+      }, { idempotencyKey: `buildpair-connect-v1-${trader.id}` });
       accountId = account.id;
       await db.update(traderProfiles).set({ stripeAccountId: accountId }).where(eq(traderProfiles.userId, trader.id));
     }
