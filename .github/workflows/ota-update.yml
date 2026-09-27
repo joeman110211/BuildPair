@@ -1,9 +1,6 @@
 name: Publish Production OTA Update
 
 on:
-  workflow_run:
-    workflows: [Quality]
-    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -15,11 +12,7 @@ concurrency:
 
 jobs:
   publish:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
-       github.event.workflow_run.head_branch == 'main')
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -36,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 2
 
       - name: Resolve OTA service configuration
