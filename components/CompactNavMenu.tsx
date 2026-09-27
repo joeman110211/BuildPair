@@ -23,7 +23,7 @@ export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: 
   }
 
   return <View style={styles.wrapper}>
-    <Button mode="outlined" accessibilityLabel={accessibilityLabel} accessibilityState={{ expanded: open }} onPress={() => setOpen((value) => !value)} contentStyle={styles.buttonContent}>Menu</Button>
+    <Button mode="outlined" style={styles.menuButton} accessibilityLabel={accessibilityLabel} accessibilityState={{ expanded: open }} onPress={() => setOpen((value) => !value)} contentStyle={styles.buttonContent}>Menu</Button>
     {open ? <ScrollView
       accessibilityRole="menu"
       style={[styles.panel, { maxHeight: menuMaxHeight }]}
@@ -52,7 +52,8 @@ export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: 
 
 const styles = StyleSheet.create({
   wrapper: { position: 'relative', zIndex: 1000 },
-  buttonContent: { minHeight: 44, paddingHorizontal: spacing.xs },
+  menuButton: { minWidth: 104, borderRadius: radii.md },
+  buttonContent: { minHeight: 44, paddingHorizontal: spacing.sm },
   panel: { position: 'absolute', top: 52, right: 0, width: 285, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, shadowColor: colors.charcoal, shadowOpacity: 0.12, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 12 },
   panelContent: { paddingVertical: spacing.xs },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.xs },
