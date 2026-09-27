@@ -16,23 +16,23 @@ export function PrelaunchBanner() {
           <Chip compact icon="rocket-launch-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Launching {LAUNCH_DATE_LABEL}</Chip>
           <Chip compact icon="gift-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Founding 50 Surrey trades</Chip>
         </View>
-        <Text style={[styles.title, compact && styles.titleCompact]}>Surrey trades can set up now. BuildPair launches {LAUNCH_DATE_LABEL}.</Text>
-        <Text style={[styles.body, compact && styles.bodyCompact]}>We’re onboarding the first 50 Surrey trades before launch. Create your profile now, add your services, service area, portfolio and trust details, and be ready when the marketplace opens.</Text>
-        <Text style={[styles.reputation, compact && styles.reputationCompact]}><Text style={styles.strong}>Pre-launch is profile setup only.</Text> Jobs, quoting, homeowner messaging, BuildPay and paid subscriptions remain locked until launch.</Text>
+        <Text style={[styles.title, compact && styles.titleCompact]}>Join Surrey’s Founding 50 before launch.</Text>
+        <Text style={[styles.body, compact && styles.bodyCompact]}>Create your trade profile now, add the services and area you genuinely cover, show your work and be ready when the marketplace opens on {LAUNCH_DATE_LABEL}.</Text>
+        <Text style={[styles.reputation, compact && styles.reputationCompact]}><Text style={styles.strong}>Profile setup is open now.</Text> Marketplace jobs, homeowner messaging, BuildPay and paid subscriptions unlock at launch.</Text>
         <View style={[styles.offerBox, compact && styles.offerBoxCompact]}>
-          <Text style={[styles.offer, compact && styles.offerCompact]}><Text style={styles.strong}>Founding 50 Surrey trades receive 3 months of BuildPair Pro free from launch day.</Text> There are no pay-per-lead charges and no pre-launch subscription fee.</Text>
+          <Text style={[styles.offer, compact && styles.offerCompact]}><Text style={styles.strong}>Founding 50 trades receive 3 months of BuildPair Pro free from launch day.</Text> No pay-per-lead. No pre-launch subscription fee.</Text>
         </View>
-        <Text style={[styles.small, compact && styles.smallCompact]}>Homeowner registration opens when the marketplace launches.</Text>
+        <Text style={[styles.small, compact && styles.smallCompact]}>Homeowners can join launch notifications now; registration opens with the marketplace.</Text>
       </View>
       {compact ? <View style={[styles.actions, styles.actionsCompact]}>
-        <Button mode="contained" icon="account-clock-outline" style={styles.actionButton} contentStyle={styles.actionContent} onPress={() => router.push(waitlistHref('trader', 'homepage-banner'))}>Create trade profile</Button>
+        <Button mode="contained" icon="account-clock-outline" style={styles.actionButton} contentStyle={styles.actionContent} onPress={() => router.push(waitlistHref('trader', 'homepage-banner'))}>Join the Founding 50</Button>
         <View style={styles.actionRow}>
           <Button mode="outlined" style={[styles.actionButton, styles.halfAction]} contentStyle={styles.actionContent} onPress={() => router.push('/(public)/rewards')}>Founding rewards</Button>
           <Button mode="outlined" style={[styles.actionButton, styles.halfAction]} contentStyle={styles.actionContent} onPress={() => router.push('/auth/sign-in')}>Sign in</Button>
         </View>
       </View> : <View style={styles.actions}>
         <Link href={waitlistHref('trader', 'homepage-banner')} asChild>
-          <Button mode="contained" icon="account-clock-outline" style={styles.actionButton} contentStyle={styles.actionContent}>Create my trade profile</Button>
+          <Button mode="contained" icon="account-clock-outline" style={styles.actionButton} contentStyle={styles.actionContent}>Join the Founding 50</Button>
         </Link>
         <Link href="/(public)/rewards" asChild>
           <Button mode="outlined" style={styles.actionButton} contentStyle={styles.actionContent}>Founding rewards</Button>
