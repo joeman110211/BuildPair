@@ -8,8 +8,6 @@ on:
         required: false
         default: 'https://www.buildpair.co.uk'
         type: string
-  push:
-    branches: [main]
 
 permissions:
   contents: read
