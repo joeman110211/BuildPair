@@ -9,19 +9,19 @@ export function PrelaunchBanner() {
   const { width } = useWindowDimensions();
   const compact = width < 720;
 
-  return <View style={[styles.banner, compact && styles.bannerCompact]}>
+  return <View style={styles.shell}>
     <View style={[styles.inner, compact && styles.innerCompact]}>
-      <View style={styles.copy}>
-        <View style={styles.chips}>
+      <View style={[styles.copy, compact && styles.copyCompact]}>
+        <View style={[styles.chips, compact && styles.chipsCompact]}>
           <Chip compact icon="rocket-launch-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Launching {LAUNCH_DATE_LABEL}</Chip>
           <Chip compact icon="gift-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Founding 50 Surrey trades</Chip>
         </View>
         <Text style={[styles.title, compact && styles.titleCompact]}>BuildPair is opening the Surrey marketplace soon.</Text>
         <Text style={[styles.body, compact && styles.bodyCompact]}>Trades can create their profile now. Homeowners can join launch updates. Founding 50 trades receive 3 months of BuildPair Pro free from launch day.</Text>
       </View>
-      {compact ? <View style={styles.compactActions}>
+      {compact ? <View style={[styles.actions, styles.actionsCompact]}>
         <Button mode="contained" icon="account-plus-outline" style={styles.actionButton} contentStyle={styles.actionContent} onPress={() => router.push(waitlistHref('trader', 'homepage-banner'))}>Create trade profile</Button>
-        <View style={styles.compactSecondaryRow}>
+        <View style={styles.actionRow}>
           <Button mode="outlined" style={[styles.actionButton, styles.halfAction]} contentStyle={styles.actionContent} onPress={() => router.push('/(public)/launch')}>Launch details</Button>
           <Button mode="outlined" style={[styles.actionButton, styles.halfAction]} contentStyle={styles.actionContent} onPress={() => router.push(waitlistHref('customer', 'homepage-banner'))}>Homeowner updates</Button>
         </View>
