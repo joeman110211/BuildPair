@@ -6,6 +6,7 @@ import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 're
 import { Button, Chip, Text } from 'react-native-paper';
 import { colors, controlHeights, radii } from '@/constants/theme';
 import { ApiError, apiFetch } from '@/lib/api';
+import { waitlistHref } from '@/lib/launch';
 import type { Job, TraderProfile } from '@/types';
 
 function chunk<T>(items: T[], size: number) {
@@ -109,7 +110,24 @@ export function LatestJobsShowcase({ wide }: { wide: boolean }) {
     </View>;
   }
 
-  if (!jobs.length) return null;
+  if (!jobs.length) {
+    return <View style={[styles.section, wide && styles.sectionWide]}>
+      <View style={styles.headingRow}>
+        <View style={styles.headingCopy}>
+          <Text style={styles.eyebrow}>LATEST JOBS</Text>
+          <Text variant="headlineSmall" style={styles.title}>Local homeowner projects will appear here at launch.</Text>
+          <Text style={styles.muted}>We are building the Surrey trade network first so the marketplace opens with useful local coverage rather than a page full of fake demo jobs.</Text>
+        </View>
+      </View>
+      <View style={styles.emptyJobsCard}>
+        <View style={styles.emptyJobsCopy}>
+          <Text variant="titleMedium" style={styles.jobTitle}>Want to be ready when the first jobs land?</Text>
+          <Text style={styles.description}>Create your trade profile now, set the area you genuinely cover and join the Founding 50 before the marketplace opens.</Text>
+        </View>
+        <Button mode="contained" style={styles.button} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'latest-jobs-empty'))}>Join the Founding 50</Button>
+      </View>
+    </View>;
+  }
 
   const updatePage = (offsetX: number) => {
     const next = Math.max(0, Math.min(pages.length - 1, Math.round(offsetX / pageWidth)));
@@ -190,6 +208,8 @@ const styles = StyleSheet.create({
   muted: { color: colors.muted, lineHeight: 20, maxWidth: 720 },
   preloadCard: { minHeight: 110, alignItems: 'center', justifyContent: 'center', borderRadius: 18, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSoft, padding: 16 },
   preloadText: { color: colors.muted, fontWeight: '800', textAlign: 'center' },
+  emptyJobsCard: { borderRadius: 20, borderWidth: 1, borderColor: '#E8B98F', backgroundColor: '#FFF8F2', padding: 17, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14 },
+  emptyJobsCopy: { flex: 1, minWidth: 220, maxWidth: 720, gap: 6 },
   carousel: { width: '100%', maxWidth: 1140 },
   carouselContent: { alignItems: 'stretch' },
   page: { flexDirection: 'row', gap: 10, paddingHorizontal: 1 },

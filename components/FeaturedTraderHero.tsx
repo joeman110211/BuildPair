@@ -2,10 +2,11 @@ import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ImageBackground, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { LatestJobsShowcase } from '@/components/LatestJobsShowcase';
 import { colors } from '@/constants/theme';
 import { apiFetch } from '@/lib/api';
+import { waitlistHref } from '@/lib/launch';
 
 type FeaturedTrader = {
   id: string;
@@ -75,6 +76,7 @@ function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
 }
 
 export function FeaturedTraderHero({ wide }: { wide: boolean }) {
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const [traders, setTraders] = useState<FeaturedTrader[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -108,8 +110,8 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
     return <View style={[styles.wrapper, wide && styles.wrapperWide]}>
       <View style={[styles.preloadCard, wide && styles.wrapperWide]}>
         <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
-        <Text style={styles.preloadTitle}>Featured BuildPair profiles.</Text>
-        <Text style={styles.preloadText}>Live local trade profiles appear here as they become available. BuildPair loads current directory profiles rather than using placeholder listings.</Text>
+        <Text style={styles.preloadTitle}>Real BuildPair profiles are loading.</Text>
+        <Text style={styles.preloadText}>Current Surrey trade profiles appear here as they become available.</Text>
       </View>
       <LatestJobsShowcase wide={wide} />
     </View>;
@@ -120,9 +122,10 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
       <ImageBackground source={{ uri: FALLBACK_IMAGE }} style={[styles.emptyState, wide && styles.wrapperWide]} imageStyle={styles.emptyImage}>
         <View style={styles.emptyShade} />
         <View style={styles.emptyCopy}>
-          <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
-          <Text style={styles.emptyTitle}>Real profiles. Real work. No placeholder listings.</Text>
-          <Text style={styles.emptyText}>BuildPair trade profiles appear here automatically as they become available.</Text>
+          <Text style={styles.emptyEyebrow}>FOUNDING 50 · SURREY</Text>
+          <Text style={styles.emptyTitle}>Your business could be featured here.</Text>
+          <Text style={styles.emptyText}>Build your profile before launch and be among the first Surrey trades visible as BuildPair opens the marketplace.</Text>
+          <Button mode="contained" buttonColor={colors.primary} style={styles.emptyButton} onPress={() => router.push(waitlistHref('trader', 'featured-empty'))}>Join the Founding 50</Button>
         </View>
       </ImageBackground>
       <LatestJobsShowcase wide={wide} />
@@ -156,7 +159,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
     >
       {pages.map((page, pageIndex) => <View key={`featured-page-${pageIndex}`} style={[styles.page, { width: pageWidth }]}>
         {page.map((trader) => <FeaturedCard key={trader.id} trader={trader} />)}
-        {page.length < pageSize ? Array.from({ length: pageSize - page.length }).map((_, index) => <View key={`spacer-${index}`} style={styles.cardSpacer} />) : null}
+        {page.length < pageSize ? Array.from({ length: pageSize - page.length }).map((_, index) => <Pressable key={`spacer-${index}`} style={styles.recruitmentSpacer} onPress={() => router.push(waitlistHref('trader', 'featured-spacer'))} accessibilityRole="button"><Text style={styles.recruitmentEyebrow}>FOUNDING 50</Text><Text style={styles.recruitmentTitle}>Your business could be here.</Text><Text style={styles.recruitmentText}>Create your Surrey trade profile before launch.</Text><Text style={styles.recruitmentLink}>Join now →</Text></Pressable>) : null}
       </View>)}
     </ScrollView>
 
@@ -179,7 +182,11 @@ const styles = StyleSheet.create({
   page: { flexDirection: 'row', gap: 10, paddingHorizontal: 1 },
   cardPressable: { flex: 1, minWidth: 0, height: 320, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.navySoft },
   cardPressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
-  cardSpacer: { flex: 1, minWidth: 0 },
+  recruitmentSpacer: { flex: 1, minWidth: 0, height: 320, borderRadius: 24, padding: 18, justifyContent: 'flex-end', gap: 7, backgroundColor: '#FFF5EC', borderWidth: 1, borderColor: '#E8B98F' },
+  recruitmentEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+  recruitmentTitle: { color: colors.charcoal, fontSize: 20, lineHeight: 24, fontWeight: '900' },
+  recruitmentText: { color: colors.muted, lineHeight: 19 },
+  recruitmentLink: { color: colors.primaryDark, fontWeight: '900', marginTop: 3 },
   cardImage: { flex: 1, justifyContent: 'space-between', padding: 12 },
   cardImageRadius: { borderRadius: 24 },
   cardShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(8,21,31,0.36)', borderRadius: 24 },
@@ -210,4 +217,5 @@ const styles = StyleSheet.create({
   emptyEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
   emptyTitle: { color: '#FFFFFF', fontSize: 22, lineHeight: 27, fontWeight: '900' },
   emptyText: { color: '#DCE7EE', lineHeight: 20 },
+  emptyButton: { alignSelf: 'flex-start', marginTop: 4, borderRadius: 14 },
 });
