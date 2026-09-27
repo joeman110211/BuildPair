@@ -6,7 +6,6 @@ import { Button, Text } from 'react-native-paper';
 import { LatestJobsShowcase } from '@/components/LatestJobsShowcase';
 import { colors } from '@/constants/theme';
 import { apiFetch } from '@/lib/api';
-import { waitlistHref } from '@/lib/launch';
 
 type FeaturedTrader = {
   id: string;
@@ -59,13 +58,13 @@ function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
     >
       <View style={styles.cardShade} />
       <View style={styles.cardTopRow}>
-        <View style={styles.featuredBadge}><Text style={styles.featuredBadgeText}>{trader.foundingTrade ? 'FOUNDING TRADE' : 'BUILDPAIR TRADE'}</Text></View>
+        <View style={styles.featuredBadge}><Text style={styles.featuredBadgeText}>FEATURED TRADE</Text></View>
         <View style={styles.planBadge}><Text style={styles.planBadgeText}>{membership}</Text></View>
       </View>
       <View style={styles.cardInfo}>
         <Text numberOfLines={2} style={styles.businessName}>{trader.businessName}</Text>
         <Text numberOfLines={2} style={styles.tradeLine}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
-        <Text numberOfLines={1} style={styles.metaLine}>{reputation}{trader.prelaunchProfile ? ' · Profile live before launch' : ''}</Text>
+        <Text numberOfLines={1} style={styles.metaLine}>{reputation}</Text>
         <View style={styles.cardFoot}>
           <Text style={styles.activityText}>{trader.completedJobs > 0 ? `${trader.completedJobs} completed` : `${trader.galleryCount} work photos`}</Text>
           <Text style={styles.viewText}>View →</Text>
@@ -122,10 +121,10 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
       <ImageBackground source={{ uri: FALLBACK_IMAGE }} style={[styles.emptyState, wide && styles.wrapperWide]} imageStyle={styles.emptyImage}>
         <View style={styles.emptyShade} />
         <View style={styles.emptyCopy}>
-          <Text style={styles.emptyEyebrow}>FOUNDING 50 · SURREY</Text>
+          <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
           <Text style={styles.emptyTitle}>Your business could be featured here.</Text>
-          <Text style={styles.emptyText}>Build your profile before launch and be among the first Surrey trades visible as BuildPair opens the marketplace.</Text>
-          <Button mode="contained" buttonColor={colors.primary} style={styles.emptyButton} onPress={() => router.push(waitlistHref('trader', 'featured-empty'))}>Join the Founding 50</Button>
+          <Text style={styles.emptyText}>Create a professional BuildPair profile, show the work you do and make it easier for local homeowners to find you.</Text>
+          <Button mode="contained" buttonColor={colors.primary} style={styles.emptyButton} onPress={() => router.push('/auth/sign-up?mode=trader')}>Create trade profile</Button>
         </View>
       </ImageBackground>
       <LatestJobsShowcase wide={wide} />
@@ -159,7 +158,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
     >
       {pages.map((page, pageIndex) => <View key={`featured-page-${pageIndex}`} style={[styles.page, { width: pageWidth }]}>
         {page.map((trader) => <FeaturedCard key={trader.id} trader={trader} />)}
-        {page.length < pageSize ? Array.from({ length: pageSize - page.length }).map((_, index) => <Pressable key={`spacer-${index}`} style={styles.recruitmentSpacer} onPress={() => router.push(waitlistHref('trader', 'featured-spacer'))} accessibilityRole="button"><Text style={styles.recruitmentEyebrow}>FOUNDING 50</Text><Text style={styles.recruitmentTitle}>Your business could be here.</Text><Text style={styles.recruitmentText}>Create your Surrey trade profile before launch.</Text><Text style={styles.recruitmentLink}>Join now →</Text></Pressable>) : null}
+        {page.length < pageSize ? Array.from({ length: pageSize - page.length }).map((_, index) => <Pressable key={`spacer-${index}`} style={styles.recruitmentSpacer} onPress={() => router.push('/auth/sign-up?mode=trader')} accessibilityRole="button"><Text style={styles.recruitmentEyebrow}>BUILDPAIR TRADES</Text><Text style={styles.recruitmentTitle}>Your business could be here.</Text><Text style={styles.recruitmentText}>Create your trade profile and show local homeowners what you do.</Text><Text style={styles.recruitmentLink}>Create profile →</Text></Pressable>) : null}
       </View>)}
     </ScrollView>
 
