@@ -2,7 +2,7 @@ import type { Href } from 'expo-router';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -48,12 +48,8 @@ export default function PublicJobDetailsScreen() {
   return <Screen title={job.title} subtitle="Public job request · Full address and private customer details stay hidden until appropriate.">
     <AppCard>
       <View style={styles.meta}>
-        <Chip icon="hammer-wrench">{job.category}</Chip>
-        <Chip icon="home-outline">{job.propertyType}</Chip>
-        <Chip icon="map-marker-outline">{job.locationLabel ?? job.postcode}</Chip>
-        <Chip icon="cash">{job.budgetRange}</Chip>
-        <Chip icon="calendar-clock">{job.urgency}</Chip>
-        <Chip icon={job.isPreview ? 'flask-outline' : 'briefcase-outline'}>{job.isPreview ? 'Preview job' : job.status.replace('_', ' ')}</Chip>
+        <Text style={styles.metaPrimary}>{job.category} · {job.propertyType} · {job.locationLabel ?? job.postcode}</Text>
+        <Text style={styles.metaSecondary}>{job.budgetRange} · {job.urgency} · {job.isPreview ? 'Preview job' : job.status.replace('_', ' ')}</Text>
       </View>
 
       <View style={styles.section}>
@@ -74,7 +70,9 @@ export default function PublicJobDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  meta: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  meta: { gap: 4, paddingBottom: 4 },
+  metaPrimary: { color: colors.charcoal, fontWeight: '800', lineHeight: 21 },
+  metaSecondary: { color: colors.muted, fontSize: 13, lineHeight: 19 },
   section: { gap: 8 },
   title: { color: colors.charcoal, fontWeight: '900' },
   description: { color: colors.text, lineHeight: 24, fontSize: 16 },
