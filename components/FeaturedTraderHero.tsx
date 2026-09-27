@@ -109,7 +109,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
       <View style={[styles.preloadCard, wide && styles.wrapperWide]}>
         <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
         <Text style={styles.preloadTitle}>Featured BuildPair profiles.</Text>
-        <Text style={styles.preloadText}>Live local trade profiles appear here as they become available. BuildPair checks the current directory when the page opens rather than filling the site with made-up listings.</Text>
+        <Text style={styles.preloadText}>Live local trade profiles appear here as they become available. BuildPair loads current directory profiles rather than using placeholder listings.</Text>
       </View>
       <LatestJobsShowcase wide={wide} />
     </View>;
@@ -121,8 +121,8 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
         <View style={styles.emptyShade} />
         <View style={styles.emptyCopy}>
           <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
-          <Text style={styles.emptyTitle}>Real profiles. Real work. No made-up directory filler.</Text>
-          <Text style={styles.emptyText}>BuildPair trade profiles will appear here automatically as they become available.</Text>
+          <Text style={styles.emptyTitle}>Real profiles. Real work. No placeholder listings.</Text>
+          <Text style={styles.emptyText}>BuildPair trade profiles appear here automatically as they become available.</Text>
         </View>
       </ImageBackground>
       <LatestJobsShowcase wide={wide} />
@@ -172,7 +172,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', gap: 12, overflow: 'hidden' },
+  wrapper: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', gap: 14, overflow: 'hidden' },
   wrapperWide: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center' },
   carousel: { width: '100%', maxWidth: 1140, minWidth: 0 },
   carouselContent: { alignItems: 'stretch' },
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   cardFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginTop: 2 },
   activityText: { flexShrink: 1, color: '#B7C8D2', fontSize: 10, fontWeight: '700' },
   viewText: { flexShrink: 0, color: '#FFD0AE', fontSize: 11, fontWeight: '900' },
-  carouselFooter: { minHeight: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingHorizontal: 2 },
+  carouselFooter: { minHeight: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingHorizontal: 2, marginTop: 2 },
   swipeHint: { flexShrink: 1, color: colors.muted, fontSize: 11, fontWeight: '700' },
   dots: { flexDirection: 'row', gap: 5, alignItems: 'center' },
   dot: { width: 7, height: 7, borderRadius: 999, backgroundColor: '#CBD4D9' },
