@@ -1,7 +1,7 @@
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { Image, StyleSheet, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { colors } from '@/constants/theme';
 import type { TraderProfile } from '@/types';
@@ -22,6 +22,13 @@ export function TraderCard({
   const isPro = trader.subscriptionTier === 'featured';
   const membership = trader.isSubscriptionActive ? (isPro ? 'BuildPair Pro' : trader.subscriptionTier === 'basic' ? 'BuildPair Plus' : trader.subscriptionTier === 'core' ? 'BuildPair Core' : null) : null;
   const responseLabel = trader.averageResponseHours && trader.averageResponseHours > 0 ? `Replies in ~${trader.averageResponseHours < 1 ? '<1' : Math.round(trader.averageResponseHours)}h` : trader.responseRate && trader.responseRate > 0 ? `${Math.round(trader.responseRate)}% response rate` : null;
+  const metaLine = [
+    trader.reviewCount ? `${rating.toFixed(1)} ★ · ${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}` : 'New to BuildPair',
+    `${trader.radiusMiles} mile radius`,
+    trader.availabilitySummary ? `Available ${trader.availabilitySummary}` : null,
+    responseLabel,
+  ].filter(Boolean).join(' · ');
+  const visibleServices = trader.subSkills.slice(0, 4);
 
   return <AppCard style={styles.card}>
     <View style={styles.media}>
@@ -37,26 +44,20 @@ export function TraderCard({
           <Text style={styles.muted}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
         </View>
         <View style={styles.badges}>
-          {trader.foundingTrade ? <Chip compact icon="rocket-launch-outline">Founding BuildPair Trade</Chip> : null}
-          {trader.isPreview ? <Chip compact>Example profile</Chip> : null}
+          {trader.foundingTrade ? <View style={styles.softBadge}><Text style={styles.softBadgeText}>Founding trade</Text></View> : null}
+          {trader.isPreview ? <View style={styles.softBadge}><Text style={styles.softBadgeText}>Example profile</Text></View> : null}
         </View>
       </View>
-      <View style={styles.metaRow}>
-        <View style={styles.metaPill}><Text style={styles.metaStrong}>{trader.reviewCount ? `${rating.toFixed(1)} ★` : 'New'}</Text><Text style={styles.metaText}>{trader.reviewCount ? `${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}` : 'No reviews yet'}</Text></View>
-        <View style={styles.metaPill}><Text style={styles.metaStrong}>{trader.radiusMiles} miles</Text><Text style={styles.metaText}>working radius</Text></View>
-        {trader.availabilitySummary ? <View style={styles.metaPill}><Text style={styles.metaStrong}>Available</Text><Text style={styles.metaText}>{trader.availabilitySummary}</Text></View> : null}
-        {responseLabel ? <View style={styles.metaPill}><Text style={styles.metaStrong}>{responseLabel}</Text><Text style={styles.metaText}>BuildPair response history</Text></View> : null}
-      </View>
+      <Text style={styles.metaLine}>{metaLine}</Text>
       <Text numberOfLines={3} style={styles.bio}>{trader.bio}</Text>
-      <View style={styles.skills}>{trader.subSkills.slice(0, 4).map((skill) => <Chip key={skill} compact>{skill}</Chip>)}</View>
+      {visibleServices.length ? <Text style={styles.servicesText}><Text style={styles.servicesLabel}>Services: </Text>{visibleServices.join(' · ')}{trader.subSkills.length > visibleServices.length ? ` · +${trader.subSkills.length - visibleServices.length} more` : ''}</Text> : null}
       <View style={styles.actions}>
         <Button mode="contained" contentStyle={styles.button} onPress={() => router.push(`/(public)/traders/${trader.id}` as Href)}>View profile</Button>
         {onToggleCompare ? <Button
           mode={compareSelected ? 'contained-tonal' : 'outlined'}
-          icon={compareSelected ? 'check' : 'compare-horizontal'}
           disabled={compareDisabled}
           onPress={() => onToggleCompare(trader)}
-        >{compareSelected ? 'Added' : 'Compare'}</Button> : null}
+        >{compareSelected ? 'Added ✓' : 'Compare'}</Button> : null}
       </View>
     </View>
   </AppCard>;
@@ -78,14 +79,14 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' },
   flex: { flex: 1, minWidth: 180, gap: 3 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, justifyContent: 'flex-end' },
+  softBadge: { borderRadius: 999, backgroundColor: colors.primarySoft, paddingHorizontal: 9, paddingVertical: 5 },
+  softBadgeText: { color: colors.primaryDark, fontSize: 10, fontWeight: '800' },
   title: { fontWeight: '900', color: colors.text, letterSpacing: -0.35 },
   muted: { color: colors.muted, lineHeight: 21 },
   bio: { color: colors.charcoalSoft, lineHeight: 22 },
-  metaRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  metaPill: { flexGrow: 1, minWidth: 120, borderRadius: 16, backgroundColor: colors.surfaceSoft, paddingHorizontal: 12, paddingVertical: 9, gap: 1 },
-  metaStrong: { color: colors.charcoal, fontWeight: '900' },
-  metaText: { color: colors.muted, fontSize: 10 },
-  skills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  metaLine: { color: colors.muted, fontSize: 12, lineHeight: 18, fontWeight: '700' },
+  servicesText: { color: colors.charcoalSoft, fontSize: 13, lineHeight: 19 },
+  servicesLabel: { color: colors.charcoal, fontWeight: '800' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   button: { minHeight: 48 },
 });
