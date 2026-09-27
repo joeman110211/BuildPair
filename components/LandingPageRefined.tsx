@@ -220,13 +220,6 @@ export default function LandingPageRefined() {
       </View>
     </View>
 
-    <View style={styles.section}>
-      <View style={styles.finalCta}>
-        <View style={styles.finalCopy}><Text style={styles.finalEyebrow}>BUILDPAIR UK</Text><Text variant="headlineSmall" style={styles.finalTitle}>Find the trade. Agree the work. Keep the whole job connected.</Text><Text style={styles.finalText}>Search, compare structured quotes, message, manage changes and complete the project in one place.</Text></View>
-        {mobile ? <View style={styles.finalButtons}><View style={styles.mobileActionRow}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Button mode="outlined" textColor="#FFFFFF" style={[styles.buttonBase, styles.finalOutline, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-final-trader'))}>Trade profile</Button></View></View> : <View style={styles.finalButtons}><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.navy} style={styles.buttonBase} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('trader', 'homepage-final-trader')} asChild><Button mode="outlined" textColor="#FFFFFF" style={[styles.buttonBase, styles.finalOutline]} contentStyle={styles.buttonContent}>Create trade profile</Button></Link></View>}
-      </View>
-    </View>
-
     <PublicFooter />
   </ScrollView>;
 }
@@ -309,11 +302,4 @@ const styles = StyleSheet.create({
   faqCard: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 15, gap: 8 },
   faqRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   faqToggle: { flexShrink: 0, color: colors.primary, fontSize: 24, fontWeight: '900' },
-  finalCta: { width: '100%', backgroundColor: colors.navy, borderRadius: 26, padding: 24, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 18 },
-  finalCopy: { flex: 1, minWidth: 240, maxWidth: '100%', gap: 6 },
-  finalEyebrow: { color: '#FFD7BA', fontSize: 11, fontWeight: '900', letterSpacing: 1.2 },
-  finalTitle: { color: '#FFFFFF', fontWeight: '900' },
-  finalText: { color: '#DCE7EE', lineHeight: 22 },
-  finalButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, minWidth: 220 },
-  finalOutline: { borderColor: '#FFFFFF', maxWidth: '100%' },
 });
