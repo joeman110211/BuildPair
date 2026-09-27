@@ -270,7 +270,7 @@ export default function DirectoryScreen() {
           </View>
           <View style={[styles.compareDockActions, compactCompareDock && styles.compareDockActionsCompact]}>
             <Button compact mode="text" onPress={() => setCompareIds([])}>Clear</Button>
-            <Button mode="contained" icon="compare-horizontal" disabled={compareTraders.length < 2} onPress={scrollToComparison}>Compare now</Button>
+            <Button mode="contained" disabled={compareTraders.length < 2} onPress={scrollToComparison}>Compare now</Button>
           </View>
         </View>
       </View>
