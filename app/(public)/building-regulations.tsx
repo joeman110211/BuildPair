@@ -1,7 +1,7 @@
-import { Linking, ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { PublicFooter } from '@/components/PublicFooter';
-import { colors } from '@/constants/theme';
+import { colors, publicResponsiveMetrics } from '@/constants/theme';
 
 type NationCard = {
   nation: string;
@@ -64,16 +64,18 @@ const COMMON_CHECKS = [
 ] as const;
 
 export default function BuildingRegulationsHub() {
+  const { width } = useWindowDimensions();
+  const metrics = publicResponsiveMetrics(width);
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
-    <View style={styles.hero}>
+    <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroInner}>
         <Chip style={styles.chip} textStyle={styles.chipText}>Free public reference</Chip>
-        <Text variant="displaySmall" style={styles.heroTitle}>Official UK building-rule starting points in one place.</Text>
+        <Text variant="displaySmall" style={[styles.heroTitle, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Official UK building-rule starting points in one place.</Text>
         <Text variant="bodyLarge" style={styles.heroBody}>BuildPair brings together the official sources for England, Wales, Scotland and Northern Ireland. We link to current source material rather than copying technical guidance that may change.</Text>
       </View>
     </View>
 
-    <View style={styles.content}>
+    <View style={[styles.content, metrics.phone && styles.contentMobile]}>
       <View style={styles.warning}>
         <Text variant="titleMedium" style={styles.title}>Use the right nation, edition and date</Text>
         <Text style={styles.body}>Building standards are not identical across the UK. The applicable guidance can depend on the property location, type of work, application or notice date and transitional provisions. Approved Documents and Technical Handbooks provide guidance on ways to comply; use building control or a suitably competent professional where the position is unclear.</Text>
@@ -91,8 +93,8 @@ export default function BuildingRegulationsHub() {
       </View>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.eyebrow}>Quick orientation</Text>
-        <Text variant="headlineMedium" style={styles.sectionTitle}>Common areas to check.</Text>
+        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Quick orientation</Text>
+        <Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>Common areas to check.</Text>
         <Text style={styles.body}>These headings are a navigation aid only. Use the official national sources above for the current guidance that applies to the project.</Text>
       </View>
       <View style={styles.checkGrid}>{COMMON_CHECKS.map(([title, body]) => <View key={title} style={styles.checkCard}><Text variant="titleMedium" style={styles.title}>{title}</Text><Text style={styles.body}>{body}</Text></View>)}</View>
@@ -115,12 +117,14 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
   hero: { backgroundColor: colors.charcoal, paddingHorizontal: 20, paddingVertical: 62 },
+  heroMobile: { paddingHorizontal: 16, paddingVertical: 42 },
   heroInner: { width: '100%', maxWidth: 1120, alignSelf: 'center', gap: 13 },
   chip: { alignSelf: 'flex-start', backgroundColor: '#3A4148' },
   chipText: { color: '#FFFFFF', fontWeight: '800' },
   heroTitle: { color: '#FFFFFF', fontWeight: '900', maxWidth: 850, letterSpacing: -1 },
   heroBody: { color: '#DDE1E3', maxWidth: 840, lineHeight: 27 },
   content: { width: '100%', maxWidth: 1120, alignSelf: 'center', padding: 20, gap: 24 },
+  contentMobile: { paddingHorizontal: 16, paddingVertical: 16, gap: 20 },
   warning: { backgroundColor: colors.goldSoft, borderWidth: 1, borderColor: '#E5C98F', borderRadius: 24, padding: 20, gap: 7 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
   card: { flexGrow: 1, flexBasis: 460, backgroundColor: colors.surfaceRaised, borderRadius: 26, padding: 22, borderWidth: 1, borderColor: colors.border, gap: 12 },
