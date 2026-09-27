@@ -73,10 +73,6 @@ jobs:
       - run: npm test
       - name: Export web
         run: npm run build:web
-      - name: Export Android bundle
-        run: npx expo export --platform android --output-dir dist/android
-      - name: Export iOS bundle
-        run: npx expo export --platform ios --output-dir dist/ios
       - name: Audit production dependencies
         shell: bash
         run: |
