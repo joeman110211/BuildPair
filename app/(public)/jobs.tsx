@@ -2,7 +2,7 @@ import type { Href } from 'expo-router';
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -45,18 +45,15 @@ export default function PublicJobsScreen() {
     {!loading && error ? <EmptyState title="Jobs unavailable" body={error} action={<Button onPress={load}>Try again</Button>} /> : null}
     {!loading && !error && !jobs.length ? <EmptyState title="No job requests yet" body="There are no live customer requests to show right now. New jobs will appear here automatically as homeowners post them." /> : null}
     {!loading && !error ? jobs.map((job) => <AppCard key={job.id}>
-      <View style={styles.row}>
-        <View style={styles.headingBlock}>
-          <Link href={jobDetailsHref(job)} asChild>
-            <Text variant="titleLarge" style={styles.linkTitle}>{job.title}</Text>
-          </Link>
-          <Text style={styles.muted}>{job.category} · {job.propertyType} · {job.locationLabel ?? job.postcode} · {job.budgetRange}</Text>
-        </View>
-        <Chip>{job.status.replace('_', ' ')}</Chip>
+      <View style={styles.headingBlock}>
+        <Link href={jobDetailsHref(job)} asChild>
+          <Text variant="titleLarge" style={styles.linkTitle}>{job.title}</Text>
+        </Link>
+        <Text style={styles.muted}>{job.category} · {job.propertyType} · {job.locationLabel ?? job.postcode} · {job.budgetRange}</Text>
+        <Text style={styles.jobMeta}>Status: {job.status.replace('_', ' ')} · Urgency: {job.urgency}</Text>
       </View>
       <Text numberOfLines={4} style={styles.description}>{job.description}</Text>
       <View style={styles.row}>
-        <Chip icon="calendar-clock">{job.urgency}</Chip>
         <View style={styles.actions}>
           <Link href={jobDetailsHref(job)} asChild><Button mode="outlined">View job</Button></Link>
           <Link href={joinJobHref(job)} asChild><Button mode="contained">Join to quote</Button></Link>
@@ -71,6 +68,7 @@ const styles = StyleSheet.create({
   headingBlock: { flex: 1, minWidth: 220, gap: 4 },
   linkTitle: { fontWeight: '900', color: colors.charcoal, textDecorationLine: 'underline' },
   muted: { color: colors.muted, lineHeight: 21 },
+  jobMeta: { color: colors.muted, fontSize: 12, lineHeight: 18, fontWeight: '700' },
   description: { color: colors.text, lineHeight: 22 },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
   loadingCard: { minHeight: 160, alignItems: 'center', justifyContent: 'center' },
