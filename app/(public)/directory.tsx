@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Chip, Portal, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
+import { Button, Menu, Portal, Text, TextInput } from 'react-native-paper';
 import { FormSelect } from '@/components/FormSelect';
 import { EmptyState, Screen } from '@/components/Screen';
 import { TraderCard } from '@/components/TraderCard';
@@ -12,6 +12,11 @@ import { searchTraders, searchTradersWithFallback } from '@/lib/trade-search';
 import { recentlyViewedTraderIds } from '@/lib/trader-browse-history';
 import type { TraderProfile } from '@/types';
 
+const SORT_LABELS = {
+  best: 'Best match',
+  rating: 'Highest rated',
+  responsive: 'Most responsive',
+} as const;
 
 type TradeSearchIntent = {
   matched?: boolean;
@@ -45,6 +50,7 @@ export default function DirectoryScreen() {
   const [aiCheckingQuery, setAiCheckingQuery] = useState('');
   const [availabilityOnly, setAvailabilityOnly] = useState(false);
   const [sortMode, setSortMode] = useState<'best' | 'rating' | 'responsive'>('best');
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [recentIds, setRecentIds] = useState<string[]>([]);
 
@@ -154,71 +160,71 @@ export default function DirectoryScreen() {
     };
   }, [trade, trimmedQuery, localFiltered.length]);
 
-  return <Screen title="Find the right trade" subtitle="Describe the job or problem and BuildPair will help match it to the right local trade.">
+  return <Screen title="Find the right trade" subtitle="Describe the job or problem in your own words. If you already know the trade you need, you can narrow the search below.">
     <View style={styles.searchPanel}>
       <View style={styles.search}>
         <TextInput
           mode="outlined"
+          label="What do you need help with?"
           style={styles.searchInput}
           outlineStyle={styles.searchOutline}
-          placeholder="What do you need help with?"
+          placeholder="For example: leaking tap, bathroom tiling, broken boiler"
           value={query}
           onChangeText={setQuery}
         />
       </View>
       <View style={styles.select}>
         <FormSelect
-          label="Trade category"
+          label="Trade category (optional)"
           value={trade}
           options={TRADE_CATEGORIES}
           onChange={setTrade}
-          placeholder="All trades"
+          placeholder="Choose a trade if you know it"
         />
       </View>
-      {trade || query ? <Button mode="text" onPress={() => { setQuery(''); setTrade(undefined); }}>Clear</Button> : null}
-    </View>
-
-    <View style={styles.resultsControls}>
-      <View style={styles.sortControl}>
-        <Text variant="labelMedium" style={styles.controlLabel}>Sort results</Text>
-        <SegmentedButtons
-          density="small"
-          value={sortMode}
-          onValueChange={(value) => setSortMode(value as 'best' | 'rating' | 'responsive')}
-          buttons={[
-            { value: 'best', label: 'Best match' },
-            { value: 'rating', label: 'Rating' },
-            { value: 'responsive', label: 'Response' },
-          ]}
-        />
-      </View>
-      <View style={styles.availabilityControl}>
-        <View style={styles.availabilityCopy}>
-          <Text style={styles.availabilityTitle}>Available soon</Text>
-          <Text variant="bodySmall" style={styles.availabilityHint}>Only show trades with upcoming availability</Text>
-        </View>
-        <Switch value={availabilityOnly} onValueChange={setAvailabilityOnly} />
-      </View>
+      {trade || query ? <View style={styles.searchActions}><Button compact mode="text" onPress={() => { setQuery(''); setTrade(undefined); }}>Clear search</Button></View> : null}
     </View>
 
     <View style={styles.resultsHeader}>
       <View style={styles.resultsCopy}>
         <Text variant="titleLarge" style={styles.title}>{loading ? 'Finding local trades' : `${displayFiltered.length} trade${displayFiltered.length === 1 ? '' : 's'} found`}</Text>
         {loading ? <Text style={styles.muted}>Checking active BuildPair trade profiles. This page will always resolve to live results, a clear empty state or an error with a retry option.</Text> : null}
-        {!loading && query && !fallbackActive ? <Text style={styles.muted}>Best matches for “{query}” are shown first.</Text> : null}
-        {!loading && fallbackActive ? <Text style={styles.muted}>No exact wording match, so BuildPair is showing the closest available trades instead of leaving you at a dead end.</Text> : null}
-        {!loading && aiChecking ? <Text style={styles.muted}>Checking the likely trade behind your search…</Text> : null}
+        {!loading && query && !fallbackActive ? <Text style={styles.muted}>Showing the closest matches for “{query}”.</Text> : null}
+        {!loading && fallbackActive ? <Text style={styles.muted}>No exact wording match, so BuildPair is showing the closest relevant trades.</Text> : null}
+        {!loading && aiChecking ? <Text style={styles.muted}>Working out the most likely trade for your problem…</Text> : null}
         {!loading && !aiChecking && activeIntent?.matched && activeIntent.primaryTrade && exactFiltered.length > 0
-          ? <Text style={styles.intentText}>BuildPair matched this to {activeIntent.primaryTrade}{activeIntent.source === 'ai' ? ' using AI intent matching' : ''}.</Text>
+          ? <Text style={styles.intentText}>Likely trade: {activeIntent.primaryTrade}.</Text>
           : null}
+        {!loading && trade ? <Text style={styles.muted}>Trade filter: {trade}</Text> : null}
       </View>
-      {trade ? <Chip>{trade}</Chip> : null}
     </View>
+
+    {!loading && !error && (filtered.length > 0 || availabilityOnly) ? <View style={styles.refineBar}>
+      <Text style={styles.refineLabel}>Refine results</Text>
+      <View style={styles.refineActions}>
+        <Menu
+          visible={sortMenuOpen}
+          onDismiss={() => setSortMenuOpen(false)}
+          anchor={<Button compact mode="text" onPress={() => setSortMenuOpen(true)}>Sort: {SORT_LABELS[sortMode]}</Button>}
+        >
+          <Menu.Item title="Best match" onPress={() => { setSortMode('best'); setSortMenuOpen(false); }} />
+          <Menu.Item title="Highest rated" onPress={() => { setSortMode('rating'); setSortMenuOpen(false); }} />
+          <Menu.Item title="Most responsive" onPress={() => { setSortMode('responsive'); setSortMenuOpen(false); }} />
+        </Menu>
+        <Button compact mode={availabilityOnly ? 'contained-tonal' : 'text'} onPress={() => setAvailabilityOnly((value) => !value)}>
+          {availabilityOnly ? '✓ Available soon' : 'Available soon'}
+        </Button>
+      </View>
+    </View> : null}
 
     {loading ? <View style={styles.loadingState} accessibilityLiveRegion="polite"><Text style={styles.loadingTitle}>Checking the directory…</Text><Text style={styles.muted}>Active local trade profiles will appear here as soon as the directory check completes.</Text></View> : null}
     {!loading && error ? <EmptyState title="Directory unavailable" body={error} action={<Button onPress={() => load()}>Try again</Button>} /> : null}
     {!loading && !error && !displayFiltered.length
-      ? <EmptyState title="No trades match these filters" body={availabilityOnly ? 'There are profiles matching your search, but none currently show upcoming availability. Turn off the availability filter to see the wider directory.' : 'Real BuildPair trade profiles appear here as they are completed. Try a broader trade or search term.'} />
+      ? <EmptyState
+          title="No trades match this search"
+          body={availabilityOnly ? 'No matching trades currently show upcoming availability. You can show all matching trades instead.' : 'Try describing the job a little differently or remove the trade category filter.'}
+          action={availabilityOnly ? <Button mode="outlined" onPress={() => setAvailabilityOnly(false)}>Show all matching trades</Button> : undefined}
+        />
       : null}
 
     {compareTraders.length >= 2 ? <View nativeID="trade-comparison-panel" style={styles.comparePanel}>
@@ -264,7 +270,7 @@ export default function DirectoryScreen() {
           </View>
           <View style={[styles.compareDockActions, compactCompareDock && styles.compareDockActionsCompact]}>
             <Button compact mode="text" onPress={() => setCompareIds([])}>Clear</Button>
-            <Button mode="contained" icon="compare-horizontal" disabled={compareTraders.length < 2} onPress={scrollToComparison}>Compare now</Button>
+            <Button mode="contained" disabled={compareTraders.length < 2} onPress={scrollToComparison}>Compare now</Button>
           </View>
         </View>
       </View>
@@ -273,18 +279,15 @@ export default function DirectoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  searchPanel: { backgroundColor: '#FFFCF8', borderWidth: 1, borderColor: '#E9D4C2', borderRadius: 20, padding: 14, flexDirection: 'row', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' },
+  searchPanel: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 14, flexDirection: 'row', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' },
   search: { flex: 2, minWidth: 250 },
   searchInput: { backgroundColor: colors.surfaceRaised },
-  searchOutline: { borderRadius: 18 },
+  searchOutline: { borderRadius: 16 },
   select: { flex: 1, minWidth: 220 },
-  resultsControls: { width: '100%', maxWidth: 760, alignSelf: 'center', gap: 12 },
-  sortControl: { gap: 6 },
-  controlLabel: { color: colors.charcoalSoft, fontWeight: '800' },
-  availabilityControl: { minHeight: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: colors.border, borderRadius: 16, backgroundColor: colors.surfaceRaised },
-  availabilityCopy: { flex: 1, gap: 1 },
-  availabilityTitle: { color: colors.charcoal, fontWeight: '800' },
-  availabilityHint: { color: colors.muted, lineHeight: 17 },
+  searchActions: { minHeight: 50, justifyContent: 'center' },
+  refineBar: { minHeight: 42, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap', paddingHorizontal: 2 },
+  refineLabel: { color: colors.muted, fontSize: 12, fontWeight: '800' },
+  refineActions: { flexDirection: 'row', alignItems: 'center', gap: 2, flexWrap: 'wrap' },
   resultsHeader: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
   resultsCopy: { alignItems: 'center', gap: 3, maxWidth: 760 },
   title: { fontWeight: '900', color: colors.charcoal, textAlign: 'center' },
