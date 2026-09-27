@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Chip, Portal, Text, TextInput } from 'react-native-paper';
+import { Button, Chip, Portal, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
 import { FormSelect } from '@/components/FormSelect';
 import { EmptyState, Screen } from '@/components/Screen';
 import { TraderCard } from '@/components/TraderCard';
@@ -12,7 +12,6 @@ import { searchTraders, searchTradersWithFallback } from '@/lib/trade-search';
 import { recentlyViewedTraderIds } from '@/lib/trader-browse-history';
 import type { TraderProfile } from '@/types';
 
-const EXAMPLE_SEARCHES = ['tiler', 'bathroom', 'camera', 'security', 'water leak', 'wood', 'boiler', 'roof leak', 'kitchen', 'driveway'];
 
 type TradeSearchIntent = {
   matched?: boolean;
@@ -155,14 +154,14 @@ export default function DirectoryScreen() {
     };
   }, [trade, trimmedQuery, localFiltered.length]);
 
-  return <Screen title="Find the right trade" subtitle="Search by trade, job, material, brand, symptom or problem. BuildPair understands related work, common wording and likely intent, so you do not need to know the exact trade name first.">
+  return <Screen title="Find the right trade" subtitle="Describe the job or problem and BuildPair will help match it to the right local trade.">
     <View style={styles.searchPanel}>
       <View style={styles.search}>
         <TextInput
           mode="outlined"
           style={styles.searchInput}
           outlineStyle={styles.searchOutline}
-          placeholder="Try ‘camera’, ‘water leak’, ‘wood’, ‘boiler’ or describe the problem"
+          placeholder="What do you need help with?"
           value={query}
           onChangeText={setQuery}
         />
@@ -179,18 +178,27 @@ export default function DirectoryScreen() {
       {trade || query ? <Button mode="text" onPress={() => { setQuery(''); setTrade(undefined); }}>Clear</Button> : null}
     </View>
 
-    <View style={styles.examples}>
-      <Text variant="bodySmall" style={styles.muted}>Popular searches</Text>
-      <View style={styles.exampleChips}>
-        {EXAMPLE_SEARCHES.map((example) => <Chip key={example} onPress={() => setQuery(example)}>{example}</Chip>)}
+    <View style={styles.resultsControls}>
+      <View style={styles.sortControl}>
+        <Text variant="labelMedium" style={styles.controlLabel}>Sort results</Text>
+        <SegmentedButtons
+          density="small"
+          value={sortMode}
+          onValueChange={(value) => setSortMode(value as 'best' | 'rating' | 'responsive')}
+          buttons={[
+            { value: 'best', label: 'Best match' },
+            { value: 'rating', label: 'Rating' },
+            { value: 'responsive', label: 'Response' },
+          ]}
+        />
       </View>
-    </View>
-
-    <View style={styles.filterChips}>
-      <Chip selected={sortMode === 'best'} showSelectedCheck onPress={() => setSortMode('best')}>Best match</Chip>
-      <Chip selected={sortMode === 'rating'} showSelectedCheck onPress={() => setSortMode('rating')}>Highest rated</Chip>
-      <Chip selected={sortMode === 'responsive'} showSelectedCheck onPress={() => setSortMode('responsive')}>Most responsive</Chip>
-      <Chip selected={availabilityOnly} showSelectedCheck icon="calendar-check-outline" onPress={() => setAvailabilityOnly((value) => !value)}>Available soon</Chip>
+      <View style={styles.availabilityControl}>
+        <View style={styles.availabilityCopy}>
+          <Text style={styles.availabilityTitle}>Available soon</Text>
+          <Text variant="bodySmall" style={styles.availabilityHint}>Only show trades with upcoming availability</Text>
+        </View>
+        <Switch value={availabilityOnly} onValueChange={setAvailabilityOnly} />
+      </View>
     </View>
 
     <View style={styles.resultsHeader}>
@@ -265,14 +273,18 @@ export default function DirectoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  searchPanel: { backgroundColor: '#FFFCF8', borderWidth: 1, borderTopWidth: 3, borderColor: '#E9D4C2', borderTopColor: colors.primary, borderRadius: 26, padding: 16, flexDirection: 'row', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' },
+  searchPanel: { backgroundColor: '#FFFCF8', borderWidth: 1, borderColor: '#E9D4C2', borderRadius: 20, padding: 14, flexDirection: 'row', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' },
   search: { flex: 2, minWidth: 250 },
   searchInput: { backgroundColor: colors.surfaceRaised },
   searchOutline: { borderRadius: 18 },
   select: { flex: 1, minWidth: 220 },
-  examples: { gap: 8, alignItems: 'center' },
-  exampleChips: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
-  filterChips: { flexDirection: 'row', gap: 7, flexWrap: 'wrap', justifyContent: 'center' },
+  resultsControls: { width: '100%', maxWidth: 760, alignSelf: 'center', gap: 12 },
+  sortControl: { gap: 6 },
+  controlLabel: { color: colors.charcoalSoft, fontWeight: '800' },
+  availabilityControl: { minHeight: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: colors.border, borderRadius: 16, backgroundColor: colors.surfaceRaised },
+  availabilityCopy: { flex: 1, gap: 1 },
+  availabilityTitle: { color: colors.charcoal, fontWeight: '800' },
+  availabilityHint: { color: colors.muted, lineHeight: 17 },
   resultsHeader: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
   resultsCopy: { alignItems: 'center', gap: 3, maxWidth: 760 },
   title: { fontWeight: '900', color: colors.charcoal, textAlign: 'center' },
