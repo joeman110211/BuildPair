@@ -1,28 +1,66 @@
 import { Link, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Button, Chip, ProgressBar, Text } from 'react-native-paper';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
+import { apiFetch } from '@/lib/api';
 import { LAUNCH_DATE_LABEL, waitlistHref } from '@/lib/launch';
+
+type FoundingProgress = {
+  onboarded: number;
+  target: number;
+  remaining: number;
+  filled: boolean;
+};
 
 export function PrelaunchBanner() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const compact = width < 720;
+  const [progress, setProgress] = useState<FoundingProgress | null>(null);
+  const [progressLoaded, setProgressLoaded] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    apiFetch<FoundingProgress>('/api/founding-trades')
+      .then((result) => {
+        if (active) setProgress(result);
+      })
+      .catch(() => {
+        if (active) setProgress(null);
+      })
+      .finally(() => {
+        if (active) setProgressLoaded(true);
+      });
+    return () => { active = false; };
+  }, []);
+
+  const progressValue = progress?.target ? Math.min(1, progress.onboarded / progress.target) : 0;
 
   return <View style={styles.shell}>
     <View style={[styles.inner, compact && styles.innerCompact]}>
       <View style={[styles.copy, compact && styles.copyCompact]}>
         <View style={[styles.chips, compact && styles.chipsCompact]}>
-          <Chip compact icon="rocket-launch-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Launching {LAUNCH_DATE_LABEL}</Chip>
+          <Chip compact icon="rocket-launch-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Target launch {LAUNCH_DATE_LABEL}</Chip>
           <Chip compact icon="gift-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Founding 50 Surrey trades</Chip>
         </View>
-        <Text style={[styles.title, compact && styles.titleCompact]}>We’re getting the first 50 Surrey trades set up before launch.</Text>
-        <Text style={[styles.body, compact && styles.bodyCompact]}>Create your profile now, add your services, service area, portfolio and trust details, and be ready when BuildPair opens on {LAUNCH_DATE_LABEL}.</Text>
-        <Text style={[styles.reputation, compact && styles.reputationCompact]}><Text style={styles.strong}>Pre-launch is profile setup only.</Text> Jobs, quoting, homeowner messaging, BuildPay and paid subscriptions remain locked until launch.</Text>
+        <Text style={[styles.title, compact && styles.titleCompact]}>We’re building the first 50 Surrey trades before we open the gates to homeowners.</Text>
+        <Text style={[styles.body, compact && styles.bodyCompact]}>Trades can build their profiles now while homeowners join the launch list. We want homeowners to arrive to genuine local choice, not an empty marketplace.</Text>
+        <View style={[styles.progressCard, compact && styles.progressCardCompact]}>
+          <Text style={styles.progressEyebrow}>FOUNDING 50 PROGRESS</Text>
+          {progress ? <>
+            <View style={styles.progressRow}>
+              <Text style={[styles.progressCount, compact && styles.progressCountCompact]}>{progress.onboarded} / {progress.target} onboard</Text>
+              <Text style={styles.progressRemaining}>{progress.filled ? 'Founding 50 filled' : `${progress.remaining} places remaining`}</Text>
+            </View>
+            <ProgressBar progress={progressValue} color={colors.primary} style={styles.progressBar} />
+          </> : <Text style={styles.progressUnavailable}>{progressLoaded ? 'Live count temporarily unavailable' : 'Checking the live count…'}</Text>}
+        </View>
+        <Text style={[styles.reputation, compact && styles.reputationCompact]}><Text style={styles.strong}>Pre-launch is profile setup only.</Text> Jobs, quoting, homeowner messaging, BuildPay and paid subscriptions remain locked while we build the Founding 50.</Text>
         <View style={[styles.offerBox, compact && styles.offerBoxCompact]}>
           <Text style={[styles.offer, compact && styles.offerCompact]}><Text style={styles.strong}>Founding 50 Surrey trades receive 3 months of BuildPair Pro free from launch day.</Text> There are no pay-per-lead charges and no pre-launch subscription fee.</Text>
         </View>
-        <Text style={[styles.small, compact && styles.smallCompact]}>Homeowner registration opens when the marketplace launches.</Text>
+        <Text style={[styles.small, compact && styles.smallCompact]}>Once the Founding 50 are onboard, we can open homeowner registration and the marketplace with useful local coverage already in place.</Text>
       </View>
       {compact ? <View style={[styles.actions, styles.actionsCompact]}>
         <Button mode="contained" icon="account-clock-outline" style={styles.actionButton} contentStyle={styles.actionContent} onPress={() => router.push(waitlistHref('trader', 'homepage-banner'))}>Create trade profile</Button>
@@ -63,6 +101,15 @@ const styles = StyleSheet.create({
   bodyCompact: { lineHeight: 18, fontSize: 13 },
   reputation: { color: colors.charcoalSoft, lineHeight: 20, fontSize: 14 },
   reputationCompact: { lineHeight: 17, fontSize: 12.5 },
+  progressCard: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#EDC6A7', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 11, gap: 8 },
+  progressCardCompact: { borderRadius: 11, paddingHorizontal: 10, paddingVertical: 9, gap: 7 },
+  progressEyebrow: { color: colors.primaryDark, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+  progressRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
+  progressCount: { color: colors.charcoal, fontSize: 21, lineHeight: 25, fontWeight: '900' },
+  progressCountCompact: { fontSize: 18, lineHeight: 22 },
+  progressRemaining: { color: colors.muted, fontSize: 12, lineHeight: 17, fontWeight: '800' },
+  progressBar: { height: 8, borderRadius: 999, backgroundColor: '#F0DDD0' },
+  progressUnavailable: { color: colors.muted, fontSize: 12, lineHeight: 18, fontWeight: '700' },
   offerBox: { backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: '#EDC6A7', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 11, gap: 6 },
   offerBoxCompact: { borderRadius: 11, paddingHorizontal: 10, paddingVertical: 8, gap: 4 },
   offer: { color: colors.charcoalSoft, lineHeight: 20, fontSize: 14 },
