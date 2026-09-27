@@ -9,7 +9,6 @@ import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
 import { TRADE_CATEGORIES } from '@/constants/options';
 import { colors, controlHeights, radii } from '@/constants/theme';
-import { LAUNCH_DATE_LABEL, waitlistHref } from '@/lib/launch';
 
 const POPULAR_TRADES = ['Tiling', 'Plumbing', 'Electrical', 'Building & Extensions', 'Roofing & Roofline', 'Painting & Decorating', 'Kitchens', 'Bathrooms'] as const;
 const HERO_BENEFITS = ['Whole project in one place', 'Local matching by real service area', 'No pay-per-lead for trades'] as const;
@@ -17,7 +16,7 @@ const HERO_BENEFITS = ['Whole project in one place', 'Local matching by real ser
 const FAQS = [
   ['Is BuildPair free for tradespeople?', 'Yes. Starter is £0/month. Paid plans add more marketplace access and business tools, but BuildPair does not charge tradespeople per lead.'],
   ['Do tradespeople pay for individual leads?', 'No. BuildPair uses membership-based marketplace access rather than selling the same contact details as individual paid leads.'],
-  ['When does the marketplace open?', `BuildPair launches ${LAUNCH_DATE_LABEL}. Surrey trades can create a launch-ready profile now, while homeowners can join launch notifications.`],
+  ['What makes BuildPair different from a lead-generation site?', 'BuildPair is designed around the whole project. It helps homeowners find and compare trades, then keeps structured quotes, messages, changes, project records and supported payments connected after the introduction. Tradespeople do not pay per lead.'],
   ['How does BuildPay work?', 'BuildPay supports agreed staged payments through Stripe. A stage follows the recorded quote and release workflow. If a trade requests BuildPay, the trade carries the applicable BuildPay cost; if a homeowner adds it, the homeowner pays the separately disclosed service fee.'],
   ['What does BuildPair verification mean?', 'BuildPair can show the review status of submitted credentials and project-linked activity. It does not replace an issuing register, regulator, building-control body or the checks appropriate to the work.'],
 ] as const;
@@ -49,29 +48,29 @@ export default function LandingPageRefined() {
 
     <View style={[styles.hero, wide && styles.heroWide]}>
       <View style={[styles.heroCopy, wide && styles.heroCopyWide]} testID="home-hero-copy">
-        <View style={styles.heroBadge}><View style={styles.liveDot} /><Text style={styles.heroBadgeText}>Surrey pre-launch · Built around the project, not the lead</Text></View>
+        <View style={styles.heroBadge}><View style={styles.liveDot} /><Text style={styles.heroBadgeText}>Built around the project, not the lead</Text></View>
         <Text style={[styles.heroTitle, !wide && styles.heroTitleCompact]}>Find trusted local tradespeople. Compare quotes clearly. Manage the whole job in one place.</Text>
-        <Text variant="titleMedium" style={styles.heroSubtitle}>From first quote to final payment, BuildPair keeps homeowners, tradespeople and the project connected. Trades can join the Surrey Founding 50 now; homeowners can register for launch updates.</Text>
+        <Text variant="titleMedium" style={styles.heroSubtitle}>BuildPair connects homeowners with local tradespeople and keeps the project organised from first search to final payment. Structured quotes, messages, agreed changes and payment records stay connected to the same job.</Text>
         <View style={styles.heroBenefits}>
           {HERO_BENEFITS.map((item) => <View key={item} style={styles.heroBenefit}><Text style={styles.heroBenefitMark}>✓</Text><Text style={styles.heroBenefitText}>{item}</Text></View>)}
         </View>
         {mobile ? <View style={styles.heroActionsMobile} testID="home-hero-actions">
-          <Button mode="contained" icon="account-star-outline" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-hero-trader'))}>Join the Founding 50</Button>
+          <Button mode="contained" icon="magnify" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button>
           <View style={styles.mobileActionRow}>
-            <Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('customer', 'homepage-hero'))}>Notify me at launch</Button>
-            <Button mode="text" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/how-it-works')}>See how it works</Button>
+            <Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/auth/sign-up?mode=trader')}>Create trade profile</Button>
+            <Button mode="text" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/how-it-works')}>How it works</Button>
           </View>
         </View> : <View style={styles.heroActions} testID="home-hero-actions">
-          <Link href={waitlistHref('trader', 'homepage-hero-trader')} asChild><Button mode="contained" icon="account-star-outline" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Join the Founding 50</Button></Link>
-          <Link href={waitlistHref('customer', 'homepage-hero')} asChild><Button mode="outlined" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Notify me at launch</Button></Link>
-          <Link href="/(public)/how-it-works" asChild><Button mode="text" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>See how it works</Button></Link>
+          <Button mode="contained" icon="magnify" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button>
+          <Link href="/auth/sign-up?mode=trader" asChild><Button mode="outlined" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Create trade profile</Button></Link>
+          <Link href="/(public)/how-it-works" asChild><Button mode="text" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>How it works</Button></Link>
         </View>}
       </View>
     </View>
 
     <View style={styles.featuredBand}>
       <View style={styles.featuredSection}>
-        <SectionHeading eyebrow="Featured tradespeople" title="Meet trades already building their BuildPair presence." body="Real profiles appear here as Surrey trades join. Swipe through the current businesses or claim an early place in the Founding 50." />
+        <SectionHeading eyebrow="Featured tradespeople" title="Meet tradespeople on BuildPair." body="Explore real local profiles, see what each business does and open a profile for more detail." />
         <FeaturedTraderHero wide={wide} />
       </View>
     </View>
@@ -98,13 +97,13 @@ export default function LandingPageRefined() {
             <Text style={[styles.audienceEyebrow, styles.tradeAudienceEyebrow]}>FOR TRADESPEOPLE</Text>
             <Text variant="headlineSmall" style={styles.cardTitle}>More than a place to find work. Quote it. Manage it. Get paid for it.</Text>
             <Text style={styles.cardText}>No pay-per-lead. Build a professional profile, find suitable local work, send structured quotes and keep customers, messages, changes and payment stages connected to the job.</Text>
-            {mobile ? <View style={styles.audienceActions}><Button mode="contained" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-trade-card'))}>Join the Founding 50</Button><View style={styles.mobileActionRow}><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/for-tradespeople')}>Trade features</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/pricing')}>Membership</Button></View></View> : <View style={styles.audienceActions}><Link href={waitlistHref('trader', 'homepage-trade-card')} asChild><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent}>Join the Founding 50</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>See trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>View membership</Button></Link></View>}
+            {mobile ? <View style={styles.audienceActions}><Button mode="contained" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/auth/sign-up?mode=trader')}>Create trade profile</Button><View style={styles.mobileActionRow}><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/for-tradespeople')}>Trade features</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/pricing')}>Membership</Button></View></View> : <View style={styles.audienceActions}><Link href="/auth/sign-up?mode=trader" asChild><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent}>Create trade profile</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>See trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>View membership</Button></Link></View>}
           </View>
           <View style={[styles.audienceCard, styles.homeownerCard]}>
             <Text style={styles.audienceEyebrow}>FOR HOMEOWNERS</Text>
             <Text variant="headlineSmall" style={styles.cardTitle}>Clearer quotes, fewer scattered messages and more control over the job.</Text>
             <Text style={styles.cardText}>Post once, compare structured quotes, choose the right trade and keep messages, agreed changes, project records and payment stages together.</Text>
-            {mobile ? <View style={styles.audienceActions}><View style={styles.mobileActionRow}><Button mode="contained" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('customer', 'homepage-audience'))}>Notify me</Button></View></View> : <View style={styles.audienceActions}><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('customer', 'homepage-audience')} asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>Notify me at launch</Button></Link></View>}
+            {mobile ? <View style={styles.audienceActions}><View style={styles.mobileActionRow}><Button mode="contained" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/for-homeowners')}>For homeowners</Button></View></View> : <View style={styles.audienceActions}><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Link href="/(public)/for-homeowners" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>For homeowners</Button></Link></View>}
           </View>
         </View>
       </View>
@@ -148,7 +147,7 @@ export default function LandingPageRefined() {
         <View style={styles.localGrid}>
           <View style={styles.localCard}><Text style={styles.localIcon}>⌖</Text><Text variant="titleMedium" style={styles.cardTitle}>Real service areas</Text><Text style={styles.cardText}>Trades set where they are based and how far they genuinely travel for work.</Text></View>
           <View style={styles.localCard}><Text style={styles.localIcon}>◎</Text><Text variant="titleMedium" style={styles.cardTitle}>Relevant local opportunities</Text><Text style={styles.cardText}>Marketplace matching is designed around trade, service and distance rather than vague nationwide coverage.</Text></View>
-          <View style={styles.localCard}><Text style={styles.localIcon}>↗</Text><Text variant="titleMedium" style={styles.cardTitle}>Surrey first, then outward</Text><Text style={styles.cardText}>BuildPair is concentrating on useful local density before expanding the marketplace more widely.</Text></View>
+          <View style={styles.localCard}><Text style={styles.localIcon}>↗</Text><Text variant="titleMedium" style={styles.cardTitle}>Useful local coverage</Text><Text style={styles.cardText}>BuildPair is designed to grow area by area so local matching stays useful as the marketplace expands.</Text></View>
         </View>
       </View>
     </View>
@@ -170,7 +169,7 @@ export default function LandingPageRefined() {
             {['No pay-per-lead', 'Structured quoting designed for clearer comparison', 'Project-linked communication, changes and records', 'Tools to quote, manage the work and handle supported staged payments'].map((item) => <Text key={item} style={styles.comparisonItem}>✓ {item}</Text>)}
           </View>
         </View>
-        <Link href={waitlistHref('trader', 'homepage-comparison')} asChild><Button mode="contained" icon="account-star-outline" buttonColor={colors.primary} style={styles.darkCta} contentStyle={styles.buttonContent}>Join the Surrey Founding 50</Button></Link>
+        <Link href="/auth/sign-up?mode=trader" asChild><Button mode="contained" icon="account-plus-outline" buttonColor={colors.primary} style={styles.darkCta} contentStyle={styles.buttonContent}>Create your trade profile</Button></Link>
       </View>
     </View>
 
@@ -264,26 +263,26 @@ export default function LandingPageRefined() {
 
     <View style={styles.updatesBand}>
       <View style={styles.section}>
-        <SectionHeading eyebrow="BuildPair roadmap" title="Live now. At launch. Coming later." body="The roadmap stays visible so nobody has to guess which parts of BuildPair are ready and which parts are still being built." />
+        <SectionHeading eyebrow="BuildPair roadmap" title="A working platform that keeps getting better." body="BuildPair is built around the full job, with improvements added to the marketplace, project workspace and business tools over time." />
         <View style={styles.updateColumns}>
           <View style={styles.updatePanel}>
-            <Chip icon="check-circle-outline">Live now</Chip>
+            <Chip icon="check-circle-outline">Core platform</Chip>
             {[
-              'Surrey trade profile setup, services, portfolio and service area',
-              'Outside-customer quotes and managed project workspace',
-              'Advice Hub, trust pages and launch-ready product flows',
+              'Local trade profiles, service areas and marketplace matching',
+              'Structured quotes, messaging and managed project workspace',
+              'BuildPay staged-payment workflow, trust pages and Advice Hub',
             ].map((item) => <Text key={item} style={styles.updateItem}>✓ {item}</Text>)}
           </View>
           <View style={[styles.updatePanel, styles.launchPanel]}>
-            <Chip icon="rocket-launch-outline">At launch</Chip>
+            <Chip icon="sparkles-outline">Recently added</Chip>
             {[
-              'Homeowner marketplace and local matching',
-              'Structured marketplace quotes, job messaging and paid memberships',
-              'Supported BuildPay staged-payment workflow',
+              'Outside-customer quotes and managed projects',
+              'Customer book, working calendar and richer project records',
+              'Project+ planning and room-concept tools',
             ].map((item) => <Text key={item} style={styles.updateItem}>• {item}</Text>)}
           </View>
           <View style={[styles.updatePanel, styles.comingPanel]}>
-            <Chip icon="clock-outline">Coming later</Chip>
+            <Chip icon="clock-outline">Coming next</Chip>
             {[
               'Smarter quote, invoice and aftercare reminders',
               'Calendar sync and richer document packs',
@@ -299,10 +298,10 @@ export default function LandingPageRefined() {
       <View style={styles.finalCta}>
         <Text style={styles.darkEyebrow}>BUILDPAIR</Text>
         <Text variant="headlineMedium" style={styles.finalTitle}>A better way to get the job done.</Text>
-        <Text style={styles.finalBody}>Built around the project, not the lead. Surrey trades can join the Founding 50 now, while homeowners can register for launch updates.</Text>
+        <Text style={styles.finalBody}>Find the right local trade, compare the work clearly and keep the project connected. Tradespeople get a fairer way to find work and practical tools to manage it.</Text>
         <View style={styles.finalActions}>
-          <Link href={waitlistHref('trader', 'homepage-final')} asChild><Button mode="contained" icon="account-star-outline" buttonColor={colors.primary} style={styles.buttonBase} contentStyle={styles.buttonContent}>Join the Founding 50</Button></Link>
-          <Link href={waitlistHref('customer', 'homepage-final')} asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.buttonBase} contentStyle={styles.buttonContent}>Notify me at launch</Button></Link>
+          <Button mode="contained" icon="magnify" buttonColor={colors.primary} style={styles.buttonBase} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button>
+          <Link href="/auth/sign-up?mode=trader" asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.buttonBase} contentStyle={styles.buttonContent}>Create trade profile</Button></Link>
         </View>
       </View>
     </View>

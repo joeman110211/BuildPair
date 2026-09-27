@@ -16,29 +16,24 @@ export function PrelaunchBanner() {
           <Chip compact icon="rocket-launch-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Launching {LAUNCH_DATE_LABEL}</Chip>
           <Chip compact icon="gift-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Founding 50 Surrey trades</Chip>
         </View>
-        <Text style={[styles.title, compact && styles.titleCompact]}>Join Surrey’s Founding 50 before launch.</Text>
-        <Text style={[styles.body, compact && styles.bodyCompact]}>Create your trade profile now, add the services and area you genuinely cover, show your work and be ready when the marketplace opens on {LAUNCH_DATE_LABEL}.</Text>
-        <Text style={[styles.reputation, compact && styles.reputationCompact]}><Text style={styles.strong}>Profile setup is open now.</Text> Marketplace jobs, homeowner messaging, BuildPay and paid subscriptions unlock at launch.</Text>
-        <View style={[styles.offerBox, compact && styles.offerBoxCompact]}>
-          <Text style={[styles.offer, compact && styles.offerCompact]}><Text style={styles.strong}>Founding 50 trades receive 3 months of BuildPair Pro free from launch day.</Text> No pay-per-lead. No pre-launch subscription fee.</Text>
-        </View>
-        <Text style={[styles.small, compact && styles.smallCompact]}>Homeowners can join launch notifications now; registration opens with the marketplace.</Text>
+        <Text style={[styles.title, compact && styles.titleCompact]}>BuildPair is opening the Surrey marketplace soon.</Text>
+        <Text style={[styles.body, compact && styles.bodyCompact]}>Trades can create their profile now. Homeowners can join launch updates. Founding 50 trades receive 3 months of BuildPair Pro free from launch day.</Text>
       </View>
       {compact ? <View style={[styles.actions, styles.actionsCompact]}>
-        <Button mode="contained" icon="account-clock-outline" style={styles.actionButton} contentStyle={styles.actionContent} onPress={() => router.push(waitlistHref('trader', 'homepage-banner'))}>Join the Founding 50</Button>
+        <Button mode="contained" icon="account-plus-outline" style={styles.actionButton} contentStyle={styles.actionContent} onPress={() => router.push(waitlistHref('trader', 'homepage-banner'))}>Create trade profile</Button>
         <View style={styles.actionRow}>
-          <Button mode="outlined" style={[styles.actionButton, styles.halfAction]} contentStyle={styles.actionContent} onPress={() => router.push('/(public)/rewards')}>Founding rewards</Button>
-          <Button mode="outlined" style={[styles.actionButton, styles.halfAction]} contentStyle={styles.actionContent} onPress={() => router.push('/auth/sign-in')}>Sign in</Button>
+          <Button mode="outlined" style={[styles.actionButton, styles.halfAction]} contentStyle={styles.actionContent} onPress={() => router.push('/(public)/launch')}>Launch details</Button>
+          <Button mode="outlined" style={[styles.actionButton, styles.halfAction]} contentStyle={styles.actionContent} onPress={() => router.push(waitlistHref('customer', 'homepage-banner'))}>Homeowner updates</Button>
         </View>
       </View> : <View style={styles.actions}>
         <Link href={waitlistHref('trader', 'homepage-banner')} asChild>
-          <Button mode="contained" icon="account-clock-outline" style={styles.actionButton} contentStyle={styles.actionContent}>Join the Founding 50</Button>
+          <Button mode="contained" icon="account-plus-outline" style={styles.actionButton} contentStyle={styles.actionContent}>Create trade profile</Button>
         </Link>
-        <Link href="/(public)/rewards" asChild>
-          <Button mode="outlined" style={styles.actionButton} contentStyle={styles.actionContent}>Founding rewards</Button>
+        <Link href="/(public)/launch" asChild>
+          <Button mode="outlined" style={styles.actionButton} contentStyle={styles.actionContent}>Launch details</Button>
         </Link>
-        <Link href="/auth/sign-in" asChild>
-          <Button mode="outlined" style={styles.actionButton} contentStyle={styles.actionContent}>Sign in</Button>
+        <Link href={waitlistHref('customer', 'homepage-banner')} asChild>
+          <Button mode="outlined" style={styles.actionButton} contentStyle={styles.actionContent}>Homeowner updates</Button>
         </Link>
       </View>}
     </View>

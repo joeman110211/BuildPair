@@ -6,7 +6,6 @@ import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 're
 import { Button, Chip, Text } from 'react-native-paper';
 import { colors, controlHeights, radii } from '@/constants/theme';
 import { ApiError, apiFetch } from '@/lib/api';
-import { waitlistHref } from '@/lib/launch';
 import type { Job, TraderProfile } from '@/types';
 
 function chunk<T>(items: T[], size: number) {
@@ -115,16 +114,16 @@ export function LatestJobsShowcase({ wide }: { wide: boolean }) {
       <View style={styles.headingRow}>
         <View style={styles.headingCopy}>
           <Text style={styles.eyebrow}>LATEST JOBS</Text>
-          <Text variant="headlineSmall" style={styles.title}>Local homeowner projects will appear here at launch.</Text>
-          <Text style={styles.muted}>We are building the Surrey trade network first so the marketplace opens with useful local coverage rather than a page full of fake demo jobs.</Text>
+          <Text variant="headlineSmall" style={styles.title}>No public jobs are available right now.</Text>
+          <Text style={styles.muted}>New homeowner projects appear here when they are posted. BuildPair only shows genuine marketplace jobs rather than filling the page with demo listings.</Text>
         </View>
       </View>
       <View style={styles.emptyJobsCard}>
         <View style={styles.emptyJobsCopy}>
-          <Text variant="titleMedium" style={styles.jobTitle}>Want to be ready when the first jobs land?</Text>
-          <Text style={styles.description}>Create your trade profile now, set the area you genuinely cover and join the Founding 50 before the marketplace opens.</Text>
+          <Text variant="titleMedium" style={styles.jobTitle}>Looking for local work?</Text>
+          <Text style={styles.description}>Create your trade profile, set the area you genuinely cover and check the Job Board for new matching opportunities.</Text>
         </View>
-        <Button mode="contained" style={styles.button} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'latest-jobs-empty'))}>Join the Founding 50</Button>
+        <Button mode="contained" style={styles.button} contentStyle={styles.buttonContent} onPress={() => router.push('/auth/sign-up?mode=trader')}>Create trade profile</Button>
       </View>
     </View>;
   }
