@@ -10,7 +10,7 @@ const plans = [
     price: '£0',
     suffix: '/ month',
     eyebrow: 'Build your presence',
-    summary: 'Create a professional BuildPair presence, choose the work you genuinely do and browse the marketplace before paying for marketplace access.',
+    summary: 'Create a professional BuildPair presence, show the work you genuinely do and browse the marketplace before paying for access.',
     compactFeatures: [
       '2 main trade categories + relevant services',
       'Complete profile, gallery and portfolio',
@@ -32,7 +32,7 @@ const plans = [
     price: '£9.99',
     suffix: '/ month',
     eyebrow: 'Occasional work + business basics',
-    summary: 'A low-cost working plan for tradespeople who want marketplace access and want to use BuildPair with customers they already find elsewhere.',
+    summary: 'A low-cost working plan for tradespeople who want marketplace access and useful tools for customers they already find elsewhere.',
     compactFeatures: [
       '5 marketplace opportunities per month',
       'External customer quotes & invoices',
@@ -57,7 +57,7 @@ const plans = [
     price: '£19.99',
     suffix: '/ month',
     eyebrow: 'Most popular',
-    summary: 'The everyday plan for active trades: more marketplace capacity plus the tools to quote, manage and move outside-customer work into BuildPair.',
+    summary: 'The everyday plan for active trades, with more marketplace capacity and the tools to quote, manage and bring outside-customer work into BuildPair.',
     compactFeatures: [
       '15 marketplace offers + unlimited direct requests',
       'Full Quote Builder + outside customer projects',
@@ -85,7 +85,7 @@ const plans = [
     price: '£29.99',
     suffix: '/ month',
     eyebrow: 'Run more of the business here',
-    summary: 'For established trades and growing businesses that want maximum marketplace capacity, deeper project controls and BuildPair’s strongest planning tools.',
+    summary: 'For established trades and growing businesses that need maximum marketplace capacity, deeper project controls and BuildPair’s strongest planning tools.',
     compactFeatures: [
       '35 marketplace offers + advanced analytics',
       '6-month availability + reusable templates',
@@ -135,7 +135,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
             </View> : null}
           </View>
           <Link href={href} asChild>
-            <Button mode={featured || pro ? 'contained' : 'outlined'} contentStyle={styles.buttonContent}>{cta}</Button>
+            <Button mode={featured || pro ? 'contained' : 'outlined'} style={styles.button} contentStyle={styles.buttonContent}>{cta}</Button>
           </Link>
         </View>;
       })}
@@ -173,7 +173,8 @@ const styles = StyleSheet.create({
   limitMark: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   limitMarkText: { color: colors.muted, fontWeight: '900', fontSize: 13 },
   limitText: { color: colors.muted, lineHeight: 21, flex: 1, minWidth: 0 },
+  button: { borderRadius: radii.pill },
   buttonContent: { minHeight: controlHeights.standard },
   launchNote: { color: colors.primaryDark, fontSize: 13, lineHeight: 20, textAlign: 'center', fontWeight: '800', maxWidth: 820, alignSelf: 'center' },
-  note: { color: colors.muted, fontSize: 12, lineHeight: 19, textAlign: 'center', maxWidth: 820, alignSelf: 'center' },
+  note: { color: colors.muted, fontSize: 12, lineHeight: 19, textAlign: 'center', maxWidth: 780, alignSelf: 'center' },
 });
