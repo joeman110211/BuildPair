@@ -6,7 +6,17 @@ import { AppCard } from '@/components/AppCard';
 import { colors } from '@/constants/theme';
 import type { TraderProfile } from '@/types';
 
-export function TraderCard({ trader, compareSelected = false, onToggleCompare }: { trader: TraderProfile; compareSelected?: boolean; onToggleCompare?: (trader: TraderProfile) => void }) {
+export function TraderCard({
+  trader,
+  compareSelected = false,
+  compareDisabled = false,
+  onToggleCompare,
+}: {
+  trader: TraderProfile;
+  compareSelected?: boolean;
+  compareDisabled?: boolean;
+  onToggleCompare?: (trader: TraderProfile) => void;
+}) {
   const router = useRouter();
   const rating = Number(trader.averageRating || 0);
   const isPro = trader.subscriptionTier === 'featured';
@@ -41,7 +51,12 @@ export function TraderCard({ trader, compareSelected = false, onToggleCompare }:
       <View style={styles.skills}>{trader.subSkills.slice(0, 4).map((skill) => <Chip key={skill} compact>{skill}</Chip>)}</View>
       <View style={styles.actions}>
         <Button mode="contained" contentStyle={styles.button} onPress={() => router.push(`/(public)/traders/${trader.id}` as Href)}>View profile</Button>
-        {onToggleCompare ? <Button mode={compareSelected ? 'contained-tonal' : 'outlined'} icon="compare-horizontal" onPress={() => onToggleCompare(trader)}>{compareSelected ? 'Comparing' : 'Compare'}</Button> : null}
+        {onToggleCompare ? <Button
+          mode={compareSelected ? 'contained-tonal' : 'outlined'}
+          icon={compareSelected ? 'check' : 'compare-horizontal'}
+          disabled={compareDisabled}
+          onPress={() => onToggleCompare(trader)}
+        >{compareSelected ? 'Added' : 'Compare'}</Button> : null}
       </View>
     </View>
   </AppCard>;
