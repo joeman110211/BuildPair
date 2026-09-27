@@ -132,7 +132,7 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
     </View>;
   }
 
-  const updatePage =  const updatePage = (offsetX: number) => {
+  const updatePage = (offsetX: number) => {
     const next = Math.max(0, Math.min(pages.length - 1, Math.round(offsetX / pageWidth)));
     setActivePage(next);
   };

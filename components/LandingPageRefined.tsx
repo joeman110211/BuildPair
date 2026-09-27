@@ -156,7 +156,7 @@ export default function LandingPageRefined() {
     <View style={styles.compareBand}>
       <View style={styles.section}>
         <View style={styles.darkHeading}>
-          <Text style={styles.darkEyebrow}>WHY IT'S DIFFERENT</Text>
+          <Text style={styles.darkEyebrow}>WHY IT IS DIFFERENT</Text>
           <Text variant="headlineMedium" style={styles.darkTitle}>Not another pay-per-lead directory.</Text>
           <Text style={styles.darkBody}>Traditional lead generation tends to focus on the introduction. BuildPair is designed around the whole project and stays useful after the work is won.</Text>
         </View>
