@@ -8,7 +8,7 @@ import { PrelaunchBanner } from '@/components/PrelaunchBanner';
 import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
 import { TRADE_CATEGORIES } from '@/constants/options';
-import { colors, controlHeights, radii } from '@/constants/theme';
+import { colors, controlHeights, publicResponsiveMetrics, radii } from '@/constants/theme';
 import { waitlistHref } from '@/lib/launch';
 
 const POPULAR_TRADES = ['Tiling', 'Plumbing', 'Electrical', 'Building & Extensions', 'Roofing & Roofline', 'Painting & Decorating', 'Kitchens', 'Bathrooms'] as const;
@@ -23,9 +23,11 @@ const FAQS = [
 ] as const;
 
 function SectionHeading({ eyebrow, title, body }: { eyebrow?: string; title: string; body?: string }) {
+  const { width } = useWindowDimensions();
+  const metrics = publicResponsiveMetrics(width);
   return <View style={styles.sectionHeading}>
-    {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-    <Text variant="headlineMedium" style={styles.sectionTitle}>{title}</Text>
+    {eyebrow ? <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>{eyebrow}</Text> : null}
+    <Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>{title}</Text>
     {body ? <Text style={styles.sectionBody}>{body}</Text> : null}
   </View>;
 }
@@ -34,6 +36,7 @@ export default function LandingPageRefined() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const mobile = width < 720;
+  const narrowMobile = width < 380;
   const wide = width >= 920;
   const [search, setSearch] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -47,7 +50,7 @@ export default function LandingPageRefined() {
   return <ScrollView style={styles.page} contentContainerStyle={styles.pageContent}>
     <PrelaunchBanner />
 
-    <View style={[styles.hero, wide && styles.heroWide]}>
+    <View style={[styles.hero, mobile && styles.heroMobile, narrowMobile && styles.heroNarrow, wide && styles.heroWide]}>
       <View style={[styles.heroCopy, wide && styles.heroCopyWide]} testID="home-hero-copy">
         <View style={styles.heroBadge}><View style={styles.liveDot} /><Text style={styles.heroBadgeText}>Built for UK homeowners and tradespeople</Text></View>
         <Text style={[styles.heroTitle, !wide && styles.heroTitleCompact]}>Find trusted local tradespeople. Compare quotes clearly. Manage the whole job in one place.</Text>
@@ -70,14 +73,14 @@ export default function LandingPageRefined() {
     </View>
 
     <View style={styles.featuredBand}>
-      <View style={styles.featuredSection}>
+      <View style={[styles.featuredSection, mobile && styles.featuredSectionMobile, narrowMobile && styles.featuredSectionNarrow]}>
         <SectionHeading eyebrow="Featured tradespeople" title="Meet tradespeople already on BuildPair." body="Explore real BuildPair profiles. Swipe or scroll through featured tradespeople and open any profile for more detail." />
         <FeaturedTraderHero wide={wide} />
       </View>
     </View>
 
     <View style={styles.tradeBand}>
-      <View style={styles.section}>
+      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
         <SectionHeading eyebrow="Find a trade" title="Search by the job, not the jargon." body="Choose a trade when you know what you need, or describe the work and let BuildPair guide you to the right starting point." />
         <View style={styles.tradeGrid}>
           {POPULAR_TRADES.map((trade) => <Pressable key={trade} style={styles.tradeCard} onPress={() => goTrade(trade)} accessibilityRole="button"><Text style={styles.tradeName}>{trade}</Text><Text style={styles.tradeArrow}>→</Text></Pressable>)}
@@ -87,7 +90,7 @@ export default function LandingPageRefined() {
     </View>
 
     <View style={styles.audienceBand}>
-      <View style={styles.section}>
+      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
         <SectionHeading eyebrow="Built for both sides" title="One project. Clear tools for both sides." body="Homeowners get a simpler way to find, compare and manage work. Tradespeople get a professional way to win suitable jobs and keep projects organised." />
         <View style={styles.audienceGrid}>
           <View style={[styles.audienceCard, styles.homeownerCard]}>
@@ -106,7 +109,7 @@ export default function LandingPageRefined() {
       </View>
     </View>
 
-    <View style={styles.section}>
+    <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
       <SectionHeading eyebrow="How it works" title="From first search to finished job." body="Some jobs can be quoted remotely and others need a site visit. BuildPair supports both while keeping the important decisions connected to the project." />
       <View style={styles.routeGrid}>
         {[
@@ -119,7 +122,7 @@ export default function LandingPageRefined() {
       <Link href="/(public)/how-it-works" asChild><Button mode="text" style={styles.buttonBase} contentStyle={styles.buttonContent}>See the full process →</Button></Link>
     </View>
 
-    <View style={styles.section}>
+    <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
       <SectionHeading eyebrow="Built around the project" title="Built to support the job from first enquiry to completion." body="BuildPair keeps the important parts of a project connected instead of stopping once a homeowner and tradesperson find each other." />
       <View style={styles.featureGrid}>
         {[
@@ -132,7 +135,7 @@ export default function LandingPageRefined() {
     </View>
 
     <View style={styles.paymentBand}>
-      <View style={styles.section}>
+      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
         <SectionHeading eyebrow="Payments" title="Choose the payment route that suits the job." body="Use BuildPay for supported protected stages, or mutually agree to arrange payment privately. The project can stay organised either way, but BuildPair can only manage payments made through BuildPay." />
         <View style={styles.paymentGrid}>
           <View style={[styles.paymentCard, styles.protectedCard]}>
@@ -151,7 +154,7 @@ export default function LandingPageRefined() {
     </View>
 
     <View style={styles.trustBand}>
-      <View style={styles.section}>
+      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
         <SectionHeading eyebrow="Trust & safety" title="Clearer records, evidence and reporting." body="BuildPair organises useful trust signals and project history while keeping the limits clear. Homeowners should still carry out checks appropriate to the work being commissioned." />
         <View style={styles.trustGrid}>
           {[
@@ -167,7 +170,7 @@ export default function LandingPageRefined() {
     </View>
 
     <View style={styles.pricingBand}>
-      <View style={styles.section}>
+      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
         <SectionHeading eyebrow="Tradesperson membership" title="Start free. Upgrade when your business needs more." body="Starter builds your presence, Core adds low-cost marketplace access, Plus is designed for active trades and Pro adds the strongest capacity, analytics and project tools." />
         <PricingCards compact />
         <Link href="/(public)/pricing" asChild><Button mode="text" style={styles.buttonBase} contentStyle={styles.buttonContent}>Compare membership plans →</Button></Link>
@@ -175,7 +178,7 @@ export default function LandingPageRefined() {
     </View>
 
     <View style={styles.faqBand}>
-      <View style={styles.section}>
+      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
         <SectionHeading eyebrow="Questions" title="Key questions before you get started." />
         <View style={styles.faqList}>
           {FAQS.map(([question, answer], index) => {
@@ -190,7 +193,7 @@ export default function LandingPageRefined() {
     </View>
 
     <View style={styles.updatesBand}>
-      <View style={styles.section}>
+      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
         <SectionHeading eyebrow="BuildPair updates" title="What’s live now, and what’s being built next." body="BuildPair is being developed around the whole job, including work tradespeople find outside the marketplace. The roadmap stays visible so it is clear what is available now and what is still being built." />
         <View style={styles.updateColumns}>
           <View style={styles.updatePanel}>
@@ -229,6 +232,8 @@ const styles = StyleSheet.create({
   pageContent: { flexGrow: 1, width: '100%', maxWidth: '100%' },
   hero: { width: '100%', maxWidth: 1240, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 38, gap: 24 },
   heroWide: { paddingVertical: 50 },
+  heroMobile: { paddingHorizontal: 16, paddingVertical: 30, gap: 18 },
+  heroNarrow: { paddingHorizontal: 14, paddingVertical: 28 },
   heroCopy: { width: '100%', maxWidth: '100%', minWidth: 0, flexShrink: 1, justifyContent: 'center', alignItems: 'center', gap: 16 },
   heroCopyWide: { width: '100%', maxWidth: 900, alignSelf: 'center' },
   heroBadge: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: colors.primarySoft, borderRadius: 999, borderWidth: 1, borderColor: '#F2D7C3' },
@@ -257,9 +262,13 @@ const styles = StyleSheet.create({
   heroActionButton: { minWidth: 180, maxWidth: '100%' },
   featuredBand: { backgroundColor: '#FFFFFF' },
   featuredSection: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingTop: 28, paddingBottom: 46, gap: 20 },
+  featuredSectionMobile: { paddingHorizontal: 16, paddingTop: 22, paddingBottom: 34, gap: 16 },
+  featuredSectionNarrow: { paddingHorizontal: 14 },
   section: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 46, gap: 24 },
+  sectionMobile: { paddingHorizontal: 16, paddingVertical: 34, gap: 18 },
+  sectionNarrow: { paddingHorizontal: 14, paddingVertical: 30 },
   sectionHeading: { width: '100%', maxWidth: 820, minWidth: 0, alignSelf: 'center', alignItems: 'center', gap: 8 },
-  eyebrow: { color: colors.primary, fontWeight: '900', fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', textAlign: 'center' },
+  eyebrow: { color: colors.primary, fontWeight: '900', letterSpacing: 1.2, textTransform: 'uppercase', textAlign: 'center' },
   sectionTitle: { color: colors.charcoal, fontWeight: '900', letterSpacing: -0.5, textAlign: 'center' },
   sectionBody: { color: colors.muted, lineHeight: 23, textAlign: 'center', maxWidth: 720 },
   audienceBand: { backgroundColor: '#FBF8F5' },
@@ -267,7 +276,7 @@ const styles = StyleSheet.create({
   audienceCard: { flexGrow: 1, flexShrink: 1, flexBasis: 430, minWidth: 0, backgroundColor: colors.surfaceRaised, borderRadius: 22, padding: 20, gap: 10, borderWidth: 1, borderColor: colors.border },
   homeownerCard: { borderTopWidth: 4, borderTopColor: colors.primary },
   tradeAudienceCard: { borderTopWidth: 4, borderTopColor: colors.navy },
-  audienceEyebrow: { color: colors.primary, fontSize: 11, fontWeight: '900', letterSpacing: 1.1 },
+  audienceEyebrow: { color: colors.primary, fontSize: 12.3, lineHeight: 16, fontWeight: '900', letterSpacing: 1.1 },
   tradeAudienceEyebrow: { color: colors.navy },
   audienceActions: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginTop: 6 },
   routeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },

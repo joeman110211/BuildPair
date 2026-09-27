@@ -1,19 +1,21 @@
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Icon, Text } from 'react-native-paper';
 import { PublicFooter } from '@/components/PublicFooter';
-import { colors } from '@/constants/theme';
+import { colors, publicResponsiveMetrics } from '@/constants/theme';
 
 export default function DownloadPage() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const metrics = publicResponsiveMetrics(width);
   const goBack = () => router.canGoBack() ? router.back() : router.replace('/');
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
-    <View style={styles.hero}>
+    <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroInner}>
         <Button icon="arrow-left" mode="text" textColor="#FFFFFF" compact style={styles.back} onPress={goBack}>Back</Button>
-        <Text style={styles.eyebrow}>Download BuildPair</Text>
-        <Text variant="displaySmall" style={styles.title}>Web now. Mobile apps next.</Text>
+        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Download BuildPair</Text>
+        <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Web now. Mobile apps next.</Text>
         <Text variant="bodyLarge" style={styles.intro}>BuildPair is being prepared for Android and iOS distribution. The public website already includes the download area so store links can be switched on cleanly at launch.</Text>
       </View>
     </View>
@@ -44,6 +46,7 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
   hero: { backgroundColor: colors.charcoal, paddingHorizontal: 20, paddingVertical: 56 },
+  heroMobile: { paddingHorizontal: 16, paddingVertical: 40 },
   heroInner: { width: '100%', maxWidth: 1000, alignSelf: 'center', gap: 12 },
   back: { alignSelf: 'flex-start', marginLeft: -8 },
   eyebrow: { color: colors.secondary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.2 },

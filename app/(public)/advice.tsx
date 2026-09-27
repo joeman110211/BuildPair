@@ -1,8 +1,8 @@
 import { Link } from 'expo-router';
-import { Linking, ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { PublicFooter } from '@/components/PublicFooter';
-import { colors } from '@/constants/theme';
+import { colors, publicResponsiveMetrics } from '@/constants/theme';
 
 type Resource = { title: string; body: string; label: string; url: string };
 
@@ -104,11 +104,13 @@ function ResourceCard({ item }: { item: Resource }) {
 }
 
 export default function AdviceHub() {
+  const { width } = useWindowDimensions();
+  const metrics = publicResponsiveMetrics(width);
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
-    <View style={styles.hero}>
+    <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroInner}>
         <Chip style={styles.heroChip} textStyle={styles.heroChipText}>Free BuildPair advice hub</Chip>
-        <Text variant="displaySmall" style={styles.heroTitle}>Practical guidance before, during and after a home-improvement job.</Text>
+        <Text variant="displaySmall" style={[styles.heroTitle, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Practical guidance before, during and after a home-improvement job.</Text>
         <Text variant="bodyLarge" style={styles.heroBody}>Straightforward guidance for homeowners and tradespeople, with direct links to official UK sources for consumer rights, regulated work, building standards and safety.</Text>
         <View style={styles.heroActions}>
           <Link href="/(public)/building-regulations" asChild><Button mode="contained" icon="book-open-page-variant-outline">Building rules by UK nation</Button></Link>
@@ -117,7 +119,7 @@ export default function AdviceHub() {
       </View>
     </View>
 
-    <View style={styles.content}>
+    <View style={[styles.content, metrics.phone && styles.contentMobile]}>
       <View style={styles.notice}>
         <Text variant="titleMedium" style={styles.title}>A clear record prevents avoidable disputes</Text>
         <Text style={styles.body}>Written scope, agreed changes, sensible evidence and verified credentials make a project easier to manage and much easier to understand later if something goes wrong.</Text>
@@ -125,15 +127,15 @@ export default function AdviceHub() {
       </View>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.eyebrow}>For homeowners</Text>
-        <Text variant="headlineMedium" style={styles.sectionTitle}>Know what to check and where to get authoritative guidance.</Text>
+        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>For homeowners</Text>
+        <Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>Know what to check and where to get authoritative guidance.</Text>
         <Text style={styles.body}>Use BuildPair records for project clarity, then use the official services below when you need consumer, safety or registration guidance. Electrical Building Regulations differ across the UK, so the Part P examples below apply specifically to England.</Text>
       </View>
       <View style={styles.grid}>{HOMEOWNER_RESOURCES.map((item) => <ResourceCard key={item.title} item={item} />)}</View>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.eyebrow}>For tradespeople</Text>
-        <Text variant="headlineMedium" style={styles.sectionTitle}>Protect your business with clear agreements and current guidance.</Text>
+        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>For tradespeople</Text>
+        <Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>Protect your business with clear agreements and current guidance.</Text>
         <Text style={styles.body}>Good records protect both the customer and the trade. Use the resources below for current guidance on consumer obligations, certificates, health and safety and building standards.</Text>
       </View>
       <View style={styles.grid}>{TRADE_RESOURCES.map((item) => <ResourceCard key={item.title} item={item} />)}</View>
@@ -154,6 +156,7 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
   hero: { backgroundColor: colors.charcoal, paddingHorizontal: 20, paddingVertical: 64 },
+  heroMobile: { paddingHorizontal: 16, paddingVertical: 42 },
   heroInner: { width: '100%', maxWidth: 1120, alignSelf: 'center', gap: 14 },
   heroChip: { alignSelf: 'flex-start', backgroundColor: '#3A4148' },
   heroChipText: { color: '#FFFFFF', fontWeight: '800' },
@@ -161,6 +164,7 @@ const styles = StyleSheet.create({
   heroBody: { color: '#DDE1E3', maxWidth: 850, lineHeight: 27 },
   heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6 },
   content: { width: '100%', maxWidth: 1120, alignSelf: 'center', padding: 20, gap: 26 },
+  contentMobile: { paddingHorizontal: 16, paddingVertical: 16, gap: 20 },
   notice: { backgroundColor: colors.primarySoft, borderRadius: 28, padding: 24, borderWidth: 1, borderColor: '#F0C9AE', gap: 10 },
   habits: { gap: 7, marginTop: 4 },
   habit: { color: colors.text, lineHeight: 22 },

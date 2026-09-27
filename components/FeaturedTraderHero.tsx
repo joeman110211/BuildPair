@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   emptyImage: { borderRadius: 24 },
   emptyShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(8,21,31,0.46)', borderRadius: 24 },
   emptyCopy: { maxWidth: 560, gap: 6, padding: 16, borderRadius: 18, backgroundColor: 'rgba(10,24,36,0.86)' },
-  emptyEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
-  emptyTitle: { color: '#FFFFFF', fontSize: 22, lineHeight: 27, fontWeight: '900' },
+  emptyEyebrow: { color: colors.primary, fontSize: 11.2, lineHeight: 15, fontWeight: '900', letterSpacing: 1 },
+  emptyTitle: { color: '#FFFFFF', fontSize: 20, lineHeight: 25, fontWeight: '900' },
   emptyText: { color: '#DCE7EE', lineHeight: 20 },
 });

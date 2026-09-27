@@ -66,6 +66,27 @@ export const controlHeights = {
   prominent: 50,
 } as const;
 
+export function publicResponsiveMetrics(width: number) {
+  const narrowPhone = width < 380;
+  const phone = width < 720;
+  const tablet = width < 1040;
+
+  return {
+    narrowPhone,
+    phone,
+    tablet,
+    eyebrowFontSize: 12.3,
+    eyebrowLineHeight: 16,
+    sectionTitleFontSize: narrowPhone ? 24.5 : phone ? 25.5 : tablet ? 27 : 28,
+    sectionTitleLineHeight: narrowPhone ? 30 : phone ? 31 : tablet ? 33 : 34,
+    heroTitleFontSize: narrowPhone ? 31.5 : phone ? 32.5 : tablet ? 34 : 36,
+    heroTitleLineHeight: narrowPhone ? 38 : phone ? 39 : tablet ? 41 : 43,
+    horizontalPadding: narrowPhone ? 14 : phone ? 16 : 20,
+    sectionVerticalPadding: phone ? 34 : 46,
+    heroVerticalPadding: phone ? 42 : 56,
+  } as const;
+}
+
 export const paperTheme = {
   ...MD3LightTheme,
   roundness: radii.md,

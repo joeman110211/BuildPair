@@ -1,12 +1,14 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { PublicFooter } from '@/components/PublicFooter';
-import { colors } from '@/constants/theme';
+import { colors, publicResponsiveMetrics } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 
 export default function ContactPage() {
+  const { width } = useWindowDimensions();
+  const metrics = publicResponsiveMetrics(width);
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,17 +35,17 @@ export default function ContactPage() {
   }
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-    <View style={styles.hero}>
+    <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.glow} />
       <View style={styles.heroInner}>
         <Button mode="text" textColor="#FFFFFF" compact style={styles.back} onPress={goBack}>← Back</Button>
-        <Text style={styles.eyebrow}>Contact BuildPair</Text>
-        <Text variant="displaySmall" style={styles.title}>Support, marketplace questions and business enquiries.</Text>
+        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Contact BuildPair</Text>
+        <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Support, marketplace questions and business enquiries.</Text>
         <Text variant="bodyLarge" style={styles.intro}>Tell us what you need help with and include enough detail for the team to understand the account, job or issue involved. Do not send passwords, full payment-card details or other unnecessary sensitive information.</Text>
       </View>
     </View>
 
-    <View style={styles.content}>
+    <View style={[styles.content, metrics.phone && styles.contentMobile]}>
       <View style={styles.sideColumn}>
         <View style={styles.contactCard}>
           <Text style={styles.cardEyebrow}>EMAIL SUPPORT</Text>
@@ -77,6 +79,7 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
   hero: { backgroundColor: colors.navy, paddingHorizontal: 20, paddingVertical: 62, overflow: 'hidden' },
+  heroMobile: { paddingHorizontal: 16, paddingVertical: 42 },
   glow: { position: 'absolute', width: 300, height: 300, borderRadius: 150, right: -110, top: -150, backgroundColor: 'rgba(211,84,0,0.23)' },
   heroInner: { width: '100%', maxWidth: 1040, alignSelf: 'center', gap: 13 },
   back: { alignSelf: 'flex-start', marginLeft: -8 },
@@ -84,12 +87,13 @@ const styles = StyleSheet.create({
   title: { color: '#FFFFFF', fontWeight: '900', letterSpacing: -1 },
   intro: { color: '#DFE8EE', lineHeight: 27, maxWidth: 820 },
   content: { width: '100%', maxWidth: 1040, alignSelf: 'center', padding: 20, flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' },
+  contentMobile: { paddingHorizontal: 16, paddingVertical: 16 },
   sideColumn: { flexGrow: 1, flexShrink: 1, flexBasis: 280, minWidth: 0, maxWidth: '100%', gap: 14 },
   contactCard: { backgroundColor: colors.primarySoft, borderRadius: 26, padding: 23, gap: 9, borderWidth: 1, borderColor: '#F2D7C3' },
   safetyCard: { backgroundColor: colors.accentSoft, borderRadius: 26, padding: 23, gap: 9, borderWidth: 1, borderColor: '#CDE2DE' },
   formCard: { flexGrow: 2, flexShrink: 1, flexBasis: 470, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: 26, padding: 24, borderWidth: 1, borderColor: colors.border, gap: 14 },
-  cardEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.1 },
-  cardTitle: { color: colors.charcoal, fontWeight: '900' },
+  cardEyebrow: { color: colors.primary, fontSize: 11.2, lineHeight: 15, fontWeight: '900', letterSpacing: 1.1 },
+  cardTitle: { color: colors.charcoal, fontWeight: '900', fontSize: 22, lineHeight: 28 },
   body: { color: colors.muted, lineHeight: 23 },
   inputOutline: { borderRadius: 14 },
   error: { color: colors.danger, lineHeight: 20 },

@@ -1,20 +1,22 @@
 import { Link } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
-import { colors } from '@/constants/theme';
+import { colors, publicResponsiveMetrics } from '@/constants/theme';
 import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 export default function PricingPage() {
+  const { width } = useWindowDimensions();
+  const metrics = publicResponsiveMetrics(width);
   const primaryHref = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', 'pricing-hero');
   const primaryLabel = REGISTRATION_OPEN ? 'Create trade account' : 'Create launch-ready trade profile';
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
-    <View style={styles.hero}>
+    <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroInner}>
-        <Text style={styles.eyebrow}>Tradesperson membership</Text>
-        <Text variant="displaySmall" style={styles.title}>Simple monthly plans, built around how much of the marketplace you actually use.</Text>
+        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Tradesperson membership</Text>
+        <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Simple monthly plans, built around how much of the marketplace you actually use.</Text>
         <Text variant="bodyLarge" style={styles.intro}>BuildPair keeps Starter useful, adds a low-cost Core route for occasional work, makes Plus the everyday marketplace plan and reserves the strongest growth tools for Pro.</Text>
         <View style={styles.heroActions}>
           <Link href={primaryHref} asChild><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.primary}>{primaryLabel}</Button></Link>
@@ -23,7 +25,7 @@ export default function PricingPage() {
       </View>
     </View>
 
-    <View style={styles.content}>
+    <View style={[styles.content, metrics.phone && styles.contentMobile]}>
       <PricingCards />
 
       <View style={styles.explainerGrid}>
@@ -66,6 +68,7 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
   hero: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 66 },
+  heroMobile: { paddingHorizontal: 16, paddingVertical: 42 },
   heroInner: { width: '100%', maxWidth: 1080, alignSelf: 'center', gap: 15 },
   eyebrow: { color: '#FFE2CF', fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.3 },
   title: { color: '#FFFFFF', fontWeight: '900', letterSpacing: -1.2, maxWidth: 900 },
@@ -73,6 +76,7 @@ const styles = StyleSheet.create({
   heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 5 },
   outline: { borderColor: 'rgba(255,255,255,0.7)' },
   content: { width: '100%', maxWidth: 1180, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 42, gap: 28 },
+  contentMobile: { paddingHorizontal: 16, paddingVertical: 30, gap: 22 },
   explainerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   explainer: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 0, maxWidth: '100%', borderRadius: 26, padding: 22, gap: 9 },
   explainerTitle: { color: colors.charcoal, fontWeight: '900' },

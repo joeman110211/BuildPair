@@ -1,8 +1,8 @@
 import { Link } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { PublicFooter } from '@/components/PublicFooter';
-import { colors } from '@/constants/theme';
+import { colors, publicResponsiveMetrics } from '@/constants/theme';
 
 const RECENT = [
   ['Four clear trade plans', 'Starter, Core, Plus and Pro now scale marketplace access and business tools without turning paid membership into a trust badge.'],
@@ -49,21 +49,23 @@ function FeatureCard({ title, body, coming = false }: { title: string; body: str
 }
 
 export default function UpdatesPage() {
+  const { width } = useWindowDimensions();
+  const metrics = publicResponsiveMetrics(width);
   return <ScrollView style={styles.page} contentContainerStyle={styles.content}>
-    <View style={styles.hero}>
-      <Text style={styles.eyebrow}>BuildPair product updates</Text>
-      <Text variant="displaySmall" style={styles.heroTitle}>BuildPair is being built around the whole job, not just the lead.</Text>
+    <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
+      <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>BuildPair product updates</Text>
+      <Text variant="displaySmall" style={[styles.heroTitle, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>BuildPair is being built around the whole job, not just the lead.</Text>
       <Text variant="bodyLarge" style={styles.heroBody}>See what has just been added and what is deliberately next. Features shown as coming soon are plans, not promises that they are already live.</Text>
       <View style={styles.actions}><Link href="/(public)/how-it-works" asChild><Button mode="contained">How BuildPair works</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined">Trade membership</Button></Link></View>
     </View>
 
-    <View style={styles.section}>
-      <View style={styles.heading}><Text style={styles.eyebrow}>Recently added</Text><Text variant="headlineMedium" style={styles.sectionTitle}>The marketplace is becoming a proper project system.</Text></View>
+    <View style={[styles.section, metrics.phone && styles.sectionMobile]}>
+      <View style={styles.heading}><Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Recently added</Text><Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>The marketplace is becoming a proper project system.</Text></View>
       <View style={styles.grid}>{RECENT.map(([title, body]) => <FeatureCard key={title} title={title} body={body} />)}</View>
     </View>
 
     <View style={[styles.section, styles.comingSection]}>
-      <View style={styles.heading}><Text style={styles.eyebrow}>Coming soon</Text><Text variant="headlineMedium" style={styles.sectionTitle}>The next pieces we are building.</Text><Text style={styles.heroBody}>We will add these in stages and keep the core workflow understandable. BuildPair should remove admin, not become a cockpit nobody asked for.</Text></View>
+      <View style={styles.heading}><Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Coming soon</Text><Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>The next pieces we are building.</Text><Text style={styles.heroBody}>We will add these in stages and keep the core workflow understandable. BuildPair should remove admin, not become a cockpit nobody asked for.</Text></View>
       <View style={styles.grid}>{COMING.map(([title, body]) => <FeatureCard key={title} title={title} body={body} coming />)}</View>
     </View>
     <PublicFooter />
@@ -74,11 +76,13 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   content: { flexGrow: 1 },
   hero: { width: '100%', maxWidth: 1080, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 52, gap: 14, alignItems: 'center' },
-  eyebrow: { color: colors.primary, fontSize: 11, fontWeight: '900', letterSpacing: 1.2, textTransform: 'uppercase', textAlign: 'center' },
+  heroMobile: { paddingHorizontal: 16, paddingVertical: 38, gap: 11 },
+  eyebrow: { color: colors.primary, fontWeight: '900', letterSpacing: 1.2, textTransform: 'uppercase', textAlign: 'center' },
   heroTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center', maxWidth: 820 },
   heroBody: { color: colors.muted, lineHeight: 24, textAlign: 'center', maxWidth: 800 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   section: { width: '100%', maxWidth: 1140, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 38, gap: 20 },
+  sectionMobile: { paddingHorizontal: 16, paddingVertical: 30, gap: 16 },
   comingSection: { maxWidth: '100%', backgroundColor: colors.surfaceSoft, paddingHorizontal: 28 },
   heading: { gap: 7, alignItems: 'center' },
   sectionTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' },
