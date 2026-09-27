@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
-import { colors } from '@/constants/theme';
+import { colors, controlHeights, radii } from '@/constants/theme';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { Job, TraderProfile } from '@/types';
 
@@ -100,10 +100,10 @@ export function LatestJobsShowcase({ wide }: { wide: boolean }) {
       <View style={styles.headingRow}>
         <View style={styles.headingCopy}>
           <Text style={styles.eyebrow}>LATEST JOBS</Text>
-          <Text variant="headlineSmall" style={styles.title}>Local work posted through BuildPair.</Text>
-          <Text style={styles.muted}>Live customer requests appear here when available. The current marketplace is checked when the page opens.</Text>
+          <Text variant="headlineSmall" style={styles.title}>New local work posted through BuildPair.</Text>
+          <Text style={styles.muted}>Live customer requests appear here when available. BuildPair checks the current marketplace when the page opens.</Text>
         </View>
-        <Button mode="text" onPress={() => router.push('/(public)/jobs')}>Browse jobs →</Button>
+        <Button mode="text" style={styles.button} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/jobs')}>Browse jobs →</Button>
       </View>
       <View style={styles.preloadCard}><Text style={styles.preloadText}>Checking current BuildPair job requests…</Text></View>
     </View>;
@@ -127,10 +127,10 @@ export function LatestJobsShowcase({ wide }: { wide: boolean }) {
     <View style={styles.headingRow}>
       <View style={styles.headingCopy}>
         <Text style={styles.eyebrow}>LATEST JOBS</Text>
-        <Text variant="headlineSmall" style={styles.title}>Fresh work being posted on BuildPair.</Text>
-        <Text style={styles.muted}>A live preview for tradespeople. Paid members can open matching jobs and quote through the normal Job Board.</Text>
+        <Text variant="headlineSmall" style={styles.title}>Latest work posted on BuildPair.</Text>
+        <Text style={styles.muted}>A live preview for tradespeople. Eligible members can open matching jobs and quote through the Job Board.</Text>
       </View>
-      <Button mode="text" onPress={() => router.push('/(public)/jobs')}>See all jobs →</Button>
+      <Button mode="text" style={styles.button} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/jobs')}>See all jobs →</Button>
     </View>
 
     <ScrollView
@@ -181,13 +181,13 @@ export function LatestJobsShowcase({ wide }: { wide: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  section: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', marginTop: 18, paddingTop: 24, borderTopWidth: 1, borderTopColor: colors.border, gap: 13 },
+  section: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', marginTop: 20, paddingTop: 28, borderTopWidth: 1, borderTopColor: colors.border, gap: 14 },
   sectionWide: { width: '100%', maxWidth: 1140 },
   headingRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10 },
-  headingCopy: { flex: 1, minWidth: 230, gap: 4 },
+  headingCopy: { flex: 1, minWidth: 230, gap: 5 },
   eyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   title: { color: colors.charcoal, fontWeight: '900' },
-  muted: { color: colors.muted, lineHeight: 20 },
+  muted: { color: colors.muted, lineHeight: 20, maxWidth: 720 },
   preloadCard: { minHeight: 110, alignItems: 'center', justifyContent: 'center', borderRadius: 18, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSoft, padding: 16 },
   preloadText: { color: colors.muted, fontWeight: '800', textAlign: 'center' },
   carousel: { width: '100%', maxWidth: 1140 },
@@ -206,7 +206,9 @@ const styles = StyleSheet.create({
   cardFoot: { marginTop: 'auto', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 7 },
   urgency: { flexShrink: 1, color: colors.charcoalSoft, fontSize: 10, fontWeight: '800' },
   openText: { flexShrink: 0, color: colors.primary, fontSize: 11, fontWeight: '900' },
-  footer: { minHeight: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingHorizontal: 2 },
+  button: { borderRadius: radii.pill },
+  buttonContent: { minHeight: controlHeights.standard },
+  footer: { minHeight: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingHorizontal: 2, marginTop: 2 },
   swipeHint: { flexShrink: 1, color: colors.muted, fontSize: 11, fontWeight: '700' },
   dots: { flexDirection: 'row', gap: 5, alignItems: 'center' },
   dot: { width: 7, height: 7, borderRadius: 999, backgroundColor: '#CBD4D9' },
