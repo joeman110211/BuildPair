@@ -1,16 +1,11 @@
-import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
+import { createBusinessQuoteNumber, createBusinessQuoteShareToken } from '@/lib/business-quote-id';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { hasPlanSetupAccess, tierAtLeast } from '@/lib/subscription';
 
 const schema = z.object({ quoteId: z.string().uuid() });
 
-function quoteNumber() {
-  const date = new Date();
-  const stamp = `${String(date.getFullYear()).slice(-2)}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
-  return `BP-${stamp}-${randomUUID().replace(/-/g, '').slice(0, 5).toUpperCase()}`;
-}
 
 export async function POST(request: Request) {
   try {
@@ -32,8 +27,8 @@ export async function POST(request: Request) {
     if (source.status === 'draft') throw new HttpError(409, 'Edit the existing draft instead of creating a revision.');
 
     const id = randomUUID();
-    const token = randomUUID().replace(/-/g, '') + randomUUID().replace(/-/g, '');
-    const number = quoteNumber();
+    const token = createBusinessQuoteShareToken();
+    const number = createBusinessQuoteNumber();
     await getSql()`
       INSERT INTO business_quotes(
         id, trader_id, quote_number, customer_name, customer_email, customer_phone, job_title, trade_category, job_address,
