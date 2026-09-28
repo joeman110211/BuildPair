@@ -9,10 +9,8 @@ import { colors } from '@/constants/theme';
 import { modeSetupHref, signInHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
 import { FOUNDING_PRO_MONTHS, LAUNCH_DATE_LABEL, TRADER_PRELAUNCH_REGISTRATION_OPEN } from '@/lib/launch';
+import { firstParam } from '@/lib/search-params';
 
-function scalar(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 export default function FoundingTradeSignup() {
   const { signUp, fetchStatus } = useSignUp();
@@ -23,8 +21,8 @@ export default function FoundingTradeSignup() {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const busy = fetchStatus === 'fetching';
-  const source = scalar(params.source)?.slice(0, 150) || 'founding-trade-signup';
-  const referralCode = scalar(params.ref)?.slice(0, 40) || '';
+  const source = firstParam(params.source)?.slice(0, 150) || 'founding-trade-signup';
+  const referralCode = firstParam(params.ref)?.slice(0, 40) || '';
   const normalisedEmail = email.trim().toLowerCase();
   const canCreate = useMemo(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalisedEmail) && password.length >= 8, [normalisedEmail, password.length]);
   const needsEmailVerification = signUp.status === 'missing_requirements'
