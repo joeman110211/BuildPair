@@ -9,6 +9,7 @@ import { colors } from '@/constants/theme';
 import { modeSetupHref, signInHref } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { HOMEOWNER_REGISTRATION_OPEN, LAUNCH_DATE_LABEL } from '@/lib/launch';
+import { firstParam } from '@/lib/search-params';
 
 type InviteState = {
   valid: boolean;
@@ -19,15 +20,12 @@ type InviteState = {
   mode?: 'homeowner' | 'trader';
 };
 
-function scalar(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 export default function EarlyAccessSignup() {
   const { signUp, fetchStatus } = useSignUp();
   const router = useRouter();
   const params = useLocalSearchParams<{ invite?: string | string[] }>();
-  const invite = scalar(params.invite)?.trim() ?? '';
+  const invite = firstParam(params.invite)?.trim() ?? '';
   const [inviteState, setInviteState] = useState<InviteState>();
   const [checking, setChecking] = useState(true);
   const [accountEmail, setAccountEmail] = useState('');
