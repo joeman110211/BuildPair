@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createBusinessQuoteNumber, createBusinessQuoteShareToken } from '@/lib/business-quote-id';
+import { createBusinessQuoteId, createBusinessQuoteNumber, createBusinessQuoteShareToken } from '@/lib/business-quote-id';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { hasPlanSetupAccess, tierAtLeast } from '@/lib/subscription';
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     if (source.status === 'accepted' || source.managed_job_id) throw new HttpError(409, 'An accepted quote is part of the agreed project. Use a project variation for changes after acceptance.');
     if (source.status === 'draft') throw new HttpError(409, 'Edit the existing draft instead of creating a revision.');
 
-    const id = randomUUID();
+    const id = createBusinessQuoteId();
     const token = createBusinessQuoteShareToken();
     const number = createBusinessQuoteNumber();
     await getSql()`
