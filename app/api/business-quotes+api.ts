@@ -1,5 +1,5 @@
-import { randomUUID } from 'node:crypto';
 import { TRADE_CATEGORIES } from '@/constants/options';
+import { createBusinessQuoteNumber, createBusinessQuoteShareToken } from '@/lib/business-quote-id';
 import { z } from 'zod';
 import { paymentScheduleSchema, validatePaymentSchedule } from '@/lib/payment-plan';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
@@ -91,11 +91,6 @@ function shareUrl(token: string) {
   return `${appUrl()}/quote/${encodeURIComponent(token)}`;
 }
 
-function quoteNumber() {
-  const date = new Date();
-  const stamp = `${String(date.getFullYear()).slice(-2)}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
-  return `BP-${stamp}-${randomUUID().replace(/-/g, '').slice(0, 5).toUpperCase()}`;
-}
 
 
 async function requireBusinessQuotePlan(traderId: string) {
@@ -252,8 +247,8 @@ export async function POST(request: Request) {
       await getSql()`DELETE FROM business_quote_options WHERE quote_id = ${id}`;
     } else {
       id = randomUUID();
-      const token = randomUUID().replace(/-/g, '') + randomUUID().replace(/-/g, '');
-      const number = quoteNumber();
+      const token = createBusinessQuoteShareToken();
+      const number = createBusinessQuoteNumber();
       await getSql()`
         INSERT INTO business_quotes(
           id, trader_id, quote_number, customer_name, customer_email, customer_phone,
