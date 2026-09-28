@@ -8,20 +8,18 @@ import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import type { Job, Quote, TraderProfile } from '@/types';
+import { firstParam } from '@/lib/search-params';
 
 type Conversation = { id: string; jobId: string; traderId: string; customerId: string };
 type JobWithDistance = Job & { distanceMiles?: number | null };
 
-function scalar(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 export default function TraderJobBoard() {
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   const router = useRouter();
   const params = useLocalSearchParams<{ jobId?: string | string[] }>();
-  const linkedJobId = scalar(params.jobId);
+  const linkedJobId = firstParam(params.jobId);
   const [profile, setProfile] = useState<TraderProfile>();
   const [jobs, setJobs] = useState<JobWithDistance[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
