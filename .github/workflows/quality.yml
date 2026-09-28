@@ -34,6 +34,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Temporary orphan-module scan
+        shell: bash
+        run: |
+          node scripts/find-orphan-modules.mjs
+          echo "::error::Temporary scan gate: stopping before dependency install and full validation"
+          exit 1
+
       - name: Reject legacy product branding
         shell: bash
         run: |
