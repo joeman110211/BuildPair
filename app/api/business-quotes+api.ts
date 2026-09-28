@@ -1,5 +1,5 @@
 import { TRADE_CATEGORIES } from '@/constants/options';
-import { createBusinessQuoteNumber, createBusinessQuoteShareToken } from '@/lib/business-quote-id';
+import { createBusinessQuoteId, createBusinessQuoteNumber, createBusinessQuoteShareToken } from '@/lib/business-quote-id';
 import { z } from 'zod';
 import { paymentScheduleSchema, validatePaymentSchedule } from '@/lib/payment-plan';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
@@ -246,7 +246,7 @@ export async function POST(request: Request) {
       await getSql()`DELETE FROM business_quote_items WHERE quote_id = ${id}`;
       await getSql()`DELETE FROM business_quote_options WHERE quote_id = ${id}`;
     } else {
-      id = randomUUID();
+      id = createBusinessQuoteId();
       const token = createBusinessQuoteShareToken();
       const number = createBusinessQuoteNumber();
       await getSql()`
