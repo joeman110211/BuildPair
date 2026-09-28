@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import type { BusinessQuoteScopeFields } from '@/types/business-quotes';
 
 const actionSchema = z.object({ action: z.enum(['accept', 'decline']) });
 
-type PublicQuoteRow = {
+type PublicQuoteRow = BusinessQuoteScopeFields & {
   id: string;
   quoteNumber: string;
   businessName: string;
@@ -17,11 +18,6 @@ type PublicQuoteRow = {
   managedJobId: string | null;
   managedProjectEligible: boolean;
   jobAddress: string | null;
-  workIncluded: string;
-  notIncluded: string | null;
-  expectedStart: string | null;
-  durationText: string | null;
-  warrantyText: string | null;
   subtotal: number;
   vatRate: number;
   vatAmount: number;

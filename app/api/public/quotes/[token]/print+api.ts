@@ -1,10 +1,11 @@
 import { HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import type { BusinessQuoteScopeFields } from '@/types/business-quotes';
 
 type Item = { description: string; quantity: number | string; unitPrice: number; lineTotal: number };
 type Stage = { key: string; title: string; amount: number; trigger: string };
 type Choice = { id: string; kind: 'optional' | 'alternative'; title: string; description: string; priceDelta: number };
-type Row = {
+type Row = BusinessQuoteScopeFields & {
   quoteNumber: string;
   businessName: string;
   traderEmail: string | null;
@@ -14,11 +15,6 @@ type Row = {
   customerPhone: string | null;
   jobTitle: string;
   jobAddress: string | null;
-  workIncluded: string;
-  notIncluded: string | null;
-  expectedStart: string | null;
-  durationText: string | null;
-  warrantyText: string | null;
   subtotal: number;
   vatRate: number;
   vatAmount: number;
