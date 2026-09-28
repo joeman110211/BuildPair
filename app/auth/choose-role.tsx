@@ -12,18 +12,16 @@ import { dashboardHref, parseAccountMode, safeInternalReturnTo } from '@/lib/acc
 import { apiFetch, errorMessage } from '@/lib/api';
 import { HOMEOWNER_REGISTRATION_OPEN, LAUNCH_DATE_LABEL } from '@/lib/launch';
 import type { CurrentUser, UserRole } from '@/types';
+import { firstParam } from '@/lib/search-params';
 
 type ModeActivationResponse = CurrentUser & { wasEnabled?: boolean };
 
-function scalar(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 export default function ChooseRoleScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ mode?: string | string[]; trade?: string | string[]; returnTo?: string | string[] }>();
   const requestedMode = parseAccountMode(params.mode);
-  const requestedTrade = TRADE_CATEGORIES.find((trade) => trade === scalar(params.trade));
+  const requestedTrade = TRADE_CATEGORIES.find((trade) => trade === firstParam(params.trade));
   const returnTo = safeInternalReturnTo(params.returnTo);
   const { getToken, isLoaded: authLoaded, isSignedIn } = useAuth();
   const { user, error: loadError, refresh } = useCurrentUser();
