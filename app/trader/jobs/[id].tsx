@@ -11,6 +11,7 @@ import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { formatMoney, poundsToPence } from '@/lib/money';
 import type { Job, JobTimelineEvent, JobVariation, PaymentStageStatus, Quote } from '@/types';
+import type { ExternalPaymentRecord, PaymentDispute } from '@/types/project-payments';
 
 type Milestone = {
   id: string;
@@ -26,31 +27,6 @@ type Milestone = {
   releaseRequestedAt?: string | null;
   disputedAt?: string | null;
   disputeReason?: string | null;
-};
-
-type ExternalPaymentRecord = {
-  id: string;
-  milestoneId: string;
-  amount: number;
-  payerConfirmedAt: string | null;
-  recipientConfirmedAt: string | null;
-  payerNote: string;
-  recipientNote: string;
-};
-
-type PaymentDispute = {
-  milestoneId: string;
-  milestoneTitle: string;
-  milestoneAmount: number;
-  disputeReason: string | null;
-  disputeStatus: 'open' | 'trader_response' | 'escalated' | 'resolved';
-  disputeResponse: string | null;
-  disputeResponseAt: string | null;
-  disputeEscalatedAt: string | null;
-  disputeResolvedAt: string | null;
-  disputeResolutionNote: string | null;
-  refundRequestedAt: string | null;
-  refundApprovedAt: string | null;
 };
 
 type PrivateDetails = {
