@@ -6,8 +6,7 @@ import {
   type BuildPairBusinessIdentity,
 } from '@/lib/google-reviews';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
-import { getSql } from '@/lib/sql';
-import { hasPlanSetupAccess, tierAtLeast } from '@/lib/subscription';
+import { requireTraderPlanSetupAccess } from '@/lib/trader-plan-access';
 
 type ConnectionRow = {
   placeId: string;
@@ -33,26 +32,10 @@ async function connectionFor(traderId: string) {
   return rows[0] ?? null;
 }
 
-
-async function requireGoogleReviewPlan(traderId: string) {
-  const rows = await getSql()`
-    SELECT subscription_tier AS "subscriptionTier",
-           is_subscription_active AS "isSubscriptionActive",
-           trial_ends_at AS "trialEndsAt"
-    FROM trader_profiles
-    WHERE user_id = ${traderId}
-    LIMIT 1
-  ` as unknown as { subscriptionTier: 'free' | 'core' | 'basic' | 'featured'; isSubscriptionActive: boolean; trialEndsAt: string | null }[];
-  const profile = rows[0];
-  if (!profile || !tierAtLeast(profile.subscriptionTier, 'basic') || !hasPlanSetupAccess(profile, 'basic')) {
-    throw new HttpError(402, 'Google review connection is included with BuildPair Plus and Pro.');
-  }
-}
-
 export async function GET(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
-    await requireGoogleReviewPlan(trader.id);
+    await requireTraderPlanSetupAccess(trader.id, 'basic', 'Google review connection is included with BuildPair Plus and Pro.');
     if (!googlePlacesConfigured()) return Response.json({ configured: false, connected: false, connection: null, google: null });
 
     const connection = await connectionFor(trader.id);

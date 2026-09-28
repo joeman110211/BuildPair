@@ -13,6 +13,7 @@ import { apiFetch, errorMessage } from '@/lib/api';
 import { formatMoney, poundsToPence } from '@/lib/money';
 import { buildQuoteStartDateOptions, closestQuoteDuration, QUOTE_DURATION_OPTIONS, QUOTE_SCOPE_MIN_LENGTH } from '@/lib/quote-options';
 import type { BuildPayFeeMode, Job, PaymentStagePlan, TraderProfile } from '@/types';
+import type { BusinessQuoteScopeFields } from '@/types/business-quotes';
 
 type AiQuote = {
   laborCost: number; materialsCost: number; depositAmount: number; scope: string; exclusions: string; paymentTerms: string;
@@ -28,7 +29,7 @@ type DepositUnit = 'amount' | 'percent';
 type SelectOption = { value: string; label: string };
 type TraderTemplate = { id: string; kind: 'quote' | 'message'; title: string; content: string };
 
-type BusinessQuote = {
+type BusinessQuote = BusinessQuoteScopeFields & {
   id: string;
   quoteNumber: string;
   customerName: string;
@@ -37,11 +38,6 @@ type BusinessQuote = {
   jobTitle: string;
   tradeCategory: string | null;
   jobAddress: string | null;
-  workIncluded: string;
-  notIncluded: string | null;
-  expectedStart: string | null;
-  durationText: string | null;
-  warrantyText: string | null;
   subtotal: number;
   vatRate: number;
   vatAmount: number;

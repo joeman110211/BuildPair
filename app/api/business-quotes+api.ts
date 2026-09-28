@@ -6,6 +6,8 @@ import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { appUrl } from '@/lib/stripe';
 import { hasPlanSetupAccess, tierAtLeast } from '@/lib/subscription';
+import { requireTraderPlanSetupAccess } from '@/lib/trader-plan-access';
+import type { BusinessQuoteScopeFields } from '@/types/business-quotes';
 
 const itemSchema = z.object({
   description: z.string().trim().min(1).max(300),
@@ -46,7 +48,7 @@ const businessQuoteSchema = z.object({
   status: z.enum(['draft', 'sent']).default('draft'),
 });
 
-type QuoteRow = {
+type QuoteRow = BusinessQuoteScopeFields & {
   id: string;
   traderId: string;
   quoteNumber: string;
@@ -56,11 +58,6 @@ type QuoteRow = {
   jobTitle: string;
   tradeCategory: string | null;
   jobAddress: string | null;
-  workIncluded: string;
-  notIncluded: string | null;
-  expectedStart: string | null;
-  durationText: string | null;
-  warrantyText: string | null;
   subtotal: number;
   vatRate: number;
   vatAmount: number;
@@ -95,23 +92,6 @@ function quoteNumber() {
   const date = new Date();
   const stamp = `${String(date.getFullYear()).slice(-2)}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
   return `BP-${stamp}-${randomUUID().replace(/-/g, '').slice(0, 5).toUpperCase()}`;
-}
-
-
-async function requireBusinessQuotePlan(traderId: string) {
-  const rows = await getSql()`
-    SELECT subscription_tier AS "subscriptionTier",
-           is_subscription_active AS "isSubscriptionActive",
-           trial_ends_at AS "trialEndsAt"
-    FROM trader_profiles
-    WHERE user_id = ${traderId}
-    LIMIT 1
-  ` as unknown as { subscriptionTier: 'free' | 'core' | 'basic' | 'featured'; isSubscriptionActive: boolean; trialEndsAt: string | null }[];
-  const profile = rows[0];
-  if (!profile || !tierAtLeast(profile.subscriptionTier, 'core') || !hasPlanSetupAccess(profile, 'core')) {
-    throw new HttpError(402, 'Standalone customer quotes are included with BuildPair Core, Plus and Pro.');
-  }
-  return profile;
 }
 
 async function listQuotes(traderId: string) {
@@ -196,7 +176,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
-    const plan = await requireBusinessQuotePlan(trader.id);
+    const plan = await requireTraderPlanSetupAccess(trader.id, 'core', 'Standalone customer quotes are included with BuildPair Core, Plus and Pro.');
     const payload = businessQuoteSchema.parse(await request.json());
     const managedProjectEligible = tierAtLeast(plan.subscriptionTier, 'basic') && hasPlanSetupAccess(plan, 'basic');
     if (payload.paymentMethod === 'buildpair' && !managedProjectEligible) {
