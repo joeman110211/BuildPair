@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { adminActionDigest, adminMessageExplicitlyRequestsAction } from '../lib/admin-ai-security';
+import { adminActionDigest, adminMessageExplicitlyRequestsAction } from '../lib/admin/ai-security';
 import { extractBuildPairAiNavigation, resolveBuildPairAiNavigation } from '../lib/buildpair-ai-navigation';
 
 describe('BuildPair AI safe navigation', () => {

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import { ensureAdminAccessInviteTable } from '@/lib/admin-access-store';
+import { ensureAdminAccessInviteTable } from '@/lib/admin/access-store';
 import { authenticatedUserId, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 

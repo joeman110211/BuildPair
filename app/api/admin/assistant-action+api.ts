@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { PATCH as patchAdminReports } from './reports+api';
 import { PATCH as patchAdminUsers } from './users+api';
-import { adminAssistantActionSchema } from '@/lib/admin-assistant-actions';
-import { consumeAdminActionProposal } from '@/lib/admin-ai-security';
+import { adminAssistantActionSchema } from '@/lib/admin/assistant-actions';
+import { consumeAdminActionProposal } from '@/lib/admin/ai-security';
 import { recordAiRequest } from '@/lib/ai-audit';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { jsonError, requireAdmin } from '@/lib/server';

@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
-import { BUILDPAIR_PRODUCT_MAP, buildAdminLiveContext } from '@/lib/admin-ai-context';
-import { ADMIN_ASSISTANT_ACTION_INSTRUCTIONS, buildAdminActionProposal, extractAdminAssistantAction } from '@/lib/admin-assistant-actions';
-import { adminActionDigest, adminMessageExplicitlyRequestsAction, newAdminActionProposalNonce } from '@/lib/admin-ai-security';
+import { BUILDPAIR_PRODUCT_MAP, buildAdminLiveContext } from '@/lib/admin/ai-context';
+import { ADMIN_ASSISTANT_ACTION_INSTRUCTIONS, buildAdminActionProposal, extractAdminAssistantAction } from '@/lib/admin/assistant-actions';
+import { adminActionDigest, adminMessageExplicitlyRequestsAction, newAdminActionProposalNonce } from '@/lib/admin/ai-security';
 import { assertAiDailyBudget, recordAiRequest } from '@/lib/ai-audit';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { jsonError, requireAdmin } from '@/lib/server';

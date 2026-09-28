@@ -1,4 +1,4 @@
-import { listAdminClerkIdentities } from '@/lib/admin-clerk';
+import { listAdminClerkIdentities } from '@/lib/admin/clerk';
 import { jsonError, requireAdmin } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
