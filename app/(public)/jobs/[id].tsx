@@ -8,10 +8,8 @@ import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import type { Job } from '@/types';
+import { firstParam } from '@/lib/search-params';
 
-function scalar(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 function joinJobHref(job: Job): Href {
   const location = job.locationLabel ?? job.postcode ?? '';
@@ -20,7 +18,7 @@ function joinJobHref(job: Job): Href {
 
 export default function PublicJobDetailsScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
-  const id = scalar(params.id);
+  const id = firstParam(params.id);
   const [job, setJob] = useState<Job | null>();
   const [error, setError] = useState('');
 
