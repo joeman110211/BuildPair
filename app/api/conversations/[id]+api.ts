@@ -1,24 +1,7 @@
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import type { ConversationStatus } from '@/types/conversations';
 
-type ConversationStatus = {
-  id: string;
-  jobId: string;
-  jobTitle: string;
-  jobStatus: 'open' | 'quoted' | 'in_progress' | 'completed' | 'cancelled';
-  acceptedQuoteId: string | null;
-  customerId: string;
-  traderId: string;
-  quoteId: string | null;
-  quoteStatus: 'pending' | 'accepted' | 'declined' | 'withdrawn' | null;
-  siteVisitId: string | null;
-  siteVisitStatus: 'proposed' | 'confirmed' | 'declined' | 'completed' | 'cancelled' | null;
-  siteVisitProposedAt: string | null;
-  siteVisitNote: string | null;
-  moderationStatus: 'open' | 'warned' | 'restricted' | 'closed';
-  moderationReason: string;
-  moderationUpdatedAt: string | null;
-};
 
 export async function GET(request: Request, { id }: { id: string }) {
   try {
