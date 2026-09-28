@@ -9,6 +9,7 @@ import { colors } from '@/constants/theme';
 import { modeSetupHref, parseAccountMode, signInHref } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { HOMEOWNER_REGISTRATION_OPEN, LAUNCH_DATE_LABEL, waitlistHref } from '@/lib/launch';
+import { firstParam } from '@/lib/search-params';
 
 type InviteStatus = {
   valid: boolean;
@@ -17,9 +18,6 @@ type InviteStatus = {
   mode?: 'homeowner' | 'trader';
 };
 
-function scalar(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 export default function SignUpScreen() {
   const { signUp, fetchStatus } = useSignUp();
@@ -31,11 +29,11 @@ export default function SignUpScreen() {
     jobCategory?: string | string[];
     jobLocation?: string | string[];
   }>();
-  const inviteToken = scalar(params.invite)?.trim() ?? '';
+  const inviteToken = firstParam(params.invite)?.trim() ?? '';
   const requestedMode = parseAccountMode(params.mode);
-  const jobTitle = scalar(params.jobTitle);
-  const jobCategory = scalar(params.jobCategory);
-  const jobLocation = scalar(params.jobLocation);
+  const jobTitle = firstParam(params.jobTitle);
+  const jobCategory = firstParam(params.jobCategory);
+  const jobLocation = firstParam(params.jobLocation);
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>();
   const [checkingInvite, setCheckingInvite] = useState(Boolean(inviteToken));
   const [password, setPassword] = useState('');

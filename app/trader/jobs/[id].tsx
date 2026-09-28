@@ -12,6 +12,8 @@ import { apiFetch, errorMessage } from '@/lib/api';
 import { formatMoney, poundsToPence } from '@/lib/money';
 import type { Job, JobTimelineEvent, JobVariation, PaymentStageStatus, Quote } from '@/types';
 import type { ExternalPaymentRecord, PaymentDispute } from '@/types/project-payments';
+import type { JobPrivateDetails } from '@/types/job-private-details';
+import { formatProjectStart } from '@/lib/project-dates';
 
 type Milestone = {
   id: string;
@@ -29,14 +31,6 @@ type Milestone = {
   disputeReason?: string | null;
 };
 
-type PrivateDetails = {
-  addressLine1: string;
-  addressLine2: string;
-  townCity: string;
-  postcode: string;
-  accessNotes: string;
-  complete: boolean;
-};
 
 type FundingAllocation = {
   milestoneId: string;
@@ -61,7 +55,7 @@ export default function TraderJobDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getToken } = useAuth();
   const [data, setData] = useState<Detail>();
-  const [privateDetails, setPrivateDetails] = useState<PrivateDetails>();
+  const [privateDetails, setPrivateDetails] = useState<JobPrivateDetails>();
   const [externalPayments, setExternalPayments] = useState<ExternalPaymentRecord[]>([]);
   const [disputes, setDisputes] = useState<PaymentDispute[]>([]);
   const [fundingBatches, setFundingBatches] = useState<FundingBatch[]>([]);
@@ -89,7 +83,7 @@ export default function TraderJobDetail() {
         setStartDate((current) => current || formatInputDate(suggested));
       }
       const [addressResult, externalResult, disputeResult, fundingResult] = await Promise.allSettled([
-        apiFetch<PrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
+        apiFetch<JobPrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
         apiFetch<ExternalPaymentRecord[]>(`/api/external-payments?jobId=${encodeURIComponent(id)}`, {}, getToken),
         apiFetch<PaymentDispute[]>(`/api/payment-disputes?jobId=${encodeURIComponent(id)}`, {}, getToken),
         apiFetch<FundingBatch[]>(`/api/buildpay/funding-status?jobId=${encodeURIComponent(id)}`, {}, getToken),
@@ -202,11 +196,11 @@ export default function TraderJobDetail() {
       <Text variant="titleLarge" style={styles.title}>Agree the start</Text>
       {data.job.startAgreedAt && data.job.scheduledStartAt ? <>
         <Chip icon="calendar-check">Homeowner agreed ✓</Chip>
-        <Text variant="titleMedium">{formatStart(data.job.scheduledStartAt)}</Text>
+        <Text variant="titleMedium">{formatProjectStart(data.job.scheduledStartAt)}</Text>
         <Text style={styles.muted}>This is the agreed start in the BuildPair project record. If it changes, propose a new date/time and the homeowner will confirm it again.</Text>
       </> : data.job.scheduledStartAt ? <>
         <Chip icon="clock-outline">Waiting for homeowner</Chip>
-        <Text variant="titleMedium">{formatStart(data.job.scheduledStartAt)}</Text>
+        <Text variant="titleMedium">{formatProjectStart(data.job.scheduledStartAt)}</Text>
         <Text style={styles.muted}>The homeowner has been asked to approve this start. The opening BuildPay payment cannot be taken until they agree it.</Text>
       </> : <Text style={styles.muted}>Confirm when you actually expect to start. The homeowner approves this before the opening BuildPay payment.</Text>}
       <View style={styles.row}>
@@ -366,9 +360,6 @@ function parseUkStart(dateValue: string, timeValue: string) {
   return value;
 }
 
-function formatStart(value: string) {
-  return new Date(value).toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
 
 const styles = StyleSheet.create({
   nextCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary },

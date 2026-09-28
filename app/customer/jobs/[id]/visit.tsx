@@ -5,6 +5,7 @@ import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { apiFetch, errorMessage } from '@/lib/api';
+import type { JobPrivateAddress, JobPrivateDetails } from '@/types/job-private-details';
 
 type Visit = {
   id: string;
@@ -13,17 +14,9 @@ type Visit = {
   proposedAt: string;
   status: 'proposed' | 'confirmed' | 'declined' | 'completed' | 'cancelled';
   note: string;
-  privateAddress: { addressLine1: string; addressLine2: string; townCity: string; postcode: string; accessNotes: string } | null;
+  privateAddress: JobPrivateAddress | null;
 };
 
-type PrivateDetails = {
-  addressLine1: string;
-  addressLine2: string;
-  townCity: string;
-  postcode: string;
-  accessNotes: string;
-  complete: boolean;
-};
 
 export default function ConfirmVisitScreen() {
   const { id, visitId } = useLocalSearchParams<{ id: string; visitId?: string }>();
@@ -43,7 +36,7 @@ export default function ConfirmVisitScreen() {
     try {
       const [nextVisit, details] = await Promise.all([
         apiFetch<Visit>(`/api/site-visits?id=${encodeURIComponent(visitId)}`, {}, getToken),
-        apiFetch<PrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
+        apiFetch<JobPrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
       ]);
       setVisit(nextVisit);
       setAddressLine1(details.addressLine1);

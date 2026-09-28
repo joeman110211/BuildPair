@@ -8,6 +8,7 @@ import { PublicFooter } from '@/components/PublicFooter';
 import { colors, publicResponsiveMetrics } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { useAuthAvailable } from '@/lib/auth-availability';
+import { firstParam } from '@/lib/search-params';
 
 const REASON_LABELS = [
   'Fraud or suspected scam',
@@ -37,16 +38,13 @@ const REASON_VALUES: Record<ReasonLabel, string> = {
   'Other': 'other',
 };
 
-function first(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 function ReportForm() {
   const { getToken, isSignedIn } = useAuth();
   const params = useLocalSearchParams<{ subjectUserId?: string | string[]; subjectLabel?: string | string[]; subjectType?: string | string[] }>();
-  const suppliedUserId = first(params.subjectUserId);
-  const suppliedLabel = first(params.subjectLabel);
-  const suppliedType = first(params.subjectType);
+  const suppliedUserId = firstParam(params.subjectUserId);
+  const suppliedLabel = firstParam(params.subjectLabel);
+  const suppliedType = firstParam(params.subjectType);
   const [reference, setReference] = useState(suppliedUserId ?? '');
   const [reason, setReason] = useState<ReasonLabel>();
   const [details, setDetails] = useState('');

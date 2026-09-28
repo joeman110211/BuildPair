@@ -7,16 +7,14 @@ import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { firstParam } from '@/lib/search-params';
 
 type InviteStatus = { valid: boolean; email?: string; expiresAt?: string };
 
-function scalar(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 export default function AdminInviteScreen() {
   const params = useLocalSearchParams<{ token?: string | string[] }>();
-  const inviteToken = scalar(params.token)?.trim() ?? '';
+  const inviteToken = firstParam(params.token)?.trim() ?? '';
   const { signUp, fetchStatus } = useSignUp();
   const { isSignedIn } = useAuth();
   const { signOut } = useClerk();

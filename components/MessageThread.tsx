@@ -7,8 +7,9 @@ import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import type { MessageRiskLevel } from '@/lib/message-safety';
+import type { ConversationStatus } from '@/types/conversations';
 
-type MessageRiskLevel = 'none' | 'low' | 'medium' | 'high' | 'severe';
 type Message = {
   id: string;
   conversationId: string;
@@ -19,25 +20,7 @@ type Message = {
   aiRiskLevel?: MessageRiskLevel;
   aiModerationReason?: string | null;
 };
-type SiteVisitStatus = 'proposed' | 'confirmed' | 'declined' | 'completed' | 'cancelled';
-type ConversationStatus = {
-  id: string;
-  jobId: string;
-  jobTitle: string;
-  jobStatus: 'open' | 'quoted' | 'in_progress' | 'completed' | 'cancelled';
-  acceptedQuoteId: string | null;
-  customerId: string;
-  traderId: string;
-  quoteId: string | null;
-  quoteStatus: 'pending' | 'accepted' | 'declined' | 'withdrawn' | null;
-  siteVisitId: string | null;
-  siteVisitStatus: SiteVisitStatus | null;
-  siteVisitProposedAt: string | null;
-  siteVisitNote: string | null;
-  moderationStatus: 'open' | 'warned' | 'restricted' | 'closed';
-  moderationReason: string;
-  moderationUpdatedAt: string | null;
-};
+
 type SendResult = Message & { conversationStatus?: ConversationStatus['moderationStatus']; warning?: string | null };
 type AssistantResult = { summary: string; suggestions: string[]; source: 'ai' | 'rules' };
 type TraderTemplate = { id: string; kind: 'quote' | 'message'; title: string; content: string };

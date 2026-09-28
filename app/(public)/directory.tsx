@@ -11,6 +11,7 @@ import { apiFetch, errorMessage } from '@/lib/api';
 import { searchTraders, searchTradersWithFallback } from '@/lib/trade-search';
 import { recentlyViewedTraderIds } from '@/lib/trader-browse-history';
 import type { TraderProfile } from '@/types';
+import { firstParam } from '@/lib/search-params';
 
 const SORT_LABELS = {
   best: 'Best match',
@@ -31,9 +32,6 @@ type StoredIntent = {
   intent: TradeSearchIntent;
 };
 
-function firstParam(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 export default function DirectoryScreen() {
   const params = useLocalSearchParams<{ q?: string | string[]; trade?: string | string[] }>();

@@ -9,10 +9,8 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { modeSetupHref, parseAccountMode, safeInternalReturnTo, signUpHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
 import { clerkWebAppearance } from '@/lib/clerk-web';
+import { firstParam } from '@/lib/search-params';
 
-function scalar(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 function AdminSignInForm() {
   const { signIn, fetchStatus } = useSignIn();
@@ -204,7 +202,7 @@ function AdminSignInForm() {
 
 export default function SignInWebScreen() {
   const params = useLocalSearchParams<{ mode?: string | string[]; admin?: string | string[]; returnTo?: string | string[] }>();
-  const admin = scalar(params.admin) === '1';
+  const admin = firstParam(params.admin) === '1';
   const mode = parseAccountMode(params.mode);
   const returnTo = safeInternalReturnTo(params.returnTo);
   const redirectUrl = String(modeSetupHref(mode, returnTo));
