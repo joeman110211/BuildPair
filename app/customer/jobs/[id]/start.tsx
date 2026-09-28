@@ -12,6 +12,7 @@ import { apiFetch, errorMessage } from '@/lib/api';
 import { allocateCustomerBuildPayFee } from '@/lib/buildpay-fees';
 import { formatMoney } from '@/lib/money';
 import type { BuildPayFeeMode, BuildPayRequestedBy, Job, PaymentStageStatus, Quote, TraderProfile } from '@/types';
+import type { JobPrivateDetails } from '@/types/job-private-details';
 
 type Milestone = {
   id: string;
@@ -24,7 +25,7 @@ type Milestone = {
 };
 
 type Detail = { job: Job; acceptedQuote: Quote | null; milestones: Milestone[]; trader: TraderProfile | null };
-type PrivateDetails = { addressLine1: string; addressLine2: string; townCity: string; postcode: string; accessNotes: string; complete: boolean };
+
 type PaymentArrangement = {
   paymentMode: 'undecided' | 'buildpair' | 'external';
   proposedAt: string | null;
@@ -67,7 +68,7 @@ export default function StartAwardedJobScreen() {
     try {
       const [detail, privateDetails, feeSummary, paymentArrangement] = await Promise.all([
         apiFetch<Detail>(`/api/jobs/${id}`, {}, getToken),
-        apiFetch<PrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
+        apiFetch<JobPrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
         apiFetch<BuildPaySummary>(`/api/buildpay/summary?jobId=${encodeURIComponent(id)}`, {}, getToken),
         apiFetch<PaymentArrangement>(`/api/payment-arrangement?jobId=${encodeURIComponent(id)}`, {}, getToken),
       ]);
