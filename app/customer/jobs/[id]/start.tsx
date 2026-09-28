@@ -13,6 +13,7 @@ import { allocateCustomerBuildPayFee } from '@/lib/buildpay-fees';
 import { formatMoney } from '@/lib/money';
 import type { BuildPayFeeMode, BuildPayRequestedBy, Job, PaymentStageStatus, Quote, TraderProfile } from '@/types';
 import type { JobPrivateDetails } from '@/types/job-private-details';
+import { formatProjectStart } from '@/lib/project-dates';
 
 type Milestone = {
   id: string;
@@ -172,11 +173,11 @@ export default function StartAwardedJobScreen() {
         <Text>The tradesperson now confirms the date and time they plan to start. You will approve it here before the opening BuildPay payment can be taken.</Text>
       </> : startAgreed ? <>
         <Chip icon="calendar-check">Start agreed ✓</Chip>
-        <Text variant="titleMedium">{formatStart(data.job.scheduledStartAt!)}</Text>
+        <Text variant="titleMedium">{formatProjectStart(data.job.scheduledStartAt!)}</Text>
         <Text>Both sides have the same start date and time recorded in BuildPair.</Text>
       </> : <>
         <Chip icon="calendar-clock">Start proposed</Chip>
-        <Text variant="titleMedium">{formatStart(data.job.scheduledStartAt!)}</Text>
+        <Text variant="titleMedium">{formatProjectStart(data.job.scheduledStartAt!)}</Text>
         <Text>Confirm this only if the date and time work for you. If not, message the tradesperson and ask them to propose another time.</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           <Button mode="contained" icon="calendar-check" loading={busy} disabled={busy} onPress={() => void confirmStart()}>Agree start</Button>
@@ -254,6 +255,3 @@ export default function StartAwardedJobScreen() {
   </Screen>;
 }
 
-function formatStart(value: string) {
-  return new Date(value).toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
