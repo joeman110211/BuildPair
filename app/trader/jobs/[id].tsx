@@ -12,6 +12,7 @@ import { apiFetch, errorMessage } from '@/lib/api';
 import { formatMoney, poundsToPence } from '@/lib/money';
 import type { Job, JobTimelineEvent, JobVariation, PaymentStageStatus, Quote } from '@/types';
 import type { ExternalPaymentRecord, PaymentDispute } from '@/types/project-payments';
+import type { JobPrivateDetails } from '@/types/job-private-details';
 
 type Milestone = {
   id: string;
@@ -29,14 +30,6 @@ type Milestone = {
   disputeReason?: string | null;
 };
 
-type PrivateDetails = {
-  addressLine1: string;
-  addressLine2: string;
-  townCity: string;
-  postcode: string;
-  accessNotes: string;
-  complete: boolean;
-};
 
 type FundingAllocation = {
   milestoneId: string;
@@ -61,7 +54,7 @@ export default function TraderJobDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getToken } = useAuth();
   const [data, setData] = useState<Detail>();
-  const [privateDetails, setPrivateDetails] = useState<PrivateDetails>();
+  const [privateDetails, setPrivateDetails] = useState<JobPrivateDetails>();
   const [externalPayments, setExternalPayments] = useState<ExternalPaymentRecord[]>([]);
   const [disputes, setDisputes] = useState<PaymentDispute[]>([]);
   const [fundingBatches, setFundingBatches] = useState<FundingBatch[]>([]);
@@ -89,7 +82,7 @@ export default function TraderJobDetail() {
         setStartDate((current) => current || formatInputDate(suggested));
       }
       const [addressResult, externalResult, disputeResult, fundingResult] = await Promise.allSettled([
-        apiFetch<PrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
+        apiFetch<JobPrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
         apiFetch<ExternalPaymentRecord[]>(`/api/external-payments?jobId=${encodeURIComponent(id)}`, {}, getToken),
         apiFetch<PaymentDispute[]>(`/api/payment-disputes?jobId=${encodeURIComponent(id)}`, {}, getToken),
         apiFetch<FundingBatch[]>(`/api/buildpay/funding-status?jobId=${encodeURIComponent(id)}`, {}, getToken),
