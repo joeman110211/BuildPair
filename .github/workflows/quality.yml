@@ -34,13 +34,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Temporary duplicate scan
-        shell: bash
-        run: |
-          node scripts/find-duplicate-blocks.mjs
-          echo "::error::Temporary duplicate scan gate"
-          exit 1
-
       - name: Reject legacy product branding
         shell: bash
         run: |
