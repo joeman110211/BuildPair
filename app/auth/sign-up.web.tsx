@@ -1,14 +1,12 @@
 import { type Href, Redirect, useLocalSearchParams } from 'expo-router';
 import { parseAccountMode } from '@/lib/account-mode';
 import { waitlistHref } from '@/lib/launch';
+import { firstParam } from '@/lib/search-params';
 
-function scalar(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 export default function SignUpWebEntry() {
   const params = useLocalSearchParams<{ invite?: string | string[]; mode?: string | string[] }>();
-  const invite = scalar(params.invite)?.trim();
+  const invite = firstParam(params.invite)?.trim();
   const mode = parseAccountMode(params.mode);
 
   if (invite) {
