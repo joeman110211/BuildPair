@@ -6,6 +6,7 @@ import {
   type BuildPairBusinessIdentity,
 } from '@/lib/google-reviews';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
+import { getSql } from '@/lib/sql';
 import { requireTraderPlanSetupAccess } from '@/lib/trader-plan-access';
 
 type ConnectionRow = {
