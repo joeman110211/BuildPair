@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { colors } from '@/constants/theme';
-import { ADMIN_NAV_GROUPS, adminNavItemForPath } from '@/lib/admin-navigation';
+import { ADMIN_NAV_GROUPS, adminNavItemForPath } from '@/lib/admin/navigation';
 
 export function AdminNav() {
   const pathname = usePathname();

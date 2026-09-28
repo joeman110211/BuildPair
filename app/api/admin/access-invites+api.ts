@@ -1,8 +1,8 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
-import { ensureAdminAccessInviteTable } from '@/lib/admin-access-store';
-import { sendAdminInviteEmail } from '@/lib/admin-invite-email';
-import { buildPairOwnerUserId, requireOwnerAdmin } from '@/lib/admin-owner';
+import { ensureAdminAccessInviteTable } from '@/lib/admin/access-store';
+import { sendAdminInviteEmail } from '@/lib/admin/invite-email';
+import { buildPairOwnerUserId, requireOwnerAdmin } from '@/lib/admin/owner';
 import { HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 

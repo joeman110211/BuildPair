@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import type { AdminAssistantAction } from '@/lib/admin-assistant-actions';
+import type { AdminAssistantAction } from '@/lib/admin/assistant-actions';
 import { HttpError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 

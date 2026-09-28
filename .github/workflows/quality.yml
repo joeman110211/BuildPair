@@ -34,13 +34,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Temporary admin dependency report
-        shell: bash
-        run: |
-          node scripts/report-admin-importers.mjs
-          echo "::error::Temporary dependency report gate: stopping before install"
-          exit 1
-
       - name: Reject legacy product branding
         shell: bash
         run: |
