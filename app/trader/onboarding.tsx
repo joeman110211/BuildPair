@@ -370,6 +370,7 @@ export default function TraderOnboarding() {
     title={STEP_TITLES[step]}
     subtitle={STEP_HELP[step]}
     footer={footer}
+    stickyFooter
   >
     <FormStepHeader current={step + 1} total={4} hint={STEP_HELP[step]} />
 
