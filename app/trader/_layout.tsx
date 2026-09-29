@@ -9,7 +9,7 @@ import { LoadingScreen, Screen } from '@/components/Screen';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { LAUNCH_OFFER } from '@/constants/site-language';
 import { colors } from '@/constants/theme';
-import { FOUNDING_PRO_MONTHS, MARKETPLACE_OPEN } from '@/lib/launch';
+import { MARKETPLACE_OPEN } from '@/lib/launch';
 
 const PRELAUNCH_SETUP_ROUTES = [
   '/trader/onboarding',
