@@ -39,10 +39,9 @@ function chunk<T>(items: T[], size: number) {
 function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
   const router = useRouter();
   const rating = Number(trader.averageRating || 0);
-  const membership = trader.subscriptionTier === 'featured' ? 'PRO' : trader.subscriptionTier === 'basic' ? 'PLUS' : trader.subscriptionTier === 'core' ? 'CORE' : 'STARTER';
   const reputation = trader.reviewCount > 0
     ? `${rating.toFixed(1)} ★ · ${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}`
-    : 'New to BuildPair';
+    : 'Profile live';
 
   return <Pressable
     style={({ pressed }) => [styles.cardPressable, pressed && styles.cardPressed]}
@@ -59,7 +58,7 @@ function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
       <View style={styles.cardShade} />
       <View style={styles.cardTopRow}>
         <View style={styles.featuredBadge}><Text style={styles.featuredBadgeText}>{trader.foundingTrade ? 'FOUNDING TRADE' : 'BUILDPAIR TRADE'}</Text></View>
-        <View style={styles.planBadge}><Text style={styles.planBadgeText}>{membership}</Text></View>
+        <View style={styles.planBadge}><Text style={styles.planBadgeText}>{trader.verifiedCredentialCount > 0 ? `${trader.verifiedCredentialCount} CHECKED` : 'PROFILE'}</Text></View>
       </View>
       <View style={styles.cardInfo}>
         <Text numberOfLines={2} style={styles.businessName}>{trader.businessName}</Text>
@@ -74,7 +73,7 @@ function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
   </Pressable>;
 }
 
-export function FeaturedTraderHero({ wide }: { wide: boolean }) {
+export function FeaturedTraderHero({ wide, onAvailabilityChange }: { wide: boolean; onAvailabilityChange?: (hasProfiles: boolean) => void }) {
   const { width } = useWindowDimensions();
   const [traders, setTraders] = useState<FeaturedTrader[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -90,16 +89,21 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
       .then((response) => {
         if (!active) return;
         const next = response.traders?.length ? response.traders : response.trader ? [response.trader] : [];
-        setTraders(next.slice(0, 6));
+        const visible = next.slice(0, 6);
+        setTraders(visible);
+        onAvailabilityChange?.(visible.length > 0);
       })
       .catch(() => {
-        if (active) setTraders([]);
+        if (active) {
+          setTraders([]);
+          onAvailabilityChange?.(false);
+        }
       })
       .finally(() => {
         if (active) setLoaded(true);
       });
     return () => { active = false; };
-  }, []);
+  }, [onAvailabilityChange]);
 
   const pages = chunk(traders, pageSize);
   const visibleActivePage = Math.min(activePage, Math.max(0, pages.length - 1));
