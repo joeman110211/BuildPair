@@ -92,7 +92,9 @@ export const typography = {
 
 export const interaction = {
   transitionMs: 180,
+  revealMs: 420,
   pressOpacity: 0.94,
+  pressScale: 0.99,
 } as const;
 
 export function publicResponsiveMetrics(width: number) {
