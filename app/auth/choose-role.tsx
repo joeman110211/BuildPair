@@ -10,7 +10,7 @@ import { colors } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref, parseAccountMode, safeInternalReturnTo } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { HOMEOWNER_REGISTRATION_OPEN, LAUNCH_DATE_LABEL } from '@/lib/launch';
+import { HOMEOWNER_REGISTRATION_OPEN } from '@/lib/launch';
 import type { CurrentUser, UserRole } from '@/types';
 import { firstParam } from '@/lib/search-params';
 
@@ -41,7 +41,7 @@ export default function ChooseRoleScreen() {
   async function save(selectedRole = role) {
     if (!selectedRole || busy || !authLoaded || !isSignedIn) return;
     if (selectedRole === 'customer' && !HOMEOWNER_REGISTRATION_OPEN) {
-      setError(`Homeowner account creation opens at launch on ${LAUNCH_DATE_LABEL}. Tradespeople can prepare their profiles now.`);
+      setError('Homeowner accounts open at launch. Tradespeople can create profiles now.');
       return;
     }
 
@@ -133,7 +133,7 @@ export default function ChooseRoleScreen() {
         contentStyle={styles.continueButton}
         style={styles.continueAction}
       >
-        {role === 'trader' ? (user?.traderEnabled ? 'Continue as Tradesperson' : 'Add Tradesperson Profile') : role === 'customer' ? (!HOMEOWNER_REGISTRATION_OPEN ? 'Homeowner registration opens at launch' : user?.customerEnabled ? 'Continue as Homeowner' : 'Add Homeowner Profile') : 'Continue'}
+        {role === 'trader' ? (user?.traderEnabled ? 'Continue' : 'Add profile') : role === 'customer' ? (!HOMEOWNER_REGISTRATION_OPEN ? 'Opens at launch' : user?.customerEnabled ? 'Continue' : 'Add profile') : 'Continue'}
       </Button>
     </Screen>
   );
