@@ -11,7 +11,7 @@ export default function RewardsPage() {
     sections={[
       { title: 'Launch rewards', body: <View style={infoStyles.list}>
         <Text style={infoStyles.item}>• {LAUNCH_OFFER.short}</Text>
-        <Text style={infoStyles.item}>• No lead fee is added simply because a tradesperson receives or responds to a job through BuildPair. Normal membership and any separately disclosed BuildPay terms apply after promotional periods end.</Text>
+        <Text style={infoStyles.item}>• No lead fee is added simply because a tradesperson receives or responds to a job through BuildPair. Normal plan pricing and any separately disclosed BuildPay terms apply after promotional periods end.</Text>
       </View> },
       { title: 'Complete real jobs, unlock more', body: <View style={infoStyles.list}>
         <Text style={infoStyles.item}>• First 10 eligible tradespeople to complete 10 genuine BuildPair-recorded jobs: a further 3 months of Pro free.</Text>
@@ -28,8 +28,8 @@ export default function RewardsPage() {
       </View> },
       { title: 'BuildPay rewards', body: 'A BuildPay job only counts toward a BuildPay-specific reward when the supported payment flow was genuinely used for the project and the qualifying stages reached completion. Tiny or artificial transactions created solely to obtain a reward do not qualify.' },
       { title: 'Monthly member rewards', body: 'Where a monthly reward includes random selection, entry is limited to the eligible member pool described in that promotion. BuildPair will publish the applicable eligibility period and reward terms. Paying more money does not buy extra entries unless a future promotion explicitly and lawfully says otherwise.' },
-      { title: 'Reward periods and stacking', body: 'Promotional membership time is applied to the eligible BuildPair account. Individual promotions may state whether free periods can stack, when they begin and what happens if the member already has a paid subscription. BuildPair will show the applicable terms before awarding each promotion.' },
-      { title: 'Fair-use protection', body: <View style={infoStyles.callout}><Text style={infoStyles.calloutText}>BuildPair can withhold or reverse a promotional reward where activity is fraudulent, duplicated, manipulated, abusive or otherwise outside the published eligibility rules. Genuine tradespeople using the platform normally should not have to think about this. It exists so the rewards go to actual work rather than creative spreadsheet fiction.</Text></View> },
+      { title: 'Reward periods and stacking', body: 'Promotional plan time is applied to the eligible BuildPair account. Individual promotions may state whether free periods can stack, when they begin and what happens if the member already has a paid subscription. BuildPair will show the applicable terms before awarding each promotion.' },
+      { title: 'Fair-use protection', body: <View style={infoStyles.callout}><Text style={infoStyles.calloutText}>BuildPair can withhold or reverse a promotional reward where activity is fraudulent, duplicated, manipulated, abusive or otherwise outside the published eligibility rules. These controls are intended to keep rewards focused on genuine work and genuine customer activity.</Text></View> },
     ]}
   />;
 }
