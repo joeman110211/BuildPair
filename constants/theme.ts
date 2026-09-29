@@ -76,10 +76,10 @@ export const shadows = {
   },
   raised: {
     shadowColor: colors.charcoal,
-    shadowOpacity: 0.07,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 7 },
-    elevation: 3,
+    shadowOpacity: 0.055,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
   },
 } as const;
 
