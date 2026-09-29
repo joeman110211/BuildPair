@@ -1,0 +1,63 @@
+name: Cleanup obsolete backup branches
+
+on:
+  push:
+    branches:
+      - maintenance/cleanup-old-backups-2026-09-29
+    paths:
+      - '.github/workflows/cleanup-old-backups.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Delete obsolete backup branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          keep="backup/current-clean-pre-polish-2026-09-29"
+          branches=(
+            "backup/morning-homepage-changes-2026-09-27"
+            "backup/pre-evergreen-homepage-2026-09-27"
+            "backup/pre-homepage-redesign-2026-09-27"
+            "backup/pre-rollback-2026-09-17-1806"
+            "backup/production-24h"
+            "backup/production-48h"
+            "backup/production-2026-09-17-1648"
+            "backup/production-2026-09-20-founding50-live"
+            "backup/production-2026-09-20-pre-growth"
+            "backup/production-2026-09-20-pre-prelaunch-onboarding"
+            "backup-before-compact-mobile-buttons-2026-09-27"
+            "backup-before-disabling-app-auto-builds-2026-09-27"
+            "backup-before-final-homepage-footer-shape-cleanup-2026-09-27"
+            "backup-before-footer-cleanup-2026-09-27"
+            "backup-before-homepage-polish-2026-09-27"
+            "backup-before-mobile-button-cleanup-2026-09-27"
+            "backup-before-mobile-hero-simplify-2026-09-27"
+            "backup-before-stripe-production-hardening-2026-09-27"
+          )
+          for branch in "${branches[@]}"; do
+            if [ "$branch" = "$keep" ]; then
+              echo "::error::Refusing to delete protected backup $keep"
+              exit 1
+            fi
+            if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+              echo "Deleting $branch"
+              git push origin --delete "$branch"
+            else
+              echo "Already absent: $branch"
+            fi
+          done
+
+      - name: Verify only current backup remains
+        shell: bash
+        run: |
+          set -euo pipefail
+          backups="$(git ls-remote --heads origin 'refs/heads/backup*' | awk '{print $2}' | sed 's#refs/heads/##' | sort)"
+          printf '%s\n' "$backups"
+          test "$backups" = "backup/current-clean-pre-polish-2026-09-29"
