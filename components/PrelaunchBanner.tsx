@@ -1,192 +1,221 @@
 import { Link, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Button, Text } from 'react-native-paper';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { waitlistHref } from '@/lib/launch';
-
-const DISMISSED_KEY = 'buildpair-prelaunch-popup-dismissed-session';
-const POPUP_DELAY_MS = 2200;
 
 export function PrelaunchBanner() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const compact = width < 720;
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    try {
-      if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(DISMISSED_KEY) === '1') return;
-    } catch {
-      // If session storage is unavailable, the popup can still be shown and dismissed.
-    }
-
-    const timer = setTimeout(() => setVisible(true), POPUP_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, []);
-
-  function dismiss() {
-    setVisible(false);
-    try {
-      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(DISMISSED_KEY, '1');
-    } catch {
-      // Dismissing should still work if session storage is unavailable.
-    }
-  }
-
-  if (!visible) return null;
 
   return (
-    <Modal
-      animationType="fade"
-      transparent
-      visible={visible}
-      onRequestClose={dismiss}
-      statusBarTranslucent
-    >
-      <Pressable style={styles.backdrop} onPress={dismiss} accessibilityLabel="Close launch popup">
-        <Pressable
-          style={[styles.popup, compact && styles.popupCompact]}
-          onPress={(event) => event.stopPropagation()}
-          accessibilityViewIsModal
-        >
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={[styles.inner, compact && styles.innerCompact]}
-            showsVerticalScrollIndicator={false}
-          >
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Close launch popup"
-              hitSlop={10}
-              style={styles.closeButton}
-              onPress={dismiss}
-            >
-              <Text style={styles.closeText}>×</Text>
-            </Pressable>
-
-            <View style={[styles.copy, compact && styles.copyCompact]}>
-              <View style={[styles.chips, compact && styles.chipsCompact]}>
-                <Chip compact icon="rocket-launch-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>Launching soon</Chip>
-                <Chip compact icon="gift-outline" style={[styles.chip, compact && styles.chipCompact]} textStyle={[styles.chipText, compact && styles.chipTextCompact]}>3 months Pro free</Chip>
-              </View>
-
-              <Text style={[styles.title, compact && styles.titleCompact]}>BuildPair is launching soon.</Text>
-              <Text style={[styles.body, compact && styles.bodyCompact]}>Tradespeople can sign up free and create their profile now. We’ll notify you when the marketplace opens, eligible launch trades receive 3 months of BuildPair Pro free, and homeowners can start posting jobs from launch.</Text>
-
-              <View style={[styles.offerBox, compact && styles.offerBoxCompact]}>
-                <Text style={[styles.offer, compact && styles.offerCompact]}><Text style={styles.strong}>No pay-per-lead charges.</Text> Build your profile now and be ready when homeowners start posting jobs.</Text>
-              </View>
+    <View style={styles.shell}>
+      <View style={styles.topAccent} />
+      <View style={[styles.inner, compact && styles.innerCompact]}>
+        <View style={[styles.copy, compact && styles.copyCompact]}>
+          <View style={[styles.metaRow, compact && styles.metaRowCompact]}>
+            <View style={styles.livePill}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>LAUNCHING SOON</Text>
             </View>
+            <View style={styles.offerPill}>
+              <Text style={styles.offerPillText}>3 MONTHS PRO FREE</Text>
+            </View>
+          </View>
 
-            {compact ? (
-              <View style={[styles.actions, styles.actionsCompact]}>
-                <Button mode="contained" icon="account-plus-outline" style={styles.actionButton} contentStyle={styles.actionContent} onPress={() => router.push(waitlistHref('trader', 'homepage-popup'))}>Create trade profile</Button>
-                <View style={styles.actionRow}>
-                  <Button mode="outlined" style={[styles.actionButton, styles.halfAction]} contentStyle={styles.actionContent} onPress={() => router.push('/(public)/rewards')}>Rewards</Button>
-                  <Button mode="outlined" style={[styles.actionButton, styles.halfAction]} contentStyle={styles.actionContent} onPress={() => router.push('/auth/sign-in')}>Sign in</Button>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.actions}>
-                <Link href={waitlistHref('trader', 'homepage-popup')} asChild>
-                  <Button mode="contained" icon="account-plus-outline" style={styles.actionButton} contentStyle={styles.actionContent}>Create trade profile</Button>
-                </Link>
-                <Link href="/(public)/rewards" asChild>
-                  <Button mode="outlined" style={styles.actionButton} contentStyle={styles.actionContent}>Rewards</Button>
-                </Link>
-                <Link href="/auth/sign-in" asChild>
-                  <Button mode="outlined" style={styles.actionButton} contentStyle={styles.actionContent}>Sign in</Button>
-                </Link>
-              </View>
-            )}
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+          <View style={styles.textBlock}>
+            <Text style={[styles.title, compact && styles.titleCompact]}>
+              Build your profile now. Be ready when BuildPair opens.
+            </Text>
+            <Text style={[styles.body, compact && styles.bodyCompact]}>
+              Tradespeople can join free today, with no pay-per-lead charges. Homeowners can join the launch list and be first to post jobs when the marketplace opens.
+            </Text>
+          </View>
+        </View>
+
+        {compact ? (
+          <View style={styles.mobileActions}>
+            <Button
+              mode="contained"
+              icon="account-plus-outline"
+              style={[styles.button, styles.primaryButton]}
+              contentStyle={styles.buttonContent}
+              onPress={() => router.push(waitlistHref('trader', 'homepage-banner'))}
+            >
+              Create trade profile
+            </Button>
+            <Button
+              mode="outlined"
+              textColor="#FFFFFF"
+              style={[styles.button, styles.secondaryButton]}
+              contentStyle={styles.buttonContent}
+              onPress={() => router.push(waitlistHref('customer', 'homepage-banner'))}
+            >
+              Homeowner launch list
+            </Button>
+          </View>
+        ) : (
+          <View style={styles.actions}>
+            <Link href={waitlistHref('trader', 'homepage-banner')} asChild>
+              <Button
+                mode="contained"
+                icon="account-plus-outline"
+                style={[styles.button, styles.primaryButton]}
+                contentStyle={styles.buttonContent}
+              >
+                Create trade profile
+              </Button>
+            </Link>
+            <Link href={waitlistHref('customer', 'homepage-banner')} asChild>
+              <Button
+                mode="outlined"
+                textColor="#FFFFFF"
+                style={[styles.button, styles.secondaryButton]}
+                contentStyle={styles.buttonContent}
+              >
+                Homeowner launch list
+              </Button>
+            </Link>
+          </View>
+        )}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(16, 24, 32, 0.64)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 24,
-  },
-  popup: {
-    width: '92%',
-    maxWidth: 780,
-    maxHeight: '88%',
-    backgroundColor: colors.primarySoft,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: '#E8B98F',
-    shadowColor: '#000000',
-    shadowOpacity: 0.28,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 14,
-    overflow: 'hidden',
-  },
-  popupCompact: {
+  shell: {
     width: '100%',
-    maxWidth: 520,
-    maxHeight: '90%',
-    borderRadius: 18,
+    backgroundColor: colors.charcoal,
+    borderBottomWidth: 1,
+    borderBottomColor: '#394149',
   },
-  scroll: { width: '100%' },
+  topAccent: {
+    width: '100%',
+    height: 4,
+    backgroundColor: colors.primary,
+  },
   inner: {
-    position: 'relative',
+    width: '100%',
+    maxWidth: 1240,
+    alignSelf: 'center',
     paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xl,
-    paddingRight: 62,
-    gap: spacing.lg,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 24,
   },
   innerCompact: {
     paddingHorizontal: 16,
-    paddingVertical: 16,
-    paddingRight: 48,
+    paddingVertical: 14,
+    flexDirection: 'column',
+    alignItems: 'stretch',
     gap: 12,
   },
-  closeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    zIndex: 3,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.78)',
-    borderWidth: 1,
-    borderColor: '#E9C3A5',
-    alignItems: 'center',
-    justifyContent: 'center',
+  copy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 10,
   },
-  closeText: { color: colors.charcoalSoft, fontSize: 28, lineHeight: 30, fontWeight: '600' },
-  copy: { width: '100%', gap: 10 },
-  copyCompact: { gap: 8 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  chipsCompact: { gap: 5 },
-  chip: { backgroundColor: '#FFF8F2', borderWidth: 1, borderColor: '#F0C9AA' },
-  chipCompact: { minHeight: 27 },
-  chipText: { color: colors.charcoal, fontSize: 12, fontWeight: '800' },
-  chipTextCompact: { fontSize: 10.5, lineHeight: 13 },
-  title: { color: colors.charcoal, fontWeight: '900', fontSize: 29, lineHeight: 34, letterSpacing: -0.4 },
-  titleCompact: { fontSize: 22, lineHeight: 26, letterSpacing: -0.25 },
-  body: { color: colors.text, lineHeight: 22, fontSize: 14.5 },
-  bodyCompact: { lineHeight: 19, fontSize: 13 },
-  offerBox: { backgroundColor: 'rgba(255,255,255,0.78)', borderWidth: 1, borderColor: '#EDC6A7', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 11 },
-  offerBoxCompact: { borderRadius: 11, paddingHorizontal: 10, paddingVertical: 9 },
-  offer: { color: colors.charcoalSoft, lineHeight: 20, fontSize: 14 },
-  offerCompact: { lineHeight: 17, fontSize: 12.5 },
-  strong: { color: colors.charcoal, fontWeight: '900' },
-  actions: { width: '100%', maxWidth: 520, gap: spacing.sm, alignSelf: 'center', alignItems: 'stretch' },
-  actionsCompact: { minWidth: 0, maxWidth: '100%', flexDirection: 'column', flexWrap: 'nowrap', gap: 8 },
-  actionRow: { width: '100%', flexDirection: 'row', alignItems: 'stretch', gap: 8 },
-  actionButton: { width: '100%', borderRadius: radii.md },
-  halfAction: { flex: 1, width: 'auto', minWidth: 0 },
-  actionContent: { minHeight: controlHeights.standard, paddingHorizontal: 8 },
+  copyCompact: {
+    width: '100%',
+    gap: 9,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  metaRowCompact: {
+    gap: 6,
+  },
+  livePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    backgroundColor: '#303841',
+    borderWidth: 1,
+    borderColor: '#4A535D',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  liveDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+  },
+  liveText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  offerPill: {
+    backgroundColor: '#FFF0E5',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  offerPillText: {
+    color: colors.primaryDark,
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: '900',
+    letterSpacing: 0.7,
+  },
+  textBlock: {
+    gap: 4,
+  },
+  title: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    lineHeight: 25,
+    fontWeight: '900',
+    letterSpacing: -0.25,
+  },
+  titleCompact: {
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  body: {
+    color: '#D7DBDF',
+    fontSize: 13.5,
+    lineHeight: 19,
+    maxWidth: 760,
+  },
+  bodyCompact: {
+    fontSize: 12.5,
+    lineHeight: 18,
+  },
+  actions: {
+    width: 245,
+    flexShrink: 0,
+    gap: 8,
+  },
+  mobileActions: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  button: {
+    borderRadius: radii.md,
+  },
+  primaryButton: {
+    backgroundColor: colors.primary,
+    flex: 1,
+  },
+  secondaryButton: {
+    borderColor: '#68717A',
+    flex: 1,
+  },
+  buttonContent: {
+    minHeight: controlHeights.standard,
+    paddingHorizontal: 8,
+  },
 });
