@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 import { Button, Chip, ProgressBar, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
+import { NextActionCard } from '@/components/NextActionCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors, controlHeights, spacing } from '@/constants/theme';
@@ -91,7 +92,47 @@ export default function TraderDashboard() {
   const payoutsReady = Boolean(profile.stripeAccountId && profile.stripePayoutsEnabled);
   const serviceArea = profile.locationLabel || profile.postcode || 'your saved service area';
 
+  const nextAction = !marketplaceEnabled
+    ? {
+        title: 'Get launch-ready',
+        body: 'Review your public profile, portfolio and service area now so homeowners see a complete business when the marketplace opens.',
+        label: 'Review profile',
+        href: '/trader/profile' as Href,
+      }
+    : !payoutsReady
+      ? {
+          title: 'Finish payout setup',
+          body: 'Complete your Stripe payout setup before you need to receive protected BuildPay funds.',
+          label: 'Check payouts',
+          href: '/trader/subscription' as Href,
+        }
+      : newLeads[0]
+        ? {
+            title: `Review ${newLeads[0].title}`,
+            body: 'A suitable opportunity is waiting. Open it while the details are current and decide whether it fits your work.',
+            label: 'View opportunity',
+            href: '/trader/job-board' as Href,
+          }
+        : activeJobs[0]
+          ? {
+              title: `Continue ${activeJobs[0].title}`,
+              body: 'Keep the next stage, messages, changes and project record moving in one place.',
+              label: 'Continue job',
+              href: `/trader/jobs/${activeJobs[0].id}` as Href,
+            }
+          : {
+              title: 'Keep your profile current',
+              body: 'Fresh portfolio work, services and availability make it easier for suitable homeowners to understand what you actually do.',
+              label: 'Manage profile',
+              href: '/trader/profile' as Href,
+            };
+
   return <Screen title={profile.businessName} subtitle={`${profile.tradeCategory}${profile.locationLabel ? ` · ${profile.locationLabel}` : ''}`}>
+    <NextActionCard
+      title={nextAction.title}
+      body={nextAction.body}
+      action={<Button mode="contained" icon="arrow-right" onPress={() => router.push(nextAction.href)}>{nextAction.label}</Button>}
+    />
     {!marketplaceEnabled ? <AppCard style={styles.prelaunchCard}>
       <View style={styles.row}>
         <View style={styles.flex}>
@@ -119,7 +160,7 @@ export default function TraderDashboard() {
           <Text style={styles.membershipEyebrow}>CURRENT MEMBERSHIP</Text>
           <Text variant="titleLarge" style={styles.cardTitle}>{plan.name}</Text>
           <Text style={styles.muted}>{!marketplaceEnabled && profile.subscriptionTier !== 'free'
-            ? `${plan.name} is reserved for launch. Your launch offer starts when BuildPair opens, so pre-launch setup does not burn any paid or free membership time.`
+            ? `${plan.name} is reserved for launch. Your launch offer starts when BuildPair opens, so setting up early does not use any paid or free plan time.`
             : profile.subscriptionTier === 'free'
               ? 'Your Starter profile can be shared externally and you can browse marketplace jobs. Upgrade to Core, Plus or Pro to appear in BuildPair search after launch and use marketplace opportunities.'
               : `${Math.max(0, offerLimit - offersUsed)} of ${offerLimit} marketplace offers remaining this month. An open-marketplace opportunity is counted when you first engage with a job. Core direct requests share its five-opportunity allowance; Plus and Pro direct requests do not use their open-market allowance.`}</Text>
