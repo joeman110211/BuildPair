@@ -3,23 +3,37 @@ import { PublicInfoPage } from '@/components/PublicInfoPage';
 export default function PaymentsPage() {
   return <PublicInfoPage
     eyebrow="Payments"
-    title="How BuildPay and direct payments work"
-    intro="After a structured BuildPair quote is accepted, the parties can use BuildPay for supported Stripe-processed staged payments or mutually agree to arrange payment outside BuildPair. The project record can remain in BuildPair either way, but the payment protections are deliberately different."
-    updated="13 September 2026"
+    title="Pay your way."
+    intro="Use BuildPay for protected staged payments, or agree to pay directly. Either route can stay connected to the same BuildPair project so the quote, messages and agreed changes remain easy to follow."
     sections={[
-      { title: '1. Site visits and in-person quotes are allowed', body: 'BuildPair does not require every job to be priced remotely. A tradesperson can arrange a site visit through the job when inspection is needed. Once a confirmed visit has taken place it is marked complete, and the tradesperson sends the resulting structured quote through BuildPair so scope, exclusions, timing, price and payment stages are recorded clearly.' },
-      { title: '2. Agree the quote before money moves', body: 'The tradesperson sends a structured BuildPair quote showing scope, exclusions, labour/service, materials, VAT where applicable, timing and a payment schedule. The homeowner can request different service-stage splits before accepting, but the quoted total and materials amount cannot be silently changed. Any homeowner-edited stage plan must be accepted by the tradesperson.' },
-      { title: '3. BuildPay can be requested by either side', body: 'A tradesperson can include BuildPay in the quote, or a homeowner can request BuildPay protection. The party who asks to add BuildPay carries its cost: if the tradesperson requests it, the tradesperson absorbs the BuildPay cost from controlled service payouts; if the homeowner introduces it, the homeowner pays the separately disclosed BuildPay service fee. The applicable total and responsibility are shown before commitment.' },
-      { title: '4. Direct payment requires both parties to agree', body: 'Either the homeowner or tradesperson can propose paying outside BuildPair. The other person must explicitly agree before the project switches to direct payment. This allows bank transfer, cash or another privately agreed method without pretending BuildPay protection applies. BuildPair does not force use of BuildPay merely because the introduction, site visit or quote happened on the platform.' },
-      { title: '5. Opening BuildPay payment: materials plus first protected stage', body: 'Where a staged BuildPay schedule begins with quoted materials followed by a protected work stage, the homeowner funds both contract amounts together in one opening card payment. After Stripe confirms the payment, the tradesperson acknowledges it in BuildPair. Only the exact materials allocation is transferred at that point so procurement can begin. The first work-stage allocation remains controlled and is not transferred merely because the opening card payment succeeded.' },
-      { title: '6. Deposits, progress stages and final payments are controlled', body: 'A protected BuildPay deposit, progress stage or final stage is transferred only after the recorded completion point is reached and the release workflow is approved. Later stages remain locked until earlier stages progress. When one stage is released, the next unpaid stage becomes the next funding action rather than BuildPair silently charging the homeowner again.' },
-      { title: '7. Releases create real Stripe transfers', body: 'When an eligible BuildPay materials allocation or approved work stage is released, BuildPair instructs Stripe to create a transfer to the tradesperson’s connected Stripe account. BuildPair requires the tradesperson’s Stripe payout setup to be completed before protected payment can proceed. Bank payout timing from the connected Stripe account is then subject to the account’s Stripe payout settings and Stripe availability rules.' },
-      { title: '8. Issues before release', body: 'If the homeowner raises an issue before a protected work-stage transfer, that release is paused. The tradesperson can respond in the project record. The homeowner can resolve the issue and return the stage to release review, request a refund where available, or escalate the record for BuildPair admin attention. BuildPair admin review helps manage the platform workflow and evidence record; it is not an inspection of workmanship or an automatic legal adjudication.' },
-      { title: '9. Refunds and payment disputes', body: 'An unreleased BuildPay stage can be refunded where the workflow and payment position allow it, including where both parties agree a refund. Stripe, card-network, fraud, refund and chargeback procedures can also apply separately. Once money has already been transferred to a tradesperson, BuildPair cannot promise that the transfer can simply be reversed.' },
-      { title: '10. BuildPay fees are kept separate from the work price', body: 'BuildPair’s platform fee is based on labour/service value rather than quoted materials or VAT. The homeowner-facing BuildPay charge, where applicable, is presented as a separately disclosed BuildPay service fee rather than as a card surcharge. The accepted work price, BuildPay fee responsibility and all-in homeowner amount are recorded separately so a tradesperson is not accidentally charged twice.' },
-      { title: '11. Direct-payment records are declarations, not payment processing', body: 'When both parties have agreed direct payment, BuildPair can optionally record that the homeowner says a payment was sent and the tradesperson says it was received. A stage is recorded as directly paid only after both sides confirm their part. Those confirmations are user declarations. BuildPair did not receive, hold, protect, release, refund or independently verify the money.' },
-      { title: '12. What changes with direct payment', body: 'BuildPay stage protection, Stripe transaction records and BuildPair release controls do not apply to money paid directly. The tradesperson remains responsible for the work and both parties remain responsible for their own agreement and payment conduct. Choosing direct payment does not remove statutory consumer rights, contractual rights or any liability that cannot lawfully be excluded.' },
-      { title: '13. BuildPair is not an escrow or workmanship guarantor', body: 'BuildPay is a payment workflow, not a legal escrow account. BuildPair does not attend the property, certify workmanship or decide whether building work complies with a contract, regulation or professional standard. The recorded quote, messages, variations, stage actions and payment events are intended to make the project clearer and easier to evidence.' },
+      {
+        title: 'Agree the job first',
+        body: 'The tradesperson sends a structured BuildPair quote covering the scope, exclusions, labour or service, materials, VAT where applicable, timing and the proposed payment schedule. A site visit can happen first when the work needs inspecting. Money should only move after the quote and payment route are agreed.',
+      },
+      {
+        title: 'Choose BuildPay or direct payment',
+        body: 'BuildPay is optional. Either side can request it, or both sides can agree to pay privately by bank transfer, cash or another method. BuildPair records which route was agreed so neither side should have to guess later.',
+      },
+      {
+        title: 'The requester carries the BuildPay cost',
+        body: 'If the tradesperson asks to use BuildPay, the BuildPay cost is absorbed from controlled service payouts. If the homeowner adds BuildPay, the separately disclosed BuildPay service fee is added to the homeowner total. The work price and BuildPay fee responsibility stay visible as separate figures.',
+      },
+      {
+        title: 'Protected stages move in order',
+        body: 'Where the schedule starts with materials and a protected work stage, the opening card payment can fund both together. After the tradesperson acknowledges the payment, only the quoted materials allocation is released. Work-stage money remains controlled until the recorded completion point and release workflow are reached.',
+      },
+      {
+        title: 'Issues can pause a release',
+        body: 'A homeowner can raise an issue before a protected work-stage transfer. The release is then paused while the issue is recorded and the tradesperson can respond. Where the payment position allows it, the parties can resolve the issue, return the stage to release review, agree a refund or escalate the record for BuildPair admin attention.',
+      },
+      {
+        title: 'Direct payments stay direct',
+        body: 'When both sides choose direct payment, BuildPair can record that a payment was said to be sent and received, but BuildPair did not receive, hold, protect, release, refund or independently verify that money. BuildPay protection and Stripe transaction controls do not apply to privately paid funds.',
+      },
+      {
+        title: 'What BuildPair does and does not do',
+        body: 'BuildPay is a payment workflow, not legal escrow and not a workmanship guarantee. BuildPair does not attend the property or certify the standard of building work. The purpose of the project record is to keep the quote, messages, variations, stages and payment events clearer for both sides. Stripe, card-network, refund and chargeback rules can also apply separately.',
+      },
     ]}
   />;
 }
