@@ -115,7 +115,7 @@ export default function AdminWaitlist() {
 
   if (!data && !error) return <LoadingScreen label="Loading launch list…" />;
 
-  return <Screen title="Launch waitlist" subtitle="Pre-launch interest, contact preferences, early-access controls, Founding Trades candidates and real-world testers.">
+  return <Screen title="Launch waitlist" subtitle="Pre-launch interest, contact preferences, early-access controls, launch trades and real-world testers.">
     <View style={styles.stats}>
       <Stat label="Total" value={data?.summary.total ?? 0} />
       <Stat label="Trades" value={data?.summary.traders ?? 0} />
@@ -151,8 +151,8 @@ export default function AdminWaitlist() {
     </AppCard>
 
     <AppCard style={styles.offerCard}>
-      <Text variant="titleMedium" style={styles.heading}>Founding Trades offer</Text>
-      <Text style={styles.body}>The reward is not based simply on being one of the first 50 names here. It goes to the first 50 eligible waiting-list tradespeople who complete BuildPair registration within 24 hours of the 1 October launch. Early-access testing does not remove their original waitlist position.</Text>
+      <Text variant="titleMedium" style={styles.heading}>Launch Pro offer</Text>
+      <Text style={styles.body}>Eligible tradespeople who join before launch and complete their profile receive 3 months of BuildPair Pro free from marketplace launch. Early-access setup does not use any of that promotional time.</Text>
     </AppCard>
 
     <Searchbar placeholder="Search name, email, mobile, postcode or trade" value={query} onChangeText={setQuery} />
