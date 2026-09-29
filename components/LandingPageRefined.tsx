@@ -106,7 +106,7 @@ export default function LandingPageRefined() {
             <Text style={[styles.audienceEyebrow, styles.tradeAudienceEyebrow]}>FOR TRADESPEOPLE</Text>
             <Text variant="headlineSmall" style={styles.cardTitle}>{FAIR_FOR_BOTH.tradeTitle}</Text>
             <Text style={styles.cardText}>{FAIR_FOR_BOTH.tradeBody}</Text>
-            {mobile ? <View style={styles.audienceActions}><Button mode="contained" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-trade-card'))}>Create trade profile</Button><View style={styles.mobileActionRow}><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/for-tradespeople')}>Trade features</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/pricing')}>Membership</Button></View></View> : <View style={styles.audienceActions}><Link href={waitlistHref('trader', 'homepage-trade-card')} asChild><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent}>Create my trade profile</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>See trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>View membership</Button></Link></View>}
+            {mobile ? <View style={styles.audienceActions}><Button mode="contained" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-trade-card'))}>Create trade profile</Button><View style={styles.mobileActionRow}><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/for-tradespeople')}>Trade features</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/pricing')}>Pricing</Button></View></View> : <View style={styles.audienceActions}><Link href={waitlistHref('trader', 'homepage-trade-card')} asChild><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent}>Create my trade profile</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>See trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>View pricing</Button></Link></View>}
           </View>
         </View>
         <View style={styles.fairBridge}><Text style={styles.fairBridgeEyebrow}>BUILDPAIR</Text><Text variant="titleLarge" style={styles.fairBridgeTitle}>{FAIR_FOR_BOTH.bridge}</Text><Text style={styles.fairBridgeText}>Clearer decisions for homeowners. Fairer access and better tools for tradespeople.</Text></View>
@@ -197,38 +197,8 @@ export default function LandingPageRefined() {
           })}
         </View>
       </View>
-    </View>
+    </View></Reveal>
 
-    <View style={styles.updatesBand}>
-      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow="BuildPair updates" title="What’s live now, and what’s being built next." body="BuildPair is being developed around the whole job, including work tradespeople find outside the marketplace. The roadmap stays visible so it is clear what is available now and what is still being built." />
-        <View style={styles.updateColumns}>
-          <View style={styles.updatePanel}>
-            <Chip icon="check-circle-outline">Recently added</Chip>
-            {[
-              'Main categories with deliberate subcategory/service selection',
-              'Quote customers from outside the BuildPair marketplace',
-              'Quote revisions and accepted outside jobs becoming managed projects',
-              'Project workspace for progress, materials, expenses, snagging, evidence and handover',
-              'Customer book plus a working calendar for Plus and Pro',
-              'Tiered public availability up to six months on Pro',
-              'Project+ AI planning and room-concept tools',
-            ].map((item) => <Text key={item} style={styles.updateItem}>✓ {item}</Text>)}
-          </View>
-          <View style={[styles.updatePanel, styles.comingPanel]}>
-            <Chip icon="clock-outline">Coming soon</Chip>
-            {[
-              'Smarter quote and invoice reminders',
-              'Google/Outlook calendar sync and richer document packs',
-              'Quote alternatives, warranty/service follow-up and aftercare reminders',
-              'Optional opportunity, team, AI/design and SMS add-ons',
-              'Clearly labelled promoted visibility without pay-to-win trust',
-            ].map((item) => <Text key={item} style={styles.updateItem}>• {item}</Text>)}
-          </View>
-        </View>
-        <Link href="/(public)/updates" asChild><Button mode="outlined" icon="update" style={styles.buttonBase} contentStyle={styles.buttonContent}>See product updates</Button></Link>
-      </View>
-    </View>
 
     <PublicFooter />
   </ScrollView>;
