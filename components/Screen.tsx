@@ -11,9 +11,10 @@ type ScreenProps = PropsWithChildren<{
   scroll?: boolean;
   backHref?: Href;
   footer?: ReactNode;
+  stickyFooter?: boolean;
 }>;
 
-export function Screen({ children, title, subtitle, scroll = true, backHref, footer }: ScreenProps) {
+export function Screen({ children, title, subtitle, scroll = true, backHref, footer, stickyFooter = false }: ScreenProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { width } = useWindowDimensions();
@@ -28,7 +29,7 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
           : undefined
     : undefined);
   const showBack = canGoBack || Boolean(sectionBackHref);
-  const footerInScroll = Boolean(footer && scroll && width < 900);
+  const footerInScroll = Boolean(footer && scroll && width < 900 && !stickyFooter);
   const compact = width < 720;
   const contentPadding = width < 520 ? styles.contentMobile : width < 900 ? styles.contentTablet : styles.contentDesktop;
 
@@ -66,7 +67,7 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator
     >{content}</ScrollView> : <View style={styles.staticBody}>{content}</View>}
-    {footer && !footerInScroll ? <View style={styles.footerShell}><View style={styles.footerContent}>{footer}</View></View> : null}
+    {footer && !footerInScroll ? <View style={[styles.footerShell, compact && styles.footerShellCompact]}><View style={styles.footerContent}>{footer}</View></View> : null}
   </SafeAreaView>;
 }
 
@@ -96,6 +97,7 @@ const styles = StyleSheet.create({
   subtitle: { color: colors.muted, lineHeight: 24, textAlign: 'center' },
   inlineFooter: { width: '100%', borderWidth: 1, borderColor: '#E8E1DA', backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, paddingHorizontal: spacing.md, paddingVertical: spacing.md, marginTop: spacing.xs, marginBottom: 78, ...shadows.subtle },
   footerShell: { width: '100%', flexShrink: 0, borderTopWidth: 1, borderTopColor: '#E8E1DA', backgroundColor: 'rgba(255,255,255,0.985)', paddingHorizontal: spacing.xxl, paddingVertical: spacing.md, ...shadows.subtle },
+  footerShellCompact: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
   footerContent: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center' },
   loading: { flex: 1, minHeight: 420, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
   loadingCard: { minWidth: 220, maxWidth: 420, alignItems: 'center', gap: spacing.md, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: '#E8E1DA', borderRadius: radii.xl, paddingHorizontal: spacing.xxl, paddingVertical: spacing.xxl, ...shadows.subtle },
