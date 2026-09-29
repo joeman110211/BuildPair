@@ -10,7 +10,7 @@ const plans = [
     name: 'Starter',
     price: '£0',
     suffix: '/ month',
-    eyebrow: 'Start free',
+    eyebrow: 'Get established',
     summary: 'Get your business onto BuildPair, show homeowners what you do and browse local marketplace jobs with no monthly fee.',
     compactFeatures: [
       '2 trade categories + the services you actually offer',
@@ -32,7 +32,7 @@ const plans = [
     name: 'BuildPair Core',
     price: '£9.99',
     suffix: '/ month',
-    eyebrow: 'Simple tools + occasional work',
+    eyebrow: 'Win work',
     summary: 'For tradespeople who want a small amount of marketplace access plus the everyday tools to quote and manage customers they already have.',
     compactFeatures: [
       '5 marketplace opportunities each month',
@@ -57,7 +57,7 @@ const plans = [
     name: 'BuildPair Plus',
     price: '£19.99',
     suffix: '/ month',
-    eyebrow: 'Most popular',
+    eyebrow: 'Run more jobs',
     summary: 'Built for active tradespeople who want more marketplace opportunities, stronger quoting tools and one place to manage both BuildPair and existing customers.',
     compactFeatures: [
       '15 marketplace offers + unlimited direct homeowner requests',
@@ -85,7 +85,7 @@ const plans = [
     name: 'BuildPair Pro',
     price: '£29.99',
     suffix: '/ month',
-    eyebrow: 'For established trades',
+    eyebrow: 'Run your business',
     summary: 'For established trades and growing businesses that want the highest marketplace capacity, deeper project controls and BuildPair’s most advanced business tools.',
     compactFeatures: [
       '35 marketplace offers + advanced business analytics',
@@ -141,7 +141,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
         </View>;
       })}
     </View>
-    {!REGISTRATION_OPEN ? <Text style={styles.launchNote}>Trade profile setup is open now. Marketplace activity and paid plans open at launch. {LAUNCH_OFFER.short}</Text> : null}
+    {!REGISTRATION_OPEN ? <Text style={styles.launchNote}>Create your trade profile now. Marketplace activity and paid plans open at launch. {LAUNCH_OFFER.short}</Text> : null}
     <Text style={styles.note}>Category limits count broad trade categories, not every service inside them. Core direct homeowner requests use the same five-opportunity monthly allowance. On Plus and Pro, direct homeowner requests do not use the open-marketplace allowance. Google reviews remain clearly labelled as Google reviews and only appear after the business listing connection is approved.</Text>
   </View>;
 }
