@@ -5,10 +5,11 @@ import { StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
+import { LAUNCH_OFFER, SITE_LANGUAGE } from '@/constants/site-language';
 import { colors } from '@/constants/theme';
 import { modeSetupHref, signInHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
-import { FOUNDING_PRO_MONTHS, LAUNCH_DATE_LABEL, TRADER_PRELAUNCH_REGISTRATION_OPEN } from '@/lib/launch';
+import { FOUNDING_PRO_MONTHS, TRADER_PRELAUNCH_REGISTRATION_OPEN } from '@/lib/launch';
 import { firstParam } from '@/lib/search-params';
 
 
@@ -87,7 +88,7 @@ export default function FoundingTradeSignup() {
   if (needsEmailVerification) {
     return <Screen title="Verify your trade account" subtitle={`We sent a 6-digit code to ${signUp.emailAddress ?? normalisedEmail}.`}>
       <AppCard style={styles.heroCard}>
-        <Chip icon="hammer-wrench">Surrey Founding Trade</Chip>
+        <Chip icon="hammer-wrench">Launch member</Chip>
         <Text variant="titleLarge" style={styles.heading}>Your profile is nearly ready to start.</Text>
         <Text style={styles.body}>Verify your email, then BuildPair will take you straight into your real tradesperson profile setup.</Text>
       </AppCard>
@@ -98,13 +99,13 @@ export default function FoundingTradeSignup() {
     </Screen>;
   }
 
-  return <Screen title="Create your BuildPair trade profile" subtitle={`Pre-launch onboarding is open now. The marketplace launches ${LAUNCH_DATE_LABEL}.`}>
+  return <Screen title="Create your BuildPair trade profile" subtitle="Profile setup is open now. BuildPair is launching soon.">
     <AppCard style={styles.heroCard}>
-      <Chip icon="rocket-launch-outline">Founding 50 · Surrey</Chip>
-      <Text variant="headlineSmall" style={styles.heading}>Get completely launch-ready now.</Text>
+      <Chip icon="rocket-launch-outline">{SITE_LANGUAGE.launchingSoon}</Chip>
+      <Text variant="headlineSmall" style={styles.heading}>Join free. Get launch-ready.</Text>
       <Text style={styles.body}>Create your real BuildPair account, complete your business profile, service area, portfolio, credentials and Google review connection before launch.</Text>
       <Text style={styles.body}><Text style={styles.strong}>Marketplace activity stays locked until launch.</Text> No homeowner jobs, quotes, messaging, BuildPay or paid subscription charges are available during pre-launch.</Text>
-      <Text style={styles.body}><Text style={styles.strong}>Your {FOUNDING_PRO_MONTHS} months of BuildPair Pro starts at launch, not today.</Text> Setting up early does not waste a day of the founding offer.</Text>
+      <Text style={styles.body}><Text style={styles.strong}>{LAUNCH_OFFER.short}</Text> Setting up early does not use any of your free Pro time.</Text>
     </AppCard>
 
     <AppCard>
@@ -114,7 +115,7 @@ export default function FoundingTradeSignup() {
       <Text variant="bodySmall" style={styles.hint}>Use at least 8 characters. We’ll verify the email before opening profile setup.</Text>
       <View nativeID="clerk-captcha" />
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
-      <Button mode="contained" icon="hammer-wrench" loading={busy} disabled={busy || !canCreate || !TRADER_PRELAUNCH_REGISTRATION_OPEN} onPress={() => void startSignup()} contentStyle={styles.button}>Create my launch-ready trade profile</Button>
+      <Button mode="contained" icon="hammer-wrench" loading={busy} disabled={busy || !canCreate || !TRADER_PRELAUNCH_REGISTRATION_OPEN} onPress={() => void startSignup()} contentStyle={styles.button}>Create profile</Button>
       <Link href={signInHref('trader')} asChild><Button mode="text">Already have an account? Sign in</Button></Link>
     </AppCard>
   </Screen>;
