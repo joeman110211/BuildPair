@@ -4,11 +4,12 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Text, TextInput } from 'react-native-paper';
 import { FeaturedTraderHero } from '@/components/FeaturedTraderHero';
+import { MotionReveal } from '@/components/MotionReveal';
 import { PrelaunchBanner } from '@/components/PrelaunchBanner';
 import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
 import { TRADE_CATEGORIES } from '@/constants/options';
-import { colors, controlHeights, publicResponsiveMetrics, radii } from '@/constants/theme';
+import { colors, controlHeights, publicResponsiveMetrics, radii, shadows } from '@/constants/theme';
 import { waitlistHref } from '@/lib/launch';
 
 const POPULAR_TRADES = ['Tiling', 'Plumbing', 'Electrical', 'Building & Extensions', 'Roofing & Roofline', 'Painting & Decorating', 'Kitchens', 'Bathrooms'] as const;
@@ -25,11 +26,13 @@ const FAQS = [
 function SectionHeading({ eyebrow, title, body }: { eyebrow?: string; title: string; body?: string }) {
   const { width } = useWindowDimensions();
   const metrics = publicResponsiveMetrics(width);
-  return <View style={styles.sectionHeading}>
-    {eyebrow ? <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>{eyebrow}</Text> : null}
-    <Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>{title}</Text>
-    {body ? <Text style={styles.sectionBody}>{body}</Text> : null}
-  </View>;
+  return <MotionReveal>
+    <View style={styles.sectionHeading}>
+      {eyebrow ? <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>{eyebrow}</Text> : null}
+      <Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>{title}</Text>
+      {body ? <Text style={styles.sectionBody}>{body}</Text> : null}
+    </View>
+  </MotionReveal>;
 }
 
 export default function LandingPageRefined() {
@@ -84,7 +87,7 @@ export default function LandingPageRefined() {
       <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
         <SectionHeading eyebrow="Find a trade" title="Search by the job, not the jargon." body="Choose a trade when you know what you need, or describe the work and let BuildPair guide you to the right starting point." />
         <View style={styles.tradeGrid}>
-          {POPULAR_TRADES.map((trade) => <Pressable key={trade} style={styles.tradeCard} onPress={() => goTrade(trade)} accessibilityRole="button"><Text style={styles.tradeName}>{trade}</Text><Text style={styles.tradeArrow}>→</Text></Pressable>)}
+          {POPULAR_TRADES.map((trade) => <Pressable key={trade} style={({ pressed }) => [styles.tradeCard, pressed && styles.cardPressed]} onPress={() => goTrade(trade)} accessibilityRole="button"><Text style={styles.tradeName}>{trade}</Text><Text style={styles.tradeArrow}>→</Text></Pressable>)}
         </View>
         <Link href="/(public)/directory" asChild><Button mode="text" style={styles.buttonBase} contentStyle={styles.buttonContent}>Browse all {TRADE_CATEGORIES.length} trade categories →</Button></Link>
       </View>
@@ -184,7 +187,7 @@ export default function LandingPageRefined() {
         <View style={styles.faqList}>
           {FAQS.map(([question, answer], index) => {
             const open = openFaq === index;
-            return <Pressable key={question} style={styles.faqCard} onPress={() => setOpenFaq(open ? null : index)} accessibilityRole="button" accessibilityState={{ expanded: open }}>
+            return <Pressable key={question} style={({ pressed }) => [styles.faqCard, pressed && styles.cardPressed]} onPress={() => setOpenFaq(open ? null : index)} accessibilityRole="button" accessibilityState={{ expanded: open }}>
               <View style={styles.faqRow}><Text variant="titleMedium" style={styles.cardTitle}>{question}</Text><Text style={styles.faqToggle}>{open ? '−' : '+'}</Text></View>
               {open ? <Text style={styles.cardText}>{answer}</Text> : null}
             </Pressable>;
@@ -244,33 +247,33 @@ const styles = StyleSheet.create({
   sectionBody: { color: colors.muted, lineHeight: 23, textAlign: 'center', maxWidth: 720 },
   audienceBand: { backgroundColor: '#FBF8F5' },
   audienceGrid: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  audienceCard: { flexGrow: 1, flexShrink: 1, flexBasis: 430, minWidth: 0, backgroundColor: colors.surfaceRaised, borderRadius: 22, padding: 20, gap: 10, borderWidth: 1, borderColor: colors.border },
+  audienceCard: { flexGrow: 1, flexShrink: 1, flexBasis: 430, minWidth: 0, backgroundColor: colors.surfaceRaised, borderRadius: 22, padding: 20, gap: 10, borderWidth: 1, borderColor: '#EEE8E1', ...shadows.subtle },
   homeownerCard: { borderTopWidth: 4, borderTopColor: colors.primary },
   tradeAudienceCard: { borderTopWidth: 4, borderTopColor: colors.navy },
   audienceEyebrow: { color: colors.primary, fontSize: 12.3, lineHeight: 16, fontWeight: '900', letterSpacing: 1.1 },
   tradeAudienceEyebrow: { color: colors.navy },
   audienceActions: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginTop: 6 },
   routeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  routeCard: { flexGrow: 1, flexShrink: 1, flexBasis: 240, minWidth: 0, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderTopWidth: 3, borderTopColor: colors.primary, borderRadius: 18, padding: 17, gap: 7 },
+  routeCard: { flexGrow: 1, flexShrink: 1, flexBasis: 240, minWidth: 0, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: '#EEE8E1', borderTopWidth: 3, borderTopColor: colors.primary, borderRadius: 18, padding: 17, gap: 7, ...shadows.subtle },
   routeNumber: { color: colors.primary, fontWeight: '900', letterSpacing: 1 },
   cardTitle: { minWidth: 0, maxWidth: '100%', color: colors.charcoal, fontWeight: '900' },
   cardText: { minWidth: 0, maxWidth: '100%', color: colors.muted, lineHeight: 22 },
   tradeBand: { backgroundColor: colors.surfaceSoft },
   tradeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  tradeCard: { flexGrow: 1, flexShrink: 1, flexBasis: 230, minWidth: 0, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  tradeCard: { flexGrow: 1, flexShrink: 1, flexBasis: 230, minWidth: 0, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: '#EEE8E1', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...shadows.subtle },
   tradeName: { flexShrink: 1, minWidth: 0, color: colors.charcoal, fontWeight: '800' },
   tradeArrow: { flexShrink: 0, color: colors.primary, fontWeight: '900' },
   featureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  featureCard: { flexGrow: 1, flexShrink: 1, flexBasis: 250, minWidth: 0, backgroundColor: colors.surfaceRaised, borderRadius: 18, padding: 17, gap: 7, borderWidth: 1, borderColor: colors.border },
+  featureCard: { flexGrow: 1, flexShrink: 1, flexBasis: 250, minWidth: 0, backgroundColor: colors.surfaceRaised, borderRadius: 18, padding: 17, gap: 7, borderWidth: 1, borderColor: '#EEE8E1', ...shadows.subtle },
   paymentBand: { backgroundColor: '#FFF4EA' },
   paymentGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  paymentCard: { flexGrow: 1, flexShrink: 1, flexBasis: 400, minWidth: 0, borderRadius: 20, padding: 20, gap: 10, borderWidth: 1 },
+  paymentCard: { flexGrow: 1, flexShrink: 1, flexBasis: 400, minWidth: 0, borderRadius: 20, padding: 20, gap: 10, borderWidth: 1, ...shadows.subtle },
   protectedCard: { backgroundColor: '#F6FBFA', borderColor: '#CDE2DE' },
   privateCard: { backgroundColor: '#FFFFFF', borderColor: '#E8D7C7' },
   cardChip: { alignSelf: 'flex-start', maxWidth: '100%' },
   trustBand: { backgroundColor: '#F6FBFA' },
   trustGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  trustCard: { flexGrow: 1, flexShrink: 1, flexBasis: 240, minWidth: 0, backgroundColor: '#FFFFFF', borderRadius: 18, padding: 17, gap: 7, borderWidth: 1, borderColor: '#CDE2DE' },
+  trustCard: { flexGrow: 1, flexShrink: 1, flexBasis: 240, minWidth: 0, backgroundColor: '#FFFFFF', borderRadius: 18, padding: 17, gap: 7, borderWidth: 1, borderColor: '#DCEAE7', ...shadows.subtle },
   pricingBand: { backgroundColor: '#FBF8F5' },
   updatesBand: { backgroundColor: '#F6FBFA' },
   updateColumns: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
@@ -279,7 +282,8 @@ const styles = StyleSheet.create({
   updateItem: { color: colors.charcoalSoft, lineHeight: 22 },
   faqBand: { backgroundColor: colors.surfaceSoft },
   faqList: { gap: 9, maxWidth: 900, width: '100%', minWidth: 0, alignSelf: 'center' },
-  faqCard: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 15, gap: 8 },
+  faqCard: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: '#EEE8E1', borderRadius: 16, padding: 15, gap: 8, ...shadows.subtle },
+  cardPressed: { opacity: 0.94, transform: [{ scale: 0.995 }] },
   faqRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   faqToggle: { flexShrink: 0, color: colors.primary, fontSize: 24, fontWeight: '900' },
 });
