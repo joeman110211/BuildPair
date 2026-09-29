@@ -5,11 +5,11 @@ import { Button, Chip, Text } from 'react-native-paper';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { waitlistHref } from '@/lib/launch';
 
-const DISMISSED_KEY = 'buildpair-prelaunch-banner-dismissed';
+const DISMISSED_KEY = 'buildpair-prelaunch-banner-dismissed-session';
 
 function initialDismissedState() {
   try {
-    return typeof localStorage !== 'undefined' && localStorage.getItem(DISMISSED_KEY) === '1';
+    return typeof sessionStorage !== 'undefined' && sessionStorage.getItem(DISMISSED_KEY) === '1';
   } catch {
     return false;
   }
@@ -24,9 +24,9 @@ export function PrelaunchBanner() {
   function dismiss() {
     setDismissed(true);
     try {
-      if (typeof localStorage !== 'undefined') localStorage.setItem(DISMISSED_KEY, '1');
+      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(DISMISSED_KEY, '1');
     } catch {
-      // Dismissing the banner should still work if browser storage is unavailable.
+      // Dismissing the banner should still work if session storage is unavailable.
     }
   }
 
