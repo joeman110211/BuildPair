@@ -3,10 +3,11 @@ import type { Href } from 'expo-router';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, ProgressBar, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
+import { Button, Chip, HelperText, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
 import { AIJobSpecModal } from '@/components/AIJobSpecModal';
 import { AppCard } from '@/components/AppCard';
 import { FormSelect } from '@/components/FormSelect';
+import { FormStepHeader } from '@/components/FormStepHeader';
 import { PhotoUploader } from '@/components/PhotoUploader';
 import { Screen } from '@/components/Screen';
 import { TradeMatchAssistant } from '@/components/TradeMatchAssistant';
@@ -16,7 +17,14 @@ import { apiFetch, errorMessage } from '@/lib/api';
 import { clearDraft, loadDraft, saveDraft } from '@/lib/draft-storage';
 import type { Job } from '@/types';
 
-const STEP_TITLES = ['What do you need?', 'Describe the job', 'Add photos', 'Location & budget', 'Review & post'] as const;
+const STEP_TITLES = ['Trade & property', 'Describe job', 'Photos', 'Location & budget', 'Review'] as const;
+const STEP_HELP = [
+  'Choose the trade and property type.',
+  'Explain what needs doing in plain English.',
+  'Add photos if they help show the job.',
+  'Add the area, timing and budget.',
+  'Check everything before you send it.',
+] as const;
 type Category = (typeof TRADE_CATEGORIES)[number];
 type PropertyType = (typeof PROPERTY_TYPES)[number];
 type Urgency = (typeof URGENCY_OPTIONS)[number];
@@ -229,11 +237,11 @@ export default function NewJobScreen() {
   const submitLabel = traderName ? 'Send request' : isEmergency ? 'Post urgent job' : 'Post job';
   const footer = <View style={styles.actions}>
     {step > 0 ? <Button mode="outlined" contentStyle={styles.button} onPress={() => setStep((value) => value - 1)}>Back</Button> : <Button mode="text" disabled={busy} onPress={() => void discardDraft()}>Clear draft</Button>}
-    {step < 4 ? <Button mode="contained" contentStyle={styles.button} disabled={!stepValid} onPress={() => setStep((value) => value + 1)}>Continue</Button> : <Button mode="contained" icon="send" contentStyle={styles.button} loading={busy} disabled={!stepValid || busy} onPress={submit}>{submitLabel}</Button>}
+    {step < 4 ? <Button mode="contained" contentStyle={styles.button} disabled={!stepValid} onPress={() => setStep((value) => value + 1)}>Next</Button> : <Button mode="contained" icon="send" contentStyle={styles.button} loading={busy} disabled={!stepValid || busy} onPress={submit}>{submitLabel}</Button>}
   </View>;
 
-  return <Screen title={STEP_TITLES[step]} subtitle={traderName ? `Direct quote request for ${traderName}` : 'Add a few clear details so tradespeople can quote accurately.'} footer={footer}>
-    <View style={styles.progressBlock}><View style={styles.progressHeader}><Text style={styles.step}>Step {step + 1} of 5</Text><Text style={styles.muted}>{STEP_TITLES[step]}</Text></View><ProgressBar progress={(step + 1) / 5} color={colors.primary} style={styles.progress} /></View>
+  return <Screen title={STEP_TITLES[step]} subtitle={traderName ? `Request a quote from ${traderName}` : STEP_HELP[step]} footer={footer} stickyFooter>
+    <FormStepHeader current={step + 1} total={5} hint={STEP_HELP[step]} />
     {draftStatus ? <HelperText type="info" visible>{draftStatus}</HelperText> : null}
 
     {selectedProperty ? <AppCard style={styles.directInfo}>
