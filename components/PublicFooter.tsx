@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import { Linking, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Icon, Text } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { colors, layout, radii, spacing } from '@/constants/theme';
 
@@ -72,18 +72,26 @@ export function PublicFooter() {
             <Pressable
               accessibilityRole="link"
               accessibilityLabel="BuildPair on Facebook"
-              style={({ pressed }) => [styles.socialLink, pressed && styles.socialLinkPressed]}
-              onPress={() => void Linking.openURL('https://www.facebook.com/profile.php?id=1350638028128183')}
+              style={({ pressed }) => [styles.socialIconButton, pressed && styles.socialLinkPressed]}
+              onPress={() => void Linking.openURL('https://www.facebook.com/share/1cWVAbDGvm/')}
             >
-              <Text style={styles.socialLinkText}>Facebook</Text>
+              <Icon source="facebook" size={22} color="#FFFFFF" />
             </Pressable>
             <Pressable
               accessibilityRole="link"
               accessibilityLabel="BuildPair on TikTok"
-              style={({ pressed }) => [styles.socialLink, pressed && styles.socialLinkPressed]}
+              style={({ pressed }) => [styles.socialIconButton, pressed && styles.socialLinkPressed]}
               onPress={() => void Linking.openURL('https://www.tiktok.com/@buildpair')}
             >
-              <Text style={styles.socialLinkText}>TikTok</Text>
+              <Icon source="music-note" size={22} color="#FFFFFF" />
+            </Pressable>
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel="BuildPair on Instagram"
+              style={({ pressed }) => [styles.socialIconButton, pressed && styles.socialLinkPressed]}
+              onPress={() => void Linking.openURL('https://www.instagram.com/buildpair_/')}
+            >
+              <Icon source="instagram" size={22} color="#FFFFFF" />
             </Pressable>
           </View>
         </View>
@@ -123,9 +131,8 @@ const styles = StyleSheet.create({
   socialBlock: { gap: spacing.xs, marginTop: spacing.xs },
   socialLabel: { color: colors.secondary, fontSize: 10, fontWeight: '900', letterSpacing: 0.9 },
   socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  socialLink: { borderRadius: radii.pill, backgroundColor: '#343B43', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  socialLinkPressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
-  socialLinkText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' },
+  socialIconButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#343B43', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#4B535B' },
+  socialLinkPressed: { opacity: 0.72, transform: [{ scale: 0.96 }] },
   small: { color: '#B7BDC2', lineHeight: 20, fontSize: 12 },
   smallCompact: { lineHeight: 18, fontSize: 11.5 },
   group: { minWidth: 145, gap: spacing.sm },
