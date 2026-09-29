@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ImageBackground, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Text } from 'react-native-paper';
-import { LatestJobsShowcase } from '@/components/LatestJobsShowcase';
 import { colors } from '@/constants/theme';
 import { apiFetch } from '@/lib/api';
 
@@ -74,7 +73,7 @@ function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
   </Pressable>;
 }
 
-export function FeaturedTraderHero({ wide }: { wide: boolean }) {
+export function FeaturedTraderHero({ wide, onAvailabilityChange }: { wide: boolean; onAvailabilityChange?: (available: boolean) => void }) {
   const { width } = useWindowDimensions();
   const [traders, setTraders] = useState<FeaturedTrader[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -101,6 +100,10 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    if (loaded) onAvailabilityChange?.(traders.length > 0);
+  }, [loaded, onAvailabilityChange, traders.length]);
+
   const pages = chunk(traders, pageSize);
   const visibleActivePage = Math.min(activePage, Math.max(0, pages.length - 1));
 
@@ -111,23 +114,10 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
         <Text style={styles.preloadTitle}>Featured BuildPair profiles.</Text>
         <Text style={styles.preloadText}>Live local trade profiles appear here as they become available. BuildPair loads current directory profiles rather than using placeholder listings.</Text>
       </View>
-      <LatestJobsShowcase wide={wide} />
     </View>;
   }
 
-  if (!traders.length) {
-    return <View style={[styles.wrapper, wide && styles.wrapperWide]}>
-      <ImageBackground source={{ uri: FALLBACK_IMAGE }} style={[styles.emptyState, wide && styles.wrapperWide]} imageStyle={styles.emptyImage}>
-        <View style={styles.emptyShade} />
-        <View style={styles.emptyCopy}>
-          <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
-          <Text style={styles.emptyTitle}>Your business could be featured here.</Text>
-          <Text style={styles.emptyText}>Create your BuildPair trade profile, show homeowners the work you do and you could appear here as the marketplace grows.</Text>
-        </View>
-      </ImageBackground>
-      <LatestJobsShowcase wide={wide} />
-    </View>;
-  }
+  if (!traders.length) return null;
 
   const updatePage = (offsetX: number) => {
     const next = Math.max(0, Math.min(pages.length - 1, Math.round(offsetX / pageWidth)));
@@ -167,7 +157,6 @@ export function FeaturedTraderHero({ wide }: { wide: boolean }) {
       </View>
     </View>
 
-    <LatestJobsShowcase wide={wide} />
   </View>;
 }
 
