@@ -14,7 +14,7 @@ import { apiFetch } from '@/lib/api';
 import { useAuthAvailable } from '@/lib/auth-availability';
 import type { UserRole } from '@/types';
 
-const QUICK_NAV = PUBLIC_NAV_ITEMS.slice(0, 4);
+const QUICK_NAV = PUBLIC_NAV_ITEMS.slice(0, 5);
 
 function HeaderBrand({ compact = false }: { compact?: boolean }) {
   return <Link href="/" asChild><Pressable style={styles.brandPressable} accessibilityLabel="BuildPair home"><BuildPairLogo compact={compact} /></Pressable></Link>;

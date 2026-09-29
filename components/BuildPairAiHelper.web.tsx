@@ -275,7 +275,7 @@ export function BuildPairAiHelper() {
           </View>
         </View>
       ) : (
-        <Pressable style={styles.launcher} onPress={openHelper} accessibilityRole="button" accessibilityLabel="Open BuildPair AI helper">
+        <Pressable style={styles.launcher} hitSlop={6} onPress={openHelper} accessibilityRole="button" accessibilityLabel="Open BuildPair AI helper">
           <View style={styles.launcherIcon}><Text style={styles.launcherSpark}>✦</Text></View>
           <Text variant="labelLarge" style={styles.launcherText}>BuildPair AI</Text>
         </Pressable>
@@ -287,32 +287,32 @@ export function BuildPairAiHelper() {
 const styles = StyleSheet.create({
   launcher: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
-    height: 58,
-    paddingHorizontal: 14,
-    borderRadius: 29,
+    right: 16,
+    bottom: 16,
+    height: 42,
+    paddingHorizontal: 10,
+    borderRadius: 21,
     backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 9,
+    gap: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 7 },
-    shadowOpacity: 0.22,
-    shadowRadius: 16,
-    elevation: 9,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 7,
   },
   launcherIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 23,
+    height: 23,
+    borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.17)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  launcherSpark: { color: '#fff', fontSize: 17, fontWeight: '900' },
-  launcherText: { color: '#fff', fontWeight: '900', letterSpacing: 0.2, paddingRight: 3 },
+  launcherSpark: { color: '#fff', fontSize: 12, fontWeight: '900' },
+  launcherText: { color: '#fff', fontSize: 10.5, lineHeight: 13, fontWeight: '900', letterSpacing: 0.15, paddingRight: 2 },
   panel: {
     position: 'absolute',
     right: 12,
