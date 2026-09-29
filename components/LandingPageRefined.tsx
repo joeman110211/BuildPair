@@ -12,14 +12,14 @@ import { colors, controlHeights, publicResponsiveMetrics, radii } from '@/consta
 import { waitlistHref } from '@/lib/launch';
 
 const POPULAR_TRADES = ['Tiling', 'Plumbing', 'Electrical', 'Building & Extensions', 'Roofing & Roofline', 'Painting & Decorating', 'Kitchens', 'Bathrooms'] as const;
-const HERO_BENEFITS = ['Local trades matched to your area', 'Compare structured quotes clearly', 'Keep decisions and changes recorded', 'Manage the project in one place'] as const;
+const HERO_BENEFITS = ['No pay-per-lead', 'Clear structured quotes', 'Local matching', 'Manage the whole job'] as const;
 
 const FAQS = [
   ['What if a tradesperson needs to visit before quoting?', 'They can arrange a site visit through the BuildPair job. Once the confirmed visit has happened, it is marked complete and the formal structured quote can be sent through the same project record.'],
-  ['How do BuildPay payments work?', 'For a staged job that starts with materials, the opening card payment can fund the quoted materials and the first protected work stage together. After the tradesperson acknowledges the payment, only the materials allocation is released. Protected work stages transfer later only after their recorded completion point is reached and release is approved.'],
+  ['How do BuildPay payments work?', 'BuildPay follows the agreed staged schedule. Materials can release after the opening payment is acknowledged, while protected work stages release later through the recorded approval flow.'],
   ['How does BuildPair keep jobs local?', 'Tradespeople set a genuine service base and working radius. Open marketplace jobs are matched inside that area, so homeowners are not inviting quotes from businesses claiming to be local from hundreds of miles away.'],
   ['Can we arrange payment privately?', 'Yes. Either side can propose paying outside BuildPair and the other person must explicitly agree before the job switches to direct payment. The quote, messages and project record can stay in BuildPair, but BuildPair cannot process, hold, protect, refund or recover money paid outside its payment flow.'],
-  ['What memberships are available to tradespeople?', 'Starter is £0/month, Core is £9.99/month, Plus is £19.99/month and Pro is £29.99/month. Each step adds materially more marketplace access and business tools.'],
+  ['What plans are available to tradespeople?', 'Starter is £0/month, Core is £9.99/month, Plus is £19.99/month and Pro is £29.99/month. Each plan adds more marketplace access and business tools.'],
 ] as const;
 
 function SectionHeading({ eyebrow, title, body }: { eyebrow?: string; title: string; body?: string }) {
@@ -40,6 +40,7 @@ export default function LandingPageRefined() {
   const wide = width >= 920;
   const [search, setSearch] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showFeaturedProfiles, setShowFeaturedProfiles] = useState(true);
 
   const goSearch = (value: string) => {
     const q = value.trim();
@@ -52,9 +53,9 @@ export default function LandingPageRefined() {
 
     <View style={[styles.hero, mobile && styles.heroMobile, narrowMobile && styles.heroNarrow, wide && styles.heroWide]}>
       <View style={[styles.heroCopy, wide && styles.heroCopyWide]} testID="home-hero-copy">
-        <View style={styles.heroBadge}><View style={styles.liveDot} /><Text style={styles.heroBadgeText}>Built for UK homeowners and tradespeople</Text></View>
+        <View style={styles.heroBadge}><View style={styles.liveDot} /><Text style={styles.heroBadgeText}>Fair for homeowners and tradespeople</Text></View>
         <Text style={[styles.heroTitle, !wide && styles.heroTitleCompact]}>Find trusted local tradespeople. Compare quotes clearly. Manage the whole job in one place.</Text>
-        <Text variant="titleMedium" style={styles.heroSubtitle}>BuildPair connects homeowners with local tradespeople and keeps the project organised from first search to final review. Compare structured quotes, message, agree changes and manage the job in one place.</Text>
+        <Text variant="titleMedium" style={styles.heroSubtitle}>BuildPair gives homeowners a clearer way to hire and gives tradespeople a fairer way to win and manage work. Search locally, compare structured quotes and keep the project connected from first enquiry to completion.</Text>
         <View style={styles.heroBenefits}>
           {HERO_BENEFITS.map((item) => <View key={item} style={styles.heroBenefit}><Text style={styles.heroBenefitMark}>✓</Text><Text style={styles.heroBenefitText}>{item}</Text></View>)}
         </View>
@@ -63,21 +64,21 @@ export default function LandingPageRefined() {
           <Button mode="contained" style={[styles.buttonBase, styles.buttonFull]} contentStyle={[styles.buttonContent, mobile && styles.mobilePrimaryContent]} onPress={() => goSearch(search)}>Find a trade</Button>
         </View>
         {mobile ? <View style={styles.mobileHeroSecondary} testID="home-hero-actions">
-          <Button mode="text" compact textColor={colors.primaryDark} style={styles.mobileHeroLink} contentStyle={styles.mobileHeroLinkContent} onPress={() => router.push(waitlistHref('customer', 'homepage-hero'))}>Join homeowner launch list</Button>
+          <Button mode="text" compact textColor={colors.primaryDark} style={styles.mobileHeroLink} contentStyle={styles.mobileHeroLinkContent} onPress={() => router.push(waitlistHref('customer', 'homepage-hero'))}>Get notified</Button>
         </View> : <View style={styles.heroActions} testID="home-hero-actions">
-          <Link href={waitlistHref('customer', 'homepage-hero')} asChild><Button mode="outlined" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Join homeowner launch list</Button></Link>
-          <Link href={waitlistHref('trader', 'homepage-hero-trader')} asChild><Button mode="contained" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Create trade profile</Button></Link>
+          <Link href={waitlistHref('customer', 'homepage-hero')} asChild><Button mode="outlined" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Get notified</Button></Link>
+          <Link href={waitlistHref('trader', 'homepage-hero-trader')} asChild><Button mode="contained" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Create profile</Button></Link>
           <Link href="/(public)/how-it-works" asChild><Button mode="outlined" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>How it works</Button></Link>
         </View>}
       </View>
     </View>
 
-    <View style={styles.featuredBand}>
+    {showFeaturedProfiles ? <View style={styles.featuredBand}>
       <View style={[styles.featuredSection, mobile && styles.featuredSectionMobile, narrowMobile && styles.featuredSectionNarrow]}>
-        <SectionHeading eyebrow="Featured tradespeople" title="Meet tradespeople already on BuildPair." body="Explore real BuildPair profiles. Swipe or scroll through featured tradespeople and open any profile for more detail." />
-        <FeaturedTraderHero wide={wide} />
+        <SectionHeading eyebrow="Real profiles" title="Tradespeople joining BuildPair." body="Explore genuine profiles, portfolio work and reputation signals from tradespeople building their presence on BuildPair." />
+        <FeaturedTraderHero wide={wide} onAvailabilityChange={setShowFeaturedProfiles} />
       </View>
-    </View>
+    </View> : null}
 
     <View style={styles.tradeBand}>
       <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
@@ -91,62 +92,63 @@ export default function LandingPageRefined() {
 
     <View style={styles.audienceBand}>
       <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow="Built for both sides" title="One project. Clear tools for both sides." body="Homeowners get a simpler way to find, compare and manage work. Tradespeople get a professional way to win suitable jobs and keep projects organised." />
+        <SectionHeading eyebrow="Fair for both sides" title="One project. Both sides connected." body="BuildPair is designed so one side does not have to lose for the other to get a better experience." />
         <View style={styles.audienceGrid}>
           <View style={[styles.audienceCard, styles.homeownerCard]}>
             <Text style={styles.audienceEyebrow}>FOR HOMEOWNERS</Text>
-            <Text variant="headlineSmall" style={styles.cardTitle}>Find the right tradesperson and stay in control of the job.</Text>
-            <Text style={styles.cardText}>Describe the work, compare suitable tradespeople and structured quotes, then keep messages, agreed changes and payment stages attached to the same project.</Text>
-            {mobile ? <View style={styles.audienceActions}><View style={styles.mobileActionRow}><Button mode="contained" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('customer', 'homepage-audience'))}>Join launch list</Button></View></View> : <View style={styles.audienceActions}><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('customer', 'homepage-audience')} asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>Join homeowner launch list</Button></Link></View>}
+            <Text variant="headlineSmall" style={styles.cardTitle}>Clear quotes. Better records. More control.</Text>
+            <Text style={styles.cardText}>Find suitable local tradespeople, compare structured quotes and keep messages, agreed changes and project stages connected to the job.</Text>
+            {mobile ? <View style={styles.audienceActions}><View style={styles.mobileActionRow}><Button mode="contained" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('customer', 'homepage-audience'))}>Get notified</Button></View></View> : <View style={styles.audienceActions}><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('customer', 'homepage-audience')} asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>Get notified</Button></Link></View>}
           </View>
           <View style={[styles.audienceCard, styles.tradeAudienceCard]}>
             <Text style={[styles.audienceEyebrow, styles.tradeAudienceEyebrow]}>FOR TRADESPEOPLE</Text>
-            <Text variant="headlineSmall" style={styles.cardTitle}>Present your business professionally, quote clearly and manage work in one place.</Text>
-            <Text style={styles.cardText}>Build your profile, find relevant local opportunities, arrange site visits where needed, send structured quotes and keep the project organised after the work is won.</Text>
-            {mobile ? <View style={styles.audienceActions}><Button mode="contained" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-trade-card'))}>Create trade profile</Button><View style={styles.mobileActionRow}><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/for-tradespeople')}>Trade features</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/pricing')}>Membership</Button></View></View> : <View style={styles.audienceActions}><Link href={waitlistHref('trader', 'homepage-trade-card')} asChild><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent}>Create my trade profile</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>See trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>View membership</Button></Link></View>}
+            <Text variant="headlineSmall" style={styles.cardTitle}>Fair access. No paid leads. Better tools.</Text>
+            <Text style={styles.cardText}>Build a professional profile, find suitable work without buying individual leads, send clear quotes and keep won jobs organised in one place.</Text>
+            {mobile ? <View style={styles.audienceActions}><Button mode="contained" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-trade-card'))}>Create profile</Button><View style={styles.mobileActionRow}><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/for-tradespeople')}>Features</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/pricing')}>Pricing</Button></View></View> : <View style={styles.audienceActions}><Link href={waitlistHref('trader', 'homepage-trade-card')} asChild><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent}>Create profile</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>Features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>Pricing</Button></Link></View>}
           </View>
         </View>
       </View>
     </View>
 
     <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-      <SectionHeading eyebrow="How it works" title="From first search to finished job." body="Some jobs can be quoted remotely and others need a site visit. BuildPair supports both while keeping the important decisions connected to the project." />
+      <SectionHeading eyebrow="How it works" title="Find. Compare. Manage." body="Three clear stages, with site visits available when a job needs inspecting before it can be priced properly." />
       <View style={styles.routeGrid}>
         {[
-          ['01', 'Describe the job', 'Search directly or explain the problem in ordinary language. Add useful details and photos where they help.'],
-          ['02', 'Find and compare', 'Browse suitable local tradespeople, request quotes directly or post the job to the marketplace. Compare structured quotes and pause new responses when you have enough.'],
-          ['03', 'Visit, quote and agree', 'The tradesperson can quote from the information supplied or arrange a site visit first. Scope, exclusions, timing and payment stages are then recorded in the structured quote.'],
-          ['04', 'Run the project', 'After a quote is accepted, use BuildPay or mutually agree direct payment. Messages, changes, payment records, timeline events and completion stay attached to the same job.'],
+          ['01', 'Find', 'Describe the job or search for the trade you need. Add useful details and photos where they help.'],
+          ['02', 'Compare', 'Review suitable local profiles and structured quotes. Arrange a site visit first when the job needs inspecting.'],
+          ['03', 'Manage', 'Accept the quote, choose BuildPay or direct payment, then keep messages, changes, stages and completion connected to the project.'],
         ].map(([number, title, copy]) => <View key={number} style={styles.routeCard}><Text style={styles.routeNumber}>{number}</Text><Text variant="titleLarge" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
       </View>
       <Link href="/(public)/how-it-works" asChild><Button mode="text" style={styles.buttonBase} contentStyle={styles.buttonContent}>See the full process →</Button></Link>
     </View>
 
     <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-      <SectionHeading eyebrow="Built around the project" title="Built to support the job from first enquiry to completion." body="BuildPair keeps the important parts of a project connected instead of stopping once a homeowner and tradesperson find each other." />
+      <SectionHeading eyebrow="Why BuildPair" title="More than another lead site." body="BuildPair is built around fair access to work and the project that follows, not just the introduction." />
       <View style={styles.featureGrid}>
         {[
-          ['AI-assisted planning', 'Turn a plain-English problem into a clearer starting brief and more relevant trade suggestions.'],
-          ['Structured quotes', 'Compare labour, materials, VAT, scope, exclusions, timing, warranty and proposed payment stages clearly.'],
-          ['Job-linked messages', 'Keep the conversation and next actions attached to the project rather than scattered across separate channels.'],
-          ['Variations and timeline', 'Record agreed scope or price changes and keep important project events easier to follow later.'],
+          ['No pay per lead', 'Tradespeople do not buy individual leads that may go nowhere.'],
+          ['No bidding wars', 'Structured quotes make scope and price easier to compare without turning every job into a race to the bottom.'],
+          ['Local matching', 'Jobs and profiles are connected to genuine service areas and working radiuses.'],
+          ['Clear quotes', 'Labour, materials, VAT, scope, exclusions, timing and stages can be shown clearly.'],
+          ['Whole-job tools', 'Messages, changes, payments and project history stay connected after the work is won.'],
+          ['Trade business tools', 'Quotes, invoices, customers, availability and project tools support work beyond the marketplace too.'],
         ].map(([title, copy]) => <View key={title} style={styles.featureCard}><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
       </View>
     </View>
 
     <View style={styles.paymentBand}>
       <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow="Payments" title="Choose the payment route that suits the job." body="Use BuildPay for supported protected stages, or mutually agree to arrange payment privately. The project can stay organised either way, but BuildPair can only manage payments made through BuildPay." />
+        <SectionHeading eyebrow="Payments" title="Pay your way." body="Use BuildPay for protected staged payments, or agree to pay directly. The project can stay organised either way." />
         <View style={styles.paymentGrid}>
           <View style={[styles.paymentCard, styles.protectedCard]}>
             <Chip icon="credit-card-check-outline" style={styles.cardChip}>BuildPay</Chip>
-            <Text variant="titleLarge" style={styles.cardTitle}>Protected stages follow the agreed quote.</Text>
-            <Text style={styles.cardText}>When a staged schedule begins with materials, the opening payment can fund the materials and first protected work stage together. Only the materials allocation releases after the tradesperson acknowledges it; protected work stages release later after their agreed completion point and approval.</Text>
+            <Text variant="titleLarge" style={styles.cardTitle}>Protected staged payments.</Text>
+            <Text style={styles.cardText}>Follow the agreed quote through materials, progress stages and completion. Stage money moves through the recorded BuildPay workflow.</Text>
           </View>
           <View style={[styles.paymentCard, styles.privateCard]}>
-            <Chip icon="account-arrow-right-outline" style={styles.cardChip}>Private payment arrangement</Chip>
+            <Chip icon="account-arrow-right-outline" style={styles.cardChip}>Direct payment</Chip>
             <Text variant="titleLarge" style={styles.cardTitle}>Pay directly if both sides agree.</Text>
-            <Text style={styles.cardText}>Either side can propose payment outside BuildPair and the other must confirm. The project record can remain in BuildPair, but BuildPair cannot process, hold, protect, pause, refund or recover money paid privately.</Text>
+            <Text style={styles.cardText}>Use bank transfer, cash or another agreed method while keeping the quote, messages and project record in BuildPair.</Text>
           </View>
         </View>
         <Link href="/(public)/payments" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>How BuildPay works</Button></Link>
@@ -155,14 +157,13 @@ export default function LandingPageRefined() {
 
     <View style={styles.trustBand}>
       <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow="Trust & safety" title="Clearer records, evidence and reporting." body="BuildPair organises useful trust signals and project history while keeping the limits clear. Homeowners should still carry out checks appropriate to the work being commissioned." />
+        <SectionHeading eyebrow="Trust & safety" title="Evidence, not empty badges." body="Profiles can show useful evidence and project-linked reputation, while reporting and moderation work both ways." />
         <View style={styles.trustGrid}>
           {[
-            ['Local by design', 'Marketplace jobs are matched to a tradesperson’s genuine service base and working radius, helping homeowners hear from people who actually work in their area.'],
-            ['Credential status', 'Submitted credentials can show a clear BuildPair review status without replacing the issuing register or authority.'],
-            ['Project-linked reviews', 'Reviews can be connected to completed BuildPair activity where applicable, giving useful context behind the rating.'],
-            ['Two-way reporting', 'Homeowners and tradespeople can report concerns for human review and proportionate moderation.'],
-            ['Location privacy', 'Public jobs use outward location information while more precise matching data stays server-side.'],
+            ['Local by design', 'Match using genuine service areas without publishing precise home addresses.'],
+            ['Credential status', 'Show the review status of submitted evidence without turning BuildPair into the issuing authority.'],
+            ['Project-linked reviews', 'Connect reputation to real BuildPair activity where applicable and keep Google reviews clearly separate.'],
+            ['Two-way reporting', 'Homeowners and tradespeople can both report concerns for human review.'],
           ].map(([title, copy]) => <View key={title} style={styles.trustCard}><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
         </View>
         <Link href="/(public)/trust-safety" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>Read about trust & safety</Button></Link>
@@ -171,9 +172,9 @@ export default function LandingPageRefined() {
 
     <View style={styles.pricingBand}>
       <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow="Tradesperson membership" title="Start free. Upgrade when your business needs more." body="Starter builds your presence, Core adds low-cost marketplace access, Plus is designed for active trades and Pro adds the strongest capacity, analytics and project tools." />
+        <SectionHeading eyebrow="Pricing" title="Start free. Upgrade when it earns its place." body="Starter gets you established. Core helps you win work. Plus helps you run more jobs. Pro adds the strongest business and project tools." />
         <PricingCards compact />
-        <Link href="/(public)/pricing" asChild><Button mode="text" style={styles.buttonBase} contentStyle={styles.buttonContent}>Compare membership plans →</Button></Link>
+        <Link href="/(public)/pricing" asChild><Button mode="text" style={styles.buttonBase} contentStyle={styles.buttonContent}>Compare pricing →</Button></Link>
       </View>
     </View>
 
@@ -192,36 +193,6 @@ export default function LandingPageRefined() {
       </View>
     </View>
 
-    <View style={styles.updatesBand}>
-      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow="BuildPair updates" title="What’s live now, and what’s being built next." body="BuildPair is being developed around the whole job, including work tradespeople find outside the marketplace. The roadmap stays visible so it is clear what is available now and what is still being built." />
-        <View style={styles.updateColumns}>
-          <View style={styles.updatePanel}>
-            <Chip icon="check-circle-outline">Recently added</Chip>
-            {[
-              'Main categories with deliberate subcategory/service selection',
-              'Quote customers from outside the BuildPair marketplace',
-              'Quote revisions and accepted outside jobs becoming managed projects',
-              'Project workspace for progress, materials, expenses, snagging, evidence and handover',
-              'Customer book plus a working calendar for Plus and Pro',
-              'Tiered public availability up to six months on Pro',
-              'Project+ AI planning and room-concept tools',
-            ].map((item) => <Text key={item} style={styles.updateItem}>✓ {item}</Text>)}
-          </View>
-          <View style={[styles.updatePanel, styles.comingPanel]}>
-            <Chip icon="clock-outline">Coming soon</Chip>
-            {[
-              'Smarter quote and invoice reminders',
-              'Google/Outlook calendar sync and richer document packs',
-              'Quote alternatives, warranty/service follow-up and aftercare reminders',
-              'Optional opportunity, team, AI/design and SMS add-ons',
-              'Clearly labelled promoted visibility without pay-to-win trust',
-            ].map((item) => <Text key={item} style={styles.updateItem}>• {item}</Text>)}
-          </View>
-        </View>
-        <Link href="/(public)/updates" asChild><Button mode="outlined" icon="update" style={styles.buttonBase} contentStyle={styles.buttonContent}>See product updates</Button></Link>
-      </View>
-    </View>
 
     <PublicFooter />
   </ScrollView>;
