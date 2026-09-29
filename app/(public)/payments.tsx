@@ -1,10 +1,18 @@
+import { StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
 import { PublicInfoPage } from '@/components/PublicInfoPage';
+import { PAYMENT_LANGUAGE } from '@/constants/site-language';
+import { colors, radii, shadows, spacing } from '@/constants/theme';
 
 export default function PaymentsPage() {
   return <PublicInfoPage
     eyebrow="Payments"
-    title="How BuildPay and direct payments work"
-    intro="After a structured BuildPair quote is accepted, the parties can use BuildPay for supported Stripe-processed staged payments or mutually agree to arrange payment outside BuildPair. The project record can remain in BuildPair either way, but the payment protections are deliberately different."
+    title={PAYMENT_LANGUAGE.title}
+    intro={PAYMENT_LANGUAGE.short}
+    summary={<View style={styles.summary}>
+      <View style={[styles.choice, styles.buildPay]}><Text style={styles.kicker}>BUILDPAY</Text><Text variant="titleLarge" style={styles.title}>Protected stages</Text><Text style={styles.copy}>Agree the quote, fund the next stage and release protected work payments when the recorded stage is ready.</Text></View>
+      <View style={styles.choice}><Text style={styles.kicker}>DIRECT</Text><Text variant="titleLarge" style={styles.title}>Pay directly</Text><Text style={styles.copy}>If both sides agree, arrange payment privately while keeping the quote, messages and project record in BuildPair.</Text></View>
+    </View>}
     updated="13 September 2026"
     sections={[
       { title: '1. Site visits and in-person quotes are allowed', body: 'BuildPair does not require every job to be priced remotely. A tradesperson can arrange a site visit through the job when inspection is needed. Once a confirmed visit has taken place it is marked complete, and the tradesperson sends the resulting structured quote through BuildPair so scope, exclusions, timing, price and payment stages are recorded clearly.' },
@@ -23,3 +31,13 @@ export default function PaymentsPage() {
     ]}
   />;
 }
+
+
+const styles = StyleSheet.create({
+  summary: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  choice: { flexGrow: 1, flexBasis: 320, minWidth: 0, backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, padding: spacing.xl, gap: spacing.sm, ...shadows.subtle },
+  buildPay: { backgroundColor: colors.accentSoft },
+  kicker: { color: colors.primary, fontSize: 11, lineHeight: 15, fontWeight: '900', letterSpacing: 1.1 },
+  title: { color: colors.charcoal, fontWeight: '900' },
+  copy: { color: colors.muted, lineHeight: 22 },
+});
