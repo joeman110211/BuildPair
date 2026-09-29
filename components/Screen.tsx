@@ -1,7 +1,7 @@
 import { type Href, usePathname, useRouter } from 'expo-router';
-import type { PropsWithChildren, ReactNode } from 'react';
-import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { ActivityIndicator, Button, Text } from 'react-native-paper';
+import { useEffect, useRef, type PropsWithChildren, type ReactNode } from 'react';
+import { Animated, Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Button, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, layout, radii, shadows, spacing, typography } from '@/constants/theme';
 
@@ -72,7 +72,28 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
 }
 
 export function LoadingScreen({ label = 'Loading…' }: { label?: string }) {
-  return <Screen scroll={false}><View style={styles.loading}><View style={styles.loadingCard}><View style={styles.loadingIcon}><ActivityIndicator size="small" /></View><Text style={styles.loadingLabel}>{label}</Text></View></View></Screen>;
+  const pulse = useRef(new Animated.Value(0.45)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(Animated.sequence([
+      Animated.timing(pulse, { toValue: 0.9, duration: 650, useNativeDriver: false }),
+      Animated.timing(pulse, { toValue: 0.45, duration: 650, useNativeDriver: false }),
+    ]));
+    animation.start();
+    return () => animation.stop();
+  }, [pulse]);
+
+  return <Screen scroll={false}><View style={styles.loading}>
+    <Animated.View style={[styles.skeletonTitle, { opacity: pulse }]} />
+    <Animated.View style={[styles.skeletonLineWide, { opacity: pulse }]} />
+    <Animated.View style={[styles.skeletonLine, { opacity: pulse }]} />
+    <View style={styles.skeletonGrid}>
+      <Animated.View style={[styles.skeletonCard, { opacity: pulse }]} />
+      <Animated.View style={[styles.skeletonCard, { opacity: pulse }]} />
+      <Animated.View style={[styles.skeletonCard, { opacity: pulse }]} />
+    </View>
+    <Text style={styles.loadingLabel}>{label}</Text>
+  </View></Screen>;
 }
 
 export function EmptyState({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
@@ -99,10 +120,13 @@ const styles = StyleSheet.create({
   footerShell: { width: '100%', flexShrink: 0, borderTopWidth: 1, borderTopColor: '#E8E1DA', backgroundColor: 'rgba(255,255,255,0.985)', paddingHorizontal: spacing.xxl, paddingVertical: spacing.md, ...shadows.subtle },
   footerShellCompact: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
   footerContent: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center' },
-  loading: { flex: 1, minHeight: 420, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
-  loadingCard: { minWidth: 220, maxWidth: 420, alignItems: 'center', gap: spacing.md, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: '#E8E1DA', borderRadius: radii.xl, paddingHorizontal: spacing.xxl, paddingVertical: spacing.xxl, ...shadows.subtle },
-  loadingIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
-  loadingLabel: { ...typography.body, color: colors.muted, textAlign: 'center' },
+  loading: { flex: 1, minHeight: 420, width: '100%', maxWidth: 860, alignSelf: 'center', justifyContent: 'center', gap: spacing.md, paddingHorizontal: spacing.lg },
+  loadingLabel: { ...typography.bodySmall, color: colors.muted, textAlign: 'center', marginTop: spacing.xs },
+  skeletonTitle: { height: 34, width: '58%', maxWidth: 420, alignSelf: 'center', borderRadius: radii.md, backgroundColor: colors.surfaceStrong },
+  skeletonLineWide: { height: 14, width: '78%', alignSelf: 'center', borderRadius: radii.pill, backgroundColor: colors.surfaceStrong },
+  skeletonLine: { height: 14, width: '60%', alignSelf: 'center', borderRadius: radii.pill, backgroundColor: colors.surfaceStrong },
+  skeletonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.lg },
+  skeletonCard: { flexGrow: 1, flexBasis: 220, minWidth: 180, height: 130, borderRadius: radii.lg, backgroundColor: colors.surfaceStrong },
   empty: { paddingVertical: spacing.xxxl, paddingHorizontal: spacing.xxl, borderWidth: 1, borderColor: '#E8E1DA', borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, alignItems: 'center', gap: spacing.md, ...shadows.subtle },
   emptyIcon: { width: 48, height: 48, borderRadius: radii.lg, backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: '#F0C9AA', alignItems: 'center', justifyContent: 'center' },
   emptyIconText: { color: colors.primaryDark, fontWeight: '900', letterSpacing: -0.3 },
