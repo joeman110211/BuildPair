@@ -5,9 +5,9 @@ import { PublicFooter } from '@/components/PublicFooter';
 import { colors, publicResponsiveMetrics } from '@/constants/theme';
 
 const RECENT = [
-  ['Four clear trade plans', 'Starter, Core, Plus and Pro now scale marketplace access and business tools without turning paid membership into a trust badge.'],
+  ['Four clear trade plans', 'Starter, Core, Plus and Pro now scale marketplace access and business tools without turning paid plan into a trust badge.'],
   ['Main trades + real service choices', 'A main category uses one plan slot. Tradespeople then choose at least one and up to every genuine subcategory/service inside it.'],
-  ['Browse founding trades before launch', 'Real completed trade profiles can be viewed before launch while quotes, private contact and marketplace transactions remain locked.'],
+  ['Browse launch trades before launch', 'Real completed trade profiles can be viewed before launch while quotes, private contact and marketplace transactions remain locked.'],
   ['Better trade discovery', 'Compare profiles, sort by best match, rating or responsiveness, filter by availability, revisit recent profiles and see similar trades.'],
   ['Quote customers from anywhere', 'Tradespeople can create itemised quotes for customers who came from referrals, phone calls, social media or anywhere outside BuildPair.'],
   ['Quote revisions', 'Sent outside-customer quotes can be revised without overwriting the earlier agreed record. Accepted work changes move into the project variation flow.'],
@@ -56,7 +56,7 @@ export default function UpdatesPage() {
       <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>BuildPair product updates</Text>
       <Text variant="displaySmall" style={[styles.heroTitle, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>BuildPair is being built around the whole job, not just the lead.</Text>
       <Text variant="bodyLarge" style={styles.heroBody}>See what has just been added and what is deliberately next. Features shown as coming soon are plans, not promises that they are already live.</Text>
-      <View style={styles.actions}><Link href="/(public)/how-it-works" asChild><Button mode="contained">How BuildPair works</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined">Trade membership</Button></Link></View>
+      <View style={styles.actions}><Link href="/(public)/how-it-works" asChild><Button mode="contained">How BuildPair works</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined">Trade pricing</Button></Link></View>
     </View>
 
     <View style={[styles.section, metrics.phone && styles.sectionMobile]}>
