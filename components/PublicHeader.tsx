@@ -12,7 +12,6 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref } from '@/lib/account-mode';
 import { apiFetch } from '@/lib/api';
 import { useAuthAvailable } from '@/lib/auth-availability';
-import { waitlistHref } from '@/lib/launch';
 import type { UserRole } from '@/types';
 
 const QUICK_NAV = PUBLIC_NAV_ITEMS.slice(0, 4);
