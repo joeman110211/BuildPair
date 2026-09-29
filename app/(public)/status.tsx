@@ -10,7 +10,7 @@ type ResultCopy = { title: string; body: string; action: string };
 const results: Record<string, ResultCopy> = {
   'subscription:complete': {
     title: 'Subscription confirmed',
-    body: 'Stripe has accepted your subscription. BuildPair will update your plan as soon as the verified webhook arrives.',
+    body: 'Stripe has accepted your subscription. BuildPair will update your plan as soon as Stripe confirms it.',
     action: 'Return to plans',
   },
   'subscription:cancelled': {
@@ -30,7 +30,7 @@ const results: Record<string, ResultCopy> = {
   },
   'payment:complete': {
     title: 'Payment submitted',
-    body: 'Stripe is confirming the payment. The job milestone will update after BuildPair receives the verified payment event.',
+    body: 'Stripe is confirming the payment. The project stage will update when that confirmation is complete.',
     action: 'Open dashboard',
   },
   'payment:cancelled': {
@@ -46,7 +46,7 @@ export default function ProviderStatusScreen() {
   const key = `${params.type ?? ''}:${params.state ?? ''}`;
   const copy = results[key] ?? {
     title: 'Back to BuildPair',
-    body: 'The external service returned you to BuildPair. Open your dashboard to see the latest verified status.',
+    body: 'You’re back in BuildPair. Open your dashboard to see the latest status.',
     action: 'Continue',
   };
   const isTraderFlow = params.type === 'subscription' || params.type === 'connect';
@@ -60,7 +60,7 @@ export default function ProviderStatusScreen() {
 
   return <Screen title={copy.title} subtitle={copy.body}>
     <AppCard>
-      <Text>Provider updates are verified server-side. Refresh the relevant screen if the new status takes a few seconds to appear.</Text>
+      <Text>Some payment or payout updates can take a few seconds to appear. Refresh the relevant screen if needed.</Text>
       <Link href={href} asChild><Button mode="contained">{copy.action}</Button></Link>
     </AppCard>
   </Screen>;
