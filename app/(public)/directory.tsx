@@ -226,11 +226,11 @@ export default function DirectoryScreen() {
       : null}
 
     {compareTraders.length >= 2 ? <View nativeID="trade-comparison-panel" style={styles.comparePanel}>
-      <View style={styles.compareHeader}><View style={styles.compareCopy}><Text variant="titleLarge" style={styles.title}>Compare tradespeople</Text><Text style={styles.muted}>Compare up to three profiles side by side. Membership is shown as a product level, not a trust score.</Text></View><Button mode="text" onPress={() => setCompareIds([])}>Clear comparison</Button></View>
+      <View style={styles.compareHeader}><View style={styles.compareCopy}><Text variant="titleLarge" style={styles.title}>Compare tradespeople</Text><Text style={styles.muted}>Compare up to three profiles side by side. Plan level is a product choice, not a trust score.</Text></View><Button mode="text" onPress={() => setCompareIds([])}>Clear comparison</Button></View>
       <View style={styles.compareGrid}>{compareTraders.map((trader) => <View key={trader.id} style={styles.compareCard}>
         <Text variant="titleMedium" style={styles.compareTitle}>{trader.businessName}</Text>
         <Text style={styles.compareLine}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
-        <Text style={styles.compareLine}>{trader.reviewCount ? `${Number(trader.averageRating || 0).toFixed(1)} ★ · ${trader.reviewCount} reviews` : 'New to BuildPair'}</Text>
+        <Text style={styles.compareLine}>{trader.reviewCount ? `${Number(trader.averageRating || 0).toFixed(1)} ★ · ${trader.reviewCount} reviews` : 'Profile live'}</Text>
         <Text style={styles.compareLine}>{trader.verifiedCredentialCount ?? 0} verified credential{(trader.verifiedCredentialCount ?? 0) === 1 ? '' : 's'}</Text>
         <Text style={styles.compareLine}>{trader.availabilitySummary || 'Availability on request'}</Text>
         <Button compact onPress={() => toggleCompare(trader)}>Remove</Button>
