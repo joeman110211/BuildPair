@@ -90,6 +90,15 @@ export default function TraderDashboard() {
   // always be based on payouts_enabled so every screen reports the same financial state.
   const payoutsReady = Boolean(profile.stripeAccountId && profile.stripePayoutsEnabled);
   const serviceArea = profile.locationLabel || profile.postcode || 'your saved service area';
+  const nextAction = !marketplaceEnabled
+    ? { title: 'Get your profile launch-ready', body: 'Check your photos, services, working area and trust information so homeowners see the strongest version of your business when BuildPair opens.', label: 'Review profile', href: '/trader/profile' as Href }
+    : activeJobs[0]
+      ? { title: `Continue ${activeJobs[0].title}`, body: 'Keep the next stage, messages, changes and project record moving from one place.', label: 'Continue job', href: `/trader/jobs/${activeJobs[0].id}` as Href }
+      : pendingQuotes[0]
+        ? { title: 'Check your open quotes', body: 'Keep on top of quotes that are still waiting for the homeowner so nothing useful gets lost.', label: 'Open quotes', href: '/trader/quotes' as Href }
+        : newLeads[0]
+          ? { title: 'A suitable opportunity is waiting', body: 'Review matching work and only engage with jobs that suit your trade and service area.', label: 'Find work', href: '/trader/job-board' as Href }
+          : { title: 'Keep your profile current', body: 'Fresh work, services and availability make your profile more useful when homeowners are comparing tradespeople.', label: 'Manage profile', href: '/trader/profile' as Href };
 
   return <Screen title={profile.businessName} subtitle={`${profile.tradeCategory}${profile.locationLabel ? ` · ${profile.locationLabel}` : ''}`}>
     {!marketplaceEnabled ? <AppCard style={styles.prelaunchCard}>
@@ -112,6 +121,11 @@ export default function TraderDashboard() {
     </AppCard> : <AppCard style={styles.payoutReadyCard}>
       <View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.cardTitle}>BuildPair payouts ready</Text><Text style={styles.muted}>Stripe has confirmed that your connected account can receive materials, deposit and released staged payments.</Text></View><Chip icon="check-circle-outline">Ready</Chip></View>
     </AppCard>}
+
+    <AppCard style={styles.nextActionCard}>
+      <View style={styles.row}><View style={styles.flex}><Text style={styles.nextActionEyebrow}>NEXT ACTION</Text><Text variant="titleLarge" style={styles.cardTitle}>{nextAction.title}</Text><Text style={styles.muted}>{nextAction.body}</Text></View><Chip icon="arrow-right-circle-outline">Next</Chip></View>
+      <Button mode="contained" icon="arrow-right" onPress={() => router.push(nextAction.href)}>{nextAction.label}</Button>
+    </AppCard>
 
     <AppCard style={[styles.membershipCard, paidActive && styles.membershipCardPaid]}>
       <View style={styles.row}>
@@ -196,6 +210,7 @@ export default function TraderDashboard() {
 }
 
 const styles = StyleSheet.create({
+  nextActionCard: { backgroundColor: colors.primarySoft, borderColor: '#F0C9AA' }, nextActionEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.1 },
   payoutCard: { backgroundColor: colors.goldSoft, borderColor: colors.gold }, payoutReadyCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent }, prelaunchCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary }, relayCard: { backgroundColor: '#FFF9F5', borderColor: colors.primary, borderWidth: 2 }, relayLink: { color: colors.primary, fontSize: 12, fontWeight: '700' }, relayNote: { color: colors.muted, fontSize: 12, lineHeight: 18 }, activeJobCard: { borderColor: colors.primary, borderWidth: 2 },
   membershipCard: { backgroundColor: colors.surfaceRaised, borderColor: colors.border }, membershipCardPaid: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' }, membershipEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.1, marginBottom: spacing.xxs }, membershipActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center', justifyContent: 'flex-start' }, offerMeta: { color: colors.muted, fontSize: 11, fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' }, cardActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }, flex: { flex: 1, minWidth: 220, gap: spacing.xxs }, cardTitle: { fontWeight: '900', color: colors.charcoal }, muted: { color: colors.muted, lineHeight: 21 }, progress: { height: 7, borderRadius: 4, backgroundColor: colors.surfaceStrong }, stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }, stat: { flexGrow: 1, flexBasis: 145, minWidth: 135, paddingVertical: spacing.lg, alignItems: 'center' }, statNumber: { color: colors.primary, fontWeight: '900', textAlign: 'center' }, statLabel: { color: colors.muted, fontWeight: '700', textAlign: 'center' }, sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.xxs }, quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'center' }, actionButton: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xs }, description: { color: colors.text, lineHeight: 21 },
