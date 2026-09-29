@@ -8,7 +8,7 @@ const linkGroups = [
   {
     title: 'Discover',
     links: [
-      ['Find trades', '/(public)/directory'],
+      ['Find a trade', '/(public)/directory'],
       ['Browse jobs', '/(public)/jobs'],
       ['How it works', '/(public)/how-it-works'],
       ['For homeowners', '/(public)/for-homeowners'],
