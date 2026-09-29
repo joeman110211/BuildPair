@@ -81,7 +81,7 @@ export function PublicFooter() {
               style={({ pressed }) => [styles.socialIconButton, pressed && styles.socialLinkPressed]}
               onPress={() => void Linking.openURL('https://www.facebook.com/share/1cWVAbDGvm/')}
             >
-              <Image source={{ uri: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Facebook_Logo_2023.png?width=160' }} style={styles.socialBrandImage} />
+              <Image source={{ uri: SOCIAL_ICON_URIS.facebook }} style={styles.socialIcon} />
             </Pressable>
             <Pressable
               accessibilityRole="link"
@@ -89,7 +89,7 @@ export function PublicFooter() {
               style={({ pressed }) => [styles.socialIconButton, pressed && styles.socialLinkPressed]}
               onPress={() => void Linking.openURL('https://www.tiktok.com/@buildpair')}
             >
-              <Image source={{ uri: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Tiktok_icon.svg?width=160' }} style={styles.socialBrandImage} />
+              <Image source={{ uri: SOCIAL_ICON_URIS.tiktok }} style={styles.socialIcon} />
             </Pressable>
             <Pressable
               accessibilityRole="link"
@@ -97,7 +97,7 @@ export function PublicFooter() {
               style={({ pressed }) => [styles.socialIconButton, pressed && styles.socialLinkPressed]}
               onPress={() => void Linking.openURL('https://www.instagram.com/buildpair_/')}
             >
-              <Image source={{ uri: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Instagram_icon.png?width=160' }} style={styles.socialBrandImage} />
+              <Image source={{ uri: SOCIAL_ICON_URIS.instagram }} style={styles.socialIcon} />
             </Pressable>
           </View>
         </View>
