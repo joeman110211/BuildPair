@@ -4,8 +4,7 @@ export const PUBLIC_NAV_ITEMS: { label: string; href: Href }[] = [
   { label: 'Find a trade', href: '/(public)/directory' },
   { label: 'How it works', href: '/(public)/how-it-works' },
   { label: 'For tradespeople', href: '/(public)/for-tradespeople' },
-  { label: 'Pricing', href: '/(public)/pricing' },
-  { label: 'Advice', href: '/(public)/advice' },
+  { label: 'Advice Hub', href: '/(public)/advice' },
 ];
 
 export const SITE_LANGUAGE = {
