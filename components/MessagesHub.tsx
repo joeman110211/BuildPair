@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Badge, Button, Icon, Text } from 'react-native-paper';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
-import { colors, radii, spacing } from '@/constants/theme';
+import { colors, radii, shadows, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 
 type Conversation = {
@@ -67,9 +67,9 @@ function formatConversationTime(value: string) {
 }
 
 const styles = StyleSheet.create({
-  conversation: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.md, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
-  unread: { borderWidth: 2, borderColor: colors.primarySoft, backgroundColor: colors.surfaceRaised },
-  pressed: { opacity: 0.72 },
+  conversation: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.md, ...shadows.subtle },
+  unread: { borderWidth: 1.5, borderColor: '#F0C9AA', backgroundColor: '#FFFCF9' },
+  pressed: { backgroundColor: colors.surfaceSoft, transform: [{ scale: 0.995 }] },
   avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1, gap: spacing.xxs },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm, alignItems: 'center' },
