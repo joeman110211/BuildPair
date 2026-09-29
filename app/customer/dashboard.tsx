@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
+import { NextActionCard } from '@/components/NextActionCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors, controlHeights, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
@@ -47,7 +48,7 @@ export default function CustomerDashboard() {
     ?? jobs.find((job) => job.status === 'open');
   const attention = attentionJob ? dashboardNextAction(attentionJob) : null;
 
-  return <Screen title={`Good to see you, ${firstName}`} subtitle="Your jobs do not disappear after a quote. Quotes, messages, payment stages and project progress all continue here.">
+  return <Screen title={`Good to see you, ${firstName}`} subtitle="Your jobs, quotes, messages and project stages stay connected here.">
     <View style={styles.heroActions}>
       <Link href="/customer/jobs" asChild><Button mode="contained" icon="briefcase-outline" contentStyle={styles.actionButton}>My jobs & payments</Button></Link>
       <Link href="/customer/new-job" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Post a job</Button></Link>
@@ -65,17 +66,11 @@ export default function CustomerDashboard() {
 
     {error ? <EmptyState title="Couldn’t load your dashboard" body={error} action={<Button mode="outlined" onPress={load}>Try again</Button>} /> : null}
 
-    {attentionJob && attention ? <AppCard style={styles.attentionCard}>
-      <View style={styles.row}>
-        <View style={styles.flex}>
-          <Text style={styles.attentionEyebrow}>WHAT NEEDS YOUR ATTENTION</Text>
-          <Text variant="titleLarge" style={styles.title}>{attention.title}</Text>
-          <Text style={styles.muted}>{attention.body}</Text>
-        </View>
-        <Chip icon="arrow-right-circle-outline">Next step</Chip>
-      </View>
-      <Button mode="contained" icon="arrow-right" onPress={() => router.push(attention.href)}>{attention.label}</Button>
-    </AppCard> : null}
+    {attentionJob && attention ? <NextActionCard
+      title={attention.title}
+      body={attention.body}
+      action={<Button mode="contained" icon="arrow-right" onPress={() => router.push(attention.href)}>{attention.label}</Button>}
+    /> : null}
 
     <View style={styles.sectionHeading}><View><Text style={styles.sectionEyebrow}>YOUR PROJECTS</Text><Text variant="titleLarge" style={styles.title}>Continue where you left off</Text></View><Link href="/customer/jobs" asChild><Button mode="text">View all jobs</Button></Link></View>
     {!jobs.length ? <EmptyState title="No jobs yet" body="Post what you need once. BuildPair keeps quotes, messages and project history together." action={<Link href="/customer/new-job" asChild><Button mode="contained" contentStyle={styles.actionButton}>Post your first job</Button></Link>} /> : orderedJobs.slice(0, 4).map((job) => <AppCard key={job.id} style={job.status === 'in_progress' ? styles.activeJob : undefined}>
@@ -85,9 +80,12 @@ export default function CustomerDashboard() {
       <View style={styles.cardActions}><Button mode={job.status === 'in_progress' ? 'contained' : 'outlined'} onPress={() => router.push(`/customer/jobs/${job.id}` as Href)}>{job.status === 'in_progress' ? 'Continue job' : 'View job'}</Button>{['open', 'quoted'].includes(job.status) ? <Button mode="contained" onPress={() => router.push(`/customer/compare/${job.id}` as Href)}>Review quotes</Button> : null}</View>
     </AppCard>)}
 
-    <View style={styles.sectionHeading}><View><Text style={styles.sectionEyebrow}>DISCOVER</Text><Text variant="titleLarge" style={styles.title}>Trades to explore</Text></View><Link href="/(public)/directory" asChild><Button mode="text">Browse all</Button></Link></View>
+    {traders.length ? <>
+<View style={styles.sectionHeading}><View><Text style={styles.sectionEyebrow}>DISCOVER</Text><Text variant="titleLarge" style={styles.title}>Trades to explore</Text></View><Link href="/(public)/directory" asChild><Button mode="text">Browse all</Button></Link></View>
     <Text style={styles.sectionIntro}>Explore tradespeople on BuildPair and make the checks appropriate to your job before appointing anyone.</Text>
-    <View style={styles.traderGrid}>{traders.map((trader) => <AppCard key={trader.id} style={styles.traderCard}><Text variant="titleMedium" style={styles.title}>{trader.businessName}</Text><Text style={styles.muted}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text><View style={styles.row}><Text style={styles.rating}>{trader.reviewCount ? `${trader.averageRating.toFixed(1)} ★ · ${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}` : 'New to BuildPair'}</Text><Button mode="text" onPress={() => router.push(`/(public)/traders/${trader.id}` as Href)}>View profile</Button></View></AppCard>)}</View>
+    <View style={styles.traderGrid}>{traders.map((trader) => <AppCard key={trader.id} style={styles.traderCard}><Text variant="titleMedium" style={styles.title}>{trader.businessName}</Text><Text style={styles.muted}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text><View style={styles.row}><Text style={styles.rating}>{trader.reviewCount ? `${trader.averageRating.toFixed(1)} ★ · ${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}` : 'New to BuildPair'}</Text><Button mode="text" onPress={() => router.push(`/(public)/traders/${trader.id}` as Href)}>View profile</Button></View></AppCard>)}
+    </> : null}
+</View>
   </Screen>;
 }
 
