@@ -109,7 +109,7 @@ export default function LandingPageRefined() {
             {mobile ? <View style={styles.audienceActions}><Button mode="contained" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-trade-card'))}>Create profile</Button><View style={styles.mobileActionRow}><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/for-tradespeople')}>Trade features</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/pricing')}>Pricing</Button></View></View> : <View style={styles.audienceActions}><Link href={waitlistHref('trader', 'homepage-trade-card')} asChild><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent}>Create profile</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>Trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>View pricing</Button></Link></View>}
           </View>
         </View>
-        <View style={styles.fairBridge}><Text style={styles.fairBridgeEyebrow}>BUILDPAIR</Text><Text variant="titleLarge" style={styles.fairBridgeTitle}>{FAIR_FOR_BOTH.bridge}</Text><Text style={styles.fairBridgeText}>Clearer decisions for homeowners. Fairer access and better tools for tradespeople.</Text></View>
+        <View style={styles.fairBridge}><Text style={styles.fairBridgeEyebrow}>BUILDPAIR</Text><Text variant="titleLarge" style={styles.fairBridgeTitle}>Checked the directories? Collected the quotes? Still chasing trades? There’s a better way.</Text><Text style={styles.fairBridgeText}>BuildPair connects homeowners and tradespeople around the whole project, not just the introduction.</Text></View>
       </View>
     </View></Reveal>
 
@@ -126,7 +126,7 @@ export default function LandingPageRefined() {
     </View></Reveal>
 
     <Reveal delay={140}><View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-      <SectionHeading eyebrow="Why BuildPair" title="More than another lead directory." body="The difference is not one flashy feature. It is a fairer model and a project that stays useful after the introduction." />
+      <SectionHeading eyebrow="Why BuildPair" title="More than a check. More than a quote. More than a directory." body="The difference is not one flashy feature. It is a fairer model and a project that stays useful after the introduction." />
       <View style={styles.featureGrid}>
         {WHY_BUILDPAIR.slice(0, 6).map((title) => {
           const copy: Record<string, string> = {
@@ -163,7 +163,7 @@ export default function LandingPageRefined() {
 
     <Reveal delay={200}><View style={styles.trustBand}>
       <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow="Trust & safety" title="See the evidence, not just a badge." body="Profiles, credentials, project-linked reviews, service area and reporting give both sides more useful context." />
+        <SectionHeading eyebrow="Trust & safety" title="Trust should be earned on the job, not displayed in a directory." body="Profiles, credentials, project-linked reviews, service area and reporting give both sides more useful context." />
         <View style={styles.trustGrid}>
           {[
             ['Local service area', 'See where a tradesperson actually works.'],
