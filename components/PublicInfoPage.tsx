@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
+import { MotionReveal } from '@/components/MotionReveal';
 import { PublicFooter } from '@/components/PublicFooter';
 import { colors, layout, publicResponsiveMetrics, radii, spacing } from '@/constants/theme';
 
@@ -31,13 +32,15 @@ export function PublicInfoPage({ eyebrow, title, intro, sections, updated }: { e
       </View>
     </View>
     <View style={[styles.content, metrics.phone && styles.contentMobile]}>
-      {sections.map((section, index) => <View key={section.title} style={[styles.card, metrics.phone && styles.cardMobile]}>
-        <View style={styles.cardHeader}>
-          <View style={styles.sectionMarker}><Text style={styles.sectionMarkerText}>{String(index + 1).padStart(2, '0')}</Text></View>
-          <Text variant="headlineSmall" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize - 2, lineHeight: metrics.sectionTitleLineHeight - 2 }]}>{section.title}</Text>
+      {sections.map((section, index) => <MotionReveal key={section.title} delay={Math.min(index * 45, 180)}>
+        <View style={[styles.card, metrics.phone && styles.cardMobile]}>
+          <View style={styles.cardHeader}>
+            <View style={styles.sectionMarker}><Text style={styles.sectionMarkerText}>{String(index + 1).padStart(2, '0')}</Text></View>
+            <Text variant="headlineSmall" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize - 2, lineHeight: metrics.sectionTitleLineHeight - 2 }]}>{section.title}</Text>
+          </View>
+          {typeof section.body === 'string' ? <Text style={styles.body}>{section.body}</Text> : section.body}
         </View>
-        {typeof section.body === 'string' ? <Text style={styles.body}>{section.body}</Text> : section.body}
-      </View>)}
+      </MotionReveal>)}
     </View>
     <PublicFooter />
   </ScrollView>;
@@ -69,7 +72,7 @@ const styles = StyleSheet.create({
   updated: { color: '#D4DEE5', fontSize: 12 },
   content: { width: '100%', maxWidth: 1040, alignSelf: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.xxxl, gap: spacing.md },
   contentMobile: { paddingHorizontal: 16, paddingVertical: 24 },
-  card: { backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, padding: spacing.xxl, borderWidth: 1, borderColor: colors.border, gap: spacing.md, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 1 },
+  card: { backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, padding: spacing.xxl, borderWidth: 1, borderColor: '#EEE8E1', gap: spacing.md, shadowColor: colors.charcoal, shadowOpacity: 0.035, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 1 },
   cardMobile: { padding: 20 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   sectionMarker: { minWidth: 36, height: 30, borderRadius: radii.sm, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
