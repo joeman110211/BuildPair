@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import { Linking, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Image, Linking, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { colors, layout, radii, spacing } from '@/constants/theme';
@@ -72,10 +72,10 @@ export function PublicFooter() {
             <Pressable
               accessibilityRole="link"
               accessibilityLabel="BuildPair on Facebook"
-              style={({ pressed }) => [styles.socialIconButton, styles.facebookButton, pressed && styles.socialLinkPressed]}
+              style={({ pressed }) => [styles.socialIconButton, pressed && styles.socialLinkPressed]}
               onPress={() => void Linking.openURL('https://www.facebook.com/share/1cWVAbDGvm/')}
             >
-              <Text style={[styles.socialGlyph, styles.facebookGlyph]}>f</Text>
+              <Image source={{ uri: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Facebook_Logo_2023.png?width=160' }} style={styles.socialBrandImage} />
             </Pressable>
             <Pressable
               accessibilityRole="link"
@@ -83,18 +83,15 @@ export function PublicFooter() {
               style={({ pressed }) => [styles.socialIconButton, styles.tiktokButton, pressed && styles.socialLinkPressed]}
               onPress={() => void Linking.openURL('https://www.tiktok.com/@buildpair')}
             >
-              <Text style={[styles.socialGlyph, styles.tiktokGlyph]}>♪</Text>
+              <Image source={{ uri: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Tiktok_icon.svg?width=160' }} style={styles.socialBrandImage} />
             </Pressable>
             <Pressable
               accessibilityRole="link"
               accessibilityLabel="BuildPair on Instagram"
-              style={({ pressed }) => [styles.socialIconButton, styles.instagramButton, pressed && styles.socialLinkPressed]}
+              style={({ pressed }) => [styles.socialIconButton, pressed && styles.socialLinkPressed]}
               onPress={() => void Linking.openURL('https://www.instagram.com/buildpair_/')}
             >
-              <View style={styles.instagramCamera}>
-                <View style={styles.instagramLens} />
-                <View style={styles.instagramDot} />
-              </View>
+              <Image source={{ uri: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Instagram_icon.png?width=160' }} style={styles.socialBrandImage} />
             </Pressable>
           </View>
         </View>
@@ -134,16 +131,9 @@ const styles = StyleSheet.create({
   socialBlock: { gap: spacing.xs, marginTop: spacing.xs },
   socialLabel: { color: colors.secondary, fontSize: 10, fontWeight: '900', letterSpacing: 0.9 },
   socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  socialIconButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  facebookButton: { backgroundColor: '#1877F2' },
-  tiktokButton: { backgroundColor: '#000000', borderWidth: 1.5, borderColor: '#25F4EE' },
-  instagramButton: { backgroundColor: '#D62976' },
-  socialGlyph: { color: '#FFFFFF', fontWeight: '900', textAlign: 'center', includeFontPadding: false },
-  facebookGlyph: { fontSize: 30, lineHeight: 34, marginTop: 4, fontFamily: 'Arial' },
-  tiktokGlyph: { fontSize: 25, lineHeight: 28, textShadowColor: '#25F4EE', textShadowOffset: { width: -1, height: 1 }, textShadowRadius: 0 },
-  instagramCamera: { width: 23, height: 23, borderRadius: 7, borderWidth: 2.2, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  instagramLens: { width: 9, height: 9, borderRadius: 5, borderWidth: 2, borderColor: '#FFFFFF' },
-  instagramDot: { position: 'absolute', top: 3.2, right: 3.2, width: 3.2, height: 3.2, borderRadius: 2, backgroundColor: '#FFFFFF' },
+  socialIconButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', backgroundColor: '#FFFFFF' },
+  tiktokButton: { backgroundColor: '#000000' },
+  socialBrandImage: { width: 44, height: 44, resizeMode: 'cover' },
   socialLinkPressed: { opacity: 0.72, transform: [{ scale: 0.96 }] },
   small: { color: '#B7BDC2', lineHeight: 20, fontSize: 12 },
   smallCompact: { lineHeight: 18, fontSize: 11.5 },
