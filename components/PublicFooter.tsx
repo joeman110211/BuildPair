@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Linking, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Icon, Text } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { colors, layout, radii, spacing } from '@/constants/theme';
 
@@ -66,6 +66,26 @@ export function PublicFooter() {
         <Text style={[styles.tagline, compact && styles.taglineCompact]}>Fair for both sides. Built around the project, not the lead.</Text>
         <Text style={[styles.description, compact && styles.descriptionCompact]}>A UK marketplace and project platform giving homeowners clearer projects and tradespeople fairer access to work, with quotes, communication, payments and job history in one place.</Text>
         <View style={[styles.contactPill, compact && styles.contactPillCompact]}><Text style={styles.contactText}>info@buildpair.co.uk</Text></View>
+        <View style={styles.socialRow}>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="BuildPair on Facebook"
+            style={({ pressed }) => [styles.socialLink, pressed && styles.linkPressed]}
+            onPress={() => void Linking.openURL('https://www.facebook.com/profile.php?id=1350638028128183')}
+          >
+            <Icon source="facebook" size={20} color="#FFFFFF" />
+            <Text style={styles.socialText}>Facebook</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="BuildPair on TikTok"
+            style={({ pressed }) => [styles.socialLink, pressed && styles.linkPressed]}
+            onPress={() => void Linking.openURL('https://www.tiktok.com/@buildpair')}
+          >
+            <Icon source="music-note" size={20} color="#FFFFFF" />
+            <Text style={styles.socialText}>TikTok</Text>
+          </Pressable>
+        </View>
       </View>
       {linkGroups.map((group) => <View key={group.title} style={[styles.group, compact && styles.groupCompact]}>
         <Text style={styles.groupTitle}>{group.title}</Text>
@@ -99,6 +119,9 @@ const styles = StyleSheet.create({
   contactPill: { alignSelf: 'flex-start', marginTop: spacing.xs, borderRadius: radii.pill, backgroundColor: '#343B43', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   contactPillCompact: { marginTop: 2, paddingHorizontal: 11, paddingVertical: 7 },
   contactText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+  socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.xs },
+  socialLink: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, borderRadius: radii.pill, backgroundColor: '#343B43', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  socialText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' },
   small: { color: '#B7BDC2', lineHeight: 20, fontSize: 12 },
   smallCompact: { lineHeight: 18, fontSize: 11.5 },
   group: { minWidth: 145, gap: spacing.sm },
