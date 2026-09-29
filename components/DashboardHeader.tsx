@@ -6,7 +6,8 @@ import { Alert, Pressable, StyleSheet, useWindowDimensions, View } from 'react-n
 import { Badge, Button, IconButton } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { CompactNavMenu, type CompactNavItem } from '@/components/CompactNavMenu';
-import { colors, controlHeights, spacing } from '@/constants/theme';
+import { SITE_LANGUAGE } from '@/constants/site-language';
+import { colors, controlHeights, shadows, spacing } from '@/constants/theme';
 import { useActivityCounts } from '@/hooks/useActivityCounts';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref, modeSetupHref } from '@/lib/account-mode';
@@ -24,9 +25,9 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
   const otherMode: UserRole = currentMode === 'customer' ? 'trader' : 'customer';
   const otherEnabled = otherMode === 'customer' ? user?.customerEnabled : user?.traderEnabled;
   const otherLabel = otherMode === 'customer' ? 'Homeowner' : 'Tradesperson';
-  const modeAction = otherEnabled ? `Switch to ${otherLabel}` : `Add ${otherLabel}`;
+  const modeAction = otherEnabled ? `Switch ${otherLabel}` : `Add ${otherLabel}`;
   const findHref = (currentMode === 'customer' ? '/(public)/directory' : '/trader/job-board') as Href;
-  const findLabel = currentMode === 'customer' ? 'Find trades' : 'Find work';
+  const findLabel = currentMode === 'customer' ? SITE_LANGUAGE.findTrade : SITE_LANGUAGE.findWork;
   const jobsHref = (currentMode === 'customer' ? '/customer/jobs' : '/trader/my-jobs') as Href;
   const quotesHref = '/trader/quotes' as Href;
   const profileHref = (currentMode === 'customer' ? '/customer/profile' : '/trader/profile') as Href;
@@ -63,16 +64,16 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
     { label: 'Jobs', onPress: () => go(jobsHref) },
     ...(currentMode === 'trader' ? [
       { label: 'Quotes', onPress: () => go(quotesHref) },
-      { label: 'Customer book', onPress: () => go('/trader/customers') },
-      { label: 'Working calendar', onPress: () => go('/trader/calendar') },
-      { label: 'Project+ planner', onPress: () => go('/trader/project-plus') },
-    ] satisfies CompactNavItem[] : [{ label: 'Project+ planner', onPress: () => go('/customer/project-plus') } satisfies CompactNavItem]),
+      { label: 'Customers', onPress: () => go('/trader/customers') },
+      { label: 'Calendar', onPress: () => go('/trader/calendar') },
+      { label: 'Project+', onPress: () => go('/trader/project-plus') },
+    ] satisfies CompactNavItem[] : [{ label: 'Project+', onPress: () => go('/customer/project-plus') } satisfies CompactNavItem]),
     { label: messageLabel, onPress: () => go(messagesHref) },
     { label: notificationLabel, onPress: () => go(notificationsHref) },
     { label: 'Profile', sectionLabel: 'Your account', dividerBefore: true, onPress: () => go(profileHref) },
-    { label: 'Account & security', onPress: () => go(settingsHref) },
-    { label: 'Advice Hub', sectionLabel: 'Help', dividerBefore: true, onPress: () => go('/(public)/advice') },
-    { label: modeAction, sectionLabel: 'Account mode', dividerBefore: true, disabled: switchingMode, onPress: () => void changeMode() },
+    { label: 'Settings', onPress: () => go(settingsHref) },
+    { label: 'Advice', sectionLabel: 'Help', dividerBefore: true, onPress: () => go('/(public)/advice') },
+    { label: modeAction, sectionLabel: 'Profiles', dividerBefore: true, disabled: switchingMode, onPress: () => void changeMode() },
     { label: 'Sign out', onPress: () => void doSignOut() },
   ];
 
@@ -85,14 +86,13 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
       </View>
       <CompactNavMenu items={compactItems} accessibilityLabel="Menu" />
     </View> : <View style={styles.actions}>
-      <Link href="/" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Home</Button></Link>
       <Link href={home} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Dashboard</Button></Link>
       <Link href={findHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{findLabel}</Button></Link>
       <Link href={jobsHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Jobs</Button></Link>
       {currentMode === 'trader' ? <Link href={quotesHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Quotes</Button></Link> : null}
       <Link href={messagesHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{messageLabel}</Button></Link>
       <Button mode="text" contentStyle={styles.navButtonContent} textColor={unreadNotifications ? colors.primary : colors.charcoalSoft} onPress={() => router.push(notificationsHref)}>{notificationLabel}</Button>
-      <Button mode="outlined" contentStyle={styles.navButtonContent} onPress={() => router.push(settingsHref)}>Account</Button>
+      <Button mode="outlined" contentStyle={styles.navButtonContent} onPress={() => router.push(settingsHref)} >Settings</Button>
       <Button mode={otherEnabled ? 'text' : 'outlined'} contentStyle={styles.navButtonContent} disabled={switchingMode} loading={switchingMode} onPress={() => void changeMode()}>{modeAction}</Button>
       <Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.muted} onPress={() => void doSignOut()}>Sign out</Button>
     </View>}
@@ -100,7 +100,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
 }
 
 const styles = StyleSheet.create({
-  header: { minHeight: 72, backgroundColor: colors.surfaceRaised, borderBottomWidth: 1, borderColor: colors.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 100, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4, overflow: 'visible' },
+  header: { minHeight: 72, backgroundColor: 'rgba(255,255,255,0.985)', borderBottomWidth: 1, borderColor: '#E8E1DA', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 100, ...shadows.subtle, overflow: 'visible' },
   headerCompact: { paddingHorizontal: spacing.md },
   headerDesktop: { paddingHorizontal: spacing.xxl },
   brandButton: { minHeight: 56, justifyContent: 'center', paddingHorizontal: spacing.xxs },
