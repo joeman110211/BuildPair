@@ -95,6 +95,13 @@ export const interaction = {
   pressOpacity: 0.94,
 } as const;
 
+export const motion = {
+  fast: 160,
+  standard: 240,
+  reveal: 360,
+  revealDistance: 12,
+} as const;
+
 export function publicResponsiveMetrics(width: number) {
   const narrowPhone = width < 380;
   const phone = width < 720;
