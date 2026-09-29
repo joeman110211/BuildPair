@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Badge, IconButton } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { CompactNavMenu, type CompactNavItem } from '@/components/CompactNavMenu';
-import { colors, spacing } from '@/constants/theme';
+import { colors, shadows, spacing } from '@/constants/theme';
 import { useActivityCounts } from '@/hooks/useActivityCounts';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref, modeSetupHref } from '@/lib/account-mode';
@@ -24,7 +24,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
   const otherMode: UserRole = currentMode === 'customer' ? 'trader' : 'customer';
   const otherEnabled = otherMode === 'customer' ? user?.customerEnabled : user?.traderEnabled;
   const otherLabel = otherMode === 'customer' ? 'Homeowner' : 'Tradesperson';
-  const modeAction = otherEnabled ? `Switch to ${otherLabel}` : `Add ${otherLabel}`;
+  const modeAction = otherEnabled ? `Switch ${otherLabel}` : `Add ${otherLabel}`;
   const messagesHref = (currentMode === 'customer' ? '/customer/messages' : '/trader/messages') as Href;
   const notificationsHref = (currentMode === 'customer' ? '/customer/notifications' : '/trader/notifications') as Href;
   const profileHref = (currentMode === 'customer' ? '/customer/profile' : '/trader/profile') as Href;
@@ -56,17 +56,17 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
 
   const items: CompactNavItem[] = [
     { label: 'Profile', sectionLabel: 'Your account', onPress: () => go(profileHref) },
-    { label: 'Account & security', onPress: () => go(settingsHref) },
+    { label: 'Settings', onPress: () => go(settingsHref) },
     ...(currentMode === 'trader' ? [
       { label: 'Quotes', sectionLabel: 'Business tools', dividerBefore: true, onPress: () => go('/trader/quotes') },
-      { label: 'Customer book', onPress: () => go('/trader/customers') },
-      { label: 'Working calendar', onPress: () => go('/trader/calendar') },
-      { label: 'Project+ planner', onPress: () => go('/trader/project-plus') },
-    ] satisfies CompactNavItem[] : [{ label: 'Project+ planner', sectionLabel: 'Planning', dividerBefore: true, onPress: () => go('/customer/project-plus') } satisfies CompactNavItem]),
+      { label: 'Customers', onPress: () => go('/trader/customers') },
+      { label: 'Calendar', onPress: () => go('/trader/calendar') },
+      { label: 'Project+', onPress: () => go('/trader/project-plus') },
+    ] satisfies CompactNavItem[] : [{ label: 'Project+', sectionLabel: 'Planning', dividerBefore: true, onPress: () => go('/customer/project-plus') } satisfies CompactNavItem]),
     { label: unreadMessages ? `Messages (${unreadMessages > 99 ? '99+' : unreadMessages})` : 'Messages', sectionLabel: 'Activity', dividerBefore: true, onPress: () => go(messagesHref) },
     { label: unreadNotifications ? `Notifications (${unreadNotifications > 99 ? '99+' : unreadNotifications})` : 'Notifications', onPress: () => go(notificationsHref) },
-    { label: modeAction, sectionLabel: 'Account mode', dividerBefore: true, disabled: switchingMode, onPress: () => void changeMode() },
-    { label: 'Advice Hub', sectionLabel: 'Help', dividerBefore: true, onPress: () => go('/(public)/advice') },
+    { label: modeAction, sectionLabel: 'Profiles', dividerBefore: true, disabled: switchingMode, onPress: () => void changeMode() },
+    { label: 'Advice', sectionLabel: 'Help', dividerBefore: true, onPress: () => go('/(public)/advice') },
     { label: 'Sign out', dividerBefore: true, onPress: () => void doSignOut() },
   ];
 
@@ -97,6 +97,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
     zIndex: 100,
+    ...shadows.subtle,
   },
   header: {
     minHeight: 58,
