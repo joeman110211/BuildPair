@@ -240,7 +240,7 @@ export default function NewJobScreen() {
     {step < 4 ? <Button mode="contained" contentStyle={styles.button} disabled={!stepValid} onPress={() => setStep((value) => value + 1)}>Next</Button> : <Button mode="contained" icon="send" contentStyle={styles.button} loading={busy} disabled={!stepValid || busy} onPress={submit}>{submitLabel}</Button>}
   </View>;
 
-  return <Screen title={STEP_TITLES[step]} subtitle={traderName ? `Request a quote from ${traderName}` : STEP_HELP[step]} footer={footer}>
+  return <Screen title={STEP_TITLES[step]} subtitle={traderName ? `Request a quote from ${traderName}` : STEP_HELP[step]} footer={footer} stickyFooter>
     <FormStepHeader current={step + 1} total={5} hint={STEP_HELP[step]} />
     {draftStatus ? <HelperText type="info" visible>{draftStatus}</HelperText> : null}
 
