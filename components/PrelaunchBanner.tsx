@@ -1,5 +1,5 @@
 import { Link, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { waitlistHref } from '@/lib/launch';
