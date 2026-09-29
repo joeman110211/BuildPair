@@ -16,7 +16,7 @@ export default function DownloadPage() {
         <Button icon="arrow-left" mode="text" textColor="#FFFFFF" compact style={styles.back} onPress={goBack}>Back</Button>
         <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Download BuildPair</Text>
         <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Web now. Mobile apps next.</Text>
-        <Text variant="bodyLarge" style={styles.intro}>BuildPair is being prepared for Android and iOS distribution. The public website already includes the download area so store links can be switched on cleanly at launch.</Text>
+        <Text variant="bodyLarge" style={styles.intro}>BuildPair is available on the web now. Android and iOS store releases are coming later.</Text>
       </View>
     </View>
     <View style={styles.content}>
@@ -34,7 +34,7 @@ export default function DownloadPage() {
       </View>
       <View style={styles.webCard}>
         <Text variant="headlineSmall" style={styles.cardTitle}>Use BuildPair on the web</Text>
-        <Text style={styles.body}>The web version remains the quickest way to use BuildPair before the store releases and will continue to work after the apps launch.</Text>
+        <Text style={styles.body}>Use BuildPair in your browser now. The web version will continue alongside the mobile apps.</Text>
         <Button mode="outlined" onPress={() => router.replace('/')}>Open BuildPair</Button>
       </View>
     </View>
