@@ -23,7 +23,7 @@ export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: 
     Animated.timing(reveal, {
       toValue: 1,
       duration: 160,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   }, [open, reveal]);
 
