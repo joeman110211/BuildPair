@@ -183,7 +183,7 @@ export default function TraderProfileStorefront() {
 
   return <Screen>
     {prelaunchProfile ? <AppCard style={styles.prelaunchNotice}>
-      <View style={styles.noticeRow}><View style={styles.noticeCopy}><Text variant="titleMedium" style={styles.panelTitle}>BuildPair pre-launch profile</Text><Text style={styles.muted}>You can browse this real trade profile now. Quote requests, messaging and direct contact stay locked until BuildPair launches on 15 October 2026.</Text></View>{profile.foundingTrade ? <Text style={styles.noticeBadge}>Founding BuildPair Trade</Text> : null}</View>
+      <View style={styles.noticeRow}><View style={styles.noticeCopy}><Text variant="titleMedium" style={styles.panelTitle}>BuildPair pre-launch profile</Text><Text style={styles.muted}>You can browse this real trade profile now. Quote requests, messaging and direct contact open when BuildPair launches.</Text></View>{profile.foundingTrade ? <Text style={styles.noticeBadge}>Launch member</Text> : null}</View>
     </AppCard> : null}
 
     {profile.shareOnly ? <AppCard style={styles.noticeCard}>

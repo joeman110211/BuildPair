@@ -8,15 +8,15 @@ import { RoleGate } from '@/components/RoleGate';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { colors } from '@/constants/theme';
-import { LAUNCH_DATE_LABEL, MARKETPLACE_OPEN, waitlistHref } from '@/lib/launch';
+import { MARKETPLACE_OPEN, waitlistHref } from '@/lib/launch';
 
 function HomeownerPrelaunchLocked() {
-  return <Screen title="Homeowner accounts open at launch" subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
+  return <Screen title="Homeowners open at launch" subtitle="Join the launch list and we’ll notify you when job posting opens.">
     <AppCard style={{ backgroundColor: colors.primarySoft, borderColor: colors.primary }}>
       <Chip icon="lock-clock">Marketplace not live yet</Chip>
       <Text variant="headlineSmall" style={{ color: colors.charcoal, fontWeight: '900' }}>We’re preparing the trade side first.</Text>
       <Text style={{ color: colors.text, lineHeight: 22 }}>Homeowner job posting, quote requests, messaging and payments remain closed until launch. This keeps BuildPair in setup mode while founding trades finish their profiles.</Text>
-      <Link href={waitlistHref('customer', 'customer-prelaunch-lock')} asChild><Button mode="contained">Get homeowner launch updates</Button></Link>
+      <Link href={waitlistHref('customer', 'customer-prelaunch-lock')} asChild><Button mode="contained">Join launch list</Button></Link>
       <Link href="/" asChild><Button mode="outlined">Back to BuildPair</Button></Link>
     </AppCard>
   </Screen>;

@@ -8,7 +8,7 @@ import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { modeSetupHref, signInHref } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { HOMEOWNER_REGISTRATION_OPEN, LAUNCH_DATE_LABEL } from '@/lib/launch';
+import { HOMEOWNER_REGISTRATION_OPEN } from '@/lib/launch';
 import { firstParam } from '@/lib/search-params';
 
 type InviteState = {
@@ -161,7 +161,7 @@ export default function EarlyAccessSignup() {
   }
 
   if (accountMode === 'customer' && !HOMEOWNER_REGISTRATION_OPEN) {
-    return <Screen title="Homeowner registration is not open yet" subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
+    return <Screen title="Homeowners open at launch" subtitle="Your place is saved and we’ll notify you when job posting opens.">
       <AppCard style={styles.inviteCard}>
         <Chip icon="lock-clock">Pre-launch</Chip>
         <Text variant="titleLarge" style={styles.heading}>Your invite is safe, but homeowner accounts stay closed for now.</Text>

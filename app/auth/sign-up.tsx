@@ -8,7 +8,7 @@ import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { modeSetupHref, parseAccountMode, signInHref } from '@/lib/account-mode';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { HOMEOWNER_REGISTRATION_OPEN, LAUNCH_DATE_LABEL, waitlistHref } from '@/lib/launch';
+import { HOMEOWNER_REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 import { firstParam } from '@/lib/search-params';
 
 type InviteStatus = {
@@ -61,15 +61,15 @@ export default function SignUpScreen() {
     && signUp.unverifiedFields.includes('email_address')
     && signUp.missingFields.length === 0;
   const verificationEmail = signUp.emailAddress ?? email;
-  const title = mode === 'customer' ? 'Create Homeowner Account' : 'Create Tradesperson Account';
+  const title = mode === 'customer' ? 'Create homeowner account' : 'Create tradesperson account';
 
   if (mode === 'customer' && !HOMEOWNER_REGISTRATION_OPEN) {
-    return <Screen title="Homeowner registration is not open yet" subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
+    return <Screen title="Homeowners open at launch" subtitle="Join the launch list and we’ll notify you when job posting opens.">
       <AppCard style={styles.inviteCard}>
         <Text variant="titleMedium" style={styles.inviteTitle}>Marketplace pre-launch</Text>
         <Text style={styles.inviteText}>Tradespeople can prepare their business profiles now. Homeowner accounts, jobs, quotes, messaging and payments open with the marketplace.</Text>
       </AppCard>
-      <Link href={waitlistHref('customer', 'homeowner-invite-paused')} asChild><Button mode="contained">Get launch updates</Button></Link>
+      <Link href={waitlistHref('customer', 'homeowner-invite-paused')} asChild><Button mode="contained">Join launch list</Button></Link>
     </Screen>;
   }
 

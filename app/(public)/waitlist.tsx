@@ -5,9 +5,9 @@ import { Button, Checkbox, Chip, HelperText, SegmentedButtons, Text, TextInput }
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
 import { trackPublicWaitlistSuccess } from '@/components/VisitorAnalytics';
+import { LAUNCH_OFFER, SITE_LANGUAGE } from '@/constants/site-language';
 import { colors, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { LAUNCH_DATE_LABEL } from '@/lib/launch';
 
 type Audience = 'homeowner' | 'trader';
 type ContactPreference = 'email' | 'sms' | 'both';
@@ -181,17 +181,17 @@ export function WaitlistPageContent({ fixedAudience }: { fixedAudience?: Audienc
       ? 'We’ll email and text you when BuildPair registration opens.'
       : 'We’ll email you when BuildPair registration opens.';
 
-  if (joined) return <Screen title={audience === 'trader' ? 'Your Founding Trade place is reserved' : 'Welcome to BuildPair early access'} subtitle={`BuildPair launches ${LAUNCH_DATE_LABEL}.`}>
+  if (joined) return <Screen title={audience === 'trader' ? 'Your BuildPair place is reserved' : 'Welcome to BuildPair early access'} subtitle="BuildPair is launching soon.">
     <AppCard style={styles.successCard}>
       <Chip icon="check-circle">Launch list confirmed</Chip>
-      <Text variant="headlineSmall" style={styles.heading}>{joined.alreadyJoined ? (audience === 'trader' ? 'Your founding place is already reserved.' : 'You’re already registered for early access.') : (audience === 'trader' ? 'You’re in the Surrey Founding 50 group.' : 'You’re in. Welcome to BuildPair early access.')}</Text>
+      <Text variant="headlineSmall" style={styles.heading}>{joined.alreadyJoined ? (audience === 'trader' ? 'Your place is already reserved.' : 'You’re already registered for early access.') : (audience === 'trader' ? 'You’re on the BuildPair launch list.' : 'You’re in. Welcome to BuildPair early access.')}</Text>
       <Text style={styles.body}>{chosenContactCopy} No account has been created yet. {audience === 'trader' ? 'We can help you finish the business profile when your early-access invite is ready.' : 'There is nothing else you have to do.'}</Text>
       {requestEarlyAccess ? <View style={styles.earlySuccess}>
         <Chip icon="key-clock-outline">Early access requested</Chip>
         <Text style={styles.body}>You’ve asked to start before the public launch. We’ll invite selected early users in manageable batches while we finish real-world testing. Requesting a place does not guarantee an invitation, but your interest is now recorded.</Text>
       </View> : null}
       {audience === 'trader' ? <>
-        <Text style={styles.body}><Text style={styles.strong}>Founding Trades:</Text> the first 100 eligible tradespeople to complete BuildPair registration during the launch offer receive 3 months of Pro free. Other eligible tradespeople joining during the launch offer receive 3 months of Plus free.</Text>
+        <Text style={styles.body}><Text style={styles.strong}>{LAUNCH_OFFER.badge}:</Text> join before launch, complete your trade profile and your free Pro period starts when the marketplace opens.</Text>
         <Text style={styles.body}>No pay-per-lead charges. Keep using BuildPair for genuine jobs and BuildPay completions and you can unlock further membership rewards.</Text>
         <Link href="/(public)/rewards" asChild><Button mode="text">See BuildPair Rewards →</Button></Link>
       </> : null}
@@ -238,11 +238,11 @@ export function WaitlistPageContent({ fixedAudience }: { fixedAudience?: Audienc
     <Link href="/" asChild><Button mode="text">Back to BuildPair</Button></Link>
   </Screen>;
 
-  return <Screen title={audience === 'trader' ? 'Become a BuildPair Founding Trade' : 'Get BuildPair early access'} subtitle={audience === 'trader' ? `Surrey Founding 50 • launching ${LAUNCH_DATE_LABEL}` : `Launching ${LAUNCH_DATE_LABEL}. Get notified and request early access.`}>
+  return <Screen title={audience === 'trader' ? 'Join BuildPair' : 'Get BuildPair early access'} subtitle={audience === 'trader' ? 'Join free, build your profile now and be ready for launch.' : 'Get notified when BuildPair opens and homeowners can start posting jobs.'}>
     <AppCard style={styles.heroCard}>
       <Chip icon="rocket-launch-outline">You’re early. That’s a good thing.</Chip>
-      <Text variant="headlineSmall" style={styles.heading}>{audience === 'trader' ? 'Claim a Surrey Founding 50 place.' : 'Get notified at launch, or ask to get in sooner.'}</Text>
-      <Text style={styles.body}>{audience === 'trader' ? 'For established Surrey trades who want local opportunities without buying individual leads. Reserve a place with your email now; we can help with the full profile afterwards.' : 'BuildPair gives homeowners a clearer way to find, compare and manage work. Early access takes less than a minute.'}</Text>
+      <Text variant="headlineSmall" style={styles.heading}>{audience === 'trader' ? 'Create your trade profile before launch.' : 'Get notified at launch, or ask to get in sooner.'}</Text>
+      <Text style={styles.body}>{audience === 'trader' ? 'Join free, build your profile now and get ready for local opportunities without paying for individual leads.' : 'BuildPair gives homeowners a clearer way to find, compare and manage work. Early access takes less than a minute.'}</Text>
     </AppCard>
 
     <AppCard>
@@ -288,8 +288,8 @@ export function WaitlistPageContent({ fixedAudience }: { fixedAudience?: Audienc
       {audience === 'trader' ? <>
         <TextInput mode="outlined" label="Main trade (optional)" value={trade} onChangeText={setTrade} placeholder="e.g. Plumber, electrician, tiler" />
         <AppCard elevated={false} style={styles.offerCard}>
-          <Text variant="titleMedium" style={styles.heading}>Founding 50: Surrey launch group</Text>
-          <Text style={styles.body}>We’re personally onboarding the first 50 Surrey trades with early setup support and founding-member recognition. Separately, the first 100 eligible tradespeople to complete BuildPair registration during the launch offer receive <Text style={styles.strong}>3 months of BuildPair Pro free</Text>.</Text>
+          <Text variant="titleMedium" style={styles.heading}>Launch offer</Text>
+          <Text style={styles.body}>Join before launch and complete your trade profile. <Text style={styles.strong}>You’ll receive 3 months of BuildPair Pro free from launch.</Text></Text>
           <Text style={styles.tradePromise}>No paying for a lead that goes nowhere. No giant bill just for sitting in a directory. BuildPair uses straightforward membership options and gives you tools to quote, manage and complete the work once you win it.</Text>
           <Text variant="bodySmall" style={styles.smsNote}>BuildPair Rewards can add further Pro time for genuine completed jobs, BuildPay completions and qualifying member activity. Promotional eligibility and fair-use rules apply.</Text>
           <Link href="/(public)/rewards" asChild><Button mode="text">View BuildPair Rewards</Button></Link>

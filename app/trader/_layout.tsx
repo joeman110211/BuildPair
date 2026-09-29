@@ -7,8 +7,9 @@ import { NativeBottomNav } from '@/components/NativeBottomNav';
 import { RoleGate } from '@/components/RoleGate';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { LAUNCH_OFFER } from '@/constants/site-language';
 import { colors } from '@/constants/theme';
-import { FOUNDING_PRO_MONTHS, LAUNCH_DATE_LABEL, MARKETPLACE_OPEN } from '@/lib/launch';
+import { MARKETPLACE_OPEN } from '@/lib/launch';
 
 const PRELAUNCH_SETUP_ROUTES = [
   '/trader/onboarding',
@@ -26,14 +27,14 @@ const PRELAUNCH_SETUP_ROUTES = [
 ];
 
 function TraderPrelaunchHome() {
-  return <Screen title="Your BuildPair profile is in pre-launch" subtitle={`Marketplace launch: ${LAUNCH_DATE_LABEL}`}>
+  return <Screen title="Your BuildPair profile is in pre-launch" subtitle="Marketplace launching soon">
     <AppCard style={{ backgroundColor: colors.primarySoft, borderColor: colors.primary }}>
       <Chip icon="hammer-wrench">Profile setup open</Chip>
       <Text variant="headlineSmall" style={{ color: colors.charcoal, fontWeight: '900' }}>Get everything ready before the first jobs go live.</Text>
-      <Text style={{ color: colors.text, lineHeight: 22 }}>You can complete and edit your real public business profile, service area, portfolio, credentials, Google reviews and founding-Pro business tools now. Visitors can browse completed trade profiles before launch, but contact, quotes and marketplace messaging remain locked.</Text>
+      <Text style={{ color: colors.text, lineHeight: 22 }}>You can complete and edit your real public business profile, service area, portfolio, credentials, Google reviews and Pro business tools now. Visitors can browse completed trade profiles before launch, but contact, quotes and marketplace messaging remain locked.</Text>
       <Text style={{ color: colors.text, lineHeight: 22 }}><Text style={{ fontWeight: '900' }}>Marketplace jobs, marketplace messaging, BuildPay money movement, payouts and paid plan checkout are locked during pre-launch. Your standalone Quote Builder, invoices, templates and availability tools are available now for launch preparation.</Text> They unlock when BuildPair officially launches.</Text>
-      <Text style={{ color: colors.text, lineHeight: 22 }}>Eligible founding trades reserve <Text style={{ fontWeight: '900' }}>{FOUNDING_PRO_MONTHS} months of BuildPair Pro free</Text>. The promotional clock starts at launch, not while you are setting up.</Text>
-      <Link href="/trader/onboarding" asChild><Button mode="contained" icon="account-edit-outline">Complete my launch-ready profile</Button></Link>
+      <Text style={{ color: colors.text, lineHeight: 22 }}><Text style={{ fontWeight: '900' }}>{LAUNCH_OFFER.short}</Text></Text>
+      <Link href="/trader/onboarding" asChild><Button mode="contained" icon="account-edit-outline">Create profile</Button></Link>
       <Link href="/trader/profile" asChild><Button mode="outlined">View my public profile</Button></Link>
       <Link href="/trader/templates" asChild><Button mode="outlined" icon="text-box-multiple-outline">Set up Pro templates</Button></Link>
     </AppCard>
@@ -41,7 +42,7 @@ function TraderPrelaunchHome() {
 }
 
 function TraderPrelaunchLocked() {
-  return <Screen title="This part opens at launch" subtitle={`BuildPair marketplace activity is locked until ${LAUNCH_DATE_LABEL}.`}>
+  return <Screen title="This part opens at launch" subtitle="Marketplace activity opens at launch.">
     <AppCard>
       <Chip icon="lock-clock">Pre-launch setup only</Chip>
       <Text variant="titleLarge" style={{ color: colors.charcoal, fontWeight: '900' }}>Your account is real. The marketplace is not live yet.</Text>

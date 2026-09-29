@@ -1,8 +1,9 @@
 import { Link } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
-import { colors, controlHeights, radii, spacing } from '@/constants/theme';
-import { LAUNCH_DATE_LABEL, REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
+import { LAUNCH_OFFER, SITE_LANGUAGE } from '@/constants/site-language';
+import { colors, controlHeights, radii, shadows, spacing } from '@/constants/theme';
+import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 const plans = [
   {
@@ -117,7 +118,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
         const starter = plan.tone === 'starter';
         const features = compact ? plan.compactFeatures : plan.features;
         const href = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', `pricing-${plan.tone}`);
-        const cta = REGISTRATION_OPEN ? plan.cta : 'Create launch-ready profile';
+        const cta = REGISTRATION_OPEN ? plan.cta : SITE_LANGUAGE.createProfile;
         return <View key={plan.name} style={[styles.card, compact && styles.cardCompact, featured && styles.cardFeatured, pro && styles.cardPro]}>
           <Text style={[styles.eyebrow, featured && styles.eyebrowFeatured, pro && styles.eyebrowPro]}>{plan.eyebrow}</Text>
           <Text variant="titleLarge" style={styles.name}>{plan.name}</Text>
@@ -140,7 +141,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
         </View>;
       })}
     </View>
-    {!REGISTRATION_OPEN ? <Text style={styles.launchNote}>Trade profile setup is open now. Marketplace activity and paid subscriptions unlock at launch on {LAUNCH_DATE_LABEL}; founding Pro time starts from launch day.</Text> : null}
+    {!REGISTRATION_OPEN ? <Text style={styles.launchNote}>Trade profile setup is open now. Marketplace activity and paid plans open at launch. {LAUNCH_OFFER.short}</Text> : null}
     <Text style={styles.note}>Category limits count broad trade categories, not every service inside them. Core direct homeowner requests use the same five-opportunity monthly allowance. On Plus and Pro, direct homeowner requests do not use the open-marketplace allowance. Google reviews remain clearly labelled as Google reviews and only appear after the business listing connection is approved.</Text>
   </View>;
 }
@@ -148,7 +149,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
 const styles = StyleSheet.create({
   wrap: { gap: spacing.lg },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, alignItems: 'stretch' },
-  card: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, padding: spacing.xl, gap: spacing.md, borderWidth: 1, borderColor: colors.border, shadowColor: colors.charcoal, shadowOpacity: 0.04, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 2 },
+  card: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, padding: spacing.xl, gap: spacing.md, borderWidth: 1, borderColor: colors.border, ...shadows.subtle },
   cardCompact: { flexBasis: 280, padding: spacing.lg, gap: spacing.sm },
   cardFeatured: { borderColor: colors.primary, borderWidth: 2, backgroundColor: '#FFFCF9' },
   cardPro: { borderColor: '#CAD6E0', backgroundColor: '#FAFCFE' },

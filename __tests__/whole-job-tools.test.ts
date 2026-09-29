@@ -146,6 +146,6 @@ describe('whole-job BuildPair tools', () => {
     expect(updates).toContain('Working calendar');
     expect(updates).toContain('Project+ trade add-on');
     expect(updates).toContain('Dedicated project file library');
-    expect(source('components/PublicHeader.tsx')).toContain("What's new");
+    expect(source('components/PublicHeader.tsx')).toContain("Updates");
   });
 });

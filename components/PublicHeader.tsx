@@ -6,29 +6,15 @@ import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 're
 import { Button, Text } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { CompactNavMenu, type CompactNavItem } from '@/components/CompactNavMenu';
-import { colors, controlHeights, radii, spacing } from '@/constants/theme';
+import { colors, controlHeights, radii, shadows, spacing } from '@/constants/theme';
+import { PUBLIC_NAV_ITEMS, SITE_LANGUAGE } from '@/constants/site-language';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { dashboardHref } from '@/lib/account-mode';
 import { apiFetch } from '@/lib/api';
 import { useAuthAvailable } from '@/lib/auth-availability';
-import { waitlistHref } from '@/lib/launch';
 import type { UserRole } from '@/types';
 
-const NAV_ITEMS: { label: string; href: Href }[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Find Trades', href: '/(public)/directory' },
-  { label: 'How It Works', href: '/(public)/how-it-works' },
-  { label: 'Membership', href: '/(public)/pricing' as Href },
-  { label: 'Advice Hub', href: '/(public)/advice' as Href },
-  { label: 'For Trades', href: '/(public)/for-tradespeople' },
-];
-
-const QUICK_NAV: { label: string; href: Href }[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Find Trades', href: '/(public)/directory' },
-  { label: 'Advice Hub', href: '/(public)/advice' as Href },
-  { label: 'For Trades', href: '/(public)/for-tradespeople' },
-];
+const QUICK_NAV = PUBLIC_NAV_ITEMS.slice(0, 4);
 
 function HeaderBrand({ compact = false }: { compact?: boolean }) {
   return <Link href="/" asChild><Pressable style={styles.brandPressable} accessibilityLabel="BuildPair home"><BuildPairLogo compact={compact} /></Pressable></Link>;
@@ -38,26 +24,25 @@ function NavMenu({ dashboard, signedIn, onDashboard, onSignOut, preview = false 
   const router = useRouter();
   const go = (href: Href) => router.push(href);
   const items: CompactNavItem[] = [
-    { label: 'Home', sectionLabel: 'Explore', onPress: () => go('/') },
-    { label: 'Find Trades', onPress: () => go('/(public)/directory') },
-    { label: 'How It Works', onPress: () => go('/(public)/how-it-works') },
-    { label: 'Membership', onPress: () => go('/(public)/pricing') },
-    { label: 'For Homeowners', sectionLabel: 'Guides', dividerBefore: true, onPress: () => go('/(public)/for-homeowners') },
-    { label: 'For Tradespeople', onPress: () => go('/(public)/for-tradespeople') },
-    { label: 'Advice Hub', onPress: () => go('/(public)/advice') },
-    { label: "What's new", onPress: () => go('/(public)/updates') },
-    { label: 'Trust & Safety', sectionLabel: 'Support', dividerBefore: true, onPress: () => go('/(public)/trust-safety') },
-    { label: 'Contact Us', onPress: () => go('/(public)/contact') },
+    { label: SITE_LANGUAGE.findTrade, sectionLabel: 'Explore', onPress: () => go('/(public)/directory') },
+    { label: 'How it works', onPress: () => go('/(public)/how-it-works') },
+    { label: 'For tradespeople', onPress: () => go('/(public)/for-tradespeople') },
+    { label: SITE_LANGUAGE.pricing, onPress: () => go('/(public)/pricing') },
+    { label: 'Advice', onPress: () => go('/(public)/advice') },
+    { label: 'For homeowners', sectionLabel: 'Guides', dividerBefore: true, onPress: () => go('/(public)/for-homeowners') },
+    { label: 'Updates', onPress: () => go('/(public)/updates') },
+    { label: 'Trust & safety', sectionLabel: 'Support', dividerBefore: true, onPress: () => go('/(public)/trust-safety') },
+    { label: 'Contact', onPress: () => go('/(public)/contact') },
   ];
 
   if (preview) {
-    items.push({ label: 'Get early access', sectionLabel: 'Launch', dividerBefore: true, onPress: () => go(waitlistHref(null, 'header-menu')) });
+    items.push({ label: SITE_LANGUAGE.joinBuildPair, sectionLabel: 'Launch', dividerBefore: true, onPress: () => go('/auth/account') });
   } else if (signedIn && dashboard) {
     items.push({ label: 'Dashboard', sectionLabel: 'Account', dividerBefore: true, onPress: () => onDashboard ? onDashboard() : go(dashboard) });
     items.push({ label: 'Sign out', onPress: () => onSignOut?.() });
   } else {
     items.push({ label: 'Sign in', sectionLabel: 'Account', dividerBefore: true, onPress: () => go('/auth/account') });
-    items.push({ label: 'Get early access', onPress: () => go(waitlistHref(null, 'header-menu')) });
+    items.push({ label: SITE_LANGUAGE.joinBuildPair, onPress: () => go('/auth/account') });
   }
 
   return <CompactNavMenu items={items} accessibilityLabel="Menu" />;
@@ -65,7 +50,7 @@ function NavMenu({ dashboard, signedIn, onDashboard, onSignOut, preview = false 
 
 function DesktopNav() {
   return <View style={styles.desktopNav}>
-    {NAV_ITEMS.slice(1).map((item) => <Link href={item.href} asChild key={item.label}><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{item.label}</Button></Link>)}
+    {PUBLIC_NAV_ITEMS.map((item) => <Link href={item.href} asChild key={item.label}><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{item.label}</Button></Link>)}
   </View>;
 }
 
@@ -115,7 +100,7 @@ function AuthenticatedHeader() {
     <HeaderBrand />
     <View style={styles.actions}>
       <DesktopNav />
-      {isSignedIn ? <><Button mode="contained" style={styles.headerActionButton} contentStyle={styles.primaryAction} onPress={() => void openDashboard()}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>Sign in</Button></Link><Link href={waitlistHref(null, 'header')} asChild><Button mode="contained" style={styles.headerActionButton} contentStyle={styles.primaryAction}>Create account</Button></Link><NavMenu /></>}
+      {isSignedIn ? <><Button mode="contained" style={styles.headerActionButton} contentStyle={styles.primaryAction} onPress={() => void openDashboard()}>Dashboard</Button><NavMenu dashboard={dashboard} signedIn onDashboard={() => void openDashboard()} onSignOut={() => void doSignOut()} /></> : <><Link href="/auth/account" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoal}>{SITE_LANGUAGE.signIn}</Button></Link><Link href="/auth/account" asChild><Button mode="contained" style={styles.headerActionButton} contentStyle={styles.primaryAction}>{SITE_LANGUAGE.joinBuildPair}</Button></Link><NavMenu /></>}
     </View>
   </View>;
 }
@@ -124,7 +109,7 @@ function PreviewHeader() {
   const { width } = useWindowDimensions();
   const compact = width < 1040;
   if (compact) return <CompactShell menu={<NavMenu preview />} />;
-  return <View style={styles.header}><HeaderBrand /><View style={styles.actions}><DesktopNav /><Link href={waitlistHref(null, 'preview-header')} asChild><Button mode="contained" style={styles.headerActionButton} contentStyle={styles.primaryAction}>Create account</Button></Link><Text variant="bodySmall" style={styles.preview}>Public preview</Text><NavMenu preview /></View></View>;
+  return <View style={styles.header}><HeaderBrand /><View style={styles.actions}><DesktopNav /><Link href="/auth/account" asChild><Button mode="contained" style={styles.headerActionButton} contentStyle={styles.primaryAction}>{SITE_LANGUAGE.joinBuildPair}</Button></Link><Text variant="bodySmall" style={styles.preview}>Public preview</Text><NavMenu preview /></View></View>;
 }
 
 export function PublicHeader() {
@@ -132,12 +117,12 @@ export function PublicHeader() {
   return authAvailable ? <AuthenticatedHeader /> : <PreviewHeader />;
 }
 
-const baseHeader = { minHeight: 72, paddingHorizontal: spacing.xxl, backgroundColor: 'rgba(255,255,255,0.985)', flexDirection: 'row' as const, justifyContent: 'space-between' as const, alignItems: 'center' as const };
+const baseHeader = { minHeight: 74, paddingHorizontal: spacing.xxl, backgroundColor: 'rgba(255,255,255,0.985)', flexDirection: 'row' as const, justifyContent: 'space-between' as const, alignItems: 'center' as const };
 
 const styles = StyleSheet.create({
-  shell: { backgroundColor: 'rgba(255,255,255,0.985)', borderBottomWidth: 1, borderColor: colors.border, zIndex: 200, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4, overflow: 'visible', flexShrink: 0 },
+    shell: { backgroundColor: 'rgba(255,255,255,0.985)', borderBottomWidth: 1, borderColor: '#ECE6E0', zIndex: 200, ...shadows.subtle, overflow: 'visible', flexShrink: 0 },
   compactHeader: { ...baseHeader, paddingHorizontal: spacing.md, zIndex: 200, overflow: 'visible', flexShrink: 0 },
-  header: { ...baseHeader, borderBottomWidth: 1, borderColor: colors.border, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1, zIndex: 20 },
+  header: { ...baseHeader, borderBottomWidth: 1, borderColor: '#ECE6E0', ...shadows.subtle, zIndex: 20 },
   brandPressable: { minHeight: 64, justifyContent: 'center', paddingHorizontal: spacing.xxs },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs, justifyContent: 'flex-end' },
   desktopNav: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },

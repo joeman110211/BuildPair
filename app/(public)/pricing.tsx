@@ -15,9 +15,9 @@ export default function PricingPage() {
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
     <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroInner}>
-        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Tradesperson membership</Text>
-        <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Simple monthly plans, built around how much of the marketplace you actually use.</Text>
-        <Text variant="bodyLarge" style={styles.intro}>BuildPair keeps Starter useful, adds a low-cost Core route for occasional work, makes Plus the everyday marketplace plan and reserves the strongest growth tools for Pro.</Text>
+        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Tradesperson pricing</Text>
+        <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Simple plans. Clear value. No pay-per-lead charges.</Text>
+        <Text variant="bodyLarge" style={styles.intro}>Start free, then choose the plan that matches how much marketplace access and business tooling you actually need.</Text>
         <View style={styles.heroActions}>
           <Link href={primaryHref} asChild><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.primary}>{primaryLabel}</Button></Link>
           <Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.outline}>See trade features</Button></Link>
