@@ -9,7 +9,7 @@ import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors, controlHeights, spacing } from '@/constants/theme';
 import { apiFetch, ApiError, errorMessage } from '@/lib/api';
-import { LAUNCH_DATE_LABEL, MARKETPLACE_OPEN } from '@/lib/launch';
+import { MARKETPLACE_OPEN } from '@/lib/launch';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import type { Job, Quote, TraderProfile } from '@/types';
 
@@ -96,7 +96,7 @@ export default function TraderDashboard() {
       <View style={styles.row}>
         <View style={styles.flex}>
           <Text variant="titleLarge" style={styles.cardTitle}>Profile setup is live. Marketplace activity is not.</Text>
-          <Text style={styles.muted}>BuildPair launches {LAUNCH_DATE_LABEL}. Jobs, quotes, messaging, BuildPay, subscriptions and payout setup stay locked until launch, so there is nothing missing from your account right now.</Text>
+          <Text style={styles.muted}>BuildPair is launching soon. Jobs, marketplace messaging, BuildPay, subscriptions and payout setup stay locked until launch, so there is nothing missing from your account right now.</Text>
         </View>
         <Chip icon="rocket-launch-outline">Launch ready</Chip>
       </View>
@@ -119,7 +119,7 @@ export default function TraderDashboard() {
           <Text style={styles.membershipEyebrow}>CURRENT MEMBERSHIP</Text>
           <Text variant="titleLarge" style={styles.cardTitle}>{plan.name}</Text>
           <Text style={styles.muted}>{!marketplaceEnabled && profile.subscriptionTier !== 'free'
-            ? `${plan.name} is reserved for launch. Your founding offer starts when BuildPair opens, so pre-launch setup does not burn any paid or free membership time.`
+            ? `${plan.name} is reserved for launch. Your launch offer starts when BuildPair opens, so pre-launch setup does not burn any paid or free membership time.`
             : profile.subscriptionTier === 'free'
               ? 'Your Starter profile can be shared externally and you can browse marketplace jobs. Upgrade to Core, Plus or Pro to appear in BuildPair search after launch and use marketplace opportunities.'
               : `${Math.max(0, offerLimit - offersUsed)} of ${offerLimit} marketplace offers remaining this month. An open-marketplace opportunity is counted when you first engage with a job. Core direct requests share its five-opportunity allowance; Plus and Pro direct requests do not use their open-market allowance.`}</Text>
@@ -128,7 +128,7 @@ export default function TraderDashboard() {
       </View>
       {offerLimit > 0 ? <><ProgressBar progress={offerProgress} color={colors.primary} style={styles.progress} /><Text style={styles.offerMeta}>{offersUsed} used · {offerLimit} monthly allowance</Text></> : null}
       <View style={styles.membershipActions}>
-        <Link href="/trader/subscription" asChild><Button mode={profile.subscriptionTier === 'free' ? 'contained' : 'outlined'} contentStyle={styles.actionButton}>{profile.subscriptionTier === 'free' ? 'View membership options' : 'Manage membership & payouts'}</Button></Link>
+        <Link href="/trader/subscription" asChild><Button mode={profile.subscriptionTier === 'free' ? 'contained' : 'outlined'} contentStyle={styles.actionButton}>{profile.subscriptionTier === 'free' ? 'View pricing' : 'Plans & payouts'}</Button></Link>
         <Link href="/trader/analytics" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Business analytics</Button></Link>
       </View>
     </AppCard>
