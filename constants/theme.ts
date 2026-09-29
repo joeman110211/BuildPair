@@ -66,6 +66,35 @@ export const controlHeights = {
   prominent: 50,
 } as const;
 
+export const shadows = {
+  subtle: {
+    shadowColor: colors.charcoal,
+    shadowOpacity: 0.035,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
+  },
+  raised: {
+    shadowColor: colors.charcoal,
+    shadowOpacity: 0.07,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 3,
+  },
+} as const;
+
+export const typography = {
+  eyebrow: { fontSize: 12, lineHeight: 16, fontWeight: '800' as const, letterSpacing: 0.7 },
+  body: { fontSize: 15, lineHeight: 22 },
+  bodySmall: { fontSize: 13, lineHeight: 19 },
+  label: { fontSize: 14, lineHeight: 18, fontWeight: '700' as const },
+} as const;
+
+export const interaction = {
+  transitionMs: 180,
+  pressOpacity: 0.94,
+} as const;
+
 export function publicResponsiveMetrics(width: number) {
   const narrowPhone = width < 380;
   const phone = width < 720;
