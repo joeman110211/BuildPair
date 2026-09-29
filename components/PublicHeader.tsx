@@ -30,7 +30,7 @@ function NavMenu({ dashboard, signedIn, onDashboard, onSignOut, preview = false 
     { label: SITE_LANGUAGE.pricing, onPress: () => go('/(public)/pricing') },
     { label: 'Advice', onPress: () => go('/(public)/advice') },
     { label: 'For homeowners', sectionLabel: 'Guides', dividerBefore: true, onPress: () => go('/(public)/for-homeowners') },
-    { label: 'What’s new', onPress: () => go('/(public)/updates') },
+    { label: 'Updates', onPress: () => go('/(public)/updates') },
     { label: 'Trust & safety', sectionLabel: 'Support', dividerBefore: true, onPress: () => go('/(public)/trust-safety') },
     { label: 'Contact', onPress: () => go('/(public)/contact') },
   ];
