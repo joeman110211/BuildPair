@@ -49,9 +49,9 @@ export default function CustomerDashboard() {
 
   return <Screen title={`Good to see you, ${firstName}`} subtitle="Your jobs do not disappear after a quote. Quotes, messages, payment stages and project progress all continue here.">
     <View style={styles.heroActions}>
-      <Link href="/customer/jobs" asChild><Button mode="contained" icon="briefcase-outline" contentStyle={styles.actionButton}>My jobs & payments</Button></Link>
+      <Link href="/customer/jobs" asChild><Button mode="contained" icon="briefcase-outline" contentStyle={styles.actionButton}>My jobs</Button></Link>
       <Link href="/customer/new-job" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Post a job</Button></Link>
-      <Link href="/(public)/directory" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Find local trades</Button></Link>
+      <Link href="/(public)/directory" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Find a trade</Button></Link>
       <Link href="/customer/saved-trades" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Saved trades</Button></Link>
       <Link href="/customer/home-record" asChild><Button mode="outlined" icon="home-heart" contentStyle={styles.actionButton}>Home Record</Button></Link>
       <Link href="/customer/attention" asChild><Button mode="outlined" icon="bell-alert-outline" contentStyle={styles.actionButton}>Needs attention</Button></Link>
