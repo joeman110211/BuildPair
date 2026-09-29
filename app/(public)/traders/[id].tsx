@@ -56,7 +56,7 @@ export default function PublicTraderProfileRoute() {
         <Text variant="titleMedium" style={styles.businessName}>{profile.businessName}</Text>
         <Text style={styles.tradeLine}>{categories.filter(Boolean).join(' · ')}</Text>
         <Text style={styles.body}>
-          This tradesperson has a BuildPair account, but full public profiles are available only while a paid tradesperson membership is active.
+          This tradesperson has a BuildPair account, but full public profiles are available only while an eligible paid trade plan is active.
         </Text>
         <Text style={styles.body}>
           Creating or signing into a homeowner account will not unlock an inactive profile. If this tradesperson activates their public profile later, this same shared link will begin showing it automatically.
