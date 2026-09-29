@@ -9,7 +9,7 @@ import { LAUNCH_OFFER, SITE_LANGUAGE } from '@/constants/site-language';
 import { colors } from '@/constants/theme';
 import { modeSetupHref, signInHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
-import { FOUNDING_PRO_MONTHS, TRADER_PRELAUNCH_REGISTRATION_OPEN } from '@/lib/launch';
+import { TRADER_PRELAUNCH_REGISTRATION_OPEN } from '@/lib/launch';
 import { firstParam } from '@/lib/search-params';
 
 
