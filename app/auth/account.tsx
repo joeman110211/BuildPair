@@ -4,9 +4,9 @@ import { Button, Chip, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { LoadingScreen, Screen } from '@/components/Screen';
+import { LAUNCH_OFFER, SITE_LANGUAGE } from '@/constants/site-language';
 import { colors } from '@/constants/theme';
 import { dashboardHref, signInHref, signUpHref } from '@/lib/account-mode';
-import { LAUNCH_DATE_LABEL } from '@/lib/launch';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export default function AccountEntryScreen() {
@@ -19,9 +19,9 @@ export default function AccountEntryScreen() {
   return <Screen>
     <View style={styles.hero}>
       <BuildPairLogo tagline />
-      <Chip icon="rocket-launch-outline">Launching {LAUNCH_DATE_LABEL}</Chip>
-      <Text variant="headlineSmall" style={styles.heading}>New account registration is paused until launch.</Text>
-      <Text style={styles.subheading}>Existing members can still sign in normally. If you’re new to BuildPair, join the launch waiting list and we’ll let you know as soon as registration opens.</Text>
+      <Chip icon="rocket-launch-outline">{SITE_LANGUAGE.launchingSoon}</Chip>
+      <Text variant="headlineSmall" style={styles.heading}>Choose how you want to join BuildPair.</Text>
+      <Text style={styles.subheading}>Tradespeople can create a profile now. Homeowners can join the launch list and we’ll notify you when job posting opens.</Text>
     </View>
 
     <View style={styles.cards}>
@@ -34,8 +34,8 @@ export default function AccountEntryScreen() {
           </View>
         </View>
         <Text style={styles.body}>Find trades, compare quotes and keep the whole job together when BuildPair opens.</Text>
-        <Link href={signUpHref('customer')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Join Homeowner Waitlist</Button></Link>
-        <Link href={signInHref('customer')} asChild><Button mode="text">Existing Homeowner Sign In</Button></Link>
+        <Link href={signUpHref('customer')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Join launch list</Button></Link>
+        <Link href={signInHref('customer')} asChild><Button mode="text">Homeowner sign in</Button></Link>
       </AppCard>
 
       <AppCard style={styles.roleCard}>
@@ -43,12 +43,12 @@ export default function AccountEntryScreen() {
           <View style={styles.roleIcon}><Text style={styles.emoji}>🔨</Text></View>
           <View style={styles.roleHeading}>
             <Text variant="headlineSmall" style={styles.title}>I’m a Tradesperson</Text>
-            <Chip compact style={styles.trialChip} textStyle={styles.trialChipText}>Founding offer</Chip>
+            <Chip compact style={styles.trialChip} textStyle={styles.trialChipText}>{LAUNCH_OFFER.badge}</Chip>
           </View>
         </View>
-        <Text style={styles.body}>Join the waiting list for launch. The first 50 eligible waiting-list trades who complete registration within 24 hours of launch get 3 months of Pro free.</Text>
-        <Link href={signUpHref('trader')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Join Tradesperson Waitlist</Button></Link>
-        <Link href={signInHref('trader')} asChild><Button mode="text">Existing Tradesperson Sign In</Button></Link>
+        <Text style={styles.body}>{LAUNCH_OFFER.trade}</Text>
+        <Link href={signUpHref('trader')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Create profile</Button></Link>
+        <Link href={signInHref('trader')} asChild><Button mode="text">Tradesperson sign in</Button></Link>
       </AppCard>
     </View>
 
