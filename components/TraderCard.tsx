@@ -19,11 +19,9 @@ export function TraderCard({
 }) {
   const router = useRouter();
   const rating = Number(trader.averageRating || 0);
-  const isPro = trader.subscriptionTier === 'featured';
-  const membership = trader.isSubscriptionActive ? (isPro ? 'BuildPair Pro' : trader.subscriptionTier === 'basic' ? 'BuildPair Plus' : trader.subscriptionTier === 'core' ? 'BuildPair Core' : null) : null;
   const responseLabel = trader.averageResponseHours && trader.averageResponseHours > 0 ? `Replies in ~${trader.averageResponseHours < 1 ? '<1' : Math.round(trader.averageResponseHours)}h` : trader.responseRate && trader.responseRate > 0 ? `${Math.round(trader.responseRate)}% response rate` : null;
   const metaLine = [
-    trader.reviewCount ? `${rating.toFixed(1)} ★ · ${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}` : 'New to BuildPair',
+    trader.reviewCount ? `${rating.toFixed(1)} ★ · ${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}` : 'Profile live',
     `${trader.radiusMiles} mile radius`,
     trader.availabilitySummary ? `Available ${trader.availabilitySummary}` : null,
     responseLabel,
@@ -35,7 +33,7 @@ export function TraderCard({
       {trader.photos[0]
         ? <Image source={{ uri: trader.photos[0] }} style={styles.image} accessibilityLabel={`${trader.businessName} work example`} />
         : <View style={styles.placeholder}><View style={styles.placeholderMark}><Text style={styles.placeholderLetter}>{trader.businessName.slice(0, 1).toUpperCase()}</Text></View><Text style={styles.placeholderText}>Work gallery coming soon</Text></View>}
-      {membership ? <View style={[styles.membershipBadge, isPro && styles.proBadge]}><Text style={[styles.membershipText, isPro && styles.proMembershipText]}>{membership}</Text></View> : null}
+      {(trader.verifiedCredentialCount ?? 0) > 0 ? <View style={styles.evidenceBadge}><Text style={styles.evidenceText}>{trader.verifiedCredentialCount} credential{trader.verifiedCredentialCount === 1 ? '' : 's'} checked</Text></View> : null}
     </View>
     <View style={styles.content}>
       <View style={styles.row}>
@@ -44,7 +42,7 @@ export function TraderCard({
           <Text style={styles.muted}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
         </View>
         <View style={styles.badges}>
-          {trader.foundingTrade ? <View style={styles.softBadge}><Text style={styles.softBadgeText}>Founding trade</Text></View> : null}
+          {trader.foundingTrade ? <View style={styles.softBadge}><Text style={styles.softBadgeText}>Launch member</Text></View> : null}
           {trader.isPreview ? <View style={styles.softBadge}><Text style={styles.softBadgeText}>Example profile</Text></View> : null}
         </View>
       </View>
@@ -71,10 +69,8 @@ const styles = StyleSheet.create({
   placeholderMark: { width: 64, height: 64, borderRadius: 22, backgroundColor: colors.surfaceRaised, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#D6E0E8' },
   placeholderLetter: { color: colors.navy, fontSize: 30, fontWeight: '900' },
   placeholderText: { color: colors.muted, fontSize: 12, fontWeight: '700' },
-  membershipBadge: { position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(255,255,255,0.96)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
-  proBadge: { backgroundColor: 'rgba(24,53,78,0.96)' },
-  membershipText: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
-  proMembershipText: { color: '#FFFFFF' },
+  evidenceBadge: { position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(255,255,255,0.96)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
+  evidenceText: { color: colors.navy, fontSize: 10, fontWeight: '900', letterSpacing: 0.35 },
   content: { padding: 18, gap: 11 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' },
   flex: { flex: 1, minWidth: 180, gap: 3 },
