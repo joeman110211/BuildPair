@@ -2,9 +2,10 @@ import { useAuth } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Button, HelperText, ProgressBar, Text, TextInput } from 'react-native-paper';
+import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { FormSelect } from '@/components/FormSelect';
+import { FormStepHeader } from '@/components/FormStepHeader';
 import { PhotoUploader } from '@/components/PhotoUploader';
 import { Screen } from '@/components/Screen';
 import { TradeCategorySelector } from '@/components/TradeCategorySelector';
@@ -15,7 +16,13 @@ import { apiFetch, ApiError, errorMessage } from '@/lib/api';
 import { clearDraft, loadDraft, saveDraft } from '@/lib/draft-storage';
 import type { BeforeAfterProject, TraderProfile } from '@/types';
 
-const STEP_TITLES = ['Business & Service Area', 'Build Your Storefront', 'Portfolio & Trust', 'Preview & Publish'] as const;
+const STEP_TITLES = ['Business & area', 'Storefront', 'Work & trust', 'Review'] as const;
+const STEP_HELP = [
+  'Set your business, services and working area.',
+  'Add the details homeowners see first.',
+  'Show your work and trust information.',
+  'Check your profile before publishing.',
+] as const;
 const DRAFT_KEY = 'trader-onboarding-v2';
 
 const LEGACY_CATEGORY_MAP: Record<string, TradeCategory> = {
@@ -354,23 +361,17 @@ export default function TraderOnboarding() {
   const footer = <View style={styles.actions}>
     {step > 0 ? <Button mode="text" onPress={() => setStep((value) => value - 1)}>Back</Button> : <View />}
     {step < 3
-      ? <Button mode="contained" contentStyle={styles.continueButton} disabled={!valid} onPress={() => setStep((value) => value + 1)}>Continue</Button>
-      : <Button mode="contained" icon="check-circle-outline" contentStyle={styles.continueButton} loading={busy} disabled={!valid || busy} onPress={() => void save()}>{busy ? 'Publishing…' : 'Save & Publish Profile'}</Button>}
+      ? <Button mode="contained" contentStyle={styles.continueButton} disabled={!valid} onPress={() => setStep((value) => value + 1)}>Next</Button>
+      : <Button mode="contained" icon="check-circle-outline" contentStyle={styles.continueButton} loading={busy} disabled={!valid || busy} onPress={() => void save()}>{busy ? 'Publishing…' : 'Publish profile'}</Button>}
   </View>;
 
   return <Screen
     key={step}
     title={STEP_TITLES[step]}
-    subtitle="Build the same polished storefront homeowners will see, with your services, work, service area and trust information in the right place."
+    subtitle={STEP_HELP[step]}
     footer={footer}
   >
-    <View style={styles.progressBlock}>
-      <View style={styles.progressHeader}>
-        <Text variant="labelLarge" style={styles.stepLabel}>Step {step + 1} of 4</Text>
-        <Text style={styles.muted}>{STEP_TITLES[step]}</Text>
-      </View>
-      <ProgressBar progress={(step + 1) / 4} color={colors.primary} style={styles.progress} />
-    </View>
+    <FormStepHeader current={step + 1} total={4} hint={STEP_HELP[step]} />
 
     {loadingExisting ? <HelperText type="info">Loading your existing profile details…</HelperText> : draftStatus ? <HelperText type="info">{draftStatus}</HelperText> : null}
 
