@@ -5,7 +5,7 @@ import { colors, radii, shadows, spacing } from '@/constants/theme';
 export default function TrustSafetyPage() {
   return <PublicInfoPage
     eyebrow="Trust & safety"
-    title="Clearer information, stronger records and a fair reporting process."
+    title="Check the work. Trust the relationship. Build the pair."
     intro="See the evidence behind a profile, keep project history connected and report concerns from either side."
     summary={<View style={styles.signalGrid}>
       {[['PROFILE', 'Real work', 'Services, area, availability and portfolio'], ['CREDENTIALS', 'Clear status', 'Reviewed evidence shown with its status'], ['REVIEWS', 'Useful context', 'Project-linked reviews where available'], ['REPORTING', 'Two-way', 'Homeowners and tradespeople can report concerns']].map(([label, title, body]) => <View key={label} style={styles.signal}><Text style={styles.label}>{label}</Text><Text style={styles.signalTitle}>{title}</Text><Text style={styles.signalBody}>{body}</Text></View>)}
