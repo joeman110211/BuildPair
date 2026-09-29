@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ImageBackground, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Text } from 'react-native-paper';
+import { SkeletonBlock } from '@/components/Skeleton';
 import { colors } from '@/constants/theme';
 import { apiFetch } from '@/lib/api';
 
@@ -110,9 +111,8 @@ export function FeaturedTraderHero({ wide, onAvailabilityChange }: { wide: boole
   if (!loaded) {
     return <View style={[styles.wrapper, wide && styles.wrapperWide]}>
       <View style={[styles.preloadCard, wide && styles.wrapperWide]}>
-        <Text style={styles.emptyEyebrow}>BUILDPAIR TRADES</Text>
-        <Text style={styles.preloadTitle}>Featured BuildPair profiles.</Text>
-        <Text style={styles.preloadText}>Live local trade profiles appear here as they become available. BuildPair loads current directory profiles rather than using placeholder listings.</Text>
+        <SkeletonBlock style={styles.preloadTitleSkeleton} />
+        <View style={styles.preloadRow}><SkeletonBlock style={styles.preloadProfile} /><SkeletonBlock style={styles.preloadProfile} /></View>
       </View>
     </View>;
   }
@@ -191,6 +191,9 @@ const styles = StyleSheet.create({
   dotActive: { width: 20, backgroundColor: colors.primary },
   preloadCard: { width: '100%', maxWidth: 1140, minHeight: 260, alignItems: 'center', justifyContent: 'center', gap: 7, padding: 24, borderRadius: 24, backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border },
   preloadTitle: { color: colors.charcoal, fontSize: 22, lineHeight: 27, fontWeight: '900', textAlign: 'center' },
+  preloadTitleSkeleton: { width: '42%', minWidth: 180, height: 24 },
+  preloadRow: { width: '100%', flexDirection: 'row', gap: 12 },
+  preloadProfile: { flex: 1, minWidth: 0, height: 170, borderRadius: 18 },
   preloadText: { color: colors.muted, lineHeight: 20, maxWidth: 620, textAlign: 'center' },
   emptyState: { width: '100%', maxWidth: 1140, minHeight: 300, justifyContent: 'flex-end', padding: 18, overflow: 'hidden', borderRadius: 24 },
   emptyImage: { borderRadius: 24 },
