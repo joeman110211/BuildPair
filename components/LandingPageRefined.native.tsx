@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { TRADE_CATEGORIES } from '@/constants/options';
+import { FAIR_FOR_BOTH } from '@/constants/site-language';
 import { colors, radii, spacing } from '@/constants/theme';
 
 const POPULAR_TRADES = [
@@ -42,9 +43,9 @@ export default function LandingPageRefined() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.hero}>
-        <Text style={styles.kicker}>BUILDPAIR</Text>
+        <Text style={styles.kicker}>{FAIR_FOR_BOTH.eyebrow.toUpperCase()}</Text>
         <Text style={styles.title}>What do you need done?</Text>
-        <Text style={styles.subtitle}>Find the right local trade, compare clearly and keep the whole job organised.</Text>
+        <Text style={styles.subtitle}>A fairer way for homeowners and tradespeople to find each other, agree the job and keep it organised.</Text>
 
         <View style={styles.searchCard}>
           <TextInput
@@ -96,6 +97,15 @@ export default function LandingPageRefined() {
               <Text style={styles.arrow}>›</Text>
             </Pressable>
           ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.fairCard}>
+          <View style={styles.fairSide}><Text style={styles.fairLabel}>HOMEOWNER</Text><Text style={styles.fairTitle}>{FAIR_FOR_BOTH.homeownerTitle}</Text><Text style={styles.fairText}>{FAIR_FOR_BOTH.homeownerBody}</Text></View>
+          <View style={styles.fairDivider} />
+          <View style={styles.fairSide}><Text style={styles.fairLabel}>TRADESPERSON</Text><Text style={styles.fairTitle}>{FAIR_FOR_BOTH.tradeTitle}</Text><Text style={styles.fairText}>{FAIR_FOR_BOTH.tradeBody}</Text></View>
+          <Text style={styles.fairBridge}>{FAIR_FOR_BOTH.bridge}</Text>
         </View>
       </View>
 
@@ -164,6 +174,13 @@ const styles = StyleSheet.create({
   section: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
   sectionTitle: { color: colors.charcoal, fontSize: 20, lineHeight: 25, fontWeight: '900' },
+  fairCard: { borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, padding: spacing.lg, gap: spacing.md, borderWidth: 1, borderColor: colors.border },
+  fairSide: { gap: spacing.xs },
+  fairDivider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
+  fairLabel: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+  fairTitle: { color: colors.charcoal, fontSize: 17, lineHeight: 22, fontWeight: '900' },
+  fairText: { color: colors.muted, fontSize: 13, lineHeight: 19 },
+  fairBridge: { color: colors.navy, fontSize: 14, lineHeight: 19, fontWeight: '900', textAlign: 'center', paddingTop: spacing.xs },
   tradeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   tradeCard: { width: '48.7%', minHeight: 70, borderRadius: radii.md, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xs },
   tradeName: { flex: 1, color: colors.charcoalSoft, fontSize: 14, lineHeight: 18, fontWeight: '800' },

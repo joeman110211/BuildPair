@@ -66,7 +66,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
     { label: unreadMessages ? `Messages (${unreadMessages > 99 ? '99+' : unreadMessages})` : 'Messages', sectionLabel: 'Activity', dividerBefore: true, onPress: () => go(messagesHref) },
     { label: unreadNotifications ? `Notifications (${unreadNotifications > 99 ? '99+' : unreadNotifications})` : 'Notifications', onPress: () => go(notificationsHref) },
     { label: modeAction, sectionLabel: 'Account mode', dividerBefore: true, disabled: switchingMode, onPress: () => void changeMode() },
-    { label: 'Advice Hub', sectionLabel: 'Help', dividerBefore: true, onPress: () => go('/(public)/advice') },
+    { label: 'Advice', sectionLabel: 'Help', dividerBefore: true, onPress: () => go('/(public)/advice') },
     { label: 'Sign out', dividerBefore: true, onPress: () => void doSignOut() },
   ];
 

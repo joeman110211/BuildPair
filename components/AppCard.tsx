@@ -22,15 +22,15 @@ export function AppCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surfaceRaised,
-    borderWidth: 1,
-    borderColor: '#E8E1DA',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#E9E3DD',
     borderRadius: radii.lg,
     padding: spacing.xl,
     gap: spacing.md,
   },
   soft: {
     backgroundColor: colors.surfaceSoft,
-    borderColor: '#ECE4DC',
+    borderColor: '#EEE7E1',
   },
   outlined: {
     backgroundColor: 'transparent',

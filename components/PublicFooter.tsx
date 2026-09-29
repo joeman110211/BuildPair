@@ -8,7 +8,7 @@ const linkGroups = [
   {
     title: 'Discover',
     links: [
-      ['Find trades', '/(public)/directory'],
+      ['Find a trade', '/(public)/directory'],
       ['Browse jobs', '/(public)/jobs'],
       ['How it works', '/(public)/how-it-works'],
       ['For homeowners', '/(public)/for-homeowners'],
@@ -18,7 +18,7 @@ const linkGroups = [
   {
     title: 'Help & advice',
     links: [
-      ['Advice Hub', '/(public)/advice'],
+      ['Advice', '/(public)/advice'],
       ['UK building rules', '/(public)/building-regulations'],
       ['Report a user', '/(public)/report'],
       ['Trust & Safety', '/(public)/trust-safety'],
@@ -28,7 +28,7 @@ const linkGroups = [
   {
     title: 'BuildPair',
     links: [
-      ['Membership', '/(public)/pricing'],
+      ['Pricing', '/(public)/pricing'],
       ['BuildPair Rewards', '/(public)/rewards'],
       ['How payments work', '/(public)/payments'],
       ['About us', '/(public)/about'],
@@ -63,8 +63,8 @@ export function PublicFooter() {
             </Pressable>
           </Link>
         </View>
-        <Text style={[styles.tagline, compact && styles.taglineCompact]}>Built around the project, not the lead.</Text>
-        <Text style={[styles.description, compact && styles.descriptionCompact]}>A UK marketplace and project platform connecting local trades, structured quotes, project communication, payments and job history in one place.</Text>
+        <Text style={[styles.tagline, compact && styles.taglineCompact]}>One project. Both sides connected.</Text>
+        <Text style={[styles.description, compact && styles.descriptionCompact]}>A fairer UK marketplace and project platform for homeowners and tradespeople, from first search to finished job.</Text>
         <View style={[styles.contactPill, compact && styles.contactPillCompact]}><Text style={styles.contactText}>info@buildpair.co.uk</Text></View>
       </View>
       {linkGroups.map((group) => <View key={group.title} style={[styles.group, compact && styles.groupCompact]}>

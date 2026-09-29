@@ -10,14 +10,14 @@ export default function PricingPage() {
   const { width } = useWindowDimensions();
   const metrics = publicResponsiveMetrics(width);
   const primaryHref = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', 'pricing-hero');
-  const primaryLabel = REGISTRATION_OPEN ? 'Create trade account' : 'Create launch-ready trade profile';
+  const primaryLabel = REGISTRATION_OPEN ? 'Create trade account' : 'Create profile';
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
     <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroInner}>
         <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Tradesperson pricing</Text>
         <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Simple plans. Clear value. No pay-per-lead charges.</Text>
-        <Text variant="bodyLarge" style={styles.intro}>Start free, then choose the plan that matches how much marketplace access and business tooling you actually need.</Text>
+        <Text variant="bodyLarge" style={styles.intro}>Starter gets you established. Core helps you win work. Plus helps you run more jobs. Pro helps you run the business.</Text>
         <View style={styles.heroActions}>
           <Link href={primaryHref} asChild><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.primary}>{primaryLabel}</Button></Link>
           <Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" textColor="#FFFFFF" style={styles.outline}>See trade features</Button></Link>
@@ -44,19 +44,19 @@ export default function PricingPage() {
       </View>
 
       <View style={styles.notice}>
-        <Text variant="titleMedium" style={styles.noticeTitle}>Business tools are part of the membership value</Text>
-        <Text style={styles.noticeText}>Core can quote and invoice customers found outside BuildPair. Plus adds the fuller Quote Builder, outside-customer managed projects, a working calendar and staged BuildPay once the customer claims an accepted quote. Pro adds the longest availability horizon, advanced project tools and Project+ planning.</Text>
-        <Link href="/(public)/updates" asChild><Button mode="text">See what has just been added</Button></Link>
+        <Text variant="titleMedium" style={styles.noticeTitle}>More than leads</Text>
+        <Text style={styles.noticeText}>BuildPair plans add practical tools as your business grows, including quoting, invoicing, customer management, calendars, analytics and project tools.</Text>
+        <Link href="/(public)/updates" asChild><Button mode="text">See product updates</Button></Link>
       </View>
 
       <View style={styles.notice}>
         <Text variant="titleMedium" style={styles.noticeTitle}>BuildPair job payment fee</Text>
-        <Text style={styles.noticeText}>For jobs using BuildPay, the party who asks to add BuildPay carries its cost. Tradesperson-requested BuildPay is absorbed from controlled service payouts; homeowner-requested BuildPay adds the separately disclosed service fee to the homeowner total. BuildPair keeps the contract amount and payment-fee responsibility visible so both sides can see what was agreed.</Text>
-        <Link href="/(public)/payments" asChild><Button mode="text">Read how BuildPair payments work</Button></Link>
+        <Text style={styles.noticeText}>BuildPay is optional. The party requesting it carries the disclosed cost, while direct payment remains available when both sides agree.</Text>
+        <Link href="/(public)/payments" asChild><Button mode="text">Learn about payments</Button></Link>
       </View>
 
       <View style={styles.notice}>
-        <Text variant="titleMedium" style={styles.noticeTitle}>Membership billing</Text>
+        <Text variant="titleMedium" style={styles.noticeTitle}>Plan billing</Text>
         <Text style={styles.noticeText}>Starter is £0 per month. BuildPair Core is £9.99, BuildPair Plus is £19.99 and BuildPair Pro is £29.99 per month. Subscription purchases, renewals, plan changes and cancellations are handled through the BuildPair billing flow and Stripe. The applicable amount is shown before a paid subscription is confirmed.</Text>
       </View>
     </View>

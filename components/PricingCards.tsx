@@ -1,7 +1,7 @@
 import { Link } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
-import { LAUNCH_OFFER, SITE_LANGUAGE } from '@/constants/site-language';
+import { LAUNCH_OFFER, PLAN_POSITIONING, SITE_LANGUAGE } from '@/constants/site-language';
 import { colors, controlHeights, radii, shadows, spacing } from '@/constants/theme';
 import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
@@ -10,8 +10,8 @@ const plans = [
     name: 'Starter',
     price: '£0',
     suffix: '/ month',
-    eyebrow: 'Start free',
-    summary: 'Get your business onto BuildPair, show homeowners what you do and browse local marketplace jobs with no monthly fee.',
+    eyebrow: PLAN_POSITIONING.Starter,
+    summary: 'Build a credible profile, show your work and get established on BuildPair with no monthly fee.',
     compactFeatures: [
       '2 trade categories + the services you actually offer',
       'Full business profile, work gallery and portfolio',
@@ -32,8 +32,8 @@ const plans = [
     name: 'BuildPair Core',
     price: '£9.99',
     suffix: '/ month',
-    eyebrow: 'Simple tools + occasional work',
-    summary: 'For tradespeople who want a small amount of marketplace access plus the everyday tools to quote and manage customers they already have.',
+    eyebrow: PLAN_POSITIONING['BuildPair Core'],
+    summary: 'Start winning suitable local work while keeping quotes, messages and existing customers organised.',
     compactFeatures: [
       '5 marketplace opportunities each month',
       'Quotes and invoices for your own customers',
@@ -57,8 +57,8 @@ const plans = [
     name: 'BuildPair Plus',
     price: '£19.99',
     suffix: '/ month',
-    eyebrow: 'Most popular',
-    summary: 'Built for active tradespeople who want more marketplace opportunities, stronger quoting tools and one place to manage both BuildPair and existing customers.',
+    eyebrow: PLAN_POSITIONING['BuildPair Plus'],
+    summary: 'Run more jobs with stronger quoting, more marketplace access and one place for BuildPair and existing customers.',
     compactFeatures: [
       '15 marketplace offers + unlimited direct homeowner requests',
       'Full Quote Builder + managed outside-customer projects',
@@ -85,8 +85,8 @@ const plans = [
     name: 'BuildPair Pro',
     price: '£29.99',
     suffix: '/ month',
-    eyebrow: 'For established trades',
-    summary: 'For established trades and growing businesses that want the highest marketplace capacity, deeper project controls and BuildPair’s most advanced business tools.',
+    eyebrow: PLAN_POSITIONING['BuildPair Pro'],
+    summary: 'Run the business with the highest marketplace capacity, deeper project controls and BuildPair’s most advanced tools.',
     compactFeatures: [
       '35 marketplace offers + advanced business analytics',
       'Up to 6 months’ availability + reusable templates',

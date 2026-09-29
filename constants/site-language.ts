@@ -31,6 +31,27 @@ export const LAUNCH_OFFER = {
   homeowner: 'Homeowners can join the launch list now. We’ll notify you when BuildPair opens and you can start posting jobs.',
 } as const;
 
+export const FAIR_FOR_BOTH = {
+  eyebrow: 'Fair for both sides',
+  homeownerTitle: 'Clear quotes. More control.',
+  homeownerBody: 'Find local tradespeople, compare the important details clearly and keep the project record together.',
+  tradeTitle: 'Fair access. Better tools.',
+  tradeBody: 'No pay per lead or bidding wars. Build your reputation, quote professionally and manage the work after you win it.',
+  bridge: 'One project. Both sides connected.',
+} as const;
+
+export const PLAN_POSITIONING = {
+  Starter: 'Get established',
+  'BuildPair Core': 'Win work',
+  'BuildPair Plus': 'Run more jobs',
+  'BuildPair Pro': 'Run your business',
+} as const;
+
+export const PAYMENT_LANGUAGE = {
+  title: 'Pay your way',
+  short: 'Use BuildPay for protected staged payments, or agree to pay directly.',
+} as const;
+
 export const WHY_BUILDPAIR = [
   'No pay per lead',
   'No bidding wars',

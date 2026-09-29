@@ -1,11 +1,15 @@
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { PublicInfoPage, infoStyles } from '@/components/PublicInfoPage';
+import { colors, radii, shadows, spacing } from '@/constants/theme';
 
 export default function TrustSafetyPage() {
   return <PublicInfoPage
     eyebrow="Trust & safety"
     title="Clearer information, stronger records and a fair reporting process."
-    intro="BuildPair combines profile information, credential review, project-linked reputation, privacy controls and human moderation to help users make better-informed decisions."
+    intro="See the evidence behind a profile, keep project history connected and report concerns from either side."
+    summary={<View style={styles.signalGrid}>
+      {[['PROFILE', 'Real work', 'Services, area, availability and portfolio'], ['CREDENTIALS', 'Clear status', 'Reviewed evidence shown with its status'], ['REVIEWS', 'Useful context', 'Project-linked reviews where available'], ['REPORTING', 'Two-way', 'Homeowners and tradespeople can report concerns']].map(([label, title, body]) => <View key={label} style={styles.signal}><Text style={styles.label}>{label}</Text><Text style={styles.signalTitle}>{title}</Text><Text style={styles.signalBody}>{body}</Text></View>)}
+    </View>}
     sections={[
       { title: 'Profiles with useful context', body: 'Trade profiles can show categories and services, experience, service area, work galleries, project examples, availability and submitted credentials. Users should still make the checks appropriate to regulated or specialist work.' },
       { title: 'Credential review status', body: 'BuildPair can review submitted credential evidence and show a clear status. A verified item means the submitted evidence passed the relevant BuildPair review workflow; it does not make BuildPair the issuing regulator or guarantee future work.' },
@@ -17,3 +21,11 @@ export default function TrustSafetyPage() {
     ]}
   />;
 }
+
+const styles = StyleSheet.create({
+  signalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  signal: { flexGrow: 1, flexBasis: 210, minWidth: 0, borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, padding: spacing.lg, gap: spacing.xs, ...shadows.subtle },
+  label: { color: colors.accentDark, fontSize: 10, lineHeight: 14, fontWeight: '900', letterSpacing: 1 },
+  signalTitle: { color: colors.charcoal, fontSize: 17, lineHeight: 22, fontWeight: '900' },
+  signalBody: { color: colors.muted, lineHeight: 20 },
+});

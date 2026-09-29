@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { PublicFooter } from '@/components/PublicFooter';
+import { Reveal } from '@/components/Reveal';
 import { colors, layout, publicResponsiveMetrics, radii, spacing } from '@/constants/theme';
 
 export type InfoSection = {
@@ -10,7 +11,7 @@ export type InfoSection = {
   body: ReactNode;
 };
 
-export function PublicInfoPage({ eyebrow, title, intro, sections, updated }: { eyebrow?: string; title: string; intro: string; sections: InfoSection[]; updated?: string }) {
+export function PublicInfoPage({ eyebrow, title, intro, sections, updated, summary }: { eyebrow?: string; title: string; intro: string; sections: InfoSection[]; updated?: string; summary?: ReactNode }) {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const metrics = publicResponsiveMetrics(width);
@@ -31,13 +32,14 @@ export function PublicInfoPage({ eyebrow, title, intro, sections, updated }: { e
       </View>
     </View>
     <View style={[styles.content, metrics.phone && styles.contentMobile]}>
-      {sections.map((section, index) => <View key={section.title} style={[styles.card, metrics.phone && styles.cardMobile]}>
+      {summary ? <Reveal>{summary}</Reveal> : null}
+      {sections.map((section, index) => <Reveal key={section.title} delay={Math.min(index, 4) * 45}><View style={[styles.card, metrics.phone && styles.cardMobile]}>
         <View style={styles.cardHeader}>
           <View style={styles.sectionMarker}><Text style={styles.sectionMarkerText}>{String(index + 1).padStart(2, '0')}</Text></View>
           <Text variant="headlineSmall" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize - 2, lineHeight: metrics.sectionTitleLineHeight - 2 }]}>{section.title}</Text>
         </View>
         {typeof section.body === 'string' ? <Text style={styles.body}>{section.body}</Text> : section.body}
-      </View>)}
+      </View></Reveal>)}
     </View>
     <PublicFooter />
   </ScrollView>;

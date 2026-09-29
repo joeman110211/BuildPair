@@ -26,7 +26,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
   const otherLabel = otherMode === 'customer' ? 'Homeowner' : 'Tradesperson';
   const modeAction = otherEnabled ? `Switch to ${otherLabel}` : `Add ${otherLabel}`;
   const findHref = (currentMode === 'customer' ? '/(public)/directory' : '/trader/job-board') as Href;
-  const findLabel = currentMode === 'customer' ? 'Find trades' : 'Find work';
+  const findLabel = currentMode === 'customer' ? 'Find a trade' : 'Find work';
   const jobsHref = (currentMode === 'customer' ? '/customer/jobs' : '/trader/my-jobs') as Href;
   const quotesHref = '/trader/quotes' as Href;
   const profileHref = (currentMode === 'customer' ? '/customer/profile' : '/trader/profile') as Href;
@@ -71,7 +71,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
     { label: notificationLabel, onPress: () => go(notificationsHref) },
     { label: 'Profile', sectionLabel: 'Your account', dividerBefore: true, onPress: () => go(profileHref) },
     { label: 'Account & security', onPress: () => go(settingsHref) },
-    { label: 'Advice Hub', sectionLabel: 'Help', dividerBefore: true, onPress: () => go('/(public)/advice') },
+    { label: 'Advice', sectionLabel: 'Help', dividerBefore: true, onPress: () => go('/(public)/advice') },
     { label: modeAction, sectionLabel: 'Account mode', dividerBefore: true, disabled: switchingMode, onPress: () => void changeMode() },
     { label: 'Sign out', onPress: () => void doSignOut() },
   ];

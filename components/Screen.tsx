@@ -1,8 +1,9 @@
 import { type Href, usePathname, useRouter } from 'expo-router';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { ActivityIndicator, Button, Text } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PageSkeleton } from '@/components/Skeleton';
 import { colors, layout, radii, shadows, spacing, typography } from '@/constants/theme';
 
 type ScreenProps = PropsWithChildren<{
@@ -72,7 +73,7 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
 }
 
 export function LoadingScreen({ label = 'Loading…' }: { label?: string }) {
-  return <Screen scroll={false}><View style={styles.loading}><View style={styles.loadingCard}><View style={styles.loadingIcon}><ActivityIndicator size="small" /></View><Text style={styles.loadingLabel}>{label}</Text></View></View></Screen>;
+  return <Screen scroll={false}><View style={styles.loading}><PageSkeleton /><Text style={styles.loadingLabel}>{label}</Text></View></Screen>;
 }
 
 export function EmptyState({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
@@ -99,9 +100,7 @@ const styles = StyleSheet.create({
   footerShell: { width: '100%', flexShrink: 0, borderTopWidth: 1, borderTopColor: '#E8E1DA', backgroundColor: 'rgba(255,255,255,0.985)', paddingHorizontal: spacing.xxl, paddingVertical: spacing.md, ...shadows.subtle },
   footerShellCompact: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
   footerContent: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center' },
-  loading: { flex: 1, minHeight: 420, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
-  loadingCard: { minWidth: 220, maxWidth: 420, alignItems: 'center', gap: spacing.md, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: '#E8E1DA', borderRadius: radii.xl, paddingHorizontal: spacing.xxl, paddingVertical: spacing.xxl, ...shadows.subtle },
-  loadingIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  loading: { flex: 1, minHeight: 420, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg, gap: spacing.xl },
   loadingLabel: { ...typography.body, color: colors.muted, textAlign: 'center' },
   empty: { paddingVertical: spacing.xxxl, paddingHorizontal: spacing.xxl, borderWidth: 1, borderColor: '#E8E1DA', borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, alignItems: 'center', gap: spacing.md, ...shadows.subtle },
   emptyIcon: { width: 48, height: 48, borderRadius: radii.lg, backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: '#F0C9AA', alignItems: 'center', justifyContent: 'center' },
