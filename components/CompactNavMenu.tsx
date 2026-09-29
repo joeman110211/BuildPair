@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { IconButton, Text } from 'react-native-paper';
 import { colors, radii, shadows, spacing } from '@/constants/theme';
 
@@ -13,8 +13,19 @@ export type CompactNavItem = {
 
 export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: CompactNavItem[]; accessibilityLabel?: string }) {
   const [open, setOpen] = useState(false);
+  const reveal = useRef(new Animated.Value(0)).current;
   const { height: viewportHeight } = useWindowDimensions();
   const menuMaxHeight = Math.max(180, viewportHeight - 120);
+
+  useEffect(() => {
+    if (!open) return;
+    reveal.setValue(0);
+    Animated.timing(reveal, {
+      toValue: 1,
+      duration: 160,
+      useNativeDriver: true,
+    }).start();
+  }, [open, reveal]);
 
   function run(item: CompactNavItem) {
     if (item.disabled) return;
@@ -24,9 +35,13 @@ export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: 
 
   return <View style={styles.wrapper}>
     <IconButton icon={open ? 'close' : 'menu'} mode="outlined" style={styles.menuButton} accessibilityLabel={accessibilityLabel} accessibilityState={{ expanded: open }} onPress={() => setOpen((value) => !value)} />
-    {open ? <ScrollView
+    {open ? <Animated.ScrollView
       accessibilityRole="menu"
-      style={[styles.panel, { maxHeight: menuMaxHeight }]}
+      style={[styles.panel, {
+        maxHeight: menuMaxHeight,
+        opacity: reveal,
+        transform: [{ translateY: reveal.interpolate({ inputRange: [0, 1], outputRange: [-6, 0] }) }],
+      }]}
       contentContainerStyle={styles.panelContent}
       showsVerticalScrollIndicator={false}
       nestedScrollEnabled
@@ -46,7 +61,7 @@ export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: 
           <Text style={styles.itemText}>{item.label}</Text>
         </Pressable>
       </View>)}
-    </ScrollView> : null}
+    </Animated.ScrollView> : null}
   </View>;
 }
 
