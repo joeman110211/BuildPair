@@ -1,11 +1,11 @@
 import type { PropsWithChildren } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, type StyleProp, type ViewStyle } from 'react-native';
 import { interaction } from '@/constants/theme';
 
 export function Reveal({ children, delay = 0, style }: PropsWithChildren<{ delay?: number; style?: StyleProp<ViewStyle> }>) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(10)).current;
+  const [opacity] = useState(() => new Animated.Value(0));
+  const [translateY] = useState(() => new Animated.Value(10));
   const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
