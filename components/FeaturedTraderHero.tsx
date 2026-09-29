@@ -57,7 +57,7 @@ function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
     >
       <View style={styles.cardShade} />
       <View style={styles.cardTopRow}>
-        <View style={styles.featuredBadge}><Text style={styles.featuredBadgeText}>{trader.foundingTrade ? 'FOUNDING TRADE' : 'BUILDPAIR TRADE'}</Text></View>
+        <View style={styles.featuredBadge}><Text style={styles.featuredBadgeText}>{trader.foundingTrade ? 'LAUNCH MEMBER' : 'BUILDPAIR TRADE'}</Text></View>
         <View style={styles.planBadge}><Text style={styles.planBadgeText}>{trader.verifiedCredentialCount > 0 ? `${trader.verifiedCredentialCount} CHECKED` : 'PROFILE'}</Text></View>
       </View>
       <View style={styles.cardInfo}>
