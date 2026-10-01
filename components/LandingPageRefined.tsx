@@ -56,8 +56,8 @@ export default function LandingPageRefined() {
     <View style={[styles.hero, mobile && styles.heroMobile, narrowMobile && styles.heroNarrow, wide && styles.heroWide]}>
       <View style={[styles.heroCopy, wide && styles.heroCopyWide]} testID="home-hero-copy">
         <View style={styles.heroBadge}><View style={styles.liveDot} /><Text style={styles.heroBadgeText}>{FAIR_FOR_BOTH.eyebrow}</Text></View>
-        <Text style={[styles.heroTitle, !wide && styles.heroTitleCompact]}>Find trusted local tradespeople. Compare quotes clearly. Manage the whole job in one place.</Text>
-        <Text variant="titleMedium" style={styles.heroSubtitle}>A fairer way for homeowners and tradespeople to find each other, agree the job and keep the project moving in one place.</Text>
+        <Text style={[styles.heroTitle, !wide && styles.heroTitleCompact]}>Find local tradespeople. Keep the whole job together.</Text>
+        <Text variant="titleMedium" style={styles.heroSubtitle}>Browse local profiles now. At launch, compare quotes, agree the work and manage your project in one place.</Text>
         <View style={styles.heroBenefits}>
           {HERO_BENEFITS.map((item) => <View key={item} style={styles.heroBenefit}><Text style={styles.heroBenefitMark}>✓</Text><Text style={styles.heroBenefitText}>{item}</Text></View>)}
         </View>
@@ -77,7 +77,7 @@ export default function LandingPageRefined() {
 
     <Reveal><View style={[styles.featuredBand, !hasFeaturedProfiles && styles.hidden]}>
       <View style={[styles.featuredSection, mobile && styles.featuredSectionMobile, narrowMobile && styles.featuredSectionNarrow]}>
-        <SectionHeading eyebrow="Tradespeople joining BuildPair" title="Meet the people behind the profiles." body="Real BuildPair profiles appear here as tradespeople join. No invented ratings, fake counters or placeholder businesses." />
+        <SectionHeading eyebrow="Tradespeople joining BuildPair" title="Meet the people behind the profiles." body="Explore real business profiles, services and work photos from tradespeople joining BuildPair." />
         <FeaturedTraderHero wide={wide} onAvailabilityChange={setHasFeaturedProfiles} />
       </View>
     </View></Reveal>
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   buttonBase: { borderRadius: radii.md, maxWidth: '100%' },
   buttonContent: { minHeight: controlHeights.standard, paddingHorizontal: 8 },
   buttonFull: { width: '100%' },
-  mobilePrimaryContent: { minHeight: 44 },
+  mobilePrimaryContent: { minHeight: controlHeights.standard },
   mobileHeroSecondary: { width: '100%', alignItems: 'center', marginTop: -2 },
   mobileHeroLink: { alignSelf: 'center', borderRadius: radii.md },
   mobileHeroLinkContent: { minHeight: 36, paddingHorizontal: 6 },
@@ -239,10 +239,10 @@ const styles = StyleSheet.create({
   heroActions: { width: '100%', maxWidth: 700, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', alignItems: 'center' },
   heroActionButton: { minWidth: 180, maxWidth: '100%' },
   featuredBand: { backgroundColor: '#FFFFFF' },
-  featuredSection: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingTop: 28, paddingBottom: 46, gap: 20 },
+  featuredSection: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingTop: 32, paddingBottom: 48, gap: 20 },
   featuredSectionMobile: { paddingHorizontal: 16, paddingTop: 22, paddingBottom: 34, gap: 16 },
   featuredSectionNarrow: { paddingHorizontal: 14 },
-  section: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 46, gap: 24 },
+  section: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 48, gap: 24 },
   sectionMobile: { paddingHorizontal: 16, paddingVertical: 34, gap: 18 },
   sectionNarrow: { paddingHorizontal: 14, paddingVertical: 30 },
   sectionHeading: { width: '100%', maxWidth: 820, minWidth: 0, alignSelf: 'center', alignItems: 'center', gap: 8 },
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   audienceBand: { backgroundColor: '#FBF8F5' },
   audienceGrid: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   audienceCard: { flexGrow: 1, flexShrink: 1, flexBasis: 430, minWidth: 0, backgroundColor: colors.surfaceRaised, borderRadius: 22, padding: 20, gap: 10, borderWidth: 1, borderColor: colors.border },
-  homeownerCard: { borderTopWidth: 4, borderTopColor: colors.primary },
+  homeownerCard: { borderTopWidth: 3, borderTopColor: colors.primary },
   tradeAudienceCard: { borderTopWidth: 4, borderTopColor: colors.navy },
   audienceEyebrow: { color: colors.primary, fontSize: 12.3, lineHeight: 16, fontWeight: '900', letterSpacing: 1.1 },
   tradeAudienceEyebrow: { color: colors.navy },
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   fairBridgeTitle: { color: '#FFFFFF', fontWeight: '900', textAlign: 'center' },
   fairBridgeText: { color: '#D9DEE2', lineHeight: 21, textAlign: 'center' },
   routeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  routeCard: { flexGrow: 1, flexShrink: 1, flexBasis: 240, minWidth: 0, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderTopWidth: 3, borderTopColor: colors.primary, borderRadius: 18, padding: 17, gap: 7 },
+  routeCard: { flexGrow: 1, flexShrink: 1, flexBasis: 240, minWidth: 0, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderTopWidth: 2, borderTopColor: colors.border, borderRadius: 18, padding: 17, gap: 7 },
   routeNumber: { color: colors.primary, fontWeight: '900', letterSpacing: 1 },
   cardTitle: { minWidth: 0, maxWidth: '100%', color: colors.charcoal, fontWeight: '900' },
   cardText: { minWidth: 0, maxWidth: '100%', color: colors.muted, lineHeight: 22 },
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   tradeArrow: { flexShrink: 0, color: colors.primary, fontWeight: '900' },
   featureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   featureCard: { flexGrow: 1, flexShrink: 1, flexBasis: 250, minWidth: 0, backgroundColor: colors.surfaceRaised, borderRadius: 18, padding: 17, gap: 7, borderWidth: 1, borderColor: colors.border },
-  paymentBand: { backgroundColor: '#FFF4EA' },
+  paymentBand: { backgroundColor: colors.surfaceSoft },
   paymentGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   paymentCard: { flexGrow: 1, flexShrink: 1, flexBasis: 400, minWidth: 0, borderRadius: 20, padding: 20, gap: 10, borderWidth: 1 },
   protectedCard: { backgroundColor: '#F6FBFA', borderColor: '#CDE2DE' },

@@ -247,7 +247,7 @@ export function WaitlistPageContent({ fixedAudience }: { fixedAudience?: Audienc
 
     <AppCard>
       {incomingReferralCode ? <Chip icon="account-multiple-check-outline">You were invited by an early BuildPair member</Chip> : null}
-      {fixedAudience ? <Chip icon="hammer-wrench">Tradesperson</Chip> : <>
+      {fixedAudience ? <Chip icon={fixedAudience === 'trader' ? 'hammer-wrench' : 'home-outline'}>{fixedAudience === 'trader' ? 'Tradesperson' : 'Homeowner'}</Chip> : <>
         <Text variant="labelLarge" style={styles.label}>I’m joining as</Text>
         <SegmentedButtons value={audience} onValueChange={(value) => setAudience(value as Audience)} buttons={[{ value: 'homeowner', label: 'Homeowner', icon: 'home-outline' }, { value: 'trader', label: 'Tradesperson', icon: 'hammer-wrench' }]} />
       </>}

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
+import { LegalAcceptance } from '@/components/LegalAcceptance';
 import { Screen } from '@/components/Screen';
 import { LAUNCH_OFFER, SITE_LANGUAGE } from '@/constants/site-language';
 import { colors } from '@/constants/theme';
@@ -19,6 +20,7 @@ export default function FoundingTradeSignup() {
   const params = useLocalSearchParams<{ source?: string | string[]; ref?: string | string[] }>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [legalAccepted, setLegalAccepted] = useState(false);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const busy = fetchStatus === 'fetching';
@@ -31,12 +33,14 @@ export default function FoundingTradeSignup() {
     && signUp.missingFields.length === 0;
 
   async function startSignup() {
+    if (!legalAccepted) return;
     if (!canCreate || !TRADER_PRELAUNCH_REGISTRATION_OPEN) return;
     try {
       setError('');
       const result = await signUp.password({
         emailAddress: normalisedEmail,
         password,
+        legalAccepted,
         unsafeMetadata: {
           buildpairMode: 'trader',
           buildpairPrelaunch: true,
@@ -113,9 +117,10 @@ export default function FoundingTradeSignup() {
       <TextInput mode="outlined" label="Business email address" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
       <TextInput mode="outlined" label="Choose a password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" />
       <Text variant="bodySmall" style={styles.hint}>Use at least 8 characters. We’ll verify the email before opening profile setup.</Text>
+      <LegalAcceptance accepted={legalAccepted} onChange={setLegalAccepted} disabled={busy} />
       <View nativeID="clerk-captcha" />
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
-      <Button mode="contained" icon="hammer-wrench" loading={busy} disabled={busy || !canCreate || !TRADER_PRELAUNCH_REGISTRATION_OPEN} onPress={() => void startSignup()} contentStyle={styles.button}>Create profile</Button>
+      <Button mode="contained" icon="hammer-wrench" loading={busy} disabled={busy || !legalAccepted || !canCreate || !TRADER_PRELAUNCH_REGISTRATION_OPEN} onPress={() => void startSignup()} contentStyle={styles.button}>Create profile</Button>
       <Link href={signInHref('trader')} asChild><Button mode="text">Already have an account? Sign in</Button></Link>
     </AppCard>
   </Screen>;

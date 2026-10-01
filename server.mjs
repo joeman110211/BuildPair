@@ -113,6 +113,7 @@ const MIME_TYPES = new Map([
   ['.svg', 'image/svg+xml'],
   ['.txt', 'text/plain; charset=utf-8'],
   ['.webp', 'image/webp'],
+  ['.xml', 'application/xml; charset=utf-8'],
   ['.woff', 'font/woff'],
   ['.woff2', 'font/woff2'],
 ]);
@@ -222,6 +223,16 @@ function safeCandidates(requestPath) {
 }
 
 async function resolveStaticFile(requestPath) {
+  const publicAsset = String(requestPath).split('?')[0];
+  if (['/sitemap.xml', '/sitemap.txt', '/robots.txt'].includes(publicAsset)) {
+    const absolute = path.resolve(process.cwd(), 'public', publicAsset.slice(1));
+    try {
+      const fileStat = await stat(absolute);
+      if (fileStat.isFile()) return { absolute, size: fileStat.size, candidate: publicAsset.slice(1) };
+    } catch {
+      // Continue to exported static assets if a public source is unavailable.
+    }
+  }
   for (const candidate of safeCandidates(requestPath)) {
     const absolute = path.resolve(CLIENT_BUILD_DIR, candidate);
     if (absolute !== CLIENT_BUILD_DIR && !absolute.startsWith(`${CLIENT_BUILD_DIR}${path.sep}`)) {
@@ -306,6 +317,10 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (await serveStatic(req, res)) return;
+    if (['/sitemap.xml', '/sitemap.txt', '/robots.txt'].includes(pathName)) {
+      sendNotFound(res);
+      return;
+    }
 
     // TLS may terminate at Caddy or Cloudflare. The Expo Node adapter checks
     // socket.encrypted when constructing request URLs, so trust the proxy flag.

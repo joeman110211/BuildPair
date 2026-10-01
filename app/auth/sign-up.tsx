@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
+import { LegalAcceptance } from '@/components/LegalAcceptance';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { modeSetupHref, parseAccountMode, signInHref } from '@/lib/account-mode';
@@ -37,6 +38,7 @@ export default function SignUpScreen() {
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>();
   const [checkingInvite, setCheckingInvite] = useState(Boolean(inviteToken));
   const [password, setPassword] = useState('');
+  const [legalAccepted, setLegalAccepted] = useState(false);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
 
@@ -89,12 +91,14 @@ export default function SignUpScreen() {
   }
 
   async function startEmailSignUp() {
+    if (!legalAccepted) return;
     try {
       setError('');
       await confirmInvite();
       const result = await signUp.password({
         emailAddress: email,
         password,
+        legalAccepted,
         unsafeMetadata: { buildpairMode: mode, buildpairEarlyAccess: true },
       });
       if (result.error) throw result.error;
@@ -165,9 +169,10 @@ export default function SignUpScreen() {
     <TextInput label="Approved email address" accessibilityLabel="Approved email address" value={email} editable={false} mode="outlined" />
     <TextInput label="Choose a password" accessibilityLabel="Choose a password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" mode="outlined" />
     <Text variant="bodySmall" style={styles.hint}>Use at least 8 characters. Your email will be verified before the account is activated.</Text>
+    <LegalAcceptance accepted={legalAccepted} onChange={setLegalAccepted} disabled={busy} />
     <View nativeID="clerk-captcha" />
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
-    <Button mode="contained" loading={busy} disabled={busy || password.length < 8} onPress={() => void startEmailSignUp()} contentStyle={styles.button}>Create my BuildPair account</Button>
+    <Button mode="contained" loading={busy} disabled={busy || !legalAccepted || password.length < 8} onPress={() => void startEmailSignUp()} contentStyle={styles.button}>Create my BuildPair account</Button>
     <View style={styles.footer}><Text>Already registered?</Text><Link href={signInHref(mode)} asChild><Button>Sign in</Button></Link></View>
   </Screen>;
 }

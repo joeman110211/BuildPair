@@ -36,7 +36,7 @@ function chunk<T>(items: T[], size: number) {
   return result;
 }
 
-function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
+function FeaturedCard({ trader, compact }: { trader: FeaturedTrader; compact: boolean }) {
   const router = useRouter();
   const rating = Number(trader.averageRating || 0);
   const membership = trader.subscriptionTier === 'featured' ? 'PRO' : trader.subscriptionTier === 'basic' ? 'PLUS' : trader.subscriptionTier === 'core' ? 'CORE' : 'STARTER';
@@ -45,24 +45,25 @@ function FeaturedCard({ trader }: { trader: FeaturedTrader }) {
     : 'New to BuildPair';
 
   return <Pressable
-    style={({ pressed }) => [styles.cardPressable, pressed && styles.cardPressed]}
+    style={({ pressed }) => [styles.cardPressable, compact && styles.cardCompact, pressed && styles.cardPressed]}
     onPress={() => router.push(`/(public)/traders/${trader.id}` as Href)}
     accessibilityRole="button"
     accessibilityLabel={`View ${trader.businessName} profile`}
   >
     <ImageBackground
       source={{ uri: trader.photos[0] || FALLBACK_IMAGE }}
-      style={styles.cardImage}
+      style={[styles.cardImage, compact && styles.cardImageCompact]}
       imageStyle={styles.cardImageRadius}
-      accessibilityLabel={`${trader.businessName} featured work`}
+      accessibilityLabel={trader.photos[0] ? `${trader.businessName} work photo` : 'Illustrative renovation image'}
     >
       <View style={styles.cardShade} />
       <View style={styles.cardTopRow}>
         <View style={styles.featuredBadge}><Text style={styles.featuredBadgeText}>{trader.foundingTrade ? 'FOUNDING TRADE' : 'BUILDPAIR TRADE'}</Text></View>
         <View style={styles.planBadge}><Text style={styles.planBadgeText}>{membership}</Text></View>
       </View>
-      <View style={styles.cardInfo}>
-        <Text numberOfLines={2} style={styles.businessName}>{trader.businessName}</Text>
+      <View style={[styles.cardInfo, compact && styles.cardInfoCompact]}>
+        {!trader.photos[0] ? <Text style={styles.metaLine}>Illustrative image</Text> : null}
+        <Text numberOfLines={2} style={[styles.businessName, compact && styles.businessNameCompact]}>{trader.businessName}</Text>
         <Text numberOfLines={2} style={styles.tradeLine}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
         <Text numberOfLines={1} style={styles.metaLine}>{reputation}{trader.prelaunchProfile ? ' · Profile live before launch' : ''}</Text>
         <View style={styles.cardFoot}>
@@ -145,7 +146,7 @@ export function FeaturedTraderHero({ wide, onAvailabilityChange }: { wide: boole
       onScrollEndDrag={(event) => updatePage(event.nativeEvent.contentOffset.x)}
     >
       {pages.map((page, pageIndex) => <View key={`featured-page-${pageIndex}`} style={[styles.page, { width: pageWidth }]}>
-        {page.map((trader) => <FeaturedCard key={trader.id} trader={trader} />)}
+        {page.map((trader) => <FeaturedCard key={trader.id} trader={trader} compact={pageWidth < 600} />)}
         {page.length < pageSize ? Array.from({ length: pageSize - page.length }).map((_, index) => <View key={`spacer-${index}`} style={styles.cardSpacer} />) : null}
       </View>)}
     </ScrollView>
@@ -167,6 +168,10 @@ const styles = StyleSheet.create({
   carouselContent: { alignItems: 'stretch' },
   page: { flexDirection: 'row', gap: 10, paddingHorizontal: 1 },
   cardPressable: { flex: 1, minWidth: 0, height: 320, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.navySoft },
+  cardCompact: { height: 290, borderRadius: 20 },
+  cardImageCompact: { padding: 8 },
+  cardInfoCompact: { padding: 9 },
+  businessNameCompact: { fontSize: 16, lineHeight: 20 },
   cardPressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
   cardSpacer: { flex: 1, minWidth: 0 },
   cardImage: { flex: 1, justifyContent: 'space-between', padding: 12 },
