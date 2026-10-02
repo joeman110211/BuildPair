@@ -1,7 +1,7 @@
 import { Link } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
-import { LAUNCH_OFFER, PLAN_POSITIONING, SITE_LANGUAGE } from '@/constants/site-language';
+import { PLAN_POSITIONING, SITE_LANGUAGE } from '@/constants/site-language';
 import { colors, controlHeights, radii, shadows, spacing } from '@/constants/theme';
 import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
@@ -110,6 +110,14 @@ const plans = [
 ];
 
 export function PricingCards({ compact = false }: { compact?: boolean }) {
+  if (compact) return <View style={styles.summaryGrid}>
+    {plans.map((plan) => <View key={plan.name} style={[styles.summaryCard, plan.tone === 'plus' && styles.cardFeatured]}>
+      <Text style={styles.eyebrow}>{plan.eyebrow}</Text>
+      <Text style={styles.name}>{plan.name.replace('BuildPair ', '')}</Text>
+      <View style={styles.priceRow}><Text style={styles.price}>{plan.price}</Text><Text style={styles.suffix}>/ month</Text></View>
+      <Text style={styles.note}>{plan.tone === 'starter' ? 'Profile and portfolio' : plan.compactFeatures[0]}</Text>
+    </View>)}
+  </View>;
   return <View style={styles.wrap}>
     <View style={styles.grid}>
       {plans.map((plan) => {
@@ -141,12 +149,13 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
         </View>;
       })}
     </View>
-    {!REGISTRATION_OPEN ? <Text style={styles.launchNote}>Trade profile setup is open now. Marketplace activity and paid plans open at launch. {LAUNCH_OFFER.short}</Text> : null}
     <Text style={styles.note}>Category limits count broad trade categories, not every service inside them. Core direct homeowner requests use the same five-opportunity monthly allowance. On Plus and Pro, direct homeowner requests do not use the open-marketplace allowance. Google reviews remain clearly labelled as Google reviews and only appear after the business listing connection is approved.</Text>
   </View>;
 }
 
 const styles = StyleSheet.create({
+  summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  summaryCard: { flexGrow: 1, flexBasis: 150, minWidth: 0, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: 16, gap: 10, backgroundColor: colors.surfaceRaised },
   wrap: { gap: spacing.lg },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, alignItems: 'stretch' },
   card: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, padding: spacing.xl, gap: spacing.md, borderWidth: 1, borderColor: colors.border, ...shadows.subtle },

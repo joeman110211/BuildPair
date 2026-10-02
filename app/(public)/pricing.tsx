@@ -1,6 +1,8 @@
 import { Link } from 'expo-router';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
+import { PrelaunchBanner } from '@/components/PrelaunchBanner';
+import { PublicSeo } from '@/components/PublicSeo';
 import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
 import { colors, publicResponsiveMetrics } from '@/constants/theme';
@@ -13,6 +15,8 @@ export default function PricingPage() {
   const primaryLabel = REGISTRATION_OPEN ? 'Create trade account' : 'Create profile';
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
+    <PublicSeo title="Trade membership pricing" description="Compare Starter, Core, Plus and Pro memberships, marketplace allowances and business tools. No pay-per-lead charges." />
+    <PrelaunchBanner />
     <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroInner}>
         <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Tradesperson pricing</Text>
@@ -67,7 +71,7 @@ export default function PricingPage() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
-  hero: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 66 },
+  hero: { backgroundColor: colors.navy, paddingHorizontal: 20, paddingVertical: 66 },
   heroMobile: { paddingHorizontal: 16, paddingVertical: 42 },
   heroInner: { width: '100%', maxWidth: 1080, alignSelf: 'center', gap: 15 },
   eyebrow: { color: '#FFE2CF', fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.3 },

@@ -1,6 +1,8 @@
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Icon, Text } from 'react-native-paper';
+import { PrelaunchBanner } from '@/components/PrelaunchBanner';
+import { PublicSeo } from '@/components/PublicSeo';
 import { PublicFooter } from '@/components/PublicFooter';
 import { colors, publicResponsiveMetrics } from '@/constants/theme';
 
@@ -11,12 +13,14 @@ export default function DownloadPage() {
   const goBack = () => router.canGoBack() ? router.back() : router.replace('/');
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
+    <PublicSeo title="Use BuildPair on your phone or computer" description="Use BuildPair in your browser on mobile, tablet or desktop. Check availability of the Android and iOS apps." />
+    <PrelaunchBanner />
     <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroInner}>
         <Button icon="arrow-left" mode="text" textColor="#FFFFFF" compact style={styles.back} onPress={goBack}>Back</Button>
         <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Download BuildPair</Text>
-        <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Web now. Mobile apps next.</Text>
-        <Text variant="bodyLarge" style={styles.intro}>BuildPair is being prepared for Android and iOS distribution. The public website already includes the download area so store links can be switched on cleanly at launch.</Text>
+        <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>BuildPair, wherever you work.</Text>
+        <Text variant="bodyLarge" style={styles.intro}>Use BuildPair in your browser on your phone, tablet or computer. Store availability is shown below.</Text>
       </View>
     </View>
     <View style={styles.content}>
@@ -34,7 +38,7 @@ export default function DownloadPage() {
       </View>
       <View style={styles.webCard}>
         <Text variant="headlineSmall" style={styles.cardTitle}>Use BuildPair on the web</Text>
-        <Text style={styles.body}>The web version remains the quickest way to use BuildPair before the store releases and will continue to work after the apps launch.</Text>
+        <Text style={styles.body}>Open BuildPair in your browser. You can add it to your home screen on supported devices for quicker access.</Text>
         <Button mode="outlined" onPress={() => router.replace('/')}>Open BuildPair</Button>
       </View>
     </View>

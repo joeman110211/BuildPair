@@ -36,7 +36,7 @@ function NavMenu({ dashboard, signedIn, onDashboard, onSignOut, preview = false 
   ];
 
   if (preview) {
-    items.push({ label: SITE_LANGUAGE.joinBuildPair, sectionLabel: 'Launch', dividerBefore: true, onPress: () => go('/auth/account') });
+    items.push({ label: SITE_LANGUAGE.joinBuildPair, sectionLabel: 'Get started', dividerBefore: true, onPress: () => go('/auth/account') });
   } else if (signedIn && dashboard) {
     items.push({ label: 'Dashboard', sectionLabel: 'Account', dividerBefore: true, onPress: () => onDashboard ? onDashboard() : go(dashboard) });
     items.push({ label: 'Sign out', onPress: () => onSignOut?.() });

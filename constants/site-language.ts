@@ -48,7 +48,7 @@ export const PLAN_POSITIONING = {
 
 export const PAYMENT_LANGUAGE = {
   title: 'Pay your way',
-  short: 'Use BuildPay for protected staged payments, or agree to pay directly.',
+  short: 'Use BuildPay to manage agreed payment stages, or pay directly when both sides agree.',
 } as const;
 
 export const WHY_BUILDPAIR = [

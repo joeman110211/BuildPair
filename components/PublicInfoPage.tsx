@@ -2,6 +2,8 @@ import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
+import { PrelaunchBanner } from '@/components/PrelaunchBanner';
+import { PublicSeo } from '@/components/PublicSeo';
 import { PublicFooter } from '@/components/PublicFooter';
 import { Reveal } from '@/components/Reveal';
 import { colors, layout, publicResponsiveMetrics, radii, spacing } from '@/constants/theme';
@@ -18,6 +20,8 @@ export function PublicInfoPage({ eyebrow, title, intro, sections, updated, summa
   const goBack = () => router.canGoBack() ? router.back() : router.replace('/');
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
+    <PublicSeo title={title} description={intro} />
+    <PrelaunchBanner />
     <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroGlowOne} />
       <View style={styles.heroGlowTwo} />

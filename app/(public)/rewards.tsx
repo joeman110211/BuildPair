@@ -1,16 +1,13 @@
 import { Text, View } from 'react-native';
 import { PublicInfoPage, infoStyles } from '@/components/PublicInfoPage';
-import { LAUNCH_OFFER } from '@/constants/site-language';
 
 export default function RewardsPage() {
   return <PublicInfoPage
     eyebrow="BuildPair Rewards"
     title="The more genuine work you complete well, the more BuildPair gives back."
-    intro="BuildPair Rewards is designed to recognise active, reliable tradespeople without charging for individual leads. Launch rewards give new members room to try the platform, while achievement rewards recognise genuine completed projects, strong customer outcomes and useful BuildPay adoption."
-    updated="Launch offer"
+    intro="BuildPair Rewards is designed to recognise active, reliable tradespeople without charging for individual leads. Member offers and achievement rewards recognise genuine completed projects, strong customer outcomes and useful BuildPay adoption."
     sections={[
-      { title: 'Launch rewards', body: <View style={infoStyles.list}>
-        <Text style={infoStyles.item}>• {LAUNCH_OFFER.short}</Text>
+      { title: 'Member offers', body: <View style={infoStyles.list}>
         <Text style={infoStyles.item}>• No lead fee is added simply because a tradesperson receives or responds to a job through BuildPair. Normal membership and any separately disclosed BuildPay terms apply after promotional periods end.</Text>
       </View> },
       { title: 'Complete real jobs, unlock more', body: <View style={infoStyles.list}>

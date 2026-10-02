@@ -1,13 +1,15 @@
 import { Link } from 'expo-router';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
+import { PrelaunchBanner } from '@/components/PrelaunchBanner';
+import { PublicSeo } from '@/components/PublicSeo';
 import { PublicFooter } from '@/components/PublicFooter';
 import { colors, publicResponsiveMetrics } from '@/constants/theme';
 
 const RECENT = [
   ['Four clear trade plans', 'Starter, Core, Plus and Pro now scale marketplace access and business tools without turning paid membership into a trust badge.'],
   ['Main trades + real service choices', 'A main category uses one plan slot. Tradespeople then choose at least one and up to every genuine subcategory/service inside it.'],
-  ['Browse founding trades before launch', 'Real completed trade profiles can be viewed before launch while quotes, private contact and marketplace transactions remain locked.'],
+  ['Explore real trade profiles', 'Browse business details, service areas, portfolios and review sources to find a good fit for your project.'],
   ['Better trade discovery', 'Compare profiles, sort by best match, rating or responsiveness, filter by availability, revisit recent profiles and see similar trades.'],
   ['Quote customers from anywhere', 'Tradespeople can create itemised quotes for customers who came from referrals, phone calls, social media or anywhere outside BuildPair.'],
   ['Quote revisions', 'Sent outside-customer quotes can be revised without overwriting the earlier agreed record. Accepted work changes move into the project variation flow.'],
@@ -52,15 +54,17 @@ export default function UpdatesPage() {
   const { width } = useWindowDimensions();
   const metrics = publicResponsiveMetrics(width);
   return <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+    <PublicSeo title="Product updates" description="Explore the latest BuildPair improvements and planned features for homeowners and tradespeople." />
+    <PrelaunchBanner />
     <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>BuildPair product updates</Text>
-      <Text variant="displaySmall" style={[styles.heroTitle, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>BuildPair is being built around the whole job, not just the lead.</Text>
-      <Text variant="bodyLarge" style={styles.heroBody}>See what has just been added and what is deliberately next. Features shown as coming soon are plans, not promises that they are already live.</Text>
+      <Text variant="displaySmall" style={[styles.heroTitle, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Built around the whole job.</Text>
+      <Text variant="bodyLarge" style={styles.heroBody}>Explore the latest improvements and see what we are working on next.</Text>
       <View style={styles.actions}><Link href="/(public)/how-it-works" asChild><Button mode="contained">How BuildPair works</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined">Trade membership</Button></Link></View>
     </View>
 
     <View style={[styles.section, metrics.phone && styles.sectionMobile]}>
-      <View style={styles.heading}><Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Recently added</Text><Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>The marketplace is becoming a proper project system.</Text></View>
+      <View style={styles.heading}><Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Recently added</Text><Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>A clearer way to manage the whole project.</Text></View>
       <View style={styles.grid}>{RECENT.map(([title, body]) => <FeatureCard key={title} title={title} body={body} />)}</View>
     </View>
 

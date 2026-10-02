@@ -94,7 +94,6 @@ export default function Root({ children }: PropsWithChildren) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="application-name" content="BuildPair" />
-        <meta name="description" content="Find trusted local tradespeople, compare quotes and manage building work." />
         <meta name="theme-color" content="#D35400" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -103,7 +102,6 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="icon" href={favicon} type="image/png" />
         <link rel="apple-touch-icon" href={appleTouchIcon} />
-        <title>BuildPair</title>
         <style dangerouslySetInnerHTML={{ __html: shellCss }} />
         <ScrollViewStyleReset />
       </head>

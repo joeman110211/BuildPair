@@ -1,7 +1,7 @@
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ImageBackground, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { SkeletonBlock } from '@/components/Skeleton';
 import { colors } from '@/constants/theme';
@@ -28,7 +28,6 @@ type FeaturedTraderResponse = {
   traders?: FeaturedTrader[];
 };
 
-const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1625577816360-32388b70471c?auto=format&fit=crop&w=1200&q=84';
 
 function chunk<T>(items: T[], size: number) {
   const result: T[][] = [];
@@ -38,11 +37,10 @@ function chunk<T>(items: T[], size: number) {
 
 function FeaturedCard({ trader, compact }: { trader: FeaturedTrader; compact: boolean }) {
   const router = useRouter();
-  const rating = Number(trader.averageRating || 0);
-  const membership = trader.subscriptionTier === 'featured' ? 'PRO' : trader.subscriptionTier === 'basic' ? 'PLUS' : trader.subscriptionTier === 'core' ? 'CORE' : 'STARTER';
+  const initials = trader.businessName.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]).join('').toUpperCase();
   const reputation = trader.reviewCount > 0
-    ? `${rating.toFixed(1)} ★ · ${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}`
-    : 'New to BuildPair';
+    ? `${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'} · See sources in profile`
+    : 'Explore this business';
 
   return <Pressable
     style={({ pressed }) => [styles.cardPressable, compact && styles.cardCompact, pressed && styles.cardPressed]}
@@ -50,33 +48,22 @@ function FeaturedCard({ trader, compact }: { trader: FeaturedTrader; compact: bo
     accessibilityRole="button"
     accessibilityLabel={`View ${trader.businessName} profile`}
   >
-    <ImageBackground
-      source={{ uri: trader.photos[0] || FALLBACK_IMAGE }}
-      style={[styles.cardImage, compact && styles.cardImageCompact]}
-      imageStyle={styles.cardImageRadius}
-      accessibilityLabel={trader.photos[0] ? `${trader.businessName} work photo` : 'Illustrative renovation image'}
-    >
-      <View style={styles.cardShade} />
-      <View style={styles.cardTopRow}>
-        <View style={styles.featuredBadge}><Text style={styles.featuredBadgeText}>{trader.foundingTrade ? 'FOUNDING TRADE' : 'BUILDPAIR TRADE'}</Text></View>
-        <View style={styles.planBadge}><Text style={styles.planBadgeText}>{membership}</Text></View>
-      </View>
-      <View style={[styles.cardInfo, compact && styles.cardInfoCompact]}>
-        {!trader.photos[0] ? <Text style={styles.metaLine}>Illustrative image</Text> : null}
-        <Text numberOfLines={2} style={[styles.businessName, compact && styles.businessNameCompact]}>{trader.businessName}</Text>
-        <Text numberOfLines={2} style={styles.tradeLine}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
-        <Text numberOfLines={1} style={styles.metaLine}>{reputation}{trader.prelaunchProfile ? ' · Profile live before launch' : ''}</Text>
-        <View style={styles.cardFoot}>
-          <Text style={styles.activityText}>{trader.completedJobs > 0 ? `${trader.completedJobs} completed` : `${trader.galleryCount} work photos`}</Text>
-          <Text style={styles.viewText}>View →</Text>
-        </View>
-      </View>
-    </ImageBackground>
+    <View style={styles.photoArea}>
+      {trader.photos[0] ? <Image source={{ uri: trader.photos[0] }} style={styles.workPhoto} accessibilityLabel={`${trader.businessName} work photo`} resizeMode="cover" /> : <View style={styles.placeholder}><Text style={styles.initials}>{initials}</Text><Text style={styles.placeholderTrade}>{trader.tradeCategory}</Text></View>}
+      {trader.foundingTrade ? <View style={styles.foundingBadge}><Text style={styles.featuredBadgeText}>FOUNDING TRADE</Text></View> : null}
+    </View>
+    <View style={[styles.cardInfo, compact && styles.cardInfoCompact]}>
+      <Text numberOfLines={2} style={[styles.businessName, compact && styles.businessNameCompact]}>{trader.businessName}</Text>
+      <Text numberOfLines={2} style={styles.tradeLine}>{trader.tradeCategory}{trader.locationLabel ? ` · ${trader.locationLabel}` : ''}</Text>
+      <Text numberOfLines={2} style={styles.metaLine}>{reputation}</Text>
+      <View style={styles.cardFoot}><Text style={styles.activityText}>{trader.galleryCount > 0 ? `${trader.galleryCount} work photos` : 'Business profile'}</Text><Text style={styles.viewText}>View →</Text></View>
+    </View>
   </Pressable>;
 }
 
 export function FeaturedTraderHero({ wide, onAvailabilityChange }: { wide: boolean; onAvailabilityChange?: (available: boolean) => void }) {
   const { width } = useWindowDimensions();
+  const carousel = useRef<ScrollView>(null);
   const [traders, setTraders] = useState<FeaturedTrader[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [activePage, setActivePage] = useState(0);
@@ -134,6 +121,7 @@ export function FeaturedTraderHero({ wide, onAvailabilityChange }: { wide: boole
     }}
   >
     <ScrollView
+      ref={carousel}
       horizontal
       pagingEnabled
       snapToInterval={pageWidth}
@@ -153,22 +141,29 @@ export function FeaturedTraderHero({ wide, onAvailabilityChange }: { wide: boole
 
     <View style={styles.carouselFooter}>
       <Text style={styles.swipeHint}>{wide ? 'Swipe or scroll to explore profiles' : 'Swipe to see more tradespeople'}</Text>
-      <View style={styles.dots}>
-        {pages.map((_, index) => <View key={`dot-${index}`} style={[styles.dot, index === visibleActivePage && styles.dotActive]} />)}
-      </View>
+      {pages.length > 1 ? <View style={styles.dots}>
+        {pages.map((_, index) => <Pressable key={`dot-${index}`} accessibilityRole="button" accessibilityLabel={`Show profile group ${index + 1} of ${pages.length}`} accessibilityState={{ selected: index === visibleActivePage }} onPress={() => { setActivePage(index); carousel.current?.scrollTo({ x: index * pageWidth, animated: true }); }} style={styles.dotControl}><View style={[styles.dot, index === visibleActivePage && styles.dotActive]} /></Pressable>)}
+      </View> : null}
     </View>
 
   </View>;
 }
 
 const styles = StyleSheet.create({
+  photoArea: { height: 150, width: '100%', backgroundColor: colors.navySoft },
+  workPhoto: { width: '100%', height: '100%' },
+  placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 5, padding: 12, backgroundColor: colors.navy },
+  initials: { color: '#FFFFFF', fontSize: 38, fontWeight: '800', letterSpacing: 1 },
+  placeholderTrade: { color: '#D3E1EC', fontSize: 11, textAlign: 'center' },
+  foundingBadge: { position: 'absolute', top: 10, left: 10, backgroundColor: colors.primary, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8 },
+  dotControl: { minWidth: 40, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   wrapper: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', gap: 14, overflow: 'hidden' },
   wrapperWide: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center' },
   carousel: { width: '100%', maxWidth: 1140, minWidth: 0 },
   carouselContent: { alignItems: 'stretch' },
   page: { flexDirection: 'row', gap: 10, paddingHorizontal: 1 },
-  cardPressable: { flex: 1, minWidth: 0, height: 320, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.navySoft },
-  cardCompact: { height: 290, borderRadius: 20 },
+  cardPressable: { flex: 1, minWidth: 0, borderRadius: 20, overflow: 'hidden', backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border },
+  cardCompact: { borderRadius: 18 },
   cardImageCompact: { padding: 8 },
   cardInfoCompact: { padding: 9 },
   businessNameCompact: { fontSize: 16, lineHeight: 20 },
@@ -182,13 +177,13 @@ const styles = StyleSheet.create({
   featuredBadgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '900', letterSpacing: 0.7 },
   planBadge: { borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 8, paddingVertical: 6 },
   planBadgeText: { color: colors.navy, fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
-  cardInfo: { gap: 5, padding: 12, borderRadius: 17, backgroundColor: 'rgba(10,24,36,0.9)' },
-  businessName: { color: '#FFFFFF', fontSize: 18, lineHeight: 21, fontWeight: '900', letterSpacing: -0.3 },
-  tradeLine: { color: '#F3F7F9', fontSize: 12, lineHeight: 17, fontWeight: '700' },
-  metaLine: { color: '#D6E1E8', fontSize: 11, lineHeight: 15 },
+  cardInfo: { flex: 1, gap: 7, padding: 16, backgroundColor: colors.surfaceRaised },
+  businessName: { color: colors.charcoal, fontSize: 18, lineHeight: 21, fontWeight: '900', letterSpacing: -0.3 },
+  tradeLine: { color: colors.charcoalSoft, fontSize: 12, lineHeight: 17, fontWeight: '700' },
+  metaLine: { color: colors.muted, fontSize: 11, lineHeight: 15 },
   cardFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginTop: 2 },
-  activityText: { flexShrink: 1, color: '#B7C8D2', fontSize: 10, fontWeight: '700' },
-  viewText: { flexShrink: 0, color: '#FFD0AE', fontSize: 11, fontWeight: '900' },
+  activityText: { flexShrink: 1, color: colors.muted, fontSize: 10, fontWeight: '700' },
+  viewText: { flexShrink: 0, color: colors.primaryDark, fontSize: 11, fontWeight: '900' },
   carouselFooter: { minHeight: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingHorizontal: 2, marginTop: 2 },
   swipeHint: { flexShrink: 1, color: colors.muted, fontSize: 11, fontWeight: '700' },
   dots: { flexDirection: 'row', gap: 5, alignItems: 'center' },

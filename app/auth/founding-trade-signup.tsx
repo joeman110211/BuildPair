@@ -6,7 +6,7 @@ import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { LegalAcceptance } from '@/components/LegalAcceptance';
 import { Screen } from '@/components/Screen';
-import { LAUNCH_OFFER, SITE_LANGUAGE } from '@/constants/site-language';
+import { PrelaunchBanner } from '@/components/PrelaunchBanner';
 import { colors } from '@/constants/theme';
 import { modeSetupHref, signInHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
@@ -92,7 +92,7 @@ export default function FoundingTradeSignup() {
   if (needsEmailVerification) {
     return <Screen title="Verify your trade account" subtitle={`We sent a 6-digit code to ${signUp.emailAddress ?? normalisedEmail}.`}>
       <AppCard style={styles.heroCard}>
-        <Chip icon="hammer-wrench">Launch member</Chip>
+        <Chip icon="hammer-wrench">Trade member</Chip>
         <Text variant="titleLarge" style={styles.heading}>Your profile is nearly ready to start.</Text>
         <Text style={styles.body}>Verify your email, then BuildPair will take you straight into your real tradesperson profile setup.</Text>
       </AppCard>
@@ -103,13 +103,12 @@ export default function FoundingTradeSignup() {
     </Screen>;
   }
 
-  return <Screen title="Create your BuildPair trade profile" subtitle="Profile setup is open now. BuildPair is launching soon.">
+  return <Screen title="Create your BuildPair trade profile" subtitle="Show your business, services and completed work in one place.">
+    <PrelaunchBanner />
     <AppCard style={styles.heroCard}>
-      <Chip icon="rocket-launch-outline">{SITE_LANGUAGE.launchingSoon}</Chip>
-      <Text variant="headlineSmall" style={styles.heading}>Join free. Get launch-ready.</Text>
-      <Text style={styles.body}>Create your real BuildPair account, complete your business profile, service area, portfolio, credentials and Google review connection before launch.</Text>
-      <Text style={styles.body}><Text style={styles.strong}>Marketplace activity stays locked until launch.</Text> No homeowner jobs, quotes, messaging, BuildPay or paid subscription charges are available during pre-launch.</Text>
-      <Text style={styles.body}><Text style={styles.strong}>{LAUNCH_OFFER.short}</Text> Setting up early does not use any of your free Pro time.</Text>
+      <Text variant="headlineSmall" style={styles.heading}>Build your profile. Show your work.</Text>
+      <Text style={styles.body}>Create your BuildPair account and add your business details, service area, portfolio, credentials and Google review connection.</Text>
+      <Text style={styles.body}>Profile setup is free. Choose the services you offer and help homeowners understand what makes your business a good fit.</Text>
     </AppCard>
 
     <AppCard>

@@ -1,13 +1,16 @@
 import { Link, useRouter } from 'expo-router';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
-import { waitlistHref } from '@/lib/launch';
+import { LAUNCH_DATE_LABEL, MARKETPLACE_OPEN, REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 export function PrelaunchBanner() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const compact = width < 720;
+  const [showTerms, setShowTerms] = useState(false);
+  if (MARKETPLACE_OPEN && REGISTRATION_OPEN) return null;
 
   return (
     <View style={styles.shell}>
@@ -19,31 +22,31 @@ export function PrelaunchBanner() {
               <View style={styles.liveDot} />
               <Text style={styles.liveText}>LAUNCHING SOON</Text>
             </View>
-            <View style={styles.offerPill}>
-              <Text style={styles.offerPillText}>3 MONTHS PRO FREE</Text>
-            </View>
+            <Pressable accessibilityRole="button" accessibilityLabel="Read free Pro offer terms" accessibilityState={{ expanded: showTerms }} onPress={() => setShowTerms(!showTerms)} style={styles.offerPill}>
+              <Text style={styles.offerPillText}>3 MONTHS PRO FREE · TERMS {showTerms ? '−' : '+'}</Text>
+            </Pressable>
           </View>
 
           <View style={styles.textBlock}>
             <Text style={[styles.title, compact && styles.titleCompact]}>
-              Build your profile now. Be ready when BuildPair opens.
+              BuildPair opens {LAUNCH_DATE_LABEL}.
             </Text>
             <Text style={[styles.body, compact && styles.bodyCompact]}>
-              Tradespeople can join free today, with no pay-per-lead charges. Homeowners can join the launch list and be first to post jobs when the marketplace opens.
+              Profiles are open. Jobs, quotes, messaging, BuildPay and paid plans open at launch.
             </Text>
           </View>
+          {showTerms ? <Text style={styles.body}>Create a trade profile before 15 October 2026 to receive Pro access from 15 October 2026 until 15 January 2027. No paid subscription is created automatically. Profile setup is free; marketplace activity remains closed until launch.</Text> : null}
         </View>
 
         {compact ? (
           <View style={styles.mobileActions}>
             <Button
               mode="contained"
-              icon="account-plus-outline"
               style={[styles.button, styles.primaryButton]}
               contentStyle={styles.buttonContent}
               onPress={() => router.push(waitlistHref('trader', 'homepage-banner'))}
             >
-              Create trade profile
+              Trade signup
             </Button>
             <Button
               mode="outlined"
@@ -52,7 +55,7 @@ export function PrelaunchBanner() {
               contentStyle={styles.buttonContent}
               onPress={() => router.push(waitlistHref('customer', 'homepage-banner'))}
             >
-              Homeowner launch list
+              Homeowner list
             </Button>
           </View>
         ) : (
@@ -60,11 +63,10 @@ export function PrelaunchBanner() {
             <Link href={waitlistHref('trader', 'homepage-banner')} asChild>
               <Button
                 mode="contained"
-                icon="account-plus-outline"
-                style={[styles.button, styles.primaryButton]}
+                  style={[styles.button, styles.primaryButton]}
                 contentStyle={styles.buttonContent}
               >
-                Create trade profile
+                Trade signup
               </Button>
             </Link>
             <Link href={waitlistHref('customer', 'homepage-banner')} asChild>
@@ -74,7 +76,7 @@ export function PrelaunchBanner() {
                 style={[styles.button, styles.secondaryButton]}
                 contentStyle={styles.buttonContent}
               >
-                Homeowner launch list
+                Homeowner list
               </Button>
             </Link>
           </View>
@@ -85,6 +87,7 @@ export function PrelaunchBanner() {
 }
 
 const styles = StyleSheet.create({
+  termsLink: { color: '#FFD7BA', fontSize: 12, lineHeight: 20, fontWeight: '700', paddingVertical: 6 },
   shell: {
     width: '100%',
     backgroundColor: colors.charcoal,
@@ -101,7 +104,7 @@ const styles = StyleSheet.create({
     maxWidth: 1240,
     alignSelf: 'center',
     paddingHorizontal: spacing.xl,
-    paddingVertical: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -109,7 +112,7 @@ const styles = StyleSheet.create({
   },
   innerCompact: {
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     flexDirection: 'column',
     alignItems: 'stretch',
     gap: 12,
@@ -160,7 +163,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF0E5',
     borderRadius: 999,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    minHeight: 32, justifyContent: 'center', paddingVertical: 7,
   },
   offerPillText: {
     color: colors.primaryDark,
@@ -194,7 +197,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   actions: {
-    width: 245,
+    width: 260,
     flexShrink: 0,
     gap: 8,
   },

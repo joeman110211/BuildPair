@@ -10,10 +10,10 @@ export default function PaymentsPage() {
     title={PAYMENT_LANGUAGE.title}
     intro={PAYMENT_LANGUAGE.short}
     summary={<View style={styles.summary}>
-      <View style={[styles.choice, styles.buildPay]}><Text style={styles.kicker}>BUILDPAY</Text><Text variant="titleLarge" style={styles.title}>Protected stages</Text><Text style={styles.copy}>Agree the quote, fund the next stage and release protected work payments when the recorded stage is ready.</Text></View>
+      <View style={[styles.choice, styles.buildPay]}><Text style={styles.kicker}>BUILDPAY</Text><Text variant="titleLarge" style={styles.title}>Agreed payment stages</Text><Text style={styles.copy}>Agree the quote, fund the next stage and approve stage releases when the recorded stage is ready.</Text></View>
       <View style={styles.choice}><Text style={styles.kicker}>DIRECT</Text><Text variant="titleLarge" style={styles.title}>Pay directly</Text><Text style={styles.copy}>If both sides agree, arrange payment privately while keeping the quote, messages and project record in BuildPair.</Text></View>
     </View>}
-    updated="13 September 2026"
+    updated="2 October 2026"
     sections={[
       { title: '1. Site visits and in-person quotes are allowed', body: 'BuildPair does not require every job to be priced remotely. A tradesperson can arrange a site visit through the job when inspection is needed. Once a confirmed visit has taken place it is marked complete, and the tradesperson sends the resulting structured quote through BuildPair so scope, exclusions, timing, price and payment stages are recorded clearly.' },
       { title: '2. Agree the quote before money moves', body: 'The tradesperson sends a structured BuildPair quote showing scope, exclusions, labour/service, materials, VAT where applicable, timing and a payment schedule. The homeowner can request different service-stage splits before accepting, but the quoted total and materials amount cannot be silently changed. Any homeowner-edited stage plan must be accepted by the tradesperson.' },

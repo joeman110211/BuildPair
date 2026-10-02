@@ -2,34 +2,31 @@ import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Chip, Text, TextInput } from 'react-native-paper';
+import { Button, Text, TextInput } from 'react-native-paper';
 import { FeaturedTraderHero } from '@/components/FeaturedTraderHero';
 import { PrelaunchBanner } from '@/components/PrelaunchBanner';
 import { PricingCards } from '@/components/PricingCards';
-import { Reveal } from '@/components/Reveal';
+import { ProductPreview } from '@/components/ProductPreview';
 import { PublicFooter } from '@/components/PublicFooter';
+import { PublicSeo } from '@/components/PublicSeo';
+import { Reveal } from '@/components/Reveal';
 import { TRADE_CATEGORIES } from '@/constants/options';
-import { FAIR_FOR_BOTH, PAYMENT_LANGUAGE, WHY_BUILDPAIR } from '@/constants/site-language';
 import { colors, controlHeights, publicResponsiveMetrics, radii } from '@/constants/theme';
-import { waitlistHref } from '@/lib/launch';
 
 const POPULAR_TRADES = ['Tiling', 'Plumbing', 'Electrical', 'Building & Extensions', 'Roofing & Roofline', 'Painting & Decorating', 'Kitchens', 'Bathrooms'] as const;
-const HERO_BENEFITS = WHY_BUILDPAIR.slice(0, 4);
-
 const FAQS = [
-  ['What if a tradesperson needs to visit first?', 'They can arrange a site visit through the job, then send the structured quote through BuildPair afterwards.'],
-  ['How does BuildPay work?', 'BuildPay follows agreed payment stages. The detailed funding, release, refund and fee rules are explained on the Payments page.'],
-  ['How does BuildPair keep jobs local?', 'Tradespeople set a real service base and working radius so matching stays focused on areas they genuinely cover.'],
-  ['Can we pay directly?', 'Yes. If both sides agree, payment can be arranged privately while the quote, messages and project record stay in BuildPair.'],
-  ['What does BuildPair cost tradespeople?', 'Starter is free. Core, Plus and Pro add increasing marketplace access and business tools. See Pricing for the current plan details.'],
+  ['Can a tradesperson visit before quoting?', 'Yes. Arrange a site visit through the job when the work needs a closer look, then agree a written quote through BuildPair.'],
+  ['Who pays the BuildPay fee?', 'The party requesting BuildPay carries the disclosed cost. The fee, payment stages and total are shown before you commit.'],
+  ['Can we pay directly?', 'Yes, when both sides agree. BuildPair keeps the project record, but does not process, hold or refund money paid directly.'],
+  ['What do trade memberships include?', 'Starter is free. Core, Plus and Pro add marketplace allowances and business tools. The Pricing page sets out each plan’s features and limits.'],
 ] as const;
 
-function SectionHeading({ eyebrow, title, body }: { eyebrow?: string; title: string; body?: string }) {
+function Heading({ eyebrow, title, body }: { eyebrow: string; title: string; body?: string }) {
   const { width } = useWindowDimensions();
   const metrics = publicResponsiveMetrics(width);
-  return <View style={styles.sectionHeading}>
-    {eyebrow ? <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>{eyebrow}</Text> : null}
-    <Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>{title}</Text>
+  return <View style={styles.heading}>
+    <Text style={styles.eyebrow}>{eyebrow}</Text>
+    <Text style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>{title}</Text>
     {body ? <Text style={styles.sectionBody}>{body}</Text> : null}
   </View>;
 }
@@ -38,259 +35,98 @@ export default function LandingPageRefined() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const mobile = width < 720;
-  const narrowMobile = width < 380;
   const wide = width >= 920;
   const [search, setSearch] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [hasFeaturedProfiles, setHasFeaturedProfiles] = useState(true);
-
   const goSearch = (value: string) => {
     const q = value.trim();
     router.push((q ? `/(public)/directory?q=${encodeURIComponent(q)}` : '/(public)/directory') as Href);
   };
-  const goTrade = (trade: string) => router.push(`/(public)/directory?trade=${encodeURIComponent(trade)}` as Href);
 
-  return <ScrollView style={styles.page} contentContainerStyle={styles.pageContent}>
+  return <ScrollView style={styles.page} contentContainerStyle={styles.pageContent} keyboardShouldPersistTaps="handled">
+    <PublicSeo title="Find local tradespeople. Keep the whole job together" description="Browse local tradespeople, compare clear quotes and keep messages, changes and payment stages together. Practical business tools for tradespeople, with no pay-per-lead charges." />
     <PrelaunchBanner />
-
-    <View style={[styles.hero, mobile && styles.heroMobile, narrowMobile && styles.heroNarrow, wide && styles.heroWide]}>
-      <View style={[styles.heroCopy, wide && styles.heroCopyWide]} testID="home-hero-copy">
-        <View style={styles.heroBadge}><View style={styles.liveDot} /><Text style={styles.heroBadgeText}>{FAIR_FOR_BOTH.eyebrow}</Text></View>
-        <Text style={[styles.heroTitle, !wide && styles.heroTitleCompact]}>Find local tradespeople. Keep the whole job together.</Text>
-        <Text variant="titleMedium" style={styles.heroSubtitle}>Browse local profiles now. At launch, compare quotes, agree the work and manage your project in one place.</Text>
-        <View style={styles.heroBenefits}>
-          {HERO_BENEFITS.map((item) => <View key={item} style={styles.heroBenefit}><Text style={styles.heroBenefitMark}>✓</Text><Text style={styles.heroBenefitText}>{item}</Text></View>)}
-        </View>
-        <View style={styles.heroSearch}>
-          <TextInput mode="outlined" value={search} onChangeText={setSearch} onSubmitEditing={() => goSearch(search)} placeholder="Describe the job, e.g. bathroom tiling" outlineStyle={styles.inputOutline} />
-          <Button mode="contained" style={[styles.buttonBase, styles.buttonFull]} contentStyle={[styles.buttonContent, mobile && styles.mobilePrimaryContent]} onPress={() => goSearch(search)}>Find a trade</Button>
-        </View>
-        {mobile ? <View style={styles.mobileHeroSecondary} testID="home-hero-actions">
-          <Button mode="text" compact textColor={colors.primaryDark} style={styles.mobileHeroLink} contentStyle={styles.mobileHeroLinkContent} onPress={() => router.push(waitlistHref('customer', 'homepage-hero'))}>Join launch list</Button>
-        </View> : <View style={styles.heroActions} testID="home-hero-actions">
-          <Link href={waitlistHref('customer', 'homepage-hero')} asChild><Button mode="outlined" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Join launch list</Button></Link>
-          <Link href={waitlistHref('trader', 'homepage-hero-trader')} asChild><Button mode="contained" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>Create profile</Button></Link>
-          <Link href="/(public)/how-it-works" asChild><Button mode="outlined" style={[styles.buttonBase, styles.heroActionButton]} contentStyle={styles.buttonContent}>How it works</Button></Link>
-        </View>}
+    <View style={[styles.hero, mobile && styles.heroMobile]}>
+      <Text style={styles.eyebrow}>ONE PROJECT. BOTH SIDES CONNECTED.</Text>
+      <Text style={[styles.heroTitle, mobile && styles.heroTitleMobile]}>Find local tradespeople.{ '\n' }Keep the whole job together.</Text>
+      <Text style={styles.heroBody}>Compare clear quotes. Agree the work. Keep messages, changes and payment stages in one place.</Text>
+      <View style={styles.heroActions}>
+        <Link href="/(public)/directory" asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Browse local trades</Button></Link>
+        <Link href="/(public)/how-it-works" asChild><Button mode="text" textColor={colors.primaryDark} style={styles.button} contentStyle={styles.buttonContent}>See how it works →</Button></Link>
       </View>
+      <View style={styles.benefits}><Text style={styles.benefit}>Clear quotes</Text><Text style={styles.benefitDot}>·</Text><Text style={styles.benefit}>Local trades</Text><Text style={styles.benefitDot}>·</Text><Text style={styles.benefit}>No pay per lead</Text></View>
     </View>
 
-    <Reveal><View style={[styles.featuredBand, !hasFeaturedProfiles && styles.hidden]}>
-      <View style={[styles.featuredSection, mobile && styles.featuredSectionMobile, narrowMobile && styles.featuredSectionNarrow]}>
-        <SectionHeading eyebrow="Tradespeople joining BuildPair" title="Meet the people behind the profiles." body="Explore real business profiles, services and work photos from tradespeople joining BuildPair." />
+    <Reveal><View style={[styles.band, styles.whiteBand, !hasFeaturedProfiles && styles.hidden]}>
+      <View style={styles.section}>
+        <Heading eyebrow="Featured tradespeople" title="Real businesses. Work you can explore." body="See their services, work photos and review sources before choosing who to contact." />
         <FeaturedTraderHero wide={wide} onAvailabilityChange={setHasFeaturedProfiles} />
       </View>
     </View></Reveal>
 
-    <Reveal delay={50}><View style={styles.tradeBand}>
-      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow="Find a trade" title="Search by the job, not the jargon." body="Choose a trade when you know what you need, or describe the work and let BuildPair guide you to the right starting point." />
-        <View style={styles.tradeGrid}>
-          {POPULAR_TRADES.map((trade) => <Pressable key={trade} style={styles.tradeCard} onPress={() => goTrade(trade)} accessibilityRole="button"><Text style={styles.tradeName}>{trade}</Text><Text style={styles.tradeArrow}>→</Text></Pressable>)}
-        </View>
-        <Link href="/(public)/directory" asChild><Button mode="text" style={styles.buttonBase} contentStyle={styles.buttonContent}>Browse all {TRADE_CATEGORIES.length} trade categories →</Button></Link>
+    <Reveal delay={40}><View style={styles.section}>
+      <Heading eyebrow="Find a trade" title="What needs doing?" body="Choose a trade or describe the job in your own words." />
+      <View style={[styles.searchRow, mobile && styles.searchRowMobile]}>
+        <TextInput accessibilityLabel="Describe the job or trade" mode="outlined" value={search} onChangeText={setSearch} onSubmitEditing={() => goSearch(search)} placeholder="e.g. bathroom tiling or a leaking tap" outlineStyle={styles.inputOutline} style={styles.searchInput} />
+        <Button mode="contained" style={[styles.button, mobile && styles.fullButton]} contentStyle={styles.buttonContent} onPress={() => goSearch(search)}>Find a trade</Button>
       </View>
+      <View style={styles.tradeGrid}>{POPULAR_TRADES.map((trade) => <Pressable key={trade} style={({ pressed }) => [styles.tradeCard, pressed && styles.pressed]} onPress={() => router.push(`/(public)/directory?trade=${encodeURIComponent(trade)}` as Href)} accessibilityRole="button"><Text style={styles.tradeName}>{trade}</Text><Text style={styles.tradeArrow}>→</Text></Pressable>)}</View>
+      <Link href="/(public)/directory" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>Browse all {TRADE_CATEGORIES.length} trade categories →</Button></Link>
     </View></Reveal>
 
-    <Reveal delay={80}><View style={styles.audienceBand}>
-      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow={FAIR_FOR_BOTH.eyebrow} title="Better for the homeowner. Fairer for the trade." body="BuildPair is designed around the job itself, so one side does not have to lose for the other side to get value." />
-        <View style={styles.audienceGrid}>
-          <View style={[styles.audienceCard, styles.homeownerCard]}>
-            <Text style={styles.audienceEyebrow}>FOR HOMEOWNERS</Text>
-            <Text variant="headlineSmall" style={styles.cardTitle}>{FAIR_FOR_BOTH.homeownerTitle}</Text>
-            <Text style={styles.cardText}>{FAIR_FOR_BOTH.homeownerBody}</Text>
-            {mobile ? <View style={styles.audienceActions}><View style={styles.mobileActionRow}><Button mode="contained" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('customer', 'homepage-audience'))}>Join launch list</Button></View></View> : <View style={styles.audienceActions}><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent} onPress={() => goSearch('')}>Find a trade</Button><Link href={waitlistHref('customer', 'homepage-audience')} asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>Join launch list</Button></Link></View>}
-          </View>
-          <View style={[styles.audienceCard, styles.tradeAudienceCard]}>
-            <Text style={[styles.audienceEyebrow, styles.tradeAudienceEyebrow]}>FOR TRADESPEOPLE</Text>
-            <Text variant="headlineSmall" style={styles.cardTitle}>{FAIR_FOR_BOTH.tradeTitle}</Text>
-            <Text style={styles.cardText}>{FAIR_FOR_BOTH.tradeBody}</Text>
-            {mobile ? <View style={styles.audienceActions}><Button mode="contained" style={[styles.buttonBase, styles.mobileWideAction]} contentStyle={styles.buttonContent} onPress={() => router.push(waitlistHref('trader', 'homepage-trade-card'))}>Create profile</Button><View style={styles.mobileActionRow}><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/for-tradespeople')}>Trade features</Button><Button mode="outlined" style={[styles.buttonBase, styles.mobileHalfAction]} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/pricing')}>Pricing</Button></View></View> : <View style={styles.audienceActions}><Link href={waitlistHref('trader', 'homepage-trade-card')} asChild><Button mode="contained" style={styles.buttonBase} contentStyle={styles.buttonContent}>Create profile</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>Trade features</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>View pricing</Button></Link></View>}
-          </View>
-        </View>
-        <View style={styles.fairBridge}><Text style={styles.fairBridgeEyebrow}>BUILDPAIR</Text><Text variant="titleLarge" style={styles.fairBridgeTitle}>Checked the directories? Collected the quotes? Still chasing trades? There’s a better way.</Text><Text style={styles.fairBridgeText}>BuildPair connects homeowners and tradespeople around the whole project, not just the introduction.</Text></View>
+    <Reveal delay={80}><View style={[styles.band, styles.whiteBand]}><View style={styles.section}>
+      <Heading eyebrow="How BuildPair works" title="From first search to finished job." />
+      <View style={styles.stepGrid}>{[
+        ['01', 'Find the right fit', 'Explore local profiles and request quotes for the work you need.'],
+        ['02', 'Agree the details', 'Compare scope, materials, timing and price. Arrange a visit when needed.'],
+        ['03', 'Keep it organised', 'Manage messages, agreed changes and payment stages through the project.'],
+      ].map(([number, title, copy]) => <View key={number} style={styles.step}><Text style={styles.stepNumber}>{number}</Text><Text style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}</View>
+      <Link href="/(public)/how-it-works" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>Explore the full process →</Button></Link>
+    </View></View></Reveal>
+
+    <Reveal delay={120}><View style={[styles.band, styles.productBand]}><View style={styles.section}>
+      <Heading eyebrow="More than an introduction" title="The useful part starts with the job." body="Clearer projects for homeowners. Practical tools for tradespeople and their existing customers." />
+      <ProductPreview />
+    </View></View></Reveal>
+
+    <Reveal delay={160}><View style={styles.section}>
+      <Heading eyebrow="Payments & trust" title="Clear choices. A better record." />
+      <View style={styles.choiceGrid}>
+        <View style={[styles.choice, styles.paymentChoice]}><Text style={styles.eyebrow}>BUILDPAY</Text><Text style={styles.cardTitle}>Agree stages. Record releases.</Text><Text style={styles.cardText}>Stripe processes supported payments. BuildPair connects funding and release decisions to the agreed work.</Text><Text style={styles.smallText}>BuildPay is not escrow, insurance or a guarantee of workmanship or refunds.</Text><Link href="/(public)/payments" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>How payments work →</Button></Link></View>
+        <View style={styles.choice}><Text style={styles.eyebrow}>DIRECT PAYMENT</Text><Text style={styles.cardTitle}>Pay directly when you both agree.</Text><Text style={styles.cardText}>Keep the quote, messages and project record in BuildPair while arranging payment privately.</Text><Text style={styles.smallText}>BuildPair does not receive, hold, release or refund money paid directly.</Text><Link href="/(public)/payments" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>Compare payment routes →</Button></Link></View>
       </View>
+      <View style={styles.trustStrip}><Text style={styles.trustTitle}>Make an informed choice.</Text><Text style={styles.cardText}>Explore real work, service areas, review sources and the status of submitted credentials. Report concerns for review.</Text><Link href="/(public)/trust-safety" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>Trust & safety →</Button></Link></View>
     </View></Reveal>
 
-    <Reveal delay={110}><View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-      <SectionHeading eyebrow="How it works" title="Three clear stages." body="Find the right fit, agree the work clearly, then keep the project together." />
-      <View style={styles.routeGrid}>
-        {[
-          ['01', 'Find the right fit', 'Describe the job or search local profiles, then request quotes from suitable tradespeople.'],
-          ['02', 'Compare and agree', 'Compare structured quotes, arrange a visit if needed and agree the scope, timing and payment route.'],
-          ['03', 'Manage the project', 'Keep messages, changes, payment stages and project history connected through to completion.'],
-        ].map(([number, title, copy]) => <View key={number} style={styles.routeCard}><Text style={styles.routeNumber}>{number}</Text><Text variant="titleLarge" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
-      </View>
-      <Link href="/(public)/how-it-works" asChild><Button mode="text" style={styles.buttonBase} contentStyle={styles.buttonContent}>See the full process →</Button></Link>
+    <Reveal delay={200}><View style={[styles.band, styles.whiteBand]}><View style={styles.section}>
+      <Heading eyebrow="For tradespeople" title="Start free. Build from there." body="Monthly memberships combine marketplace access with quoting, customer and project tools. No pay-per-lead charges." />
+      <PricingCards compact />
+      <View style={styles.heroActions}><Link href="/(public)/pricing" asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Compare plans & allowances</Button></Link><Link href="/(public)/for-tradespeople" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>Explore trade tools →</Button></Link></View>
+    </View></View></Reveal>
+
+    <Reveal delay={240}><View style={styles.section}>
+      <Heading eyebrow="Your questions" title="A few things worth knowing." />
+      <View style={styles.faqList}>{FAQS.map(([question, answer], index) => <Pressable key={question} style={styles.faqCard} onPress={() => setOpenFaq(openFaq === index ? null : index)} accessibilityRole="button" accessibilityState={{ expanded: openFaq === index }}><View style={styles.faqRow}><Text style={styles.faqQuestion}>{question}</Text><Text style={styles.faqToggle}>{openFaq === index ? '−' : '+'}</Text></View>{openFaq === index ? <Text style={styles.cardText}>{answer}</Text> : null}</Pressable>)}</View>
+      <Link href="/(public)/contact" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>Need a hand? Contact BuildPair →</Button></Link>
     </View></Reveal>
-
-    <Reveal delay={140}><View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-      <SectionHeading eyebrow="Why BuildPair" title="More than a check. More than a quote. More than a directory." body="The difference is not one flashy feature. It is a fairer model and a project that stays useful after the introduction." />
-      <View style={styles.featureGrid}>
-        {WHY_BUILDPAIR.slice(0, 6).map((title) => {
-          const copy: Record<string, string> = {
-            'No pay per lead': 'Tradespeople are not charged every time a homeowner enquiry appears.',
-            'No bidding wars': 'Homeowners compare suitable quotes without turning the job into an endless race to the bottom.',
-            'Clear quotes': 'Scope, labour, materials, timing and stages are easier to compare.',
-            'Local matching': 'Service areas and working radius keep opportunities relevant.',
-            'Manage the whole job': 'Messages, changes and project history stay connected after the quote.',
-            'Staged payments': 'Use BuildPay when protected staged payments suit the job.',
-          };
-          return [title, copy[title] ?? 'Built to keep the project clearer for both sides.'];
-        }).map(([title, copy]) => <View key={title} style={styles.featureCard}><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
-      </View>
-    </View></Reveal>
-
-    <Reveal delay={170}><View style={styles.paymentBand}>
-      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow="Payments" title={PAYMENT_LANGUAGE.title} body={PAYMENT_LANGUAGE.short} />
-        <View style={styles.paymentGrid}>
-          <View style={[styles.paymentCard, styles.protectedCard]}>
-            <Chip icon="credit-card-check-outline" style={styles.cardChip}>BuildPay</Chip>
-            <Text variant="titleLarge" style={styles.cardTitle}>Protected staged payments.</Text>
-            <Text style={styles.cardText}>Keep agreed stages connected to the quote and release workflow. Full rules live on the Payments page.</Text>
-          </View>
-          <View style={[styles.paymentCard, styles.privateCard]}>
-            <Chip icon="account-arrow-right-outline" style={styles.cardChip}>Private payment arrangement</Chip>
-            <Text variant="titleLarge" style={styles.cardTitle}>Pay directly.</Text>
-            <Text style={styles.cardText}>If both sides agree, arrange payment privately and keep the project record in BuildPair.</Text>
-          </View>
-        </View>
-        <Link href="/(public)/payments" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>Learn about payments</Button></Link>
-      </View>
-    </View></Reveal>
-
-    <Reveal delay={200}><View style={styles.trustBand}>
-      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow="Trust & safety" title="Trust should be earned on the job, not displayed in a directory." body="Profiles, credentials, project-linked reviews, service area and reporting give both sides more useful context." />
-        <View style={styles.trustGrid}>
-          {[
-            ['Local service area', 'See where a tradesperson actually works.'],
-            ['Credential status', 'See the review status of submitted evidence.'],
-            ['Project-linked reviews', 'See review context where BuildPair activity supports it.'],
-            ['Two-way reporting', 'Either side can report a concern for review.'],
-          ].map(([title, copy]) => <View key={title} style={styles.trustCard}><Text variant="titleMedium" style={styles.cardTitle}>{title}</Text><Text style={styles.cardText}>{copy}</Text></View>)}
-        </View>
-        <Link href="/(public)/trust-safety" asChild><Button mode="outlined" style={styles.buttonBase} contentStyle={styles.buttonContent}>Read about trust & safety</Button></Link>
-      </View>
-    </View></Reveal>
-
-    <Reveal delay={230}><View style={styles.pricingBand}>
-      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow="Pricing" title="Start free. Upgrade for what you need." body="Starter gets you established. Core helps you win work. Plus helps you run more jobs. Pro helps you run the business." />
-        <PricingCards compact />
-        <Link href="/(public)/pricing" asChild><Button mode="text" style={styles.buttonBase} contentStyle={styles.buttonContent}>Compare pricing →</Button></Link>
-      </View>
-    </View></Reveal>
-
-    <Reveal delay={260}><View style={styles.faqBand}>
-      <View style={[styles.section, mobile && styles.sectionMobile, narrowMobile && styles.sectionNarrow]}>
-        <SectionHeading eyebrow="Questions" title="Key questions before you get started." />
-        <View style={styles.faqList}>
-          {FAQS.map(([question, answer], index) => {
-            const open = openFaq === index;
-            return <Pressable key={question} style={styles.faqCard} onPress={() => setOpenFaq(open ? null : index)} accessibilityRole="button" accessibilityState={{ expanded: open }}>
-              <View style={styles.faqRow}><Text variant="titleMedium" style={styles.cardTitle}>{question}</Text><Text style={styles.faqToggle}>{open ? '−' : '+'}</Text></View>
-              {open ? <Text style={styles.cardText}>{answer}</Text> : null}
-            </Pressable>;
-          })}
-        </View>
-      </View>
-    </View></Reveal>
-
-
     <PublicFooter />
   </ScrollView>;
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.background },
-  pageContent: { flexGrow: 1, width: '100%', maxWidth: '100%' },
-  hidden: { display: 'none' },
-  hero: { width: '100%', maxWidth: 1240, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 38, gap: 24 },
-  heroWide: { paddingVertical: 50 },
-  heroMobile: { paddingHorizontal: 16, paddingVertical: 30, gap: 18 },
-  heroNarrow: { paddingHorizontal: 14, paddingVertical: 28 },
-  heroCopy: { width: '100%', maxWidth: '100%', minWidth: 0, flexShrink: 1, justifyContent: 'center', alignItems: 'center', gap: 16 },
-  heroCopyWide: { width: '100%', maxWidth: 900, alignSelf: 'center' },
-  heroBadge: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: colors.primarySoft, borderRadius: 999, borderWidth: 1, borderColor: '#F2D7C3' },
-  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
-  heroBadgeText: { color: colors.primaryDark, fontWeight: '800', fontSize: 12, textAlign: 'center' },
-  heroTitle: { color: colors.charcoal, fontSize: 50, lineHeight: 55, fontWeight: '900', letterSpacing: -1.8, textAlign: 'center' },
-  heroTitleCompact: { fontSize: 36, lineHeight: 41 },
-  heroSubtitle: { color: colors.charcoalSoft, lineHeight: 27, maxWidth: 660, textAlign: 'center' },
-  heroBenefits: { width: '100%', maxWidth: 700, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
-  heroBenefit: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 999 },
-  heroBenefitMark: { color: colors.accent, fontWeight: '900' },
-  heroBenefitText: { flexShrink: 1, color: colors.charcoalSoft, fontSize: 12, fontWeight: '800' },
-  heroSearch: { gap: 10, width: '100%', maxWidth: 700 },
-  inputOutline: { borderRadius: 16 },
-  buttonBase: { borderRadius: radii.md, maxWidth: '100%' },
-  buttonContent: { minHeight: controlHeights.standard, paddingHorizontal: 8 },
-  buttonFull: { width: '100%' },
-  mobilePrimaryContent: { minHeight: controlHeights.standard },
-  mobileHeroSecondary: { width: '100%', alignItems: 'center', marginTop: -2 },
-  mobileHeroLink: { alignSelf: 'center', borderRadius: radii.md },
-  mobileHeroLinkContent: { minHeight: 36, paddingHorizontal: 6 },
-  mobileWideAction: { width: '100%' },
-  mobileActionRow: { width: '100%', flexDirection: 'row', alignItems: 'stretch', gap: 8 },
-  mobileHalfAction: { flex: 1, minWidth: 0 },
-  heroActions: { width: '100%', maxWidth: 700, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', alignItems: 'center' },
-  heroActionButton: { minWidth: 180, maxWidth: '100%' },
-  featuredBand: { backgroundColor: '#FFFFFF' },
-  featuredSection: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 18, paddingTop: 32, paddingBottom: 48, gap: 20 },
-  featuredSectionMobile: { paddingHorizontal: 16, paddingTop: 22, paddingBottom: 34, gap: 16 },
-  featuredSectionNarrow: { paddingHorizontal: 14 },
-  section: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 48, gap: 24 },
-  sectionMobile: { paddingHorizontal: 16, paddingVertical: 34, gap: 18 },
-  sectionNarrow: { paddingHorizontal: 14, paddingVertical: 30 },
-  sectionHeading: { width: '100%', maxWidth: 820, minWidth: 0, alignSelf: 'center', alignItems: 'center', gap: 8 },
-  eyebrow: { color: colors.primary, fontWeight: '900', letterSpacing: 1.2, textTransform: 'uppercase', textAlign: 'center' },
-  sectionTitle: { color: colors.charcoal, fontWeight: '900', letterSpacing: -0.5, textAlign: 'center' },
-  sectionBody: { color: colors.muted, lineHeight: 23, textAlign: 'center', maxWidth: 720 },
-  audienceBand: { backgroundColor: '#FBF8F5' },
-  audienceGrid: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  audienceCard: { flexGrow: 1, flexShrink: 1, flexBasis: 430, minWidth: 0, backgroundColor: colors.surfaceRaised, borderRadius: 22, padding: 20, gap: 10, borderWidth: 1, borderColor: colors.border },
-  homeownerCard: { borderTopWidth: 3, borderTopColor: colors.primary },
-  tradeAudienceCard: { borderTopWidth: 4, borderTopColor: colors.navy },
-  audienceEyebrow: { color: colors.primary, fontSize: 12.3, lineHeight: 16, fontWeight: '900', letterSpacing: 1.1 },
-  tradeAudienceEyebrow: { color: colors.navy },
-  audienceActions: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginTop: 6 },
-  fairBridge: { width: '100%', alignItems: 'center', gap: 6, padding: 18, borderRadius: 20, backgroundColor: colors.charcoal },
-  fairBridgeEyebrow: { color: colors.secondary, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
-  fairBridgeTitle: { color: '#FFFFFF', fontWeight: '900', textAlign: 'center' },
-  fairBridgeText: { color: '#D9DEE2', lineHeight: 21, textAlign: 'center' },
-  routeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  routeCard: { flexGrow: 1, flexShrink: 1, flexBasis: 240, minWidth: 0, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderTopWidth: 2, borderTopColor: colors.border, borderRadius: 18, padding: 17, gap: 7 },
-  routeNumber: { color: colors.primary, fontWeight: '900', letterSpacing: 1 },
-  cardTitle: { minWidth: 0, maxWidth: '100%', color: colors.charcoal, fontWeight: '900' },
-  cardText: { minWidth: 0, maxWidth: '100%', color: colors.muted, lineHeight: 22 },
-  tradeBand: { backgroundColor: colors.surfaceSoft },
-  tradeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  tradeCard: { flexGrow: 1, flexShrink: 1, flexBasis: 230, minWidth: 0, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  tradeName: { flexShrink: 1, minWidth: 0, color: colors.charcoal, fontWeight: '800' },
-  tradeArrow: { flexShrink: 0, color: colors.primary, fontWeight: '900' },
-  featureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  featureCard: { flexGrow: 1, flexShrink: 1, flexBasis: 250, minWidth: 0, backgroundColor: colors.surfaceRaised, borderRadius: 18, padding: 17, gap: 7, borderWidth: 1, borderColor: colors.border },
-  paymentBand: { backgroundColor: colors.surfaceSoft },
-  paymentGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  paymentCard: { flexGrow: 1, flexShrink: 1, flexBasis: 400, minWidth: 0, borderRadius: 20, padding: 20, gap: 10, borderWidth: 1 },
-  protectedCard: { backgroundColor: '#F6FBFA', borderColor: '#CDE2DE' },
-  privateCard: { backgroundColor: '#FFFFFF', borderColor: '#E8D7C7' },
-  cardChip: { alignSelf: 'flex-start', maxWidth: '100%' },
-  trustBand: { backgroundColor: '#F6FBFA' },
-  trustGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  trustCard: { flexGrow: 1, flexShrink: 1, flexBasis: 240, minWidth: 0, backgroundColor: '#FFFFFF', borderRadius: 18, padding: 17, gap: 7, borderWidth: 1, borderColor: '#CDE2DE' },
-  pricingBand: { backgroundColor: '#FBF8F5' },
-  updatesBand: { backgroundColor: '#F6FBFA' },
-  updateColumns: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  updatePanel: { flexGrow: 1, flexShrink: 1, flexBasis: 420, minWidth: 0, padding: 18, gap: 9, borderRadius: 18, borderWidth: 1, borderColor: '#CDE2DE', backgroundColor: colors.surfaceRaised },
-  comingPanel: { backgroundColor: '#FFF9F3', borderColor: '#E8D7C7' },
-  updateItem: { color: colors.charcoalSoft, lineHeight: 22 },
-  faqBand: { backgroundColor: colors.surfaceSoft },
-  faqList: { gap: 9, maxWidth: 900, width: '100%', minWidth: 0, alignSelf: 'center' },
-  faqCard: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 15, gap: 8 },
-  faqRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
-  faqToggle: { flexShrink: 0, color: colors.primary, fontSize: 24, fontWeight: '900' },
+  page: { flex: 1, backgroundColor: colors.background }, pageContent: { flexGrow: 1, width: '100%', maxWidth: '100%' }, hidden: { display: 'none' },
+  hero: { width: '100%', maxWidth: 1100, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 64, alignItems: 'center', gap: 20 },
+  heroMobile: { paddingHorizontal: 16, paddingVertical: 36, gap: 16 }, heroTitle: { color: colors.charcoal, fontSize: 48, lineHeight: 55, fontWeight: '900', letterSpacing: -1.6, textAlign: 'center' }, heroTitleMobile: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
+  heroBody: { color: colors.charcoalSoft, fontSize: 17, lineHeight: 26, textAlign: 'center', maxWidth: 580 }, heroActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 8 },
+  benefits: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 }, benefit: { color: colors.muted, fontSize: 12, fontWeight: '700' }, benefitDot: { color: colors.primary },
+  band: { width: '100%' }, whiteBand: { backgroundColor: colors.surfaceRaised }, productBand: { backgroundColor: colors.navySoft },
+  section: { width: '100%', maxWidth: 1140, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 36, gap: 22 }, heading: { width: '100%', maxWidth: 740, alignSelf: 'center', alignItems: 'center', gap: 8 },
+  eyebrow: { color: colors.primaryDark, fontSize: 11, lineHeight: 16, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', textAlign: 'center' }, sectionTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center', letterSpacing: -0.5 }, sectionBody: { color: colors.muted, lineHeight: 23, textAlign: 'center', maxWidth: 640 },
+  button: { borderRadius: radii.md, alignSelf: 'center', maxWidth: '100%' }, buttonContent: { minHeight: controlHeights.standard, paddingHorizontal: 12 }, fullButton: { width: '100%' },
+  searchRow: { width: '100%', maxWidth: 760, alignSelf: 'center', flexDirection: 'row', gap: 10, alignItems: 'center' }, searchRowMobile: { flexDirection: 'column', alignItems: 'stretch' }, searchInput: { flex: 1, width: '100%', minWidth: 0, backgroundColor: colors.surfaceRaised }, inputOutline: { borderRadius: radii.md },
+  tradeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, tradeCard: { flexGrow: 1, flexBasis: 150, minWidth: 0, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, backgroundColor: colors.surfaceRaised, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 52 }, tradeName: { flex: 1, color: colors.charcoal, fontSize: 14, fontWeight: '700' }, tradeArrow: { color: colors.primary, fontSize: 18 }, pressed: { opacity: 0.8 },
+  stepGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 20 }, step: { flexGrow: 1, flexBasis: 280, minWidth: 0, gap: 8, padding: 12 }, stepNumber: { color: colors.primary, fontSize: 26, fontWeight: '900' }, cardTitle: { color: colors.charcoal, fontSize: 20, lineHeight: 26, fontWeight: '800' }, cardText: { color: colors.charcoalSoft, lineHeight: 23 },
+  choiceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 }, choice: { flexGrow: 1, flexBasis: 360, minWidth: 0, borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, padding: 22, gap: 12 }, paymentChoice: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' }, smallText: { color: colors.muted, fontSize: 12, lineHeight: 18 }, trustStrip: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 22, gap: 8 }, trustTitle: { color: colors.charcoal, fontSize: 17, fontWeight: '800' },
+  faqList: { gap: 8, width: '100%', maxWidth: 820, alignSelf: 'center' }, faqCard: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 16, gap: 12 }, faqRow: { flexDirection: 'row', gap: 12, justifyContent: 'space-between', alignItems: 'center' }, faqQuestion: { flex: 1, color: colors.charcoal, fontSize: 16, lineHeight: 23, fontWeight: '700' }, faqToggle: { color: colors.primary, fontSize: 22 },
 });

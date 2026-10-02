@@ -18,7 +18,7 @@ export default function HowItWorksPage() {
         <Text style={infoStyles.item}>• Exclusions: what is not included.</Text>
         <Text style={infoStyles.item}>• Timing: proposed start, expected duration and warranty where supplied.</Text>
         <Text style={infoStyles.item}>• Payment schedule: materials, deposits, progress stages and final payment.</Text>
-        <Text style={infoStyles.item}>• BuildPay terms: whether protected staged payment is included and who is paying the separately disclosed BuildPay service fee.</Text>
+        <Text style={infoStyles.item}>• BuildPay terms: whether BuildPay staged payment is included and who is paying the separately disclosed BuildPay service fee.</Text>
       </View> },
       { title: '6. Accept one quote', body: 'The homeowner can decline individual quotes or accept the one they want. Once a quote is accepted, the job is awarded to that tradesperson, other active quotes move out of the live comparison and those tradespeople are notified that another quote was chosen. Non-winning quotes are retained in the project record rather than being physically deleted.' },
       { title: '7. Agree the payment stages', body: 'Before accepting a quote, the homeowner can propose a different service-stage split or completion point without silently changing the tradesperson’s quoted total or materials amount. If the homeowner changes the staged schedule, the tradesperson must accept the revision before the quote can be awarded.' },

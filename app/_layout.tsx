@@ -1,5 +1,6 @@
 import { ClerkProvider } from '@clerk/expo';
 import { Stack } from 'expo-router';
+import Head from 'expo-router/head';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -23,6 +24,10 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 function AppShell({ trackPresence = false }: { trackPresence?: boolean }) {
   return (
     <SafeAreaProvider>
+      <Head>
+        <title>BuildPair | Local trades and clearer projects</title>
+        <meta name="description" content="Find local tradespeople, compare clear quotes and keep the whole job together." />
+      </Head>
       <PaperProvider theme={paperTheme} settings={{ icon: PaperIcon }}>
         <AppStripeProvider>
           <StatusBar style="dark" />
