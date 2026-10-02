@@ -42,7 +42,7 @@ export function PrelaunchBanner() {
           <View style={styles.mobileActions}>
             <Button
               mode="contained"
-              style={[styles.button, styles.primaryButton]}
+              style={StyleSheet.flatten([styles.button, styles.primaryButton])}
               contentStyle={styles.buttonContent}
               onPress={() => router.push(waitlistHref('trader', 'homepage-banner'))}
             >
@@ -51,7 +51,7 @@ export function PrelaunchBanner() {
             <Button
               mode="outlined"
               textColor="#FFFFFF"
-              style={[styles.button, styles.secondaryButton]}
+              style={StyleSheet.flatten([styles.button, styles.secondaryButton])}
               contentStyle={styles.buttonContent}
               onPress={() => router.push(waitlistHref('customer', 'homepage-banner'))}
             >
@@ -63,7 +63,7 @@ export function PrelaunchBanner() {
             <Link href={waitlistHref('trader', 'homepage-banner')} asChild>
               <Button
                 mode="contained"
-                  style={[styles.button, styles.primaryButton]}
+                  style={StyleSheet.flatten([styles.button, styles.primaryButton])}
                 contentStyle={styles.buttonContent}
               >
                 Trade signup
@@ -73,7 +73,7 @@ export function PrelaunchBanner() {
               <Button
                 mode="outlined"
                 textColor="#FFFFFF"
-                style={[styles.button, styles.secondaryButton]}
+                style={StyleSheet.flatten([styles.button, styles.secondaryButton])}
                 contentStyle={styles.buttonContent}
               >
                 Homeowner list

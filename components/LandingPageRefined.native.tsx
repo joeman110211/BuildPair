@@ -65,7 +65,7 @@ export default function LandingPageRefined() {
 
         <View style={styles.quickRow}>
           <Link href="/auth/account" asChild>
-            <Pressable style={[styles.quickCard, styles.quickPrimary]} accessibilityRole="button">
+            <Pressable style={StyleSheet.flatten([styles.quickCard, styles.quickPrimary])} accessibilityRole="button">
               <Text style={styles.quickGlyph}>＋</Text>
               <View style={styles.quickCopy}>
                 <Text style={styles.quickTitle}>Post a job</Text>
