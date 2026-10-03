@@ -23,11 +23,11 @@ const FAQS = [
   ['What do trade memberships include?', 'Starter is free. Core, Plus and Pro add marketplace allowances and business tools. The Pricing page sets out each plan’s features and limits.'],
 ] as const;
 
-function Heading({ eyebrow, title, body }: { eyebrow: string; title: string; body?: string }) {
+function Heading({ eyebrow, title, body }: { eyebrow?: string; title: string; body?: string }) {
   const { width } = useWindowDimensions();
   const metrics = publicResponsiveMetrics(width);
   return <View style={styles.heading}>
-    <Text style={styles.eyebrow}>{eyebrow}</Text>
+    {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
     <Text style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>{title}</Text>
     {body ? <Text style={styles.sectionBody}>{body}</Text> : null}
   </View>;
@@ -63,7 +63,7 @@ export default function LandingPageRefined() {
 
     <Reveal><View style={[styles.band, styles.whiteBand, !hasFeaturedProfiles && styles.hidden]}>
       <View style={styles.section}>
-        <Heading eyebrow="Featured tradespeople" title="Real businesses. Work you can explore." body="See their services, work photos and review sources before choosing who to contact." />
+        <Heading title="Featured tradespeople" body="Explore tradespeople on BuildPair." />
         <FeaturedTraderHero wide={wide} onAvailabilityChange={setHasFeaturedProfiles} />
       </View>
     </View></Reveal>
