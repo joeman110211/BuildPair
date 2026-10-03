@@ -4,10 +4,10 @@ import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { PublicFooter } from '@/components/PublicFooter';
-import { PublicSeo } from '@/components/PublicSeo';
+import { PUBLIC_SHARE_IMAGE, PublicSeo } from '@/components/PublicSeo';
 import { SemanticHeading } from '@/components/SemanticHeading';
 import { colors, radii } from '@/constants/theme';
-import { adviceAudienceLabel, adviceGuideBySlug } from '@/lib/advice-library';
+import { adviceAudienceLabel, adviceGuideBySlug, isOfficialAdviceSource } from '@/lib/advice-library';
 
 export function AdviceGuidePage({ slug }: { slug: string }) {
   const guide = adviceGuideBySlug(slug);
@@ -23,6 +23,8 @@ export function AdviceGuidePage({ slug }: { slug: string }) {
   const related = (guide.relatedSlugs ?? [])
     .map((relatedSlug) => adviceGuideBySlug(relatedSlug))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const officialSources = guide.sources.filter(isOfficialAdviceSource);
+  const hasMarketReferences = officialSources.length < guide.sources.length;
 
   const canonical = 'https://www.buildpair.co.uk/advice/' + guide.slug;
   const structuredData = {
@@ -33,8 +35,9 @@ export function AdviceGuidePage({ slug }: { slug: string }) {
     dateModified: guide.reviewedAt,
     datePublished: guide.reviewedAt,
     mainEntityOfPage: canonical,
+    image: PUBLIC_SHARE_IMAGE,
     author: { '@type': 'Organization', name: 'BuildPair', url: 'https://www.buildpair.co.uk/' },
-    publisher: { '@type': 'Organization', name: 'BuildPair', url: 'https://www.buildpair.co.uk/' },
+    publisher: { '@type': 'Organization', name: 'BuildPair', url: 'https://www.buildpair.co.uk/', logo: { '@type': 'ImageObject', url: PUBLIC_SHARE_IMAGE } },
     inLanguage: 'en-GB',
   };
 
@@ -66,18 +69,23 @@ export function AdviceGuidePage({ slug }: { slug: string }) {
         {(section.bullets ?? []).map((bullet) => <Text key={bullet} style={styles.bullet}>• {bullet}</Text>)}
       </View>)}
 
-      <View style={styles.sourceBox}>
-        <SemanticHeading level={2} style={styles.sectionTitle}>Official and authoritative sources</SemanticHeading>
-        <Text style={styles.body}>Use these sources for the current detail that applies to your job or contract.</Text>
+      {officialSources.length ? <View style={styles.sourceBox}>
+        <SemanticHeading level={2} style={styles.sectionTitle}>Official sources</SemanticHeading>
+        <Text style={styles.body}>Use these official sources for the current detail that applies to your job, contract or location.</Text>
         <View style={styles.sourceList}>
-          {guide.sources.map((source) => <Button
+          {officialSources.map((source) => <Button
             key={source.url}
             mode="outlined"
             icon="open-in-new"
             onPress={() => Linking.openURL(source.url)}
           >{source.publisher}: {source.title}</Button>)}
         </View>
-      </View>
+      </View> : null}
+
+      {hasMarketReferences ? <View style={styles.methodologyBox}>
+        <Text style={styles.methodologyTitle}>Pricing methodology</Text>
+        <Text style={styles.body}>BuildPair reviews current UK market pricing references when preparing cost guides. Published figures are budgeting ranges, not BuildPair quotes or guaranteed local prices. Compare current local quotes before appointing a tradesperson.</Text>
+      </View> : null}
 
       <View style={styles.disclaimer}>
         <Text style={styles.disclaimerText}>BuildPair provides general information and signposting, not legal, structural, electrical, gas or building-control approval. Requirements can change and the right answer depends on the work, contract, location and facts.</Text>
@@ -118,6 +126,8 @@ const styles = StyleSheet.create({
   bullet: { color: colors.charcoalSoft, fontSize: 16, lineHeight: 24 },
   sourceBox: { backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, borderWidth: 1, borderColor: colors.border, padding: 22, gap: 12 },
   sourceList: { gap: 10, alignItems: 'flex-start' },
+  methodologyBox: { backgroundColor: colors.surfaceSoft, borderRadius: radii.xl, borderWidth: 1, borderColor: colors.border, padding: 18, gap: 7 },
+  methodologyTitle: { color: colors.charcoal, fontSize: 16, fontWeight: '900' },
   disclaimer: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 16 },
   disclaimerText: { color: colors.muted, fontSize: 13, lineHeight: 20 },
   relatedGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
