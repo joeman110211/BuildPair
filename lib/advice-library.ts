@@ -571,7 +571,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     sections: [
       {
         heading: 'Published 2026 planning figures',
-        paragraphs: ['Current UK market guidance gives an average floor-tiling project around £700 and a rough £400–£1,000 range depending on room size and tile. Checkatrade uses about £50 per m² as an average labour-only tiling figure. Use these only to sense-check a budget; actual preparation and tile choice can move the result substantially.'],
+        paragraphs: ['Current UK market guidance gives an average floor-tiling project around £700 and a rough £400–£1,000 range depending on room size and tile. Another current UK market guide uses about £50 per m² as an average labour-only tiling figure. Use these only to sense-check a budget; actual preparation and tile choice can move the result substantially.'],
       },
       {
         heading: 'Preparation matters',
@@ -937,7 +937,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 figures",
         "paragraphs": [
-          "Checkatrade's current guide gives average tap-installation labour around £140. It publishes basin-tap replacement around £140–£220, mixer tap replacement around £140–£260 and bath tap replacement around £200–£320."
+          "Current UK market guidance gives average tap-installation labour around £140, with published replacement ranges varying by basin, mixer and bath tap type."
         ]
       },
       {
@@ -1168,7 +1168,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical electrician rates",
         "paragraphs": [
-          "Checkatrade's current guide publishes electrician rates around £45–£60 per hour, with an average near £50, and a typical day rate around £400. Emergency rates are published around £80–£100 per hour."
+          "Current UK market guidance puts electrician rates around £45–£60 per hour, with an average near £50, and a typical day rate around £400. Emergency rates are published around £80–£100 per hour."
         ]
       },
       {
@@ -1777,7 +1777,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 project figures",
         "paragraphs": [
-          "Checkatrade's current guide places rooflight/Velux conversions around £27,500, dormers around £50,000, hip-to-gable projects around £60,000 and mansard conversions around £65,000 as typical examples."
+          "Current UK market guidance places rooflight/Velux conversions around £27,500, dormers around £50,000, hip-to-gable projects around £60,000 and mansard conversions around £65,000 as typical examples."
         ]
       },
       {
