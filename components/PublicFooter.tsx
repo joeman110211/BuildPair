@@ -1,7 +1,7 @@
 import { Link } from 'expo-router';
-import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Image, Linking, Pressable, StyleSheet, View } from 'react-native';
 import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
-import { IconButton, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { colors, layout, radii, spacing } from '@/constants/theme';
 
@@ -70,33 +70,15 @@ export function PublicFooter() {
         <View style={styles.socialBlock}>
           <Text style={styles.socialLabel}>FOLLOW BUILDPAIR</Text>
           <View style={styles.socialRow}>
-            <IconButton
-              icon="facebook"
-              size={26}
-              iconColor="#FFFFFF"
-              containerColor="#1877F2"
-              style={styles.socialIconButton}
-              accessibilityLabel="BuildPair on Facebook"
-              onPress={() => void Linking.openURL('https://www.facebook.com/share/1cWVAbDGvm/')}
-            />
-            <IconButton
-              icon="tiktok"
-              size={25}
-              iconColor="#FFFFFF"
-              containerColor="#000000"
-              style={[styles.socialIconButton, styles.tiktokButton]}
-              accessibilityLabel="BuildPair on TikTok"
-              onPress={() => void Linking.openURL('https://www.tiktok.com/@buildpair')}
-            />
-            <IconButton
-              icon="instagram"
-              size={26}
-              iconColor="#FFFFFF"
-              containerColor="#E4405F"
-              style={styles.socialIconButton}
-              accessibilityLabel="BuildPair on Instagram"
-              onPress={() => void Linking.openURL('https://www.instagram.com/buildpair_/')}
-            />
+            <Pressable accessibilityRole="link" accessibilityLabel="BuildPair on Facebook" style={({ pressed }) => [styles.socialIconButton, pressed && styles.socialLinkPressed]} onPress={() => void Linking.openURL('https://www.facebook.com/share/1cWVAbDGvm/')}>
+              <Image source={require('../assets/social/facebook.png')} style={styles.socialIcon} />
+            </Pressable>
+            <Pressable accessibilityRole="link" accessibilityLabel="BuildPair on TikTok" style={({ pressed }) => [styles.socialIconButton, pressed && styles.socialLinkPressed]} onPress={() => void Linking.openURL('https://www.tiktok.com/@buildpair')}>
+              <Image source={require('../assets/social/tiktok.png')} style={styles.socialIcon} />
+            </Pressable>
+            <Pressable accessibilityRole="link" accessibilityLabel="BuildPair on Instagram" style={({ pressed }) => [styles.socialIconButton, pressed && styles.socialLinkPressed]} onPress={() => void Linking.openURL('https://www.instagram.com/buildpair_/')}>
+              <Image source={require('../assets/social/instagram.png')} style={styles.socialIcon} />
+            </Pressable>
           </View>
         </View>
       </View>
@@ -135,8 +117,9 @@ const styles = StyleSheet.create({
   socialBlock: { gap: spacing.xs, marginTop: spacing.xs },
   socialLabel: { color: colors.secondary, fontSize: 10, fontWeight: '900', letterSpacing: 0.9 },
   socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  socialIconButton: { width: 46, height: 46, margin: 0, borderRadius: 14 },
-  tiktokButton: { borderWidth: 1, borderColor: '#4A5158' },
+  socialIconButton: { width: 50, height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  socialIcon: { width: 48, height: 48, borderRadius: 13, resizeMode: 'contain' },
+  socialLinkPressed: { opacity: 0.76, transform: [{ scale: 0.96 }] },
   small: { color: '#B7BDC2', lineHeight: 20, fontSize: 12 },
   smallCompact: { lineHeight: 18, fontSize: 11.5 },
   group: { minWidth: 145, gap: spacing.sm },
