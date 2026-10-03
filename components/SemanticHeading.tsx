@@ -14,7 +14,8 @@ export function SemanticHeading({
 }) {
   if (Platform.OS === 'web') {
     const flattened = StyleSheet.flatten(style) ?? {};
-    return createElement('h' + level, { style: { margin: 0, ...flattened } }, children);
+    const lineHeight = typeof flattened.lineHeight === 'number' ? `${flattened.lineHeight}px` : flattened.lineHeight;
+    return createElement('h' + level, { style: { margin: 0, ...flattened, lineHeight } }, children);
   }
 
   return <Text accessibilityRole="header" style={style}>{children}</Text>;
