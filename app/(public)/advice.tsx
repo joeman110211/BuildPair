@@ -1,153 +1,167 @@
+import type { Href } from 'expo-router';
 import { Link } from 'expo-router';
+import { useMemo, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
-import { Chip, Text } from 'react-native-paper';
+import { Chip, Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { PublicFooter } from '@/components/PublicFooter';
+import { PublicSeo } from '@/components/PublicSeo';
+import { SemanticHeading } from '@/components/SemanticHeading';
 import { colors, publicResponsiveMetrics, radii } from '@/constants/theme';
+import { apiFetch, errorMessage } from '@/lib/api';
+import { ADVICE_GUIDES, adviceAudienceLabel, adviceGuideBySlug, searchAdviceGuides, type AdviceAudience, type AdviceSource } from '@/lib/advice-library';
 
-type Resource = { title: string; body: string; label: string; url: string };
+type AudienceFilter = AdviceAudience | 'all';
 
-const HOMEOWNER_RESOURCES: Resource[] = [
-  {
-    title: 'Know your consumer rights',
-    body: 'Paid services should be carried out with reasonable care and skill. If work goes wrong, the available remedies depend on the contract and circumstances, so start with current official consumer guidance.',
-    label: 'GOV.UK consumer rights',
-    url: 'https://www.gov.uk/consumer-protection-rights',
-  },
-  {
-    title: 'Problems with building or home-improvement work',
-    body: 'Citizens Advice recommends keeping contracts, receipts, photos and a dated record of what happened before raising a problem with the trader.',
-    label: 'Citizens Advice guidance',
-    url: 'https://www.citizensadvice.org.uk/consumer/getting-home-improvements-done/problem-with-home-improvements/',
-  },
-  {
-    title: 'Check registered work where it matters',
-    body: 'For work that relies on formal registration or self-certification, use the relevant official register rather than relying on a badge or profile claim alone.',
-    label: 'GOV.UK competent person schemes',
-    url: 'https://www.gov.uk/building-regulations-approval/use-a-competent-person-scheme',
-  },
-  {
-    title: 'Check gas engineers',
-    body: 'Gas work should be checked against the Gas Safe Register. HSE explains how to confirm both the business and the individual engineer.',
-    label: 'HSE Gas Safe check',
-    url: 'https://www.hse.gov.uk/gas/gas-safe-register-check.htm',
-  },
-  {
-    title: 'Electrical work: minor, notifiable and competent (England)',
-    body: 'Some maintenance and alterations to existing circuits may not need formal Building Regulations approval, but safety standards and competence still apply. Consumer-unit replacement, new circuits and certain work around baths or showers can require notification or an authorised self-certification route.',
-    label: 'GOV.UK Approved Document P',
-    url: 'https://www.gov.uk/government/publications/electrical-safety-approved-document-p',
-  },
-  {
-    title: 'Rental electrical checks: the five-year rule (England)',
-    body: 'Landlords must have fixed electrical installations inspected and tested at least every five years by a properly qualified person and provide the required report to tenants. Check the current guidance for the property and tenancy involved.',
-    label: 'GOV.UK rental electrical safety',
-    url: 'https://www.gov.uk/government/publications/electrical-safety-standards-in-the-private-and-social-rented-sectors-guidance/electrical-safety-standards-in-the-private-and-social-rented-sectors-guidance',
-  },
-  {
-    title: 'Check electrical competence',
-    body: 'The Registered Competent Person Electrical search allows householders to find or check registered electrical businesses for relevant domestic work.',
-    label: 'Electrical Competent Person Register',
-    url: 'https://www.electricalcompetentperson.co.uk/Search',
-  },
-];
-
-const TRADE_RESOURCES: Resource[] = [
-  {
-    title: 'Consumer-law basics for supplying services',
-    body: 'Clear quotes, estimates, service standards and written changes reduce avoidable disputes. Business Companion explains the relevant consumer-law principles for service providers.',
-    label: 'Business Companion: supplying services',
-    url: 'https://www.businesscompanion.info/en/quick-guides/services/supplying-services-s',
-  },
-  {
-    title: 'Contracts agreed away from business premises',
-    body: 'Home visits, distance contracts and cancellation rights can have specific legal requirements. Use current guidance rather than relying on generic templates or assumptions.',
-    label: 'Business Companion: off-premises sales',
-    url: 'https://www.businesscompanion.info/en/quick-guides/off-premises-sales/consumer-contracts-off-premises-sales',
-  },
-  {
-    title: 'Electrical certificates: use the right record',
-    body: 'BS 7671 uses different records for different purposes, including Electrical Installation Certificates, Minor Electrical Installation Works Certificates and EICRs. The IET publishes current model forms. Certification does not replace Building Regulations notification where notification is required.',
-    label: 'IET current electrical model forms',
-    url: 'https://electrical.theiet.org/bs-7671-18th-edition-wiring-regulations/model-forms/',
-  },
-  {
-    title: 'Small-builder health and safety',
-    body: 'HSE guidance covers the CDM 2015 duties that apply to small builders, contractors, subcontractors and self-employed people carrying out construction work.',
-    label: 'HSE small-builder guidance',
-    url: 'https://www.hse.gov.uk/construction/areyou/builder.htm',
-  },
-  {
-    title: 'Current building standards',
-    body: 'Use the rules for the UK nation where the work is taking place and check the edition and transitional provisions that apply. BuildPair keeps the official starting points together in one page.',
-    label: 'Open BuildPair Building Rules',
-    url: 'internal:building-regulations',
-  },
-];
-
-const SMART_HABITS = [
-  'Write down the scope, exclusions, price or pricing method, timing and who supplies materials.',
-  'Record variations before extra work starts wherever practical.',
-  'Keep photos, quotes, invoices, receipts and important messages attached to the job.',
-  'Check regulated qualifications and registrations against the appropriate source.',
-  'If a dispute develops, preserve the evidence and use the appropriate complaint, reporting or legal route.',
-] as const;
-
-function ResourceCard({ item }: { item: Resource }) {
-  const internal = item.url.startsWith('internal:');
-  return <View style={styles.card}>
-    <Text variant="titleLarge" style={styles.title}>{item.title}</Text>
-    <Text style={styles.body}>{item.body}</Text>
-    {internal
-      ? <Link href="/(public)/building-regulations" asChild><Button mode="outlined" icon="book-open-page-variant-outline">{item.label}</Button></Link>
-      : <Button mode="outlined" icon="open-in-new" onPress={() => Linking.openURL(item.url)}>{item.label}</Button>}
-  </View>;
-}
+type AdviceAiResponse = {
+  answer: string;
+  guideSlugs: string[];
+  sources: AdviceSource[];
+  source: 'ai' | 'library';
+};
 
 export default function AdviceHub() {
   const { width } = useWindowDimensions();
   const metrics = publicResponsiveMetrics(width);
-  return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
+  const [query, setQuery] = useState('');
+  const [audience, setAudience] = useState<AudienceFilter>('all');
+  const [category, setCategory] = useState('all');
+  const [asking, setAsking] = useState(false);
+  const [aiResult, setAiResult] = useState<AdviceAiResponse | null>(null);
+  const [aiError, setAiError] = useState('');
+
+  const categories = useMemo(() => {
+    const pool = audience === 'all' ? ADVICE_GUIDES : ADVICE_GUIDES.filter((guide) => guide.audience === audience);
+    return Array.from(new Set(pool.map((guide) => guide.category))).sort();
+  }, [audience]);
+
+  const guides = useMemo(() => {
+    const matches = searchAdviceGuides(query, audience);
+    return category === 'all' ? matches : matches.filter((guide) => guide.category === category);
+  }, [query, audience, category]);
+
+  const askAdviceAi = async () => {
+    const question = query.trim();
+    if (question.length < 3) {
+      setAiError('Type a question first.');
+      return;
+    }
+
+    setAsking(true);
+    setAiError('');
+    try {
+      const result = await apiFetch<AdviceAiResponse>('/api/ai/advice', {
+        method: 'POST',
+        body: JSON.stringify({ question, audience }),
+      });
+      setAiResult(result);
+    } catch (error) {
+      setAiError(errorMessage(error));
+    } finally {
+      setAsking(false);
+    }
+  };
+
+  const changeAudience = (value: AudienceFilter) => {
+    setAudience(value);
+    setCategory('all');
+    setAiResult(null);
+  };
+
+  return <ScrollView style={styles.page} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+    <PublicSeo
+      title="Home improvement advice, rules and practical guidance"
+      description="Search BuildPair advice for homeowners and tradespeople: quotes, payments, consumer rights, building rules, safety and practical project guidance."
+    />
+
     <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroInner}>
-        <Chip style={styles.heroChip} textStyle={styles.heroChipText}>Free BuildPair advice hub</Chip>
-        <Text variant="displaySmall" style={[styles.heroTitle, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Practical guidance before, during and after a home-improvement job.</Text>
-        <Text variant="bodyLarge" style={styles.heroBody}>Straightforward guidance for homeowners and tradespeople, with direct links to official UK sources for consumer rights, regulated work, building standards and safety.</Text>
-        <View style={styles.heroActions}>
-          <Link href="/(public)/building-regulations" asChild><Button mode="contained" icon="book-open-page-variant-outline">Building rules by UK nation</Button></Link>
-          <Link href="/(public)/report" asChild><Button mode="outlined" textColor={colors.primaryDark} icon="alert-outline">Report a BuildPair user</Button></Link>
+        <Chip style={styles.heroChip} textStyle={styles.heroChipText}>Free BuildPair Advice Hub</Chip>
+        <SemanticHeading level={1} style={[styles.heroTitle, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>
+          Advice for the job you are actually dealing with.
+        </SemanticHeading>
+        <Text variant="bodyLarge" style={styles.heroBody}>Search practical guidance, consumer rights, building rules, safety and business basics. Or ask BuildPair AI and get an answer grounded in checked BuildPair guides and their official sources.</Text>
+
+        <View style={styles.searchBox}>
+          <TextInput
+            mode="outlined"
+            value={query}
+            onChangeText={(value) => { setQuery(value); setAiResult(null); setAiError(''); }}
+            onSubmitEditing={askAdviceAi}
+            placeholder="e.g. How much deposit should I pay a builder?"
+            accessibilityLabel="Search BuildPair advice"
+            outlineStyle={styles.inputOutline}
+            style={styles.searchInput}
+          />
+          <Button mode="contained" icon="creation-outline" onPress={askAdviceAi} loading={asking} disabled={asking}>Ask BuildPair AI</Button>
         </View>
+        <Text style={styles.aiNote}>Advice AI is constrained to BuildPair’s checked guidance. For regulated, legal or safety-critical questions, use the linked official source for the current detail.</Text>
       </View>
     </View>
 
     <View style={[styles.content, metrics.phone && styles.contentMobile]}>
-      <View style={styles.notice}>
-        <Text variant="titleMedium" style={styles.title}>A clear record prevents avoidable disputes</Text>
-        <Text style={styles.body}>Written scope, agreed changes, sensible evidence and verified credentials make a project easier to manage and much easier to understand later if something goes wrong.</Text>
-        <View style={styles.habits}>{SMART_HABITS.map((item) => <Text key={item} style={styles.habit}>✓ {item}</Text>)}</View>
-      </View>
-
-      <View style={styles.sectionHeader}>
-        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>For homeowners</Text>
-        <Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>Know what to check and where to get authoritative guidance.</Text>
-        <Text style={styles.body}>Use BuildPair records for project clarity, then use the official services below when you need consumer, safety or registration guidance. Electrical Building Regulations differ across the UK, so the Part P examples below apply specifically to England.</Text>
-      </View>
-      <View style={styles.grid}>{HOMEOWNER_RESOURCES.map((item) => <ResourceCard key={item.title} item={item} />)}</View>
-
-      <View style={styles.sectionHeader}>
-        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>For tradespeople</Text>
-        <Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>Protect your business with clear agreements and current guidance.</Text>
-        <Text style={styles.body}>Good records protect both the customer and the trade. Use the resources below for current guidance on consumer obligations, certificates, health and safety and building standards.</Text>
-      </View>
-      <View style={styles.grid}>{TRADE_RESOURCES.map((item) => <ResourceCard key={item.title} item={item} />)}</View>
-
-      <View style={styles.safetyCard}>
-        <View style={styles.flex}>
-          <Text variant="headlineSmall" style={styles.lightTitle}>Need to report something on BuildPair?</Text>
-          <Text style={styles.lightBody}>Homeowners can report tradespeople and tradespeople can report homeowners. Reports are reviewed through the BuildPair moderation process and are not treated as an automatic finding against either side.</Text>
+      <View style={styles.filterBlock}>
+        <SemanticHeading level={2} style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>Browse the Advice Hub</SemanticHeading>
+        <View style={styles.filterRow}>
+          <Button compact mode={audience === 'all' ? 'contained' : 'outlined'} onPress={() => changeAudience('all')}>All advice</Button>
+          <Button compact mode={audience === 'homeowner' ? 'contained' : 'outlined'} onPress={() => changeAudience('homeowner')}>For homeowners</Button>
+          <Button compact mode={audience === 'tradesperson' ? 'contained' : 'outlined'} onPress={() => changeAudience('tradesperson')}>For tradespeople</Button>
         </View>
-        <Link href="/(public)/report" asChild><Button mode="contained" buttonColor={colors.secondary} textColor={colors.charcoal}>Open reporting form</Button></Link>
+        <View style={styles.filterRow}>
+          <Button compact mode={category === 'all' ? 'contained-tonal' : 'text'} onPress={() => setCategory('all')}>All topics</Button>
+          {categories.map((item) => <Button key={item} compact mode={category === item ? 'contained-tonal' : 'text'} onPress={() => setCategory(item)}>{item}</Button>)}
+        </View>
+      </View>
+
+      {aiError ? <View style={styles.errorBox}><Text style={styles.errorText}>{aiError}</Text></View> : null}
+
+      {aiResult ? <View style={styles.aiCard}>
+        <Text style={styles.eyebrow}>BuildPair AI answer</Text>
+        <Text style={styles.aiAnswer}>{aiResult.answer}</Text>
+        {aiResult.guideSlugs.length ? <View style={styles.aiLinks}>
+          <Text style={styles.cardLabel}>Relevant BuildPair guides</Text>
+          {aiResult.guideSlugs.map((slug) => {
+            const guide = adviceGuideBySlug(slug);
+            if (!guide) return null;
+            return <Link key={slug} href={('/(public)/advice/' + slug) as Href} asChild><Button mode="outlined">{guide.title}</Button></Link>;
+          })}
+        </View> : null}
+        {aiResult.sources.length ? <View style={styles.aiLinks}>
+          <Text style={styles.cardLabel}>Checked sources used by these guides</Text>
+          {aiResult.sources.map((source) => <Button key={source.url} mode="text" icon="open-in-new" onPress={() => Linking.openURL(source.url)}>{source.publisher}: {source.title}</Button>)}
+        </View> : null}
+      </View> : null}
+
+      <View style={styles.resultsHeader}>
+        <Text style={styles.resultsCount}>{guides.length} {guides.length === 1 ? 'guide' : 'guides'}</Text>
+        {query.trim() ? <Text style={styles.resultsFor}>matching “{query.trim()}”</Text> : null}
+      </View>
+
+      <View style={styles.grid}>
+        {guides.map((guide) => <View key={guide.slug} style={styles.card}>
+          <Text style={styles.cardMeta}>{adviceAudienceLabel(guide.audience)} · {guide.category}</Text>
+          <SemanticHeading level={2} style={styles.cardTitle}>{guide.title}</SemanticHeading>
+          <Text style={styles.cardBody}>{guide.summary}</Text>
+          <Text style={styles.checked}>Checked {new Date(guide.reviewedAt + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+          <Link href={('/(public)/advice/' + guide.slug) as Href} asChild><Button mode="outlined">Read guide</Button></Link>
+        </View>)}
+      </View>
+
+      {!guides.length ? <View style={styles.empty}>
+        <Text style={styles.emptyTitle}>No checked guide matches that yet.</Text>
+        <Text style={styles.body}>Try a broader search. Questions people ask here will help us decide which guidance BuildPair should add next.</Text>
+      </View> : null}
+
+      <View style={styles.quickLinks}>
+        <View style={styles.quickCopy}>
+          <SemanticHeading level={2} style={styles.quickTitle}>Need the official rules rather than a general guide?</SemanticHeading>
+          <Text style={styles.body}>Use BuildPair’s UK building-rules page for official starting points by nation, or report a marketplace concern through the normal moderation route.</Text>
+        </View>
+        <View style={styles.filterRow}>
+          <Link href="/(public)/building-regulations" asChild><Button mode="contained" icon="book-open-page-variant-outline">UK building rules</Button></Link>
+          <Link href="/(public)/report" asChild><Button mode="outlined" icon="alert-outline">Report a BuildPair user</Button></Link>
+        </View>
       </View>
     </View>
     <PublicFooter />
@@ -157,28 +171,42 @@ export default function AdviceHub() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
-  hero: { backgroundColor: colors.background, paddingHorizontal: 20, paddingVertical: 64 },
-  heroMobile: { paddingHorizontal: 16, paddingVertical: 42 },
-  heroInner: { width: '100%', maxWidth: 1120, alignSelf: 'center', gap: 14, alignItems: 'center' },
+  hero: { paddingHorizontal: 20, paddingVertical: 58, backgroundColor: colors.background },
+  heroMobile: { paddingHorizontal: 16, paddingVertical: 38 },
+  heroInner: { width: '100%', maxWidth: 980, alignSelf: 'center', gap: 14, alignItems: 'center' },
   heroChip: { alignSelf: 'center', backgroundColor: colors.primarySoft },
   heroChipText: { color: colors.primaryDark, fontWeight: '800' },
-  heroTitle: { color: colors.charcoal, fontWeight: '900', maxWidth: 850, letterSpacing: -1, textAlign: 'center' },
+  heroTitle: { color: colors.charcoal, fontWeight: '900', maxWidth: 880, letterSpacing: -1, textAlign: 'center' },
   heroBody: { color: colors.muted, maxWidth: 850, lineHeight: 27, textAlign: 'center' },
-  heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6 },
-  content: { width: '100%', maxWidth: 1120, alignSelf: 'center', padding: 20, gap: 26 },
-  contentMobile: { paddingHorizontal: 16, paddingVertical: 16, gap: 20 },
-  notice: { backgroundColor: colors.primarySoft, borderRadius: radii.xl, padding: 24, borderWidth: 1, borderColor: '#F0C9AE', gap: 10 },
-  habits: { gap: 7, marginTop: 4 },
-  habit: { color: colors.text, lineHeight: 22 },
-  sectionHeader: { gap: 6, marginTop: 12 },
-  eyebrow: { color: colors.primary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.1 },
-  sectionTitle: { color: colors.charcoal, fontWeight: '900', maxWidth: 820 },
-  title: { color: colors.charcoal, fontWeight: '900' },
-  body: { color: colors.muted, lineHeight: 23 },
+  searchBox: { width: '100%', maxWidth: 780, gap: 10, marginTop: 8 },
+  searchInput: { backgroundColor: colors.surfaceRaised },
+  inputOutline: { borderRadius: radii.lg },
+  aiNote: { color: colors.muted, fontSize: 12, lineHeight: 18, maxWidth: 760, textAlign: 'center' },
+  content: { width: '100%', maxWidth: 1120, alignSelf: 'center', padding: 20, paddingBottom: 48, gap: 22 },
+  contentMobile: { paddingHorizontal: 16, gap: 18 },
+  filterBlock: { gap: 10 },
+  sectionTitle: { color: colors.charcoal, fontWeight: '900' },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+  resultsHeader: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'baseline' },
+  resultsCount: { color: colors.charcoal, fontWeight: '900', fontSize: 18 },
+  resultsFor: { color: colors.muted },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
-  card: { flexGrow: 1, flexShrink: 1, flexBasis: 310, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, padding: 20, borderWidth: 1, borderColor: colors.border, gap: 10 },
-  safetyCard: { backgroundColor: colors.charcoal, borderRadius: radii.xl, padding: 24, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 18 },
-  flex: { flex: 1, minWidth: 0, maxWidth: '100%', gap: 6 },
-  lightTitle: { color: '#FFFFFF', fontWeight: '900' },
-  lightBody: { color: '#DDE1E3', lineHeight: 23 },
+  card: { flexGrow: 1, flexShrink: 1, flexBasis: 320, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, padding: 20, borderWidth: 1, borderColor: colors.border, gap: 9 },
+  cardMeta: { color: colors.primary, fontSize: 12, fontWeight: '900', textTransform: 'uppercase', letterSpacing: .7 },
+  cardTitle: { color: colors.charcoal, fontSize: 22, lineHeight: 28, fontWeight: '900' },
+  cardBody: { color: colors.muted, lineHeight: 22, flexGrow: 1 },
+  checked: { color: colors.muted, fontSize: 12 },
+  aiCard: { backgroundColor: colors.primarySoft, borderRadius: radii.xl, borderWidth: 1, borderColor: '#F0C9AE', padding: 22, gap: 12 },
+  eyebrow: { color: colors.primary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1 },
+  aiAnswer: { color: colors.charcoal, fontSize: 16, lineHeight: 25 },
+  aiLinks: { gap: 7, alignItems: 'flex-start' },
+  cardLabel: { color: colors.charcoal, fontWeight: '900' },
+  errorBox: { backgroundColor: '#FFF1F0', borderRadius: radii.lg, padding: 14 },
+  errorText: { color: '#9B1C1C' },
+  empty: { backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, borderWidth: 1, borderColor: colors.border, padding: 22, gap: 6 },
+  emptyTitle: { color: colors.charcoal, fontWeight: '900', fontSize: 18 },
+  body: { color: colors.muted, lineHeight: 23 },
+  quickLinks: { backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, borderWidth: 1, borderColor: colors.border, padding: 22, gap: 14 },
+  quickCopy: { gap: 6 },
+  quickTitle: { color: colors.charcoal, fontSize: 22, lineHeight: 28, fontWeight: '900' },
 });
