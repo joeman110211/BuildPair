@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Keyboard, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { ActivityIndicator, Portal, Text, TextInput } from 'react-native-paper';
 import { usePathname, useRouter } from 'expo-router';
 import { colors } from '@/constants/theme';
@@ -124,8 +125,8 @@ export function BuildPairAiHelper() {
   const scrollRef = useRef<ScrollView>(null);
 
   const hidden = pathname.startsWith('/admin') || pathname.startsWith('/api');
-  const panelWidth = Math.min(390, Math.max(300, width - 24));
-  const panelHeight = Math.min(610, Math.max(390, height - 100));
+  const panelWidth = Math.min(390, Math.max(1, width - 24));
+  const panelHeight = Math.min(610, Math.max(1, height - 24));
 
   useEffect(() => {
     if (open) setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
@@ -198,7 +199,7 @@ export function BuildPairAiHelper() {
   return (
     <Portal>
       {open ? (
-        <View style={[styles.panel, { width: panelWidth, height: panelHeight }]} accessibilityViewIsModal>
+        <View testID="ai-helper-panel" style={[styles.panel, { width: panelWidth, height: panelHeight }]} accessibilityViewIsModal>
           <View style={styles.header}>
             <View style={styles.brandMark}><Text style={styles.brandMarkText}>✦</Text></View>
             <View style={styles.headerCopy}>
@@ -289,7 +290,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     bottom: 16,
-    height: 42,
+    minHeight: 46,
     paddingHorizontal: 10,
     borderRadius: 21,
     backgroundColor: colors.primary,

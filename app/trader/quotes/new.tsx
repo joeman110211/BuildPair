@@ -3,7 +3,8 @@ import type { Href } from 'expo-router';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Menu, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, Menu, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { MilestoneTimeline } from '@/components/MilestoneTimeline';
 import { QuoteDocument, type QuoteDocumentData } from '@/components/QuoteDocument';
@@ -693,8 +694,8 @@ const styles = StyleSheet.create({
   strong: { color: colors.text, fontWeight: '800' },
   label: { color: colors.charcoal, fontWeight: '800' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, alignItems: 'center', justifyContent: 'space-between' },
-  flex: { flex: 1, minWidth: 220, gap: 3 },
-  flexField: { flex: 1, minWidth: 170 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 3 },
+  flexField: { flex: 1, minWidth: 0, flexBasis: 170, flexShrink: 1, maxWidth: '100%' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' },
   itemCard: { gap: spacing.sm, padding: spacing.md, backgroundColor: colors.surfaceSoft, borderRadius: 14, borderWidth: 1, borderColor: colors.border },
   totalBox: { gap: spacing.sm, padding: spacing.md, backgroundColor: colors.surfaceSoft, borderRadius: 14 },
@@ -706,7 +707,7 @@ const styles = StyleSheet.create({
   depositBlock: { gap: spacing.sm },
   stageSummary: { gap: 3, paddingVertical: spacing.xs },
   moreOptions: { gap: spacing.md },
-  dropdownWrap: { flex: 1, minWidth: 220, gap: 5 },
+  dropdownWrap: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 5 },
   dropdownButton: { minHeight: 48, justifyContent: 'space-between' },
   dropdownMenu: { maxHeight: 320 },
   footerActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: spacing.sm },

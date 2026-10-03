@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Text } from 'react-native-paper';
+import { Chip, HelperText, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -123,12 +124,12 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   card: { gap: 14 },
   header: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 },
-  flex: { flex: 1, minWidth: 240 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 240, flexShrink: 1, maxWidth: '100%' },
   eyebrow: { color: colors.primary, fontSize: 9, fontWeight: '900', letterSpacing: 1.1 },
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 20 },
   compare: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  compareColumn: { flexGrow: 1, flexBasis: 300, minWidth: 250, padding: 12, borderRadius: 14, backgroundColor: colors.surfaceSoft, gap: 4 },
+  compareColumn: { flexGrow: 1, flexBasis: 300, minWidth: 0, flexShrink: 1, maxWidth: '100%', padding: 12, borderRadius: 14, backgroundColor: colors.surfaceSoft, gap: 4 },
   reason: { color: colors.charcoalSoft, lineHeight: 19 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
 });

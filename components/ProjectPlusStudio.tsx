@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Linking, Platform, StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -151,8 +152,8 @@ const styles = StyleSheet.create({
   muted: { color: colors.muted, lineHeight: 21 },
   strong: { fontWeight: '900', color: colors.charcoal },
   topRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', alignItems: 'flex-start' },
-  flex: { flex: 1, minWidth: 220, gap: 7 },
-  field: { flex: 1, minWidth: 220 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 7 },
+  field: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%' },
   usage: { minWidth: 150, gap: 1 },
   usageStrong: { color: colors.primary, fontWeight: '900', fontSize: 18 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
@@ -161,6 +162,6 @@ const styles = StyleSheet.create({
   list: { gap: 5 },
   notice: { backgroundColor: colors.goldSoft, color: colors.charcoalSoft, padding: 12, borderRadius: 12, lineHeight: 21 },
   gallery: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  galleryCard: { flexGrow: 1, flexBasis: 260, minWidth: 230, maxWidth: 380 },
+  galleryCard: { flexGrow: 1, flexBasis: 260, minWidth: 0, flexShrink: 1, maxWidth: 380 },
   thumb: { width: '100%', height: 190, borderRadius: 14, backgroundColor: colors.border },
 });

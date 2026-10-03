@@ -1,7 +1,8 @@
 import { useUser } from '@clerk/expo';
 import { Link } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { DeleteAccountCard } from '@/components/DeleteAccountCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
@@ -67,7 +68,7 @@ const styles = StyleSheet.create({
   avatar: { width: 76, height: 76, borderRadius: 24, backgroundColor: colors.navy, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: '#FFFFFF', fontWeight: '900', fontSize: 29 },
   eyebrow: { color: colors.primary, fontSize: 9, fontWeight: '900', letterSpacing: 1.1 },
-  flex: { flex: 1, minWidth: 220, gap: 5 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 5 },
   title: { fontWeight: '900', color: colors.charcoal },
   muted: { color: colors.muted, lineHeight: 22 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },

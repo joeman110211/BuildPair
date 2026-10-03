@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, StyleSheet, View } from 'react-native';
-import { Button, Chip, ProgressBar, Text } from 'react-native-paper';
+import { Chip, ProgressBar, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
 // Metro resolves the platform-specific implementation so browser-only Stripe Connect code is not bundled natively.
@@ -231,11 +232,11 @@ export default function SubscriptionScreen() {
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  plan: { flex: 1, minWidth: 260 },
+  plan: { flex: 1, minWidth: 0, flexBasis: 260, flexShrink: 1, maxWidth: '100%' },
   currentPlan: { borderColor: colors.primary, borderWidth: 2 },
   currentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' },
   planHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' },
-  flex: { flex: 1, minWidth: 220 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%' },
   title: { color: colors.charcoal, fontWeight: '900' },
   price: { color: colors.primary, fontWeight: '900' },
   categoryLine: { color: colors.charcoal, fontWeight: '800' },

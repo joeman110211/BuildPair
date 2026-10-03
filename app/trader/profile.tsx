@@ -3,7 +3,8 @@ import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { DeleteAccountCard } from '@/components/DeleteAccountCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
   avatar: { width: 82, height: 82, borderRadius: 25, backgroundColor: colors.border },
   avatarFallback: { width: 82, height: 82, borderRadius: 25, backgroundColor: colors.navy, alignItems: 'center', justifyContent: 'center' },
   avatarLetter: { color: '#FFFFFF', fontSize: 29, fontWeight: '900' },
-  flex: { flex: 1, minWidth: 220, gap: 5 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 5 },
   identityTop: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
   eyebrow: { color: colors.primary, fontSize: 9, fontWeight: '900', letterSpacing: 1.1 },
   planPill: { backgroundColor: colors.primarySoft, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5 },
@@ -123,13 +124,13 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
   primaryActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
   toolGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 11 },
-  toolCard: { flexGrow: 1, flexBasis: 300, minWidth: 265 },
+  toolCard: { flexGrow: 1, flexBasis: 300, minWidth: 0, flexShrink: 1, maxWidth: '100%' },
   toolTrust: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' },
   toolPortfolio: { backgroundColor: colors.primarySoft, borderColor: '#F2D7C3' },
   toolAnalytics: { backgroundColor: colors.blueSoft, borderColor: '#D4E1E9' },
   toolAlerts: { backgroundColor: colors.goldSoft, borderColor: '#ECDDBF' },
   strengthGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  strengthItem: { flexGrow: 1, flexBasis: 180, minWidth: 160, borderRadius: 15, backgroundColor: colors.surfaceSoft, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  strengthItem: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 180, minWidth: 160, borderRadius: 15, backgroundColor: colors.surfaceSoft, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 8 },
   strengthStatus: { color: colors.primary, fontWeight: '900', fontSize: 16 },
   strengthText: { color: colors.charcoalSoft, fontWeight: '700', flex: 1 },
 });

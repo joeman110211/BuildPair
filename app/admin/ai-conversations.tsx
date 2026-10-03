@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
   conversationCard: { gap: 12 },
   headerRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
   conversationHeader: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
-  flex: { flex: 1, minWidth: 220, gap: 4 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 4 },
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 20 },
   mutedSmall: { color: colors.muted, fontSize: 11, lineHeight: 16 },

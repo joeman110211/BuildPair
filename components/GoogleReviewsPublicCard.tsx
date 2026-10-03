@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Image, Linking, StyleSheet, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { colors } from '@/constants/theme';
 import { apiFetch } from '@/lib/api';
@@ -63,7 +64,7 @@ export function GoogleReviewsPublicCard({ profileId, visible }: { profileId: str
 const styles = StyleSheet.create({
   card: { gap: 13, borderColor: '#DADCE0', backgroundColor: '#FFFFFF' },
   header: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12, alignItems: 'center' },
-  flex: { flex: 1, minWidth: 220 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%' },
   eyebrow: { color: '#5F6368', fontSize: 9, fontWeight: '900', letterSpacing: 1.1 },
   title: { color: colors.charcoal, fontWeight: '900' },
   explainer: { color: colors.muted, lineHeight: 20, marginTop: 4 },

@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -180,6 +181,6 @@ const styles = StyleSheet.create({
   linkText: { color: colors.primary, fontSize: 12, lineHeight: 18 },
   list: { gap: 8 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12 },
-  flex: { flex: 1, minWidth: 210 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 210, flexShrink: 1, maxWidth: '100%' },
   rowTitle: { color: colors.charcoal, fontWeight: '800' },
 });

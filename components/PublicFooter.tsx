@@ -1,5 +1,6 @@
 import { Link } from 'expo-router';
-import { Image, Linking, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Image, Linking, Pressable, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { Text } from 'react-native-paper';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { colors, layout, radii, spacing } from '@/constants/theme';
@@ -121,7 +122,7 @@ const styles = StyleSheet.create({
   accentLineCompact: { marginHorizontal: -18, marginBottom: spacing.xl },
   inner: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xxxl, justifyContent: 'space-between' },
   innerCompact: { gap: 24, justifyContent: 'flex-start' },
-  brandBlock: { flex: 2, minWidth: 260, maxWidth: 430, gap: spacing.sm },
+  brandBlock: { flex: 2, minWidth: 0, flexBasis: 260, flexShrink: 1, maxWidth: 430, gap: spacing.sm },
   brandBlockCompact: { flexBasis: '100%', minWidth: 0, maxWidth: '100%', gap: 8 },
   logoCard: { alignSelf: 'flex-start', backgroundColor: '#FFFFFF', borderRadius: radii.md, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, overflow: 'hidden' },
   logoCardCompact: { borderRadius: radii.md, paddingHorizontal: 6, paddingVertical: 4 },
@@ -137,13 +138,13 @@ const styles = StyleSheet.create({
   socialBlock: { gap: spacing.xs, marginTop: spacing.xs },
   socialLabel: { color: colors.secondary, fontSize: 10, fontWeight: '900', letterSpacing: 0.9 },
   socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  socialIconButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  socialIconButton: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   socialIcon: { width: 40, height: 40, resizeMode: 'contain' },
   socialLinkPressed: { opacity: 0.72, transform: [{ scale: 0.96 }] },
   small: { color: '#B7BDC2', lineHeight: 20, fontSize: 12 },
   smallCompact: { lineHeight: 18, fontSize: 11.5 },
   group: { minWidth: 145, gap: spacing.sm },
-  groupCompact: { flexGrow: 1, flexBasis: 145, minWidth: 0, gap: 5 },
+  groupCompact: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 145, minWidth: 0, gap: 5 },
   groupTitle: { color: colors.secondary, fontWeight: '900', marginBottom: spacing.xxs, textTransform: 'uppercase', letterSpacing: 0.8, fontSize: 11 },
   linkPress: { paddingVertical: spacing.xxs, borderRadius: radii.sm },
   linkPressCompact: { paddingVertical: 3 },

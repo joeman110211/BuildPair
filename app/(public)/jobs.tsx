@@ -2,7 +2,8 @@ import type { Href } from 'expo-router';
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -65,7 +66,7 @@ export default function PublicJobsScreen() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
-  headingBlock: { flex: 1, minWidth: 220, gap: 4 },
+  headingBlock: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 4 },
   linkTitle: { fontWeight: '900', color: colors.charcoal, textDecorationLine: 'underline' },
   muted: { color: colors.muted, lineHeight: 21 },
   jobMeta: { color: colors.muted, fontSize: 12, lineHeight: 18, fontWeight: '700' },

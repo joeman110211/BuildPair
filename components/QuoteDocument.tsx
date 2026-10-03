@@ -161,12 +161,12 @@ export function QuoteDocument({ quote }: { quote: QuoteDocumentData }) {
 const styles = StyleSheet.create({
   document: { width: '100%', maxWidth: 820, alignSelf: 'center', backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.xl, gap: spacing.lg },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.lg, flexWrap: 'wrap' },
-  grow: { flex: 1, minWidth: 220, gap: 3 },
+  grow: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 3 },
   reference: { minWidth: 150, alignItems: 'flex-end', gap: 2 },
   referenceLabel: { color: colors.primary, fontWeight: '900', letterSpacing: 1.2, fontSize: 11 },
   brand: { color: colors.charcoal, fontWeight: '900' },
   twoColumn: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
-  infoBlock: { flex: 1, minWidth: 220, gap: 3 },
+  infoBlock: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 3 },
   label: { color: colors.muted, fontSize: 10, fontWeight: '900', letterSpacing: 0.9 },
   strong: { color: colors.text, fontWeight: '800' },
   body: { color: colors.text, lineHeight: 22 },
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md, alignItems: 'center' },
   total: { color: colors.primary, fontWeight: '900' },
   facts: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  fact: { flex: 1, minWidth: 170, backgroundColor: colors.surfaceSoft, borderRadius: radii.md, padding: spacing.md, gap: 4 },
+  fact: { flex: 1, minWidth: 0, flexBasis: 170, flexShrink: 1, maxWidth: '100%', backgroundColor: colors.surfaceSoft, borderRadius: radii.md, padding: spacing.md, gap: 4 },
   stage: { gap: 3, backgroundColor: colors.surfaceSoft, borderRadius: radii.md, padding: spacing.md },
   footerRow: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: spacing.sm },
 });

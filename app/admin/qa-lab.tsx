@@ -2,7 +2,8 @@ import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -353,21 +354,21 @@ export default function AdminQaLab() {
 const styles = StyleSheet.create({
   hero: { backgroundColor: '#FFF7F0', borderColor: '#E8B37E' },
   heroHeader: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  flex: { flex: 1, minWidth: 220, gap: 3 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 3 },
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 21 },
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   accessRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  accessBlock: { flexGrow: 1, flexBasis: 260, gap: 8 },
+  accessBlock: { flexShrink: 1, maxWidth: '100%', minWidth: 0, flexGrow: 1, flexBasis: 260, gap: 8 },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   routeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  routeCard: { flexGrow: 1, flexBasis: 330, maxWidth: 620 },
+  routeCard: { flexShrink: 1, minWidth: 0, flexGrow: 1, flexBasis: 330, maxWidth: 620 },
   routeTop: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 },
   path: { color: colors.primary, fontFamily: 'monospace', fontSize: 11 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
   note: { color: colors.charcoalSoft, backgroundColor: colors.surfaceSoft, borderRadius: 10, padding: 8, lineHeight: 19 },
   sectionTitle: { color: colors.charcoal, fontWeight: '900', marginTop: 4 },
   stateGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  stateCard: { flexGrow: 1, flexBasis: 300, maxWidth: 520 },
+  stateCard: { flexShrink: 1, minWidth: 0, flexGrow: 1, flexBasis: 300, maxWidth: 520 },
   footerCard: { borderColor: colors.primary },
 });

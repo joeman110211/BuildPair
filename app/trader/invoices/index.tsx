@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { Link } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -77,4 +78,4 @@ export default function InvoicesScreen() {
   </Screen>;
 }
 
-const styles = StyleSheet.create({ row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }, flex: { flex: 1, minWidth: 180 }, title: { fontWeight: '800' }, muted: { color: colors.muted }, total: { color: colors.primary, fontWeight: '900' }, overdue: { color: colors.danger, fontWeight: '700' }, actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' } });
+const styles = StyleSheet.create({ row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }, flex: { flex: 1, minWidth: 0, flexBasis: 180, flexShrink: 1, maxWidth: '100%' }, title: { fontWeight: '800' }, muted: { color: colors.muted }, total: { color: colors.primary, fontWeight: '900' }, overdue: { color: colors.danger, fontWeight: '700' }, actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' } });

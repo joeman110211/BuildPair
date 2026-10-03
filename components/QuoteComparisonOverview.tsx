@@ -1,4 +1,5 @@
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { Chip, Text } from 'react-native-paper';
 import { AppCard } from '@/components/AppCard';
 import { colors } from '@/constants/theme';
@@ -53,11 +54,11 @@ export function QuoteComparisonOverview({ quotes }: { quotes: Quote[] }) {
 const styles = StyleSheet.create({
   shell: { gap: 14 },
   heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  flex: { flex: 1, minWidth: 220, gap: 4 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 4 },
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  quote: { flexGrow: 1, flexBasis: 240, minWidth: 220, maxWidth: 380, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 14, gap: 8, backgroundColor: '#FFFFFF' },
+  quote: { flexGrow: 1, flexBasis: 240, minWidth: 0, flexShrink: 1, maxWidth: 380, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 14, gap: 8, backgroundColor: '#FFFFFF' },
   quoteCompact: { flexBasis: '100%', maxWidth: '100%' },
   quoteBest: { borderWidth: 2, borderColor: colors.primary },
   price: { color: colors.charcoal, fontWeight: '900' },

@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -91,9 +92,9 @@ export default function PresenceScreen() {
 
 const styles = StyleSheet.create({
   toolbar: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
-  search: { flex: 1, minWidth: 240 },
+  search: { flex: 1, minWidth: 0, flexBasis: 240, flexShrink: 1, maxWidth: '100%' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 },
-  flex: { flex: 1, minWidth: 230, gap: 4 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 230, flexShrink: 1, maxWidth: '100%', gap: 4 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-end' },
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted },

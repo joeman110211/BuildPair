@@ -39,11 +39,26 @@ const clearLegacyWebAppCache = `
 
 const shellCss = `
   html, body {
-    background: #ECEFF1;
+    background: #F7F4F0;
     overscroll-behavior-y: none;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
-  body { margin: 0; }
+  body {
+    margin: 0;
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
   * { box-sizing: border-box; }
+  [dir="auto"] {
+    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
+  }
+  input, textarea { font-size: 16px; }
+  :focus-visible { outline: 2px solid #963B00; outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; }
+  }
 
   [data-testid="analytics-choice-panel"],
   [data-testid="analytics-choice-open"] {

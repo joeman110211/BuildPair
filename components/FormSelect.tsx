@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { Button, Modal, Portal, Text } from 'react-native-paper';
+import { Modal, Portal, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 
 export function FormSelect<T extends string>({ label, value, options, onChange, placeholder = 'Select an option' }: {
@@ -31,7 +32,7 @@ export function FormSelect<T extends string>({ label, value, options, onChange, 
 }
 
 const styles = StyleSheet.create({
-  wrapper: { gap: spacing.sm },
+  wrapper: { minWidth: 0, maxWidth: '100%', gap: spacing.sm },
   label: { color: colors.charcoalSoft, fontWeight: '700' },
   select: { minHeight: 50, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised, borderRadius: radii.md, paddingLeft: spacing.md, paddingRight: spacing.xs, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   selectPressed: { backgroundColor: colors.surfaceSoft, borderColor: '#CFC5BC' },

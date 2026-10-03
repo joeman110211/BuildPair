@@ -1,8 +1,10 @@
 import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Text, TextInput } from 'react-native-paper';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { FeaturedTraderHero } from '@/components/FeaturedTraderHero';
 import { PrelaunchBanner } from '@/components/PrelaunchBanner';
 import { PricingCards } from '@/components/PricingCards';
@@ -36,6 +38,7 @@ export default function LandingPageRefined() {
   const { width } = useWindowDimensions();
   const mobile = width < 720;
   const wide = width >= 920;
+  const metrics = publicResponsiveMetrics(width);
   const [search, setSearch] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [hasFeaturedProfiles, setHasFeaturedProfiles] = useState(true);
@@ -49,7 +52,7 @@ export default function LandingPageRefined() {
     <PrelaunchBanner />
     <View style={[styles.hero, mobile && styles.heroMobile]}>
       <Text style={styles.eyebrow}>ONE PROJECT. BOTH SIDES CONNECTED.</Text>
-      <Text style={[styles.heroTitle, mobile && styles.heroTitleMobile]}>Find local tradespeople.{ '\n' }Keep the whole job together.</Text>
+      <Text style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Find local tradespeople.{ '\n' }Keep the whole job together.</Text>
       <Text style={styles.heroBody}>Compare clear quotes. Agree the work. Keep messages, changes and payment stages in one place.</Text>
       <View style={styles.heroActions}>
         <Link href="/(public)/directory" asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Browse local trades</Button></Link>
@@ -125,8 +128,8 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.primaryDark, fontSize: 11, lineHeight: 16, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', textAlign: 'center' }, sectionTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center', letterSpacing: -0.5 }, sectionBody: { color: colors.muted, lineHeight: 23, textAlign: 'center', maxWidth: 640 },
   button: { borderRadius: radii.md, alignSelf: 'center', maxWidth: '100%' }, buttonContent: { minHeight: controlHeights.standard, paddingHorizontal: 12 }, fullButton: { width: '100%' },
   searchRow: { width: '100%', maxWidth: 760, alignSelf: 'center', flexDirection: 'row', gap: 10, alignItems: 'center' }, searchRowMobile: { flexDirection: 'column', alignItems: 'stretch' }, searchInput: { flex: 1, width: '100%', minWidth: 0, backgroundColor: colors.surfaceRaised }, inputOutline: { borderRadius: radii.md },
-  tradeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, tradeCard: { flexGrow: 1, flexBasis: 150, minWidth: 0, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, backgroundColor: colors.surfaceRaised, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 52 }, tradeName: { flex: 1, color: colors.charcoal, fontSize: 14, fontWeight: '700' }, tradeArrow: { color: colors.primary, fontSize: 18 }, pressed: { opacity: 0.8 },
-  stepGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 20 }, step: { flexGrow: 1, flexBasis: 280, minWidth: 0, gap: 8, padding: 12 }, stepNumber: { color: colors.primary, fontSize: 26, fontWeight: '900' }, cardTitle: { color: colors.charcoal, fontSize: 20, lineHeight: 26, fontWeight: '800' }, cardText: { color: colors.charcoalSoft, lineHeight: 23 },
-  choiceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 }, choice: { flexGrow: 1, flexBasis: 360, minWidth: 0, borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, padding: 22, gap: 12 }, paymentChoice: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' }, smallText: { color: colors.muted, fontSize: 12, lineHeight: 18 }, trustStrip: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 22, gap: 8 }, trustTitle: { color: colors.charcoal, fontSize: 17, fontWeight: '800' },
+  tradeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, tradeCard: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 150, minWidth: 0, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, backgroundColor: colors.surfaceRaised, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 52 }, tradeName: { flex: 1, color: colors.charcoal, fontSize: 14, fontWeight: '700' }, tradeArrow: { color: colors.primary, fontSize: 18 }, pressed: { opacity: 0.8 },
+  stepGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 20 }, step: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 280, minWidth: 0, gap: 8, padding: 12 }, stepNumber: { color: colors.primary, fontSize: 26, fontWeight: '900' }, cardTitle: { color: colors.charcoal, fontSize: 20, lineHeight: 26, fontWeight: '800' }, cardText: { color: colors.charcoalSoft, lineHeight: 23 },
+  choiceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 }, choice: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 360, minWidth: 0, borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, padding: 22, gap: 12 }, paymentChoice: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' }, smallText: { color: colors.muted, fontSize: 12, lineHeight: 18 }, trustStrip: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 22, gap: 8 }, trustTitle: { color: colors.charcoal, fontSize: 17, fontWeight: '800' },
   faqList: { gap: 8, width: '100%', maxWidth: 820, alignSelf: 'center' }, faqCard: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 16, gap: 12 }, faqRow: { flexDirection: 'row', gap: 12, justifyContent: 'space-between', alignItems: 'center' }, faqQuestion: { flex: 1, color: colors.charcoal, fontSize: 16, lineHeight: 23, fontWeight: '700' }, faqToggle: { color: colors.primary, fontSize: 22 },
 });

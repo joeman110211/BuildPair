@@ -21,10 +21,12 @@ export function AppCard({
 
 const styles = StyleSheet.create({
   card: {
+    minWidth: 0,
+    maxWidth: '100%',
     backgroundColor: colors.surfaceRaised,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#E9E3DD',
-    borderRadius: radii.lg,
+    borderColor: colors.border,
+    borderRadius: radii.xl,
     padding: spacing.xl,
     gap: spacing.md,
   },

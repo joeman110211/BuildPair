@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Platform, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { PublicInfoPage } from '@/components/PublicInfoPage';
 
 const CHOICE_KEY = 'buildpair_analytics_choice_v1';

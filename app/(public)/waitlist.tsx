@@ -1,7 +1,8 @@
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
-import { Button, Checkbox, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
+import { Checkbox, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
 import { trackPublicWaitlistSuccess } from '@/components/VisitorAnalytics';

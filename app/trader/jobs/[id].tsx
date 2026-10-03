@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { type Href, Link, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { ProjectUpdateComposer } from '@/components/ProjectUpdateComposer';
 import { ProjectWorkspace } from '@/components/ProjectWorkspace';
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
   money: { color: colors.primary, fontWeight: '900' },
   badges: { gap: 4, alignItems: 'flex-end' },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
-  flex: { flex: 1, minWidth: 220, gap: 3 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 3 },
   moneyInput: { flex: 1, minWidth: 140 },
   stageActions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   timelineRow: { position: 'relative', flexDirection: 'row', gap: 12, paddingBottom: 18 },

@@ -3,7 +3,9 @@ import { SignIn } from '@clerk/expo/web';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button, HelperText, Text, TextInput } from 'react-native-paper';
+import { Screen } from '@/components/Screen';
+import { HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { colors } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { modeSetupHref, parseAccountMode, safeInternalReturnTo, signUpHref } from '@/lib/account-mode';
@@ -208,16 +210,15 @@ export default function SignInWebScreen() {
   const redirectUrl = String(modeSetupHref(mode, returnTo));
   const createUrl = mode ? String(signUpHref(mode, returnTo)) : '/auth/account';
   const title = admin
-    ? 'BuildPair Administrator Sign In'
+    ? 'BuildPair administrator sign in'
     : mode === 'trader'
-      ? '🔨 Tradesperson Sign In'
+      ? 'Tradesperson sign in'
       : mode === 'customer'
-        ? '🏠 Homeowner Sign In'
+        ? 'Homeowner sign in'
         : 'Sign in to BuildPair';
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 18, paddingHorizontal: 12 }}>
-      <Text variant="headlineSmall" style={{ textAlign: 'center', fontWeight: '900', color: colors.charcoal }}>{title}</Text>
+    <Screen title={title}>
       {admin ? (
         <AdminSignInForm />
       ) : (
@@ -231,6 +232,6 @@ export default function SignInWebScreen() {
           appearance={clerkWebAppearance}
         />
       )}
-    </View>
+    </Screen>
   );
 }

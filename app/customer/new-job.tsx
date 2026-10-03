@@ -3,7 +3,8 @@ import type { Href } from 'expo-router';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AIJobSpecModal } from '@/components/AIJobSpecModal';
 import { AppCard } from '@/components/AppCard';
 import { FormSelect } from '@/components/FormSelect';
@@ -317,7 +318,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' },
   button: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xs },
   reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap', alignItems: 'flex-start' },
-  flex: { flex: 1, minWidth: 220 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%' },
   reviewMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   description: { color: colors.text, lineHeight: 23 },
   emergencyRow: { borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.md },

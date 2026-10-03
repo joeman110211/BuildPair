@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, IconButton, Portal, Surface, Text } from 'react-native-paper';
+import { IconButton, Portal, Surface, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { colors } from '@/constants/theme';
 
 type BeforeInstallPromptEvent = Event & {

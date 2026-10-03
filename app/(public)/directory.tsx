@@ -1,7 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Menu, Portal, Text, TextInput } from 'react-native-paper';
+import { Platform, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Menu, Portal, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { FormSelect } from '@/components/FormSelect';
 import { EmptyState, Screen } from '@/components/Screen';
 import { TraderCard } from '@/components/TraderCard';
@@ -186,7 +188,7 @@ export default function DirectoryScreen() {
     <View style={styles.resultsHeader}>
       <View style={styles.resultsCopy}>
         <Text variant="titleLarge" style={styles.title}>{loading ? 'Finding local trades' : `${displayFiltered.length} trade${displayFiltered.length === 1 ? '' : 's'} found`}</Text>
-        {loading ? <Text style={styles.muted}>Checking active BuildPair trade profiles. This page will always resolve to live results, a clear empty state or an error with a retry option.</Text> : null}
+        {loading ? <Text style={styles.muted}>Finding tradespeople who match your search.</Text> : null}
         {!loading && query && !fallbackActive ? <Text style={styles.muted}>Showing the closest matches for “{query}”.</Text> : null}
         {!loading && fallbackActive ? <Text style={styles.muted}>No exact wording match, so BuildPair is showing the closest relevant trades.</Text> : null}
         {!loading && aiChecking ? <Text style={styles.muted}>Working out the most likely trade for your problem…</Text> : null}
@@ -278,10 +280,10 @@ export default function DirectoryScreen() {
 
 const styles = StyleSheet.create({
   searchPanel: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 14, flexDirection: 'row', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' },
-  search: { flex: 2, minWidth: 250 },
+  search: { flex: 2, minWidth: 0, flexBasis: 250, flexShrink: 1, maxWidth: '100%' },
   searchInput: { backgroundColor: colors.surfaceRaised },
   searchOutline: { borderRadius: 16 },
-  select: { flex: 1, minWidth: 220 },
+  select: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%' },
   searchActions: { minHeight: 50, justifyContent: 'center' },
   refineBar: { minHeight: 42, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap', paddingHorizontal: 2 },
   refineLabel: { color: colors.muted, fontSize: 12, fontWeight: '800' },
@@ -296,9 +298,9 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
   comparePanel: { gap: 12, padding: 16, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceSoft },
   compareHeader: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
-  compareCopy: { flex: 1, minWidth: 220, gap: 3 },
+  compareCopy: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 3 },
   compareGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  compareCard: { flex: 1, minWidth: 220, gap: 6, borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised, padding: 14 },
+  compareCard: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 6, borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised, padding: 14 },
   compareTitle: { color: colors.charcoal, fontWeight: '900' },
   compareLine: { color: colors.muted, lineHeight: 20 },
   compareDockSpacer: { height: 124 },
@@ -306,7 +308,7 @@ const styles = StyleSheet.create({
   compareDockShellCompact: { bottom: 86 },
   compareDock: { width: '100%', maxWidth: 760, minHeight: 70, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: '#E8C9AD', backgroundColor: '#FFF9F3', shadowColor: '#000000', shadowOpacity: 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 7 }, elevation: 8 },
   compareDockCompact: { minHeight: 0, flexDirection: 'column', alignItems: 'stretch', gap: 9, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 17 },
-  compareDockCopy: { flex: 1, minWidth: 220, gap: 2 },
+  compareDockCopy: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 2 },
   compareDockCopyCompact: { minWidth: 0 },
   compareDockCount: { color: colors.charcoal, fontWeight: '900', fontSize: 15 },
   compareDockHint: { color: colors.muted, fontSize: 12, lineHeight: 16 },

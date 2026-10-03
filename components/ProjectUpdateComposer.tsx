@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { colors, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
@@ -51,7 +52,7 @@ export function ProjectUpdateComposer({ jobId, role }: { jobId:string; role:'cus
 const styles = StyleSheet.create({
   card:{ backgroundColor:colors.surfaceSoft },
   row:{ flexDirection:'row', flexWrap:'wrap', gap:spacing.sm, justifyContent:'space-between', alignItems:'center' },
-  flex:{ flex:1, minWidth:220, gap:4 },
+  flex:{ flex:1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap:4 },
   form:{ gap:spacing.sm },
   chips:{ flexDirection:'row', flexWrap:'wrap', gap:6 },
   title:{ color:colors.charcoal, fontWeight:'900' },

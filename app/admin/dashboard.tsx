@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { Link } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Text } from 'react-native-paper';
+import { Chip, HelperText, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -320,20 +321,20 @@ const styles = StyleSheet.create({
   sectionTitle: { color: colors.charcoal, fontWeight: '900', marginTop: 4 },
   sectionHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  stat: { flexGrow: 1, flexBasis: 145, minWidth: 135, borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: 12, gap: 2, backgroundColor: colors.surfaceSoft },
+  stat: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 145, minWidth: 135, borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: 12, gap: 2, backgroundColor: colors.surfaceSoft },
   liveStat: { borderColor: '#79C59F' },
   statTop: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   liveDot: { width: 9, height: 9, borderRadius: 999, backgroundColor: '#2C9B65' },
   statValue: { color: colors.primary, fontWeight: '900' },
   statLabel: { color: colors.charcoal, fontWeight: '800' },
   navGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  navGroup: { flexGrow: 1, flexBasis: 280, minWidth: 260 },
+  navGroup: { flexGrow: 1, flexBasis: 280, minWidth: 0, flexShrink: 1, maxWidth: '100%' },
   navButton: { alignSelf: 'stretch', borderTopWidth: 1, borderTopColor: colors.border, borderRadius: 0 },
   navButtonContent: { justifyContent: 'flex-start', minHeight: 46 },
   navButtonLabel: { textAlign: 'left' },
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 20 },
-  flex: { flex: 1, minWidth: 220 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8, paddingVertical: 7 },
   inlineChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   alert: { gap: 5, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 10, backgroundColor: colors.surfaceSoft },

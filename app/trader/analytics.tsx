@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, ProgressBar, Text } from 'react-native-paper';
+import { Chip, ProgressBar, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -105,7 +106,7 @@ function MetricCard({ value, label, detail }: { value: string; label: string; de
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  metric: { flexGrow: 1, flexBasis: 210, minWidth: 190 },
+  metric: { flexGrow: 1, flexBasis: 210, minWidth: 0, flexShrink: 1, maxWidth: '100%' },
   proGate: { backgroundColor: '#FFF8F3', maxWidth: 720 },
   number: { color: colors.primary, fontWeight: '900' },
   title: { color: colors.charcoal, fontWeight: '900' },

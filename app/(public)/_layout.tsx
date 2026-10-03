@@ -1,6 +1,7 @@
 import { Link, Stack, usePathname } from 'expo-router';
 import { Platform, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { NativeBottomNav } from '@/components/NativeBottomNav';
 import { PublicHeader } from '@/components/PublicHeader';

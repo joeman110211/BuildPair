@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { type Href, Link, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { Button, Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { MilestoneTimeline } from '@/components/MilestoneTimeline';
 // Metro and TypeScript resolve the .native/.web implementation; ESLint's generic resolver does not.
@@ -381,7 +382,7 @@ const styles = StyleSheet.create({
   issue: { color: colors.danger, lineHeight: 21, fontWeight: '800' },
   money: { color: colors.primary, fontWeight: '900', fontSize: 19 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
-  flex: { flex: 1, minWidth: 220, gap: 3 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 3 },
   badges: { gap: 4, alignItems: 'flex-end' },
   stageActions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   cancelBox: { gap: 8, padding: 12, borderRadius: 12, backgroundColor: colors.surfaceSoft },
@@ -390,6 +391,6 @@ const styles = StyleSheet.create({
   stars: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   timelineRow: { position: 'relative', flexDirection: 'row', gap: 12, paddingBottom: 18 },
   timelineDot: { width: 16, height: 16, borderRadius: 8, backgroundColor: colors.primary, marginTop: 3, zIndex: 2 },
-  timelineCopy: { flex: 1, minWidth: 220 },
+  timelineCopy: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%' },
   timelineLine: { position: 'absolute', left: 7, top: 19, bottom: 0, width: 2, backgroundColor: colors.border },
 });

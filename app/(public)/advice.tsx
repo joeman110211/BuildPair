@@ -1,8 +1,10 @@
 import { Link } from 'expo-router';
-import { Linking, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Linking, ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { PublicFooter } from '@/components/PublicFooter';
-import { colors, publicResponsiveMetrics } from '@/constants/theme';
+import { colors, publicResponsiveMetrics, radii } from '@/constants/theme';
 
 type Resource = { title: string; body: string; label: string; url: string };
 
@@ -114,7 +116,7 @@ export default function AdviceHub() {
         <Text variant="bodyLarge" style={styles.heroBody}>Straightforward guidance for homeowners and tradespeople, with direct links to official UK sources for consumer rights, regulated work, building standards and safety.</Text>
         <View style={styles.heroActions}>
           <Link href="/(public)/building-regulations" asChild><Button mode="contained" icon="book-open-page-variant-outline">Building rules by UK nation</Button></Link>
-          <Link href="/(public)/report" asChild><Button mode="outlined" textColor="#FFFFFF" icon="alert-outline">Report a BuildPair user</Button></Link>
+          <Link href="/(public)/report" asChild><Button mode="outlined" textColor={colors.primaryDark} icon="alert-outline">Report a BuildPair user</Button></Link>
         </View>
       </View>
     </View>
@@ -155,17 +157,17 @@ export default function AdviceHub() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
-  hero: { backgroundColor: colors.charcoal, paddingHorizontal: 20, paddingVertical: 64 },
+  hero: { backgroundColor: colors.background, paddingHorizontal: 20, paddingVertical: 64 },
   heroMobile: { paddingHorizontal: 16, paddingVertical: 42 },
-  heroInner: { width: '100%', maxWidth: 1120, alignSelf: 'center', gap: 14 },
-  heroChip: { alignSelf: 'flex-start', backgroundColor: '#3A4148' },
-  heroChipText: { color: '#FFFFFF', fontWeight: '800' },
-  heroTitle: { color: '#FFFFFF', fontWeight: '900', maxWidth: 850, letterSpacing: -1 },
-  heroBody: { color: '#DDE1E3', maxWidth: 850, lineHeight: 27 },
+  heroInner: { width: '100%', maxWidth: 1120, alignSelf: 'center', gap: 14, alignItems: 'center' },
+  heroChip: { alignSelf: 'center', backgroundColor: colors.primarySoft },
+  heroChipText: { color: colors.primaryDark, fontWeight: '800' },
+  heroTitle: { color: colors.charcoal, fontWeight: '900', maxWidth: 850, letterSpacing: -1, textAlign: 'center' },
+  heroBody: { color: colors.muted, maxWidth: 850, lineHeight: 27, textAlign: 'center' },
   heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6 },
   content: { width: '100%', maxWidth: 1120, alignSelf: 'center', padding: 20, gap: 26 },
   contentMobile: { paddingHorizontal: 16, paddingVertical: 16, gap: 20 },
-  notice: { backgroundColor: colors.primarySoft, borderRadius: 28, padding: 24, borderWidth: 1, borderColor: '#F0C9AE', gap: 10 },
+  notice: { backgroundColor: colors.primarySoft, borderRadius: radii.xl, padding: 24, borderWidth: 1, borderColor: '#F0C9AE', gap: 10 },
   habits: { gap: 7, marginTop: 4 },
   habit: { color: colors.text, lineHeight: 22 },
   sectionHeader: { gap: 6, marginTop: 12 },
@@ -174,8 +176,8 @@ const styles = StyleSheet.create({
   title: { color: colors.charcoal, fontWeight: '900' },
   body: { color: colors.muted, lineHeight: 23 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
-  card: { flexGrow: 1, flexShrink: 1, flexBasis: 310, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: 24, padding: 20, borderWidth: 1, borderColor: colors.border, gap: 10 },
-  safetyCard: { backgroundColor: colors.charcoal, borderRadius: 28, padding: 24, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 18 },
+  card: { flexGrow: 1, flexShrink: 1, flexBasis: 310, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, padding: 20, borderWidth: 1, borderColor: colors.border, gap: 10 },
+  safetyCard: { backgroundColor: colors.charcoal, borderRadius: radii.xl, padding: 24, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 18 },
   flex: { flex: 1, minWidth: 0, maxWidth: '100%', gap: 6 },
   lightTitle: { color: '#FFFFFF', fontWeight: '900' },
   lightBody: { color: '#DDE1E3', lineHeight: 23 },

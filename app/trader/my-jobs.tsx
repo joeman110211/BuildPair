@@ -3,7 +3,8 @@ import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, SegmentedButtons, Text } from 'react-native-paper';
+import { Chip, SegmentedButtons, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -69,7 +70,7 @@ export default function TraderMyJobs() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' },
-  flex: { flex: 1, minWidth: 220, gap: 4 }, badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 4 }, badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
   title: { fontWeight: '900', color: colors.charcoal }, muted: { color: colors.muted, lineHeight: 21 },
   priceLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 }, price: { color: colors.primary, fontWeight: '900' },
   description: { color: colors.text, lineHeight: 22 }, actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

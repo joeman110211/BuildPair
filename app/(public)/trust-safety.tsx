@@ -24,7 +24,7 @@ export default function TrustSafetyPage() {
 
 const styles = StyleSheet.create({
   signalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  signal: { flexGrow: 1, flexBasis: 210, minWidth: 0, borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, padding: spacing.lg, gap: spacing.xs, ...shadows.subtle },
+  signal: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 210, minWidth: 0, borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, padding: spacing.lg, gap: spacing.xs, ...shadows.subtle },
   label: { color: colors.accentDark, fontSize: 10, lineHeight: 14, fontWeight: '900', letterSpacing: 1 },
   signalTitle: { color: colors.charcoal, fontSize: 17, lineHeight: 22, fontWeight: '900' },
   signalBody: { color: colors.muted, lineHeight: 20 },

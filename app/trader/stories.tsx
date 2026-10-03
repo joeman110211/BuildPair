@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { Button, HelperText, Text, TextInput } from 'react-native-paper';
+import { HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { PhotoUploader } from '@/components/PhotoUploader';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
@@ -78,6 +79,6 @@ const styles = StyleSheet.create({
   muted: { color: colors.muted, lineHeight: 21 },
   body: { color: colors.text, lineHeight: 22 },
   photos: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  photoBlock: { flexGrow: 1, flexBasis: 220, gap: 5 },
+  photoBlock: { flexShrink: 1, maxWidth: '100%', minWidth: 0, flexGrow: 1, flexBasis: 220, gap: 5 },
   photo: { width: '100%', height: 180, borderRadius: 18, backgroundColor: colors.border },
 });

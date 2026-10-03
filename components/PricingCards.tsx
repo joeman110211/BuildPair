@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { PLAN_POSITIONING, SITE_LANGUAGE } from '@/constants/site-language';
 import { colors, controlHeights, radii, shadows, spacing } from '@/constants/theme';
 import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
@@ -155,7 +156,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
 
 const styles = StyleSheet.create({
   summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  summaryCard: { flexGrow: 1, flexBasis: 150, minWidth: 0, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: 16, gap: 10, backgroundColor: colors.surfaceRaised },
+  summaryCard: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 150, minWidth: 0, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: 16, gap: 10, backgroundColor: colors.surfaceRaised },
   wrap: { gap: spacing.lg },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, alignItems: 'stretch' },
   card: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, padding: spacing.xl, gap: spacing.md, borderWidth: 1, borderColor: colors.border, ...shadows.subtle },

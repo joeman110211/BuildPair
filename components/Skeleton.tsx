@@ -33,8 +33,8 @@ const styles = StyleSheet.create({
   block: { backgroundColor: colors.surfaceStrong, borderRadius: radii.md },
   page: { width: '100%', maxWidth: 900, alignSelf: 'center', gap: 14 },
   title: { width: '48%', minWidth: 180, height: 30, alignSelf: 'center' },
-  subtitle: { width: '72%', minWidth: 240, height: 16, alignSelf: 'center' },
+  subtitle: { width: '72%', minWidth: 0, maxWidth: '100%', height: 16, alignSelf: 'center' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginTop: 10 },
-  card: { flexGrow: 1, flexBasis: 280, height: 150 },
+  card: { flexShrink: 1, maxWidth: '100%', minWidth: 0, flexGrow: 1, flexBasis: 280, height: 150 },
   wide: { width: '100%', height: 110 },
 });

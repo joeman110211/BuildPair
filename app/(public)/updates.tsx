@@ -1,6 +1,8 @@
 import { Link } from 'expo-router';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { PrelaunchBanner } from '@/components/PrelaunchBanner';
 import { PublicSeo } from '@/components/PublicSeo';
 import { PublicFooter } from '@/components/PublicFooter';
@@ -35,10 +37,10 @@ const RECENT = [
 ] as const;
 
 const COMING = [
-  ['Automatic reminder rules', 'The new reminder controls are deliberately manual first. Later, tradespeople will be able to choose sensible automatic reminder rules without turning BuildPair into a spam cannon.'],
+  ['Automatic reminder rules', 'Reminder controls are currently manual. Planned automatic rules will let tradespeople choose when reminders are sent.'],
   ['Two-way calendar sync', 'The private calendar subscription is live first. A later opt-in sync can let Google or Outlook availability influence BuildPair without exposing private event details.'],
   ['Dedicated project file library', 'The handover pack and moderated evidence are live. Dedicated PDF/file storage for certificates, manuals and receipts is next once document privacy scanning is ready.'],
-  ['More business add-ons', 'Project+ is the first real optional trade add-on. Team seats, communication credits or opportunity packs will only be added when the underlying feature and pricing are real, rather than selling decorative buttons.'],
+  ['More business add-ons', 'Project+ is an optional trade add-on. Further add-ons may include team access, communication credits or opportunity packs, with features and pricing explained before purchase.'],
   ['Clearly labelled promoted placement', 'Optional sponsored visibility may be tested later. If used, it will be labelled as promoted and will never be presented as verification or trust.'],
 ] as const;
 
@@ -69,7 +71,7 @@ export default function UpdatesPage() {
     </View>
 
     <View style={[styles.section, styles.comingSection]}>
-      <View style={styles.heading}><Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Coming soon</Text><Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>The next pieces we are building.</Text><Text style={styles.heroBody}>We will add these in stages and keep the core workflow understandable. BuildPair should remove admin, not become a cockpit nobody asked for.</Text></View>
+      <View style={styles.heading}><Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Coming soon</Text><Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>The next pieces we are building.</Text><Text style={styles.heroBody}>These improvements will arrive in stages, with clear guidance as each becomes available.</Text></View>
       <View style={styles.grid}>{COMING.map(([title, body]) => <FeatureCard key={title} title={title} body={body} coming />)}</View>
     </View>
     <PublicFooter />
@@ -91,7 +93,7 @@ const styles = StyleSheet.create({
   heading: { gap: 7, alignItems: 'center' },
   sectionTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center' },
   grid: { width: '100%', maxWidth: 1140, alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  card: { flexGrow: 1, flexShrink: 1, flexBasis: 310, minWidth: 250, padding: 18, borderRadius: 18, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised, gap: 8 },
+  card: { flexGrow: 1, flexShrink: 1, flexBasis: 310, minWidth: 0, maxWidth: '100%', padding: 18, borderRadius: 18, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised, gap: 8 },
   comingCard: { backgroundColor: '#FFF9F3' },
   title: { color: colors.charcoal, fontWeight: '900' },
   body: { color: colors.muted, lineHeight: 22 },

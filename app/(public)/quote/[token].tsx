@@ -1,7 +1,8 @@
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Text } from 'react-native-paper';
+import { Chip, HelperText, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { QuoteDocument, type QuoteDocumentData, type QuoteDocumentItem } from '@/components/QuoteDocument';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';

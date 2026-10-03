@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { UserProfile } from '@clerk/expo/web';
 import { Redirect, Stack, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { colors } from '@/constants/theme';
 
 export default function SettingsScreen() {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 
 type Props = {
   getToken: () => Promise<string | null>;

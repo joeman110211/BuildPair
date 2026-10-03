@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/expo';
 import { useState } from 'react';
-import { Button } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { apiFetch, errorMessage } from '@/lib/api';
 
 type Props = {

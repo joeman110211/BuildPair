@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Searchbar, SegmentedButtons, Text } from 'react-native-paper';
+import { Chip, HelperText, Searchbar, SegmentedButtons, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
@@ -228,7 +229,7 @@ const styles = StyleSheet.create({
   muted: { color: colors.muted, lineHeight: 19 },
   strong: { color: colors.text, fontWeight: '800' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, justifyContent: 'space-between' },
-  flex: { flex: 1, minWidth: 230, gap: 3 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 230, flexShrink: 1, maxWidth: '100%', gap: 3 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center', justifyContent: 'flex-end' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm, alignItems: 'center' },
   meta: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.xs },

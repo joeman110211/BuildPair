@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Switch, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, Switch, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { FormSelect } from '@/components/FormSelect';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
@@ -89,6 +90,6 @@ const styles = StyleSheet.create({
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 21 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
-  flex: { flex: 1, minWidth: 220, gap: 5 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 5 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
 });

@@ -1,10 +1,12 @@
 import { type Href, usePathname, useRouter } from 'expo-router';
 import type { PropsWithChildren, ReactNode } from 'react';
-import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PageSkeleton } from '@/components/Skeleton';
-import { colors, layout, radii, shadows, spacing, typography } from '@/constants/theme';
+import { colors, layout, publicResponsiveMetrics, radii, shadows, spacing, typography } from '@/constants/theme';
 
 type ScreenProps = PropsWithChildren<{
   title?: string;
@@ -19,6 +21,7 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
   const router = useRouter();
   const pathname = usePathname();
   const { width } = useWindowDimensions();
+  const metrics = publicResponsiveMetrics(width);
   const canGoBack = router.canGoBack();
   const sectionBackHref: Href | undefined = backHref ?? (title
     ? pathname === '/trader/dashboard' || pathname === '/customer/dashboard'
@@ -46,7 +49,7 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
     <View style={[styles.content, compact && styles.contentCompact, contentPadding]}>
       {showBack ? <View style={styles.backRow}><Button icon="arrow-left" mode="text" compact onPress={goBack}>Back</Button></View> : null}
       {title || subtitle ? <View style={[styles.headingBlock, compact && styles.headingBlockCompact]}>
-        {title ? <Text variant="headlineMedium" style={styles.title}>{title}</Text> : null}
+        {title ? <Text variant="headlineMedium" style={[styles.title, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>{title}</Text> : null}
         {subtitle ? <Text variant="bodyLarge" style={styles.subtitle}>{subtitle}</Text> : null}
       </View> : null}
       {children}
@@ -55,7 +58,7 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
   );
 
   const webScrollStyle = Platform.OS === 'web'
-    ? ({ overflowY: 'auto', overscrollBehaviorY: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as never)
+    ? ({ overflowY: 'auto', overscrollBehaviorY: 'contain', WebkitOverflowScrolling: 'touch' } as never)
     : undefined;
 
   return <SafeAreaView style={styles.safe}>
@@ -86,7 +89,7 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1, paddingBottom: 72 },
   scrollWithFooter: { paddingBottom: spacing.xxxl },
   staticBody: { flex: 1, minHeight: 0 },
-  content: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', paddingTop: spacing.xxl, paddingBottom: spacing.huge, gap: spacing.xxl },
+  content: { width: '100%', minWidth: 0, maxWidth: layout.pageMaxWidth, alignSelf: 'center', paddingTop: spacing.xxl, paddingBottom: spacing.huge, gap: spacing.xxl },
   contentCompact: { paddingTop: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.lg },
   contentMobile: { paddingHorizontal: spacing.lg },
   contentTablet: { paddingHorizontal: spacing.xxl },

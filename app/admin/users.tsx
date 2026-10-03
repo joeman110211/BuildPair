@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { Link, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import { Button, Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   identityRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  flex: { flex: 1, minWidth: 240, gap: 3 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 240, flexShrink: 1, maxWidth: '100%', gap: 3 },
   title: { color: colors.charcoal, fontWeight: '900' },
   userId: { color: colors.muted, fontFamily: 'monospace' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-end' },

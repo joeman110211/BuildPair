@@ -1,7 +1,9 @@
 import { Link } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { colors, radii } from '@/constants/theme';
 
 const AUDIENCES = ['For homeowners', 'For tradespeople'] as const;
@@ -40,7 +42,8 @@ export function ProductPreview() {
     setActiveCard(0);
     scroller.current?.scrollTo({ x: 0, animated: false });
   };
-  const panels = EXAMPLES[audience].map((example) => <View key={example.title} style={[styles.panel, mobile && { width: panelWidth, flexBasis: 'auto', flexGrow: 0, flexShrink: 0 }]}>
+  const examples = EXAMPLES[audience] ?? EXAMPLES[0]!;
+  const panels = examples.map((example) => <View key={example.title} style={[styles.panel, mobile && { width: panelWidth, flexBasis: 'auto', flexGrow: 0, flexShrink: 0 }]}>
     <Text style={styles.audience}>{example.audience}</Text>
     <Text style={styles.title}>{example.title}</Text>
     <Text style={styles.body}>{example.body}</Text>
@@ -54,14 +57,14 @@ export function ProductPreview() {
     <View style={styles.tabs}>{AUDIENCES.map((label, index) => <Pressable key={label} accessibilityRole="button" accessibilityState={{ selected: audience === index }} onPress={() => choose(index)} style={[styles.tab, audience === index && styles.tabActive]}><Text style={[styles.tabText, audience === index && styles.tabTextActive]}>{label}</Text></Pressable>)}</View>
     {mobile ? <>
       <ScrollView key={audience} ref={scroller} style={styles.carousel} contentContainerStyle={styles.carouselContent} horizontal pagingEnabled snapToInterval={panelWidth} decelerationRate="fast" showsHorizontalScrollIndicator={false} onMomentumScrollEnd={(event) => setActiveCard(Math.max(0, Math.min(1, Math.round(event.nativeEvent.contentOffset.x / panelWidth))))}>{panels}</ScrollView>
-      <View style={styles.pagination}>{EXAMPLES[audience].map((example, index) => <Pressable key={example.title} accessibilityRole="button" accessibilityLabel={`Show card ${index + 1}: ${example.title}`} accessibilityState={{ selected: activeCard === index }} onPress={() => { setActiveCard(index); scroller.current?.scrollTo({ x: index * panelWidth, animated: true }); }} style={styles.pageControl}><View style={[styles.dot, activeCard === index && styles.dotActive]} /></Pressable>)}</View>
+      <View style={styles.pagination}>{examples.map((example, index) => <Pressable key={example.title} accessibilityRole="button" accessibilityLabel={`Show card ${index + 1}: ${example.title}`} accessibilityState={{ selected: activeCard === index }} onPress={() => { setActiveCard(index); scroller.current?.scrollTo({ x: index * panelWidth, animated: true }); }} style={styles.pageControl}><View style={[styles.dot, activeCard === index && styles.dotActive]} /></Pressable>)}</View>
       <Text style={styles.hint}>{activeCard + 1} of 2 · Swipe to explore {audience === 0 ? 'homeowner benefits' : 'trade tools'}</Text>
     </> : <View style={styles.grid}>{panels}</View>}
   </View>;
 }
 
 const styles = StyleSheet.create({
-  wrap: { width: '100%', minWidth: 0, gap: 12 }, carousel: { flexGrow: 0, flexShrink: 0 }, carouselContent: { alignItems: 'stretch' }, pagination: { flexDirection: 'row', justifyContent: 'center' }, pageControl: { width: 44, height: 32, alignItems: 'center', justifyContent: 'center' }, dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#CAD6E0' }, dotActive: { backgroundColor: colors.navy }, grid: { flexDirection: 'row', gap: 16 }, panel: { flexGrow: 1, flexBasis: 0, minWidth: 0, padding: 20, borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, gap: 12 },
+  wrap: { width: '100%', minWidth: 0, gap: 12 }, carousel: { flexGrow: 0, flexShrink: 0 }, carouselContent: { alignItems: 'stretch' }, pagination: { flexDirection: 'row', justifyContent: 'center' }, pageControl: { width: 44, height: 32, alignItems: 'center', justifyContent: 'center' }, dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#CAD6E0' }, dotActive: { backgroundColor: colors.navy }, grid: { flexDirection: 'row', gap: 16 }, panel: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 0, minWidth: 0, padding: 20, borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, gap: 12 },
   audience: { color: colors.primaryDark, fontSize: 11, fontWeight: '800', letterSpacing: 0.7, textTransform: 'uppercase' }, title: { color: colors.charcoal, fontSize: 23, lineHeight: 29, fontWeight: '800' }, body: { color: colors.muted, lineHeight: 23 },
   preview: { borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, overflow: 'hidden', marginTop: 4 }, previewHeader: { padding: 14, gap: 4, backgroundColor: colors.navy }, previewTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' }, exampleLabel: { color: '#CBD9E4', fontSize: 9, letterSpacing: 0.8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border }, number: { width: 30, height: 30, borderRadius: 10, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' }, numberText: { color: colors.accentDark, fontSize: 11, fontWeight: '800' }, rowCopy: { flex: 1, minWidth: 0, gap: 3 }, rowTitle: { color: colors.charcoal, fontSize: 14, fontWeight: '700' }, rowBody: { color: colors.muted, fontSize: 12, lineHeight: 18 },

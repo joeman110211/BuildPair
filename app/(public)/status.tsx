@@ -1,6 +1,7 @@
 import type { Href } from 'expo-router';
 import { Link, useLocalSearchParams } from 'expo-router';
-import { Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
 import { useCurrentUser } from '@/hooks/useCurrentUser';

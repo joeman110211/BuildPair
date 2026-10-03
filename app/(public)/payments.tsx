@@ -35,7 +35,7 @@ export default function PaymentsPage() {
 
 const styles = StyleSheet.create({
   summary: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  choice: { flexGrow: 1, flexBasis: 320, minWidth: 0, backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, padding: spacing.xl, gap: spacing.sm, ...shadows.subtle },
+  choice: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 320, minWidth: 0, backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, padding: spacing.xl, gap: spacing.sm, ...shadows.subtle },
   buildPay: { backgroundColor: colors.accentSoft },
   kicker: { color: colors.primary, fontSize: 11, lineHeight: 15, fontWeight: '900', letterSpacing: 1.1 },
   title: { color: colors.charcoal, fontWeight: '900' },

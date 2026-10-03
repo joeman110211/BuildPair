@@ -1,5 +1,6 @@
 import { Linking, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { PublicInfoPage, infoStyles } from '@/components/PublicInfoPage';
 
 export default function TermsPage() {

@@ -1,7 +1,9 @@
 import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { PrelaunchBanner } from '@/components/PrelaunchBanner';
 import { PublicSeo } from '@/components/PublicSeo';
 import { PublicFooter } from '@/components/PublicFooter';
@@ -26,7 +28,7 @@ export function PublicInfoPage({ eyebrow, title, intro, sections, updated, summa
       <View style={styles.heroGlowOne} />
       <View style={styles.heroGlowTwo} />
       <View style={styles.heroInner}>
-        <Button mode="text" textColor="#FFFFFF" compact style={styles.back} onPress={goBack}>← Back</Button>
+        <Button mode="text" textColor={colors.primaryDark} compact style={styles.back} onPress={goBack}>← Back</Button>
         <View style={styles.heroCopy}>
           {eyebrow ? <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>{eyebrow}</Text> : null}
           <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{title}</Text>
@@ -61,18 +63,18 @@ export const infoStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
-  hero: { backgroundColor: colors.navy, paddingHorizontal: spacing.xl, paddingVertical: 56, overflow: 'hidden' },
+  hero: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingVertical: 56, overflow: 'hidden' },
   heroMobile: { paddingHorizontal: 16, paddingVertical: 42 },
   heroGlowOne: { position: 'absolute', width: 260, height: 260, borderRadius: 130, backgroundColor: 'rgba(211,84,0,0.12)', top: -120, right: -70 },
   heroGlowTwo: { position: 'absolute', width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(35,118,109,0.18)', bottom: -130, left: 30 },
-  heroInner: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', gap: spacing.md },
+  heroInner: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', gap: spacing.md, alignItems: 'center' },
   heroCopy: { width: '100%', maxWidth: layout.readingMaxWidth, alignSelf: 'center', alignItems: 'center', gap: spacing.md },
   back: { alignSelf: 'flex-start', marginLeft: -spacing.sm },
-  eyebrow: { color: '#FFD7BA', fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.3, textAlign: 'center' },
-  title: { color: '#FFFFFF', fontWeight: '900', letterSpacing: -1.15, textAlign: 'center' },
-  intro: { color: '#E6EDF2', lineHeight: 27, textAlign: 'center' },
-  updatedPill: { alignSelf: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, marginTop: spacing.xxs },
-  updated: { color: '#D4DEE5', fontSize: 12 },
+  eyebrow: { color: colors.primaryDark, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.3, textAlign: 'center' },
+  title: { color: colors.charcoal, fontWeight: '900', letterSpacing: -1.15, textAlign: 'center' },
+  intro: { color: colors.muted, lineHeight: 27, textAlign: 'center' },
+  updatedPill: { alignSelf: 'center', backgroundColor: colors.surfaceStrong, borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, marginTop: spacing.xxs },
+  updated: { color: colors.muted, fontSize: 12 },
   content: { width: '100%', maxWidth: 1040, alignSelf: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.xxxl, gap: spacing.md },
   contentMobile: { paddingHorizontal: 16, paddingVertical: 28 },
   card: { backgroundColor: colors.surfaceRaised, borderRadius: radii.lg, padding: spacing.xxl, borderWidth: 1, borderColor: colors.border, gap: spacing.md, shadowColor: colors.charcoal, shadowOpacity: 0.025, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 1 },

@@ -1,7 +1,9 @@
 import { Link, usePathname, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { colors } from '@/constants/theme';
 import { ADMIN_NAV_GROUPS, adminNavItemForPath } from '@/lib/admin/navigation';
 

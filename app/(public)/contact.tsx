@@ -1,9 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Text, TextInput } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { PublicFooter } from '@/components/PublicFooter';
-import { colors, publicResponsiveMetrics } from '@/constants/theme';
+import { colors, publicResponsiveMetrics, radii } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 
 export default function ContactPage() {
@@ -38,10 +40,10 @@ export default function ContactPage() {
     <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.glow} />
       <View style={styles.heroInner}>
-        <Button mode="text" textColor="#FFFFFF" compact style={styles.back} onPress={goBack}>← Back</Button>
+        <Button mode="text" textColor={colors.primaryDark} compact style={styles.back} onPress={goBack}>← Back</Button>
         <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Contact BuildPair</Text>
-        <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Support, marketplace questions and business enquiries.</Text>
-        <Text variant="bodyLarge" style={styles.intro}>Tell us what you need help with and include enough detail for the team to understand the account, job or issue involved. Do not send passwords, full payment-card details or other unnecessary sensitive information.</Text>
+        <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>How can we help?</Text>
+        <Text variant="bodyLarge" style={styles.intro}>Get help with your account, projects or BuildPair business enquiries.</Text>
       </View>
     </View>
 
@@ -66,6 +68,7 @@ export default function ContactPage() {
         <TextInput mode="outlined" label="Email" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} outlineStyle={styles.inputOutline} />
         <TextInput mode="outlined" label="Subject" value={subject} onChangeText={setSubject} outlineStyle={styles.inputOutline} />
         <TextInput mode="outlined" label="Message" multiline numberOfLines={6} value={message} onChangeText={setMessage} outlineStyle={styles.inputOutline} />
+        <Text style={styles.body}>Include the account or job details we need to help. Do not send passwords, full card details or unnecessary sensitive information.</Text>
         {error ? <Text style={styles.error}>{error}</Text> : null}
         {status ? <Text style={styles.success}>{status}</Text> : null}
         <Button mode="contained" loading={sending} disabled={sending || !name.trim() || !email.trim() || message.trim().length < 10} onPress={submit}>Send message</Button>
@@ -78,20 +81,20 @@ export default function ContactPage() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
-  hero: { backgroundColor: colors.navy, paddingHorizontal: 20, paddingVertical: 62, overflow: 'hidden' },
+  hero: { backgroundColor: colors.background, paddingHorizontal: 20, paddingVertical: 62, overflow: 'hidden' },
   heroMobile: { paddingHorizontal: 16, paddingVertical: 42 },
   glow: { position: 'absolute', width: 300, height: 300, borderRadius: 150, right: -110, top: -150, backgroundColor: 'rgba(211,84,0,0.23)' },
-  heroInner: { width: '100%', maxWidth: 1040, alignSelf: 'center', gap: 13 },
+  heroInner: { width: '100%', maxWidth: 1040, alignSelf: 'center', gap: 13, alignItems: 'center' },
   back: { alignSelf: 'flex-start', marginLeft: -8 },
-  eyebrow: { color: '#FFD7BA', fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.2, fontSize: 11 },
-  title: { color: '#FFFFFF', fontWeight: '900', letterSpacing: -1 },
-  intro: { color: '#DFE8EE', lineHeight: 27, maxWidth: 820 },
+  eyebrow: { color: colors.primaryDark, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.2, fontSize: 11 },
+  title: { color: colors.charcoal, fontWeight: '900', letterSpacing: -1, textAlign: 'center' },
+  intro: { color: colors.muted, lineHeight: 27, maxWidth: 820, textAlign: 'center' },
   content: { width: '100%', maxWidth: 1040, alignSelf: 'center', padding: 20, flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' },
   contentMobile: { paddingHorizontal: 16, paddingVertical: 16 },
   sideColumn: { flexGrow: 1, flexShrink: 1, flexBasis: 280, minWidth: 0, maxWidth: '100%', gap: 14 },
-  contactCard: { backgroundColor: colors.primarySoft, borderRadius: 26, padding: 23, gap: 9, borderWidth: 1, borderColor: '#F2D7C3' },
-  safetyCard: { backgroundColor: colors.accentSoft, borderRadius: 26, padding: 23, gap: 9, borderWidth: 1, borderColor: '#CDE2DE' },
-  formCard: { flexGrow: 2, flexShrink: 1, flexBasis: 470, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: 26, padding: 24, borderWidth: 1, borderColor: colors.border, gap: 14 },
+  contactCard: { backgroundColor: colors.primarySoft, borderRadius: radii.xl, padding: 23, gap: 9, borderWidth: 1, borderColor: '#F2D7C3' },
+  safetyCard: { backgroundColor: colors.accentSoft, borderRadius: radii.xl, padding: 23, gap: 9, borderWidth: 1, borderColor: '#CDE2DE' },
+  formCard: { flexGrow: 2, flexShrink: 1, flexBasis: 470, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, padding: 24, borderWidth: 1, borderColor: colors.border, gap: 14 },
   cardEyebrow: { color: colors.primary, fontSize: 11.2, lineHeight: 15, fontWeight: '900', letterSpacing: 1.1 },
   cardTitle: { color: colors.charcoal, fontWeight: '900', fontSize: 22, lineHeight: 28 },
   body: { color: colors.muted, lineHeight: 23 },

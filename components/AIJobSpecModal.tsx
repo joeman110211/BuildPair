@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, HelperText, Modal, Portal, ProgressBar, Text, TextInput } from 'react-native-paper';
+import { HelperText, Modal, Portal, ProgressBar, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 

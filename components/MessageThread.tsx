@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { type Href, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import { Button, Chip, IconButton, Text, TextInput } from 'react-native-paper';
+import { Chip, IconButton, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -358,7 +359,7 @@ const styles = StyleSheet.create({
   mineTime: { color: '#FFE3D2' },
   assistantCard: { backgroundColor: colors.surfaceRaised },
   assistantHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' },
-  assistantTitleBlock: { flex: 1, minWidth: 220, gap: 3 },
+  assistantTitleBlock: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 3 },
   title: { color: colors.charcoal, fontWeight: '900' },
   summary: { color: colors.muted, lineHeight: 20 },
   suggestions: { gap: 6 },

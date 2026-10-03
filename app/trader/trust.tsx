@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { FormSelect } from '@/components/FormSelect';
 import { PhotoUploader } from '@/components/PhotoUploader';
@@ -160,13 +161,13 @@ export default function TraderTrustScreen() {
 
 const styles = StyleSheet.create({
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  stat: { flexGrow: 1, flexBasis: 180 },
+  stat: { flexShrink: 1, maxWidth: '100%', minWidth: 0, flexGrow: 1, flexBasis: 180 },
   statNumber: { color: colors.primary, fontWeight: '900' },
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 21 },
   error: { color: colors.danger },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' },
-  flex: { flex: 1, minWidth: 220, gap: 4 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 4 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   twoCol: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   sectionHeading: { marginTop: 4 },

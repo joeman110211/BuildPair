@@ -1,7 +1,7 @@
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { colors, spacing } from '@/constants/theme';
 

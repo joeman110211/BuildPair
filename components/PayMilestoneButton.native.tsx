@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/expo';
 import { useStripe } from '@stripe/stripe-react-native';
 import { Alert } from 'react-native';
 import { useState } from 'react';
-import { Button } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { apiFetch, errorMessage } from '@/lib/api';
 
 type Props = { milestoneId?: string; milestoneIds?: string[]; label?: string; onPaid: () => void };

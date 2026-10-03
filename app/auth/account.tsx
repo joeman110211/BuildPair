@@ -1,6 +1,7 @@
 import { Link, Redirect } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { LoadingScreen, Screen } from '@/components/Screen';
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
   roleTop: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   roleIcon: { width: 52, height: 52, borderRadius: 16, backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   emoji: { fontSize: 27 },
-  roleHeading: { flex: 1, alignItems: 'flex-start', gap: 6 },
+  roleHeading: { flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 6 },
   title: { fontWeight: '900', color: colors.charcoal },
   kicker: { color: colors.muted, fontWeight: '800', letterSpacing: 1.1 },
   body: { color: colors.muted, lineHeight: 23, fontSize: 16 },
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
   primaryButton: { minHeight: 52 },
   primaryAction: { borderRadius: 16 },
   browseCard: { width: '100%', maxWidth: 820, alignSelf: 'center', backgroundColor: colors.surfaceSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 },
-  browseCopy: { flex: 1, minWidth: 220, gap: 3 },
+  browseCopy: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 3 },
   browseText: { color: colors.muted, lineHeight: 21 },
   browseActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   browseButton: { minHeight: 44, minWidth: 145 },

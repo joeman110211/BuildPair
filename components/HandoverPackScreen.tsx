@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import type { Href } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, Platform, Share, StyleSheet, View } from 'react-native';
-import { Button, Chip, Divider, Text } from 'react-native-paper';
+import { Chip, Divider, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
@@ -92,7 +93,7 @@ function Section({ title, items }: { title: string; items: { key:string; title:s
 const styles = StyleSheet.create({
   actions:{ flexDirection:'row', flexWrap:'wrap', gap:spacing.sm },
   row:{ flexDirection:'row', justifyContent:'space-between', alignItems:'center', gap:spacing.sm, flexWrap:'wrap' },
-  flex:{ flex:1, minWidth:220, gap:3 },
+  flex:{ flex:1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap:3 },
   title:{ color:colors.charcoal, fontWeight:'900' },
   muted:{ color:colors.muted, lineHeight:21 },
   money:{ color:colors.primary, fontWeight:'900' },

@@ -3,7 +3,8 @@ import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, Share, StyleSheet, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 21 },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap', alignItems: 'flex-start' },
-  flex: { flex: 1, minWidth: 220, gap: 3 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 3 },
   amountBlock: { alignItems: 'flex-end', gap: 5 },
   amount: { color: colors.primary, fontWeight: '900' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' },

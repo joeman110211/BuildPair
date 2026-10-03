@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from 'react';
 import { Redirect } from 'expo-router';
-import { Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import type { UserRole } from '@/types';

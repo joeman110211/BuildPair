@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Button, Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { MilestoneTimeline } from '@/components/MilestoneTimeline';
 import { colors, radii, spacing } from '@/constants/theme';
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
   card: { width: '100%', maxWidth: 860, gap: spacing.lg },
   bestCard: { borderColor: colors.primary, borderWidth: 2 },
   summaryTop: { gap: spacing.md },
-  flex: { flex: 1, minWidth: 180, gap: 4 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 180, flexShrink: 1, maxWidth: '100%', gap: 4 },
   badges: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' },
   title: { fontWeight: '900', color: colors.text },
   total: { color: colors.primary, fontWeight: '900' },

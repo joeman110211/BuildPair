@@ -2,8 +2,10 @@ import { useAuth } from '@clerk/expo';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { colors, controlHeights, radii } from '@/constants/theme';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { Job, TraderProfile } from '@/types';
@@ -196,7 +198,7 @@ const styles = StyleSheet.create({
   section: { width: '100%', maxWidth: 1140, minWidth: 0, alignSelf: 'center', marginTop: 20, paddingTop: 28, borderTopWidth: 1, borderTopColor: colors.border, gap: 14 },
   sectionWide: { width: '100%', maxWidth: 1140 },
   headingRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10 },
-  headingCopy: { flex: 1, minWidth: 230, gap: 5 },
+  headingCopy: { flex: 1, minWidth: 0, flexBasis: 230, flexShrink: 1, maxWidth: '100%', gap: 5 },
   eyebrow: { color: colors.primary, fontSize: 11.2, lineHeight: 15, fontWeight: '900', letterSpacing: 1.2 },
   title: { color: colors.charcoal, fontWeight: '900', fontSize: 22, lineHeight: 28 },
   muted: { color: colors.muted, lineHeight: 20, maxWidth: 720 },

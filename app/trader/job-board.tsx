@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { Button, Chip, ProgressBar, Searchbar, Text } from 'react-native-paper';
+import { Chip, ProgressBar, Searchbar, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -227,8 +228,8 @@ const styles = StyleSheet.create({
   linkedCard: { borderColor: '#E7B98E', backgroundColor: '#FFF8F1' },
   progress: { height: 9, borderRadius: 8, backgroundColor: colors.surfaceStrong },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' },
-  titleBlock: { flex: 1, minWidth: 220, gap: 4 },
-  flex: { flex: 1, minWidth: 220, gap: 3 },
+  titleBlock: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 4 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 3 },
   title: { fontWeight: '900', color: colors.charcoal },
   muted: { color: colors.muted, lineHeight: 21 },
   reference: { color: colors.muted, fontWeight: '700' },

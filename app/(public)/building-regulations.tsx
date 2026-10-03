@@ -1,7 +1,9 @@
-import { Linking, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Linking, ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { PublicFooter } from '@/components/PublicFooter';
-import { colors, publicResponsiveMetrics } from '@/constants/theme';
+import { colors, publicResponsiveMetrics, radii } from '@/constants/theme';
 
 type NationCard = {
   nation: string;
@@ -83,7 +85,7 @@ export default function BuildingRegulationsHub() {
 
       <View style={styles.grid}>
         {NATIONS.map((item) => <View key={item.nation} style={styles.card}>
-          <View style={styles.cardTop}><Text variant="headlineSmall" style={styles.title}>{item.nation}</Text><Chip compact>{item.subtitle}</Chip></View>
+          <View style={styles.cardTop}><Text variant="headlineSmall" style={styles.title}>{item.nation}</Text><Text style={styles.sourceLabel}>{item.subtitle}</Text></View>
           <Text style={styles.body}>{item.body}</Text>
           <View style={styles.actions}>
             <Button mode="contained" icon="open-in-new" onPress={() => Linking.openURL(item.primaryUrl)}>{item.primaryLabel}</Button>
@@ -116,18 +118,19 @@ export default function BuildingRegulationsHub() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
-  hero: { backgroundColor: colors.charcoal, paddingHorizontal: 20, paddingVertical: 62 },
+  hero: { backgroundColor: colors.background, paddingHorizontal: 20, paddingVertical: 62 },
   heroMobile: { paddingHorizontal: 16, paddingVertical: 42 },
-  heroInner: { width: '100%', maxWidth: 1120, alignSelf: 'center', gap: 13 },
-  chip: { alignSelf: 'flex-start', backgroundColor: '#3A4148' },
-  chipText: { color: '#FFFFFF', fontWeight: '800' },
-  heroTitle: { color: '#FFFFFF', fontWeight: '900', maxWidth: 850, letterSpacing: -1 },
-  heroBody: { color: '#DDE1E3', maxWidth: 840, lineHeight: 27 },
+  heroInner: { width: '100%', maxWidth: 1120, alignSelf: 'center', gap: 13, alignItems: 'center' },
+  chip: { alignSelf: 'center', backgroundColor: colors.primarySoft },
+  chipText: { color: colors.primaryDark, fontWeight: '800' },
+  heroTitle: { color: colors.charcoal, fontWeight: '900', maxWidth: 850, letterSpacing: -1, textAlign: 'center' },
+  heroBody: { color: colors.muted, maxWidth: 840, lineHeight: 27, textAlign: 'center' },
   content: { width: '100%', maxWidth: 1120, alignSelf: 'center', padding: 20, gap: 24 },
   contentMobile: { paddingHorizontal: 16, paddingVertical: 16, gap: 20 },
-  warning: { backgroundColor: colors.goldSoft, borderWidth: 1, borderColor: '#E5C98F', borderRadius: 24, padding: 20, gap: 7 },
+  warning: { backgroundColor: colors.goldSoft, borderWidth: 1, borderColor: '#E5C98F', borderRadius: radii.xl, padding: 20, gap: 7 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, alignItems: 'stretch' },
-  card: { flexGrow: 1, flexBasis: 460, backgroundColor: colors.surfaceRaised, borderRadius: 26, padding: 22, borderWidth: 1, borderColor: colors.border, gap: 12 },
+  card: { flexGrow: 1, flexShrink: 1, flexBasis: 460, minWidth: 0, maxWidth: '100%', backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, padding: 22, borderWidth: 1, borderColor: colors.border, gap: 12 },
+  sourceLabel: { color: colors.primaryDark, fontSize: 13, lineHeight: 19, fontWeight: '700', maxWidth: '100%' },
   cardTop: { gap: 8, alignItems: 'flex-start' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 2 },
   title: { color: colors.charcoal, fontWeight: '900' },
@@ -136,9 +139,9 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.primary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.1 },
   sectionTitle: { color: colors.charcoal, fontWeight: '900' },
   checkGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  checkCard: { flexGrow: 1, flexBasis: 240, backgroundColor: colors.surfaceSoft, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: colors.border, gap: 5 },
-  actionStrip: { backgroundColor: colors.charcoal, borderRadius: 26, padding: 22, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 16 },
-  flex: { flex: 1, minWidth: 260, gap: 6 },
+  checkCard: { flexShrink: 1, maxWidth: '100%', minWidth: 0, flexGrow: 1, flexBasis: 240, backgroundColor: colors.surfaceSoft, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: colors.border, gap: 5 },
+  actionStrip: { backgroundColor: colors.charcoal, borderRadius: radii.xl, padding: 22, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 16 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 260, flexShrink: 1, maxWidth: '100%', gap: 6 },
   lightTitle: { color: '#FFFFFF', fontWeight: '900' },
   lightBody: { color: '#DDE1E3', lineHeight: 23 },
   disclaimer: { color: colors.muted, textAlign: 'center', lineHeight: 20, paddingHorizontal: 12 },

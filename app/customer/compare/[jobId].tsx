@@ -3,7 +3,8 @@ import type { Href } from 'expo-router';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { QuoteComparison } from '@/components/QuoteComparison';
@@ -137,7 +138,7 @@ export default function CompareQuotesScreen() {
 
     {!acceptedQuotes.length ? <AppCard>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-        <View style={{ flex: 1, minWidth: 220, gap: 4 }}>
+        <View style={{ flex: 1, flexBasis: 220, flexShrink: 1, minWidth: 0, maxWidth: '100%', gap: 4 }}>
           <Text variant="titleLarge" style={{ fontWeight: '900' }}>Control your quote inbox</Text>
           <Text>You can stop new tradespeople sending quotes whenever you have enough to compare. Quotes already received stay here and can still be accepted, declined or discussed.</Text>
         </View>

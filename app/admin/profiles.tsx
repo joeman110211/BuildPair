@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { type Href, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
   searchCard: { gap: 10 },
   profileCard: { gap: 12 },
   header: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 },
-  flex: { flex: 1, minWidth: 240, gap: 3 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 240, flexShrink: 1, maxWidth: '100%', gap: 3 },
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 20 },
   warning: { color: colors.muted, fontStyle: 'italic' },

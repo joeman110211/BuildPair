@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Button, HelperText, Text, TextInput } from 'react-native-paper';
+import { HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { FormSelect } from '@/components/FormSelect';
 import { FormStepHeader } from '@/components/FormStepHeader';
@@ -512,7 +513,7 @@ const styles = StyleSheet.create({
   title: { fontWeight: '900', color: colors.text },
   muted: { color: colors.muted, lineHeight: 22 },
   twoCol: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  flex: { flex: 1, minWidth: 220 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%' },
   bioMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
   helperFlex: { flex: 1 },
   counter: { color: colors.warning, fontWeight: '800' },

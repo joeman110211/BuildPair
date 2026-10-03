@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Text } from 'react-native-paper';
+import { Chip, HelperText, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -122,13 +123,13 @@ export default function AdminSystemHealth() {
 const styles = StyleSheet.create({
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  card: { minWidth: 260, flexGrow: 1, flexBasis: 320 },
+  card: { minWidth: 0, flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 320 },
   checkHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
   summaryOk: { borderColor: '#9FCBB6' },
   summaryAttention: { borderColor: '#E8B36B' },
   summaryBad: { borderColor: '#D98C8C' },
-  flex: { flex: 1, minWidth: 220 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%' },
   chips: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   title: { color: colors.charcoal, fontWeight: '900' },
   capability: { color: colors.primary, fontWeight: '800', marginTop: 2 },

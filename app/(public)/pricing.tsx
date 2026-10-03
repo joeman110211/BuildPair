@@ -1,6 +1,8 @@
 import { Link } from 'expo-router';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { PrelaunchBanner } from '@/components/PrelaunchBanner';
 import { PublicSeo } from '@/components/PublicSeo';
 import { PricingCards } from '@/components/PricingCards';

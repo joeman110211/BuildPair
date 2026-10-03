@@ -3,7 +3,8 @@ import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, SegmentedButtons, Text } from 'react-native-paper';
+import { Chip, SegmentedButtons, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -46,9 +47,9 @@ export default function CustomerJobs() {
 
 const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', gap: 10, alignItems: 'center', flexWrap: 'wrap' },
-  tabs: { flex: 1, minWidth: 280 },
+  tabs: { flex: 1, minWidth: 0, flexBasis: 280, flexShrink: 1, maxWidth: '100%' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  flex: { flex: 1, minWidth: 220, gap: 4 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 4 },
   title: { fontWeight: '900', color: colors.charcoal },
   muted: { color: colors.muted, lineHeight: 21 },
   description: { color: colors.text, lineHeight: 22 },

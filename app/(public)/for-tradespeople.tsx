@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import { Text, View } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { PublicInfoPage, infoStyles } from '@/components/PublicInfoPage';
 import { SITE_LANGUAGE } from '@/constants/site-language';
 import { waitlistHref } from '@/lib/launch';

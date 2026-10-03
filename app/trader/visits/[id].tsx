@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Button, Chip, HelperText, Text } from 'react-native-paper';
+import { Chip, HelperText, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { apiFetch, errorMessage } from '@/lib/api';

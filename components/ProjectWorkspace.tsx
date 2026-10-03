@@ -3,7 +3,8 @@ import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { PhotoUploader } from '@/components/PhotoUploader';
 import { EmptyState } from '@/components/Screen';
@@ -125,7 +126,7 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
 const styles = StyleSheet.create({
   wrap: { gap: 10 },
   headingRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' },
-  flex: { flex: 1, minWidth: 220, gap: 5 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 5 },
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 21 },
   typeWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },

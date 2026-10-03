@@ -1,7 +1,9 @@
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { LAUNCH_DATE_LABEL, MARKETPLACE_OPEN, REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 

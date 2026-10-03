@@ -1,7 +1,8 @@
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { Text } from 'react-native-paper';
 import { SkeletonBlock } from '@/components/Skeleton';
 import { colors } from '@/constants/theme';

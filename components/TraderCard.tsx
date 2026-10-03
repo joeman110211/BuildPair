@@ -1,7 +1,8 @@
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { Image, StyleSheet, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { colors } from '@/constants/theme';
 import type { TraderProfile } from '@/types';
@@ -64,7 +65,7 @@ export function TraderCard({
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 0, overflow: 'hidden', flexGrow: 1, flexBasis: 310, minWidth: 280, maxWidth: 540 },
+  card: { padding: 0, overflow: 'hidden', flexGrow: 1, flexBasis: 310, minWidth: 0, flexShrink: 1, maxWidth: 540 },
   media: { position: 'relative', minHeight: 200, backgroundColor: colors.navySoft },
   image: { width: '100%', height: 205, backgroundColor: colors.border },
   placeholder: { height: 205, backgroundColor: colors.navySoft, justifyContent: 'center', alignItems: 'center', gap: 9 },
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
   proMembershipText: { color: '#FFFFFF' },
   content: { padding: 18, gap: 11 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' },
-  flex: { flex: 1, minWidth: 180, gap: 3 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 180, flexShrink: 1, maxWidth: '100%', gap: 3 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, justifyContent: 'flex-end' },
   softBadge: { borderRadius: 999, backgroundColor: colors.primarySoft, paddingHorizontal: 9, paddingVertical: 5 },
   softBadgeText: { color: colors.primaryDark, fontSize: 10, fontWeight: '800' },

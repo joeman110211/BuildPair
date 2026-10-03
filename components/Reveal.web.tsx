@@ -34,8 +34,8 @@ export function Reveal({ children, delay = 0, style }: PropsWithChildren<{ delay
         setVisible(true);
         observer?.disconnect();
       }, {
-        threshold: 0.12,
-        rootMargin: '0px 0px -8% 0px',
+        threshold: 0,
+        rootMargin: '0px',
       });
 
       observer.observe(node);

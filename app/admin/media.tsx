@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Image, Linking, StyleSheet, View } from 'react-native';
-import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -63,7 +64,7 @@ export default function AdminMediaScreen() {
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start' },
-  card: { width: 280, maxWidth: '100%', flexGrow: 1, flexBasis: 260 },
+  card: { flexShrink: 1, minWidth: 0, width: 280, maxWidth: '100%', flexGrow: 1, flexBasis: 260 },
   image: { width: '100%', height: 180, borderRadius: 16, backgroundColor: colors.border },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   title: { color: colors.charcoal, fontWeight: '900' },

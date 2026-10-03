@@ -3,7 +3,8 @@ import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Chip, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
@@ -186,7 +187,7 @@ export default function HomeRecordScreen() {
 
 const styles = StyleSheet.create({
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  stat: { flexGrow: 1, flexBasis: 160, minWidth: 145, alignItems: 'center' },
+  stat: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 160, minWidth: 145, alignItems: 'center' },
   statNumber: { color: colors.primary, fontWeight: '900' },
   statLabel: { color: colors.muted, fontWeight: '700', textAlign: 'center' },
   property: { gap: spacing.sm },
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.primary, fontSize: 9, fontWeight: '900', letterSpacing: 1.1 },
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 21 },
-  flex: { flex: 1, minWidth: 210, gap: 3 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 210, flexShrink: 1, maxWidth: '100%', gap: 3 },
   row: { flexDirection: 'row', gap: spacing.sm, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' },
   activeCard: { borderColor: colors.primary, borderWidth: 2 },
   recordList: { gap: 8, paddingTop: 4 },

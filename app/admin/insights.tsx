@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontWeight: '900' },
   subheading: { color: colors.text, fontWeight: '900', marginTop: 4 },
   muted: { color: colors.muted, lineHeight: 21 },
-  flex: { flex: 1, minWidth: 170 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 170, flexShrink: 1, maxWidth: '100%' },
   headerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, alignItems: 'center' },
   metrics: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   metric: { flex: 1, minWidth: 130, padding: 10, borderWidth: 1, borderColor: colors.border, borderRadius: 12 },
@@ -266,8 +267,8 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   sortRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
   columns: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start' },
-  listPane: { flex: 1, minWidth: 320 },
-  detailPane: { flex: 1, minWidth: 320 },
+  listPane: { flex: 1, minWidth: 0, flexBasis: 320, flexShrink: 1, maxWidth: '100%' },
+  detailPane: { flex: 1, minWidth: 0, flexBasis: 320, flexShrink: 1, maxWidth: '100%' },
   userRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, alignItems: 'center', paddingVertical: 10, paddingHorizontal: 6, borderRadius: 10 },
   selectedRow: { backgroundColor: '#FFF4EA' },
   userName: { color: colors.text, fontWeight: '800' },

@@ -2,8 +2,10 @@ import { useClerk } from '@clerk/expo';
 import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { CompactNavMenu, type CompactNavItem } from '@/components/CompactNavMenu';
 import { colors, controlHeights, radii, shadows, spacing } from '@/constants/theme';
@@ -71,7 +73,7 @@ function AuthenticatedHeader() {
   const { user, isSignedIn, getToken } = useCurrentUser();
   const { signOut } = useClerk();
   const router = useRouter();
-  const compact = width < 1040;
+  const compact = width < 1280;
 
   let mode: UserRole | null = null;
   if (user?.activeMode === 'customer' && user.customerEnabled) mode = 'customer';
@@ -107,7 +109,7 @@ function AuthenticatedHeader() {
 
 function PreviewHeader() {
   const { width } = useWindowDimensions();
-  const compact = width < 1040;
+  const compact = width < 1280;
   if (compact) return <CompactShell menu={<NavMenu preview />} />;
   return <View style={styles.header}><HeaderBrand /><View style={styles.actions}><DesktopNav /><Link href="/auth/account" asChild><Button mode="contained" style={styles.headerActionButton} contentStyle={styles.primaryAction}>{SITE_LANGUAGE.joinBuildPair}</Button></Link><Text variant="bodySmall" style={styles.preview}>Public preview</Text><NavMenu preview /></View></View>;
 }
@@ -130,10 +132,10 @@ const styles = StyleSheet.create({
   headerActionButton: { borderRadius: radii.md },
   primaryAction: { minHeight: controlHeights.standard, paddingHorizontal: spacing.sm },
   preview: { opacity: 0.62, marginLeft: spacing.xxs },
-  quickNavShell: { height: 48, minHeight: 48, flexShrink: 0, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5', overflow: 'hidden' },
-  quickNav: { flexGrow: 0, height: 48 },
+  quickNavShell: { minHeight: 48, flexShrink: 0, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5' },
+  quickNav: { flexGrow: 0, flexShrink: 0, minHeight: 48 },
   quickNavContent: { minHeight: 48, minWidth: '100%', paddingHorizontal: 4, gap: 0, alignItems: 'center', justifyContent: 'space-around' },
-  quickButton: { borderRadius: radii.md },
-  quickButtonContent: { minHeight: 36, paddingHorizontal: 2 },
+  quickButton: { borderRadius: radii.md, flexShrink: 0 },
+  quickButtonContent: { minHeight: 46, paddingHorizontal: 2 },
   quickButtonLabel: { fontSize: 12, marginHorizontal: 0 },
 });

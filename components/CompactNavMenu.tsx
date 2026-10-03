@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { colors, radii, spacing } from '@/constants/theme';
 
 export type CompactNavItem = {
@@ -13,8 +15,8 @@ export type CompactNavItem = {
 
 export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: CompactNavItem[]; accessibilityLabel?: string }) {
   const [open, setOpen] = useState(false);
-  const { height: viewportHeight } = useWindowDimensions();
-  const menuMaxHeight = Math.max(180, viewportHeight - 120);
+  const { height: viewportHeight, width: viewportWidth } = useWindowDimensions();
+  const menuMaxHeight = Math.max(100, viewportHeight - 120);
 
   function run(item: CompactNavItem) {
     if (item.disabled) return;
@@ -26,7 +28,7 @@ export function CompactNavMenu({ items, accessibilityLabel = 'Menu' }: { items: 
     <Button mode="outlined" style={styles.menuButton} accessibilityLabel={accessibilityLabel} accessibilityState={{ expanded: open }} onPress={() => setOpen((value) => !value)} contentStyle={styles.buttonContent}>Menu</Button>
     {open ? <ScrollView
       accessibilityRole="menu"
-      style={[styles.panel, { maxHeight: menuMaxHeight }]}
+      style={[styles.panel, { maxHeight: menuMaxHeight, width: Math.min(285, viewportWidth - 24) }]}
       contentContainerStyle={styles.panelContent}
       showsVerticalScrollIndicator={false}
       nestedScrollEnabled
@@ -58,7 +60,7 @@ const styles = StyleSheet.create({
   panelContent: { paddingVertical: spacing.xs },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.xs },
   sectionLabel: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: spacing.xxs },
-  item: { minHeight: 42, justifyContent: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  item: { minHeight: 46, justifyContent: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   itemPressed: { backgroundColor: colors.surfaceSoft },
   itemDisabled: { opacity: 0.45 },
   itemText: { color: colors.charcoal, fontWeight: '700' },

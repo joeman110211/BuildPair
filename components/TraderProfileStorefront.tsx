@@ -1,8 +1,10 @@
 import { useAuth } from '@clerk/expo';
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Image, Linking, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Divider, IconButton, Text } from 'react-native-paper';
+import { Image, Linking, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Divider, IconButton, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { GoogleReviewsPublicCard } from '@/components/GoogleReviewsPublicCard';
 import { TraderCard } from '@/components/TraderCard';
@@ -453,7 +455,7 @@ const styles = StyleSheet.create({
   stars: { color: '#F4A000', fontWeight: '900', letterSpacing: 1 },
   ratingText: { color: colors.charcoalSoft, fontWeight: '700' },
   trustLine: { color: colors.muted, fontSize: 12, lineHeight: 18, fontWeight: '700', marginTop: 2 },
-  identityActions: { minWidth: 250, gap: 9, alignItems: 'stretch' },
+  identityActions: { minWidth: 0, maxWidth: '100%', gap: 9, alignItems: 'stretch' },
   responseLine: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   statusDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: '#AAB4BB' },
   statusDotLive: { backgroundColor: '#31B66B' },
@@ -510,7 +512,7 @@ const styles = StyleSheet.create({
   reviewDate: { color: colors.muted, fontSize: 12 },
   reviewText: { color: colors.charcoalSoft, lineHeight: 22 },
   credentialGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  credentialCard: { flexGrow: 1, flexBasis: 190, minWidth: 0, padding: 13, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: '#FFFFFF', gap: 5 },
+  credentialCard: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 190, minWidth: 0, padding: 13, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: '#FFFFFF', gap: 5 },
   credentialIcon: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#E8F7EF', alignItems: 'center', justifyContent: 'center' },
   credentialIconMuted: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.surfaceSoft, alignItems: 'center', justifyContent: 'center' },
   credentialTick: { color: '#238A52', fontWeight: '900' },
@@ -522,9 +524,9 @@ const styles = StyleSheet.create({
   storyTitle: { color: colors.charcoal, fontWeight: '900' },
   beforeAfterProject: { gap: 9, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border },
   beforeAfterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  beforeAfterItem: { flex: 1, minWidth: 180, gap: 5 },
+  beforeAfterItem: { flex: 1, minWidth: 0, flexBasis: 180, flexShrink: 1, maxWidth: '100%', gap: 5 },
   imageLabel: { color: colors.muted, fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
-  beforeAfterPhoto: { flex: 1, minWidth: 180, height: 180, borderRadius: 14, resizeMode: 'cover' },
+  beforeAfterPhoto: { flex: 1, minWidth: 0, flexBasis: 180, flexShrink: 1, maxWidth: '100%', height: 180, borderRadius: 14, resizeMode: 'cover' },
   mapMock: { minHeight: 190, borderRadius: 16, backgroundColor: '#EEF1EC', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' },
   mapRing: { width: 132, height: 132, borderRadius: 66, borderWidth: 2, borderColor: colors.primary, backgroundColor: 'rgba(234,107,31,0.13)', alignItems: 'center', justifyContent: 'center' },
   mapPin: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
@@ -546,7 +548,7 @@ const styles = StyleSheet.create({
   lightboxHint: { color: '#D7E0E6', textAlign: 'center', paddingTop: 8 },
   prelaunchNotice: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
   noticeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  noticeCopy: { flex: 1, minWidth: 220, gap: 4 },
+  noticeCopy: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 4 },
   noticeBadge: { color: colors.primaryDark, backgroundColor: '#FFFFFF', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, fontSize: 11, fontWeight: '800' },
   similarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   noticeCard: { gap: 6 },

@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { Button, Chip, Divider, HelperText, SegmentedButtons, Text } from 'react-native-paper';
+import { Chip, Divider, HelperText, SegmentedButtons, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -294,9 +295,9 @@ const styles = StyleSheet.create({
   muted: { color: colors.muted, lineHeight: 21 },
   headerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' },
   toolbarButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
-  flex: { flex: 1, minWidth: 180 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 180, flexShrink: 1, maxWidth: '100%' },
   metrics: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  metric: { flexGrow: 1, flexBasis: 190, minWidth: 175, maxWidth: 330 },
+  metric: { flexGrow: 1, flexBasis: 190, minWidth: 0, flexShrink: 1, maxWidth: 330 },
   liveMetric: { borderColor: '#7BC7A3' },
   metricTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   liveDot: { width: 10, height: 10, borderRadius: 999, backgroundColor: '#2C9B65' },
@@ -306,7 +307,7 @@ const styles = StyleSheet.create({
   fact: { flexGrow: 1, minWidth: 130, padding: 10, borderRadius: 12, backgroundColor: colors.surfaceSoft },
   factValue: { color: colors.charcoal, fontWeight: '900', fontSize: 18 },
   twoColumn: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start' },
-  columnCard: { flex: 1, minWidth: 300 },
+  columnCard: { flex: 1, minWidth: 0, flexBasis: 300, flexShrink: 1, maxWidth: '100%' },
   list: { gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
   rank: { width: 26, textAlign: 'center', color: colors.primary, fontWeight: '900' },

@@ -1,11 +1,13 @@
 import { useAuth } from '@clerk/expo';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
+import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { FormSelect } from '@/components/FormSelect';
 import { PublicFooter } from '@/components/PublicFooter';
-import { colors, publicResponsiveMetrics } from '@/constants/theme';
+import { colors, publicResponsiveMetrics, radii } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { useAuthAvailable } from '@/lib/auth-availability';
 import { firstParam } from '@/lib/search-params';
@@ -166,18 +168,18 @@ export default function ReportPage() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
-  hero: { backgroundColor: colors.charcoal, paddingHorizontal: 20, paddingVertical: 54 },
+  hero: { backgroundColor: colors.background, paddingHorizontal: 20, paddingVertical: 54 },
   heroMobile: { paddingHorizontal: 16, paddingVertical: 40 },
-  heroInner: { width: '100%', maxWidth: 900, alignSelf: 'center', gap: 10 },
-  eyebrow: { color: colors.secondary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.1 },
-  heroTitle: { color: '#FFFFFF', fontWeight: '900', letterSpacing: -1 },
-  heroBody: { color: '#DDE1E3', lineHeight: 27, maxWidth: 820 },
+  heroInner: { width: '100%', maxWidth: 900, alignSelf: 'center', gap: 10, alignItems: 'center' },
+  eyebrow: { color: colors.primaryDark, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.1 },
+  heroTitle: { color: colors.charcoal, fontWeight: '900', letterSpacing: -1, textAlign: 'center' },
+  heroBody: { color: colors.muted, lineHeight: 27, maxWidth: 820, textAlign: 'center' },
   content: { width: '100%', maxWidth: 900, alignSelf: 'center', padding: 20, gap: 16 },
-  formCard: { backgroundColor: colors.surfaceRaised, borderRadius: 28, padding: 22, borderWidth: 1, borderColor: colors.border, gap: 12 },
-  successCard: { backgroundColor: colors.sageSoft, borderRadius: 28, padding: 24, borderWidth: 1, borderColor: '#B7D4C0', gap: 12 },
+  formCard: { backgroundColor: colors.surfaceRaised, borderRadius: radii.xl, padding: 22, borderWidth: 1, borderColor: colors.border, gap: 12 },
+  successCard: { backgroundColor: colors.sageSoft, borderRadius: radii.xl, padding: 24, borderWidth: 1, borderColor: '#B7D4C0', gap: 12 },
   successChip: { alignSelf: 'flex-start' },
   formHeader: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start' },
-  flex: { flex: 1, minWidth: 250, gap: 5 },
+  flex: { flex: 1, minWidth: 0, flexBasis: 250, flexShrink: 1, maxWidth: '100%', gap: 5 },
   title: { color: colors.charcoal, fontWeight: '900' },
   body: { color: colors.muted, lineHeight: 23 },
   notice: { backgroundColor: colors.goldSoft, borderRadius: 18, padding: 14, gap: 4, borderWidth: 1, borderColor: '#E5C98F' },

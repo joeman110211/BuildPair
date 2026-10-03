@@ -1,7 +1,8 @@
 import { useAuth } from '@clerk/expo';
 import { useState } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, HelperText, Text } from 'react-native-paper';
+import { HelperText, Text } from 'react-native-paper';
+import { Button } from '@/components/BrandButton';
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { errorMessage } from '@/lib/api';
 import { pickAndUploadImages, type MediaKind } from '@/lib/media';
