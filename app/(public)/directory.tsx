@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { Menu, Portal, Text, TextInput } from 'react-native-paper';
@@ -14,6 +14,7 @@ import { searchTraders, searchTradersWithFallback } from '@/lib/trade-search';
 import { recentlyViewedTraderIds } from '@/lib/trader-browse-history';
 import type { TraderProfile } from '@/types';
 import { firstParam } from '@/lib/search-params';
+import { scrollToResults } from '@/lib/scroll-to-results';
 
 const SORT_LABELS = {
   best: 'Best match',
@@ -53,6 +54,7 @@ export default function DirectoryScreen() {
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [recentIds, setRecentIds] = useState<string[]>([]);
+  const initialResultScrollPending = useRef(Boolean(initialQuery || initialTrade));
 
   async function load() {
     try {
@@ -71,6 +73,12 @@ export default function DirectoryScreen() {
     const timer = setTimeout(() => void load(), 0);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (loading || !initialResultScrollPending.current) return;
+    initialResultScrollPending.current = false;
+    scrollToResults('directory-results');
+  }, [loading]);
 
   const trimmedQuery = query.trim();
   const selectedTradeMatches = useMemo(
@@ -171,6 +179,7 @@ export default function DirectoryScreen() {
           placeholder="For example: leaking tap, bathroom tiling, broken boiler"
           value={query}
           onChangeText={setQuery}
+          onSubmitEditing={() => scrollToResults('directory-results')}
         />
       </View>
       <View style={styles.select}>
@@ -182,10 +191,13 @@ export default function DirectoryScreen() {
           placeholder="Choose a trade if you know it"
         />
       </View>
-      {trade || query ? <View style={styles.searchActions}><Button compact mode="text" onPress={() => { setQuery(''); setTrade(undefined); }}>Clear search</Button></View> : null}
+      <View style={styles.searchActions}>
+        <Button mode="contained" icon="magnify" onPress={() => scrollToResults('directory-results')}>Search trades</Button>
+        {trade || query ? <Button compact mode="text" onPress={() => { setQuery(''); setTrade(undefined); }}>Clear search</Button> : null}
+      </View>
     </View>
 
-    <View style={styles.resultsHeader}>
+    <View nativeID="directory-results" style={styles.resultsHeader}>
       <View style={styles.resultsCopy}>
         <Text variant="titleLarge" style={styles.title}>{loading ? 'Finding local trades' : `${displayFiltered.length} trade${displayFiltered.length === 1 ? '' : 's'} found`}</Text>
         {loading ? <Text style={styles.muted}>Finding tradespeople who match your search.</Text> : null}
@@ -284,7 +296,7 @@ const styles = StyleSheet.create({
   searchInput: { backgroundColor: colors.surfaceRaised },
   searchOutline: { borderRadius: 16 },
   select: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%' },
-  searchActions: { minHeight: 50, justifyContent: 'center' },
+  searchActions: { minHeight: 50, justifyContent: 'center', gap: 4 },
   refineBar: { minHeight: 42, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap', paddingHorizontal: 2 },
   refineLabel: { color: colors.muted, fontSize: 12, fontWeight: '800' },
   refineActions: { flexDirection: 'row', alignItems: 'center', gap: 2, flexWrap: 'wrap' },
