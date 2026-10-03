@@ -1,7 +1,8 @@
 import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { createElement, useState } from 'react';
+import type { StyleProp, TextStyle } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
@@ -23,12 +24,23 @@ const FAQS = [
   ['What do trade memberships include?', 'Starter is free. Core, Plus and Pro add marketplace allowances and business tools. The Pricing page sets out each plan’s features and limits.'],
 ] as const;
 
+function SemanticHeading({ level, style, children }: { level: 1 | 2 | 3; style: StyleProp<TextStyle>; children: string }) {
+  if (Platform.OS === 'web') {
+    const flattened = StyleSheet.flatten(style) ?? {};
+    return createElement(`h${level}`, {
+      style: { margin: 0, whiteSpace: 'pre-line', ...flattened },
+    }, children);
+  }
+
+  return <Text accessibilityRole="header" style={style}>{children}</Text>;
+}
+
 function Heading({ eyebrow, title, body }: { eyebrow?: string; title: string; body?: string }) {
   const { width } = useWindowDimensions();
   const metrics = publicResponsiveMetrics(width);
   return <View style={styles.heading}>
     {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-    <Text style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>{title}</Text>
+    <SemanticHeading level={2} style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>{title}</SemanticHeading>
     {body ? <Text style={styles.sectionBody}>{body}</Text> : null}
   </View>;
 }
@@ -48,11 +60,11 @@ export default function LandingPageRefined() {
   };
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.pageContent} keyboardShouldPersistTaps="handled">
-    <PublicSeo title="Find local tradespeople. Keep the whole job together" description="Browse local tradespeople, compare clear quotes and keep messages, changes and payment stages together. Practical business tools for tradespeople, with no pay-per-lead charges." />
+    <PublicSeo title="Find local tradespeople. Keep the whole job together" description="Find local tradespeople, compare clear quotes and keep messages, changes and payment stages together. Business tools for tradespeople, with no pay-per-lead fees." />
     <PrelaunchBanner />
     <View style={[styles.hero, mobile && styles.heroMobile]}>
       <Text style={styles.eyebrow}>ONE PROJECT. BOTH SIDES CONNECTED.</Text>
-      <Text style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Find local tradespeople.{ '\n' }Keep the whole job together.</Text>
+      <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
       <Text style={styles.heroBody}>Compare clear quotes. Agree the work. Keep messages, changes and payment stages in one place.</Text>
       <View style={styles.heroActions}>
         <Link href="/(public)/directory" asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Browse local trades</Button></Link>
