@@ -392,7 +392,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     sections: [
       {
         heading: 'What do current UK guides suggest?',
-        paragraphs: ['Published 2026 UK marketplace guides vary because they define a “bathroom renovation” differently. MyJobQuote places a standard bathroom installation around £6,000–£8,000 and premium work around £11,000–£15,000. Checkatrade publishes a typical new-bathroom range around £5,500–£8,000, with complex high-end projects reaching £14,000+. Treat these as planning ranges, not a quote.'],
+        paragraphs: ['Published 2026 UK marketplace guides vary because they define a “bathroom renovation” differently. Current market guidance places standard bathroom installations broadly in the mid-thousands, while premium and complex projects can reach five figures. Treat these as planning ranges, not a quote.'],
       },
       {
         heading: 'What pushes the price up?',
@@ -440,7 +440,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     sections: [
       {
         heading: 'Typical published rates',
-        paragraphs: ['Checkatrade’s 2026 bathroom-fitter guide publishes an average day-rate range of roughly £320–£480 and project labour around £1,500–£3,000. Those figures are useful for orientation, but a real bathroom quote can sit outside them depending on location, specification and how many separate trades are needed.'],
+        paragraphs: ['Current 2026 UK market guidance publishes an average day-rate range of roughly £320–£480 and project labour around £1,500–£3,000. Those figures are useful for orientation, but a real bathroom quote can sit outside them depending on location, specification and how many separate trades are needed.'],
       },
       {
         heading: 'What a bathroom fitter may include',
@@ -483,7 +483,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     sections: [
       {
         heading: 'What do current 2026 guides publish?',
-        paragraphs: ['Checkatrade currently uses about £50 per m² as an average labour-only figure and a tiler day-rate range around £200–£350. MyJobQuote publishes bathroom-tiling labour around £20–£40 per m² and lower floor-tiling day rates in some examples. The gap is exactly why a single national “price per metre” should never be treated as a quote.'],
+        paragraphs: ['Current UK market guidance uses about £50 per m² as an average labour-only figure and a tiler day-rate range around £200–£350. Another current UK market guide publishes bathroom-tiling labour around £20–£40 per m² and lower floor-tiling day rates in some examples. The gap is exactly why a single national “price per metre” should never be treated as a quote.'],
       },
       {
         heading: 'Why tiling prices vary',
@@ -528,7 +528,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     sections: [
       {
         heading: 'Typical published ranges',
-        paragraphs: ['MyJobQuote currently says many UK homeowners pay around £500–£800 for bathroom tiling, while Checkatrade gives around £800–£1,200 for fully tiling bathroom walls and floors. Different room sizes and assumptions explain much of that gap. For a real budget, measure the actual tiled area and get itemised quotes.'],
+        paragraphs: ['Current UK market guidance suggests many UK homeowners pay around £500–£800 for bathroom tiling, while Another current UK market guide gives around £800–£1,200 for fully tiling bathroom walls and floors. Different room sizes and assumptions explain much of that gap. For a real budget, measure the actual tiled area and get itemised quotes.'],
       },
       {
         heading: 'Walls, floors and shower areas are not equal',
@@ -563,7 +563,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     reviewedAt: '2026-10-03',
     keywords: ['floor tiling cost', 'cost to tile floor', 'floor tiler cost', 'tile floor price per m2', 'kitchen floor tiling cost'],
     keyPoints: [
-      'MyJobQuote currently publishes an average floor-tiling project around £700, with many jobs roughly £400–£1,000.',
+      'Current UK market guidance puts an average floor-tiling project around £700, with many jobs roughly £400–£1,000.',
       'Material costs can vary far more than the labour rate.',
       'Levelling, decoupling and removal of old flooring can materially increase the price.',
       'Large simple areas can be cheaper per m² than tiny awkward rooms.',
@@ -571,7 +571,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     sections: [
       {
         heading: 'Published 2026 planning figures',
-        paragraphs: ['MyJobQuote currently gives an average floor-tiling project around £700 and a rough £400–£1,000 range depending on room size and tile. Checkatrade uses about £50 per m² as an average labour-only tiling figure. Use these only to sense-check a budget; actual preparation and tile choice can move the result substantially.'],
+        paragraphs: ['Current UK market guidance gives an average floor-tiling project around £700 and a rough £400–£1,000 range depending on room size and tile. Checkatrade uses about £50 per m² as an average labour-only tiling figure. Use these only to sense-check a budget; actual preparation and tile choice can move the result substantially.'],
       },
       {
         heading: 'Preparation matters',
@@ -613,7 +613,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     sections: [
       {
         heading: 'Replacement shower versus full shower remodel',
-        paragraphs: ['Checkatrade’s current 2026 guide gives a broad £300–£1,500 range for supplying and installing a new shower, depending on shower type and complexity. That does not mean a complete shower-area renovation with tray, enclosure, wall preparation and tiling will fit inside the same range.'],
+        paragraphs: ['Current 2026 UK market guidance gives a broad £300–£1,500 range for supplying and installing a new shower, depending on shower type and complexity. That does not mean a complete shower-area renovation with tray, enclosure, wall preparation and tiling will fit inside the same range.'],
       },
       {
         heading: 'What changes the cost?',
@@ -656,7 +656,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     sections: [
       {
         heading: 'Typical published range',
-        paragraphs: ['Checkatrade’s current 2026 guide places wet-room installation broadly around £5,000–£13,000, with an average figure around £9,000. That is a planning estimate only: smaller straightforward rooms and major structural alterations can sit outside it.'],
+        paragraphs: ['Current 2026 UK market guidance places wet-room installation broadly around £5,000–£13,000, with an average figure around £9,000. That is a planning estimate only: smaller straightforward rooms and major structural alterations can sit outside it.'],
       },
       {
         heading: 'Why wet rooms can cost more',
@@ -705,7 +705,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 plumber rates",
         "paragraphs": [
-          "Checkatrade's current 2026 guide publishes plumber rates of roughly £40–£60 per hour and £325–£375 per day, with an average around £50 per hour or £350 per day. These are budgeting figures rather than guaranteed local prices."
+          "Current 2026 UK market guidance publishes plumber rates of roughly £40–£60 per hour and £325–£375 per day, with an average around £50 per hour or £350 per day. These are budgeting figures rather than guaranteed local prices."
         ]
       },
       {
@@ -768,7 +768,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical emergency pricing",
         "paragraphs": [
-          "Checkatrade's 2026 plumber guide lists emergency plumber hourly rates around £75–£150, averaging about £100, with typical emergency call-out fees around £100–£120."
+          "Current 2026 UK market guidance lists emergency plumber hourly rates around £75–£150, averaging about £100, with typical emergency call-out fees around £100–£120."
         ]
       },
       {
@@ -824,7 +824,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical planning figure",
         "paragraphs": [
-          "Checkatrade's current plumber-cost data lists radiator installation around £150–£180, averaging roughly £165 for a straightforward job."
+          "Current UK market data lists radiator installation around £150–£180, averaging roughly £165 for a straightforward job."
         ]
       },
       {
@@ -881,7 +881,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical simple repair range",
         "paragraphs": [
-          "Checkatrade currently publishes a typical leak-repair range around £77–£128 and an average near £100, while burst-pipe repair examples can rise to around £150 or more depending on the work."
+          "Current UK market guidance puts a typical leak-repair range around £77–£128 and an average near £100, while burst-pipe repair examples can rise to around £150 or more depending on the work."
         ]
       },
       {
@@ -994,7 +994,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 range",
         "paragraphs": [
-          "Checkatrade currently publishes a typical outside-tap installation range of £120–£200 for materials and labour, averaging around £160."
+          "Current UK market guidance puts a typical outside-tap installation range of £120–£200 for materials and labour, averaging around £160."
         ]
       },
       {
@@ -1051,7 +1051,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Current planning figure",
         "paragraphs": [
-          "Checkatrade's 2026 plumbing-installation guide gives a typical bathroom plumbing cost around £3,250 excluding sanitaryware. The real figure depends heavily on the existing layout and the amount of new pipework required."
+          "Current 2026 UK market guidance gives a typical bathroom plumbing cost around £3,250 excluding sanitaryware. The real figure depends heavily on the existing layout and the amount of new pipework required."
         ]
       },
       {
@@ -1109,7 +1109,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Published planning figures",
         "paragraphs": [
-          "Checkatrade's current plumbing-installation guide gives example whole-house plumbing costs of around £14,500 for a 2-bed property and £21,500 for a 4-bed property. These are broad planning figures, not fixed rates."
+          "Current UK market guidance gives example whole-house plumbing costs of around £14,500 for a 2-bed property and £21,500 for a 4-bed property. These are broad planning figures, not fixed rates."
         ]
       },
       {
@@ -1219,7 +1219,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     ],
     "keyPoints": [
       "Current major UK guides place full house rewires broadly between about £2,500 and £12,500 depending on property size and scope.",
-      "Checkatrade's current range is roughly £3,900–£10,000 for common property sizes.",
+      "A current UK market range is roughly £3,900–£10,000 for common property sizes.",
       "Occupied properties and difficult access can increase labour.",
       "Making good, decorating and premium fittings may be extra."
     ],
@@ -1227,7 +1227,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Current 2026 ranges",
         "paragraphs": [
-          "Checkatrade currently publishes typical rewiring costs from about £3,900 for a 1-bed flat to around £10,000 for a 5-bed house. MyJobQuote publishes a broader £2,500–£12,500 range across different property types and specifications."
+          "Current UK market guidance puts typical rewiring costs from about £3,900 for a 1-bed flat to around £10,000 for a 5-bed house. Another current UK market guide publishes a broader £2,500–£12,500 range across different property types and specifications."
         ]
       },
       {
@@ -1296,7 +1296,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 cost",
         "paragraphs": [
-          "Checkatrade currently publishes a consumer-unit replacement range of roughly £450–£800, averaging around £625."
+          "Current UK market guidance puts a consumer-unit replacement range of roughly £450–£800, averaging around £625."
         ]
       },
       {
@@ -1359,7 +1359,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 price",
         "paragraphs": [
-          "Checkatrade currently publishes a typical socket-installation range around £55–£75, with an average near £65 for a straightforward installation."
+          "Current UK market guidance puts a typical socket-installation range around £55–£75, with an average near £65 for a straightforward installation."
         ]
       },
       {
@@ -1416,7 +1416,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical straightforward jobs",
         "paragraphs": [
-          "Checkatrade currently publishes standard light-fitting replacement around £55–£75. Its 2026 light-switch guide gives about £75 for a like-for-like switch replacement and around £150 for moving or adding one switch."
+          "Current UK market guidance puts standard light-fitting replacement around £55–£75. Its 2026 light-switch guide gives about £75 for a like-for-like switch replacement and around £150 for moving or adding one switch."
         ]
       },
       {
@@ -1478,7 +1478,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 figures",
         "paragraphs": [
-          "Checkatrade currently publishes electric-shower installation labour around £250–£400, averaging roughly £325, excluding the shower unit. It notes that supply-and-install jobs can rise closer to around £800 depending on the product and work required."
+          "Current UK market guidance puts electric-shower installation labour around £250–£400, averaging roughly £325, excluding the shower unit. It notes that supply-and-install jobs can rise closer to around £800 depending on the product and work required."
         ]
       },
       {
@@ -1541,7 +1541,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 cost",
         "paragraphs": [
-          "Checkatrade currently publishes EICR costs from around £125 for a one-bedroom property to £300+ for larger homes, with an average figure around £212.50."
+          "Current UK market guidance puts EICR costs from around £125 for a one-bedroom property to £300+ for larger homes, with an average figure around £212.50."
         ]
       },
       {
@@ -1598,7 +1598,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 planning figure",
         "paragraphs": [
-          "Checkatrade currently publishes an average home EV charger supply-and-install cost around £1,000. Its guide gives a typical 7kW charger supply-only range around £450–£800."
+          "Current UK market guidance puts an average home EV charger supply-and-install cost around £1,000. Its guide gives a typical 7kW charger supply-only range around £450–£800."
         ]
       },
       {
@@ -1655,7 +1655,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 rate",
         "paragraphs": [
-          "Checkatrade's current builder-rate guide uses around £400 per day as a typical builder/construction-company rate and around £40 per hour for some self-employed builder work."
+          "Current UK market guidance uses around £400 per day as a typical builder/construction-company rate and around £40 per hour for some self-employed builder work."
         ]
       },
       {
@@ -1712,7 +1712,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 extension rates",
         "paragraphs": [
-          "Checkatrade currently publishes full house-extension costs around £1,800–£3,000 per m², averaging about £2,400 per m², and shell-only costs around £1,200–£1,700 per m²."
+          "Current UK market guidance puts full house-extension costs around £1,800–£3,000 per m², averaging about £2,400 per m², and shell-only costs around £1,200–£1,700 per m²."
         ]
       },
       {
@@ -1833,7 +1833,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     ],
     "keyPoints": [
       "Current major UK guides place many standard garage conversions around £8,000–£20,000.",
-      "MyJobQuote currently publishes an average standard garage conversion around £14,500.",
+      "Current UK market guidance puts an average standard garage conversion around £14,500.",
       "Detached garages and conversions adding kitchens or bathrooms can cost much more.",
       "Insulation, floor levels, windows, ventilation and utility upgrades are common budget items."
     ],
@@ -1841,7 +1841,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 ranges",
         "paragraphs": [
-          "MyJobQuote currently publishes garage-conversion costs from about £8,000 to £45,000 across different garage types, with an average standard project around £14,500. Checkatrade gives around £10,000–£20,000 for many integrated or attached 16m² garages."
+          "Current UK market guidance puts garage-conversion costs from about £8,000 to £45,000 across different garage types, with an average standard project around £14,500. Another current UK market guide gives around £10,000–£20,000 for many integrated or attached 16m² garages."
         ]
       },
       {
@@ -1905,7 +1905,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 fees",
         "paragraphs": [
-          "Checkatrade currently publishes structural engineer rates around £100–£200 per hour, a typical site inspection around £300, a report around £700 and an RSJ calculation around £200."
+          "Current UK market guidance puts structural engineer rates around £100–£200 per hour, a typical site inspection around £300, a report around £700 and an RSJ calculation around £200."
         ]
       },
       {
@@ -1962,7 +1962,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 figures",
         "paragraphs": [
-          "Checkatrade currently publishes an average range around £1,250–£1,750 for removing a load-bearing wall, with examples around £1,525 for a roughly 2m opening and £2,700 for a larger 4m open-plan opening."
+          "Current UK market guidance puts an average range around £1,250–£1,750 for removing a load-bearing wall, with examples around £1,525 for a roughly 2m opening and £2,700 for a larger 4m open-plan opening."
         ]
       },
       {
@@ -2025,7 +2025,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 range",
         "paragraphs": [
-          "Checkatrade currently publishes a single-garage extension-over cost of roughly £25,000–£36,000, averaging around £30,000, with ensuite examples reaching around £40,000."
+          "Current UK market guidance puts a single-garage extension-over cost of roughly £25,000–£36,000, averaging around £30,000, with ensuite examples reaching around £40,000."
         ]
       },
       {
@@ -2077,7 +2077,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       "garage construction price"
     ],
     "keyPoints": [
-      "Current MyJobQuote data puts traditional brick/block garages broadly around £21,000–£58,000.",
+      "Current UK market data puts traditional brick/block garages broadly around £21,000–£58,000.",
       "A basic single brick garage is currently published around £21,000 in one 2026 guide.",
       "Prefab garages can be much cheaper but are a different product and specification.",
       "Foundations, roof type, doors, insulation, electrics and site access are major cost drivers."
@@ -2086,7 +2086,7 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
       {
         "heading": "Typical 2026 figures",
         "paragraphs": [
-          "MyJobQuote currently publishes traditionally built garage costs around £21,000–£58,000, with a basic single brick garage example around £21,000 and a pitched-roof single brick garage around £25,000."
+          "Current UK market guidance puts traditionally built garage costs around £21,000–£58,000, with a basic single brick garage example around £21,000 and a pitched-roof single brick garage around £25,000."
         ]
       },
       {
@@ -2122,6 +2122,29 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     ]
   }
 ];
+
+const OFFICIAL_ADVICE_SOURCE_HOSTS = [
+  'gov.uk',
+  'www.gov.uk',
+  'hse.gov.uk',
+  'www.hse.gov.uk',
+  'legislation.gov.uk',
+  'www.legislation.gov.uk',
+  'citizensadvice.org.uk',
+  'www.citizensadvice.org.uk',
+  'businesscompanion.info',
+  'www.businesscompanion.info',
+  'gassaferegister.co.uk',
+  'www.gassaferegister.co.uk',
+];
+
+export function isOfficialAdviceSource(source: AdviceSource) {
+  try {
+    return OFFICIAL_ADVICE_SOURCE_HOSTS.includes(new URL(source.url).hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
 
 export function adviceGuideBySlug(slug: string) {
   return ADVICE_GUIDES.find((guide) => guide.slug === slug);
