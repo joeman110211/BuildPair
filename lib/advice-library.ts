@@ -679,7 +679,6 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     ],
     relatedSlugs: ['shower-installation-cost-uk', 'bathroom-renovation-cost-uk', 'bathroom-tiling-cost-uk', 'do-i-need-building-regulations-approval'],
   },
-,
 {
     "slug": "plumber-cost-uk-2026",
     "audience": "homeowner",
