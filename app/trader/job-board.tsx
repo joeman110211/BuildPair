@@ -8,6 +8,7 @@ import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { scrollToResults } from '@/lib/scroll-to-results';
 import type { Job, Quote, TraderProfile } from '@/types';
 import { firstParam } from '@/lib/search-params';
 
@@ -144,7 +145,7 @@ export default function TraderJobBoard() {
     </AppCard> : null}
 
     {!linkedJobId ? <>
-      <Searchbar placeholder="Search jobs or locations" value={search} onChangeText={setSearch} style={styles.search} />
+      <Searchbar placeholder="Search jobs or locations" value={search} onChangeText={setSearch} onSubmitEditing={() => scrollToResults('job-board-results')} style={styles.search} />
       <View style={styles.filters}>
         <Chip selected={!directOnly && !urgentOnly} showSelectedCheck onPress={() => { setDirectOnly(false); setUrgentOnly(false); }}>All</Chip>
         <Chip selected={directOnly} showSelectedCheck onPress={() => setDirectOnly((value) => !value)}>Direct Requests</Chip>
@@ -165,6 +166,7 @@ export default function TraderJobBoard() {
       </View> : null}
     </> : null}
 
+    <View nativeID="job-board-results" />
     {error ? <Text style={styles.error}>{error}</Text> : null}
     {!opportunities.length ? <EmptyState
       title={linkedJobId ? 'This job is not available in your matching Job Board' : 'No jobs match your current search'}
