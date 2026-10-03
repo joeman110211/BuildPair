@@ -63,7 +63,7 @@ export default function LandingPageRefined() {
 
     <Reveal><View style={[styles.band, styles.whiteBand, !hasFeaturedProfiles && styles.hidden]}>
       <View style={styles.section}>
-        <Heading title="Featured tradespeople" body="Explore tradespeople on BuildPair." />
+        <Heading eyebrow="Featured tradespeople" title="Explore tradespeople on BuildPair" body="Browse local tradespeople, their work and profile details before choosing who to contact." />
         <FeaturedTraderHero wide={wide} onAvailabilityChange={setHasFeaturedProfiles} />
       </View>
     </View></Reveal>
