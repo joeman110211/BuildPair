@@ -8,6 +8,7 @@ import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { scrollToResults } from '@/lib/scroll-to-results';
 import type { GooglePlaceCandidate, GoogleReviewSnapshot } from '@/lib/google-reviews';
 
 type Connection = {
@@ -63,6 +64,7 @@ export default function GoogleReviewsPage() {
         body: JSON.stringify({ query: query.trim() }),
       }, () => getTokenRef.current());
       setResults(response.places);
+      scrollToResults('google-business-search-results');
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -156,6 +158,7 @@ export default function GoogleReviewsPage() {
       <Button mode="contained" loading={busy} disabled={!status?.configured || busy || query.trim().length < 3} onPress={() => void search()}>Search Google</Button>
     </AppCard> : null}
 
+    <View nativeID="google-business-search-results" style={styles.resultsList}>
     {results.map((place) => <AppCard key={place.id} style={styles.resultCard}>
       <View style={styles.rowBetween}>
         <View style={styles.flex}>
@@ -168,6 +171,7 @@ export default function GoogleReviewsPage() {
       {place.googleMapsUri ? <Button mode="text" onPress={() => Linking.openURL(place.googleMapsUri!)}>Check on Google Maps →</Button> : null}
       <Text style={styles.googleAttribution}>Google Maps</Text>
     </AppCard>)}
+    </View>
 
     {verified && status?.google?.reviews?.length ? <AppCard style={styles.previewCard}>
       <Text style={styles.eyebrow}>PUBLIC PROFILE PREVIEW</Text>
@@ -198,6 +202,7 @@ const styles = StyleSheet.create({
   pendingCard: { gap: 12, backgroundColor: colors.goldSoft, borderColor: '#ECDDBF' },
   rejectedCard: { gap: 12, backgroundColor: '#FFF0EE', borderColor: '#F0C3BD' },
   searchCard: { gap: 12 },
+  resultsList: { gap: 12 },
   resultCard: { gap: 9 },
   previewCard: { gap: 12 },
   rowBetween: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
