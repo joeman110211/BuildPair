@@ -373,6 +373,313 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     ],
     relatedSlugs: ['consumer-law-for-tradespeople', 'off-premises-contracts-and-cancellation-rights'],
   },
+  {
+    slug: 'bathroom-renovation-cost-uk',
+    audience: 'homeowner',
+    category: 'Costs & pricing',
+    title: 'Bathroom renovation cost in the UK: 2026 price guide',
+    summary: 'A realistic planning range for a bathroom renovation, what changes the price and what to compare in quotes.',
+    description: 'UK bathroom renovation costs for 2026, including typical project ranges, labour, materials and the factors that push a bathroom budget up or down.',
+    appliesTo: 'UK homeowners. Published market estimates vary by specification, region and scope; local quotes are the only reliable project price.',
+    reviewedAt: '2026-10-03',
+    keywords: ['bathroom renovation cost', 'new bathroom cost uk', 'bathroom remodel cost', 'bathroom fitting cost', 'bathroom price 2026'],
+    keyPoints: [
+      'Current UK marketplace guides put a standard bathroom project broadly around the mid-thousands, with premium work reaching five figures.',
+      'Keeping the existing layout usually costs less than moving plumbing, drainage or electrical points.',
+      'Tiling, preparation, sanitaryware, electrics, ventilation and waste removal can all materially change the total.',
+      'Use published averages for budgeting only; compare itemised local quotes before committing.',
+    ],
+    sections: [
+      {
+        heading: 'What do current UK guides suggest?',
+        paragraphs: ['Published 2026 UK marketplace guides vary because they define a “bathroom renovation” differently. MyJobQuote places a standard bathroom installation around £6,000–£8,000 and premium work around £11,000–£15,000. Checkatrade publishes a typical new-bathroom range around £5,500–£8,000, with complex high-end projects reaching £14,000+. Treat these as planning ranges, not a quote.'],
+      },
+      {
+        heading: 'What pushes the price up?',
+        bullets: [
+          'Moving the WC, basin, bath or shower and rerouting services.',
+          'Large-format, patterned, natural-stone or premium tiles.',
+          'Extensive wall and floor preparation after strip-out.',
+          'New lighting, ventilation, electric shower work or other electrical changes.',
+          'Bespoke furniture, screens, niches, underfloor heating or high-end sanitaryware.',
+          'Difficult access, hidden damage, waste disposal and regional labour costs.',
+        ],
+      },
+      {
+        heading: 'How to compare bathroom quotes',
+        paragraphs: ['Ask each contractor to price the same scope and make clear what is included: strip-out, disposal, preparation, waterproofing where required, plumbing, electrical work, tiling, decorating, sanitaryware fitting, silicone and final making-good. A lower total can simply mean more items are excluded.'],
+      },
+      {
+        heading: 'How BuildPair will improve this over time',
+        paragraphs: ['BuildPair does not yet have enough completed quote data to publish a proprietary bathroom-cost average. As the marketplace grows, we intend to add anonymised BuildPair quote ranges by region and project type instead of pretending a national average fits every job.'],
+      },
+    ],
+    sources: [
+      { title: 'New bathroom costs in the UK: 2026', publisher: 'MyJobQuote', url: 'https://www.myjobquote.co.uk/costs/full-bathroom-cost' },
+      { title: 'Bathroom renovation cost in 2026', publisher: 'Checkatrade', url: 'https://www.checkatrade.com/blog/cost-guides/bathroom-remodel-cost/' },
+      { title: 'Bathroom fitter costs in the UK in 2026', publisher: 'Checkatrade', url: 'https://www.checkatrade.com/blog/cost-guides/bathroom-fitter-costs/' },
+    ],
+    relatedSlugs: ['bathroom-fitter-cost-uk', 'bathroom-tiling-cost-uk', 'shower-installation-cost-uk', 'how-to-compare-building-quotes'],
+  },
+  {
+    slug: 'bathroom-fitter-cost-uk',
+    audience: 'homeowner',
+    category: 'Costs & pricing',
+    title: 'Bathroom fitter cost in the UK: day rates and labour in 2026',
+    summary: 'Understand bathroom fitter day rates, project labour and why one quote can look very different from another.',
+    description: 'Typical UK bathroom fitter costs in 2026, including labour ranges, day rates and the work that may or may not be included.',
+    appliesTo: 'UK homeowners. Rates vary significantly by region, experience, scope and whether specialist trades are included.',
+    reviewedAt: '2026-10-03',
+    keywords: ['bathroom fitter cost', 'bathroom fitter day rate', 'bathroom labour cost', 'bathroom installer cost', 'bathroom fitter price'],
+    keyPoints: [
+      'Published UK guidance currently places bathroom-fitter day rates roughly in the £320–£480 range in one major 2026 guide.',
+      'Full labour for a bathroom installation is often quoted as a project rather than simply days multiplied by a rate.',
+      'Check whether plumbing, tiling, electrical work, preparation and waste removal are included.',
+      'A single “day rate” is a poor comparison if the scope differs.',
+    ],
+    sections: [
+      {
+        heading: 'Typical published rates',
+        paragraphs: ['Checkatrade’s 2026 bathroom-fitter guide publishes an average day-rate range of roughly £320–£480 and project labour around £1,500–£3,000. Those figures are useful for orientation, but a real bathroom quote can sit outside them depending on location, specification and how many separate trades are needed.'],
+      },
+      {
+        heading: 'What a bathroom fitter may include',
+        bullets: [
+          'Removal of the existing suite and basic strip-out.',
+          'Plumbing and sanitaryware installation.',
+          'Coordination of electrical work where a separate electrician is required.',
+          'Wall and floor preparation.',
+          'Tiling or coordination with a tiler.',
+          'Sealing, finishing and handover.',
+        ],
+      },
+      {
+        heading: 'Questions to ask before comparing labour',
+        paragraphs: ['Ask whether the quote is fixed for the described scope, what happens if hidden defects appear, whether VAT is included where applicable, who supplies materials and which specialist trades are included. Two quotes that use the same headline “labour” figure can still cover very different work.'],
+      },
+    ],
+    sources: [
+      { title: 'Bathroom fitter costs in the UK in 2026', publisher: 'Checkatrade', url: 'https://www.checkatrade.com/blog/cost-guides/bathroom-fitter-costs/' },
+      { title: 'New bathroom costs in the UK: 2026', publisher: 'MyJobQuote', url: 'https://www.myjobquote.co.uk/costs/full-bathroom-cost' },
+    ],
+    relatedSlugs: ['bathroom-renovation-cost-uk', 'bathroom-tiling-cost-uk', 'how-to-compare-building-quotes'],
+  },
+  {
+    slug: 'tiler-cost-per-square-metre-uk',
+    audience: 'homeowner',
+    category: 'Costs & pricing',
+    title: 'Tiler cost per square metre in the UK: 2026 guide',
+    summary: 'See why tiling labour can vary widely per m² and when a day rate or fixed price makes more sense.',
+    description: 'UK tiler labour costs per square metre in 2026, including day-rate ranges, complexity factors and how to compare tiling quotes.',
+    appliesTo: 'UK homeowners. Rates are indicative only and can vary materially by tile, substrate, layout, location and job size.',
+    reviewedAt: '2026-10-03',
+    keywords: ['tiler cost per m2', 'tiler price per square metre', 'tiling labour cost uk', 'tiler day rate', 'tile fitting cost'],
+    keyPoints: [
+      'Current published guides show a wide labour range rather than one reliable national per-m² price.',
+      'Simple open floors are usually quicker than bathrooms, patterns, mosaics, niches or awkward cutting.',
+      'Preparation and waterproofing are often separate from the laying rate.',
+      'Small jobs are commonly priced as a minimum charge or day rate rather than pure square metres.',
+    ],
+    sections: [
+      {
+        heading: 'What do current 2026 guides publish?',
+        paragraphs: ['Checkatrade currently uses about £50 per m² as an average labour-only figure and a tiler day-rate range around £200–£350. MyJobQuote publishes bathroom-tiling labour around £20–£40 per m² and lower floor-tiling day rates in some examples. The gap is exactly why a single national “price per metre” should never be treated as a quote.'],
+      },
+      {
+        heading: 'Why tiling prices vary',
+        bullets: [
+          'Tile size, material and fragility.',
+          'Straight lay versus herringbone, diagonal or patterned layouts.',
+          'Number of corners, reveals, niches, trims and penetrations.',
+          'Condition and flatness of the walls or floor.',
+          'Waterproofing, decoupling or levelling work before tiling.',
+          'Small-area minimum charges and travel.',
+          'London and South East labour costs versus lower-cost regions.',
+        ],
+      },
+      {
+        heading: 'What should a tiling quote state?',
+        paragraphs: ['A useful quote separates preparation, waterproofing where applicable, tile laying, trims, adhesive and grout, silicone, waste removal and any materials supplied by the tiler. That makes it far easier to compare than a bare “£X per m²” number.'],
+      },
+    ],
+    sources: [
+      { title: 'Tiling cost in 2026', publisher: 'Checkatrade', url: 'https://www.checkatrade.com/blog/cost-guides/tiling-cost/' },
+      { title: 'Bathroom tiling cost guide 2026', publisher: 'MyJobQuote', url: 'https://www.myjobquote.co.uk/costs/tiling-a-bathroom' },
+      { title: 'Floor tiling cost guide 2026', publisher: 'MyJobQuote', url: 'https://www.myjobquote.co.uk/costs/tiling-a-floor' },
+    ],
+    relatedSlugs: ['bathroom-tiling-cost-uk', 'floor-tiling-cost-uk', 'bathroom-renovation-cost-uk'],
+  },
+  {
+    slug: 'bathroom-tiling-cost-uk',
+    audience: 'homeowner',
+    category: 'Costs & pricing',
+    title: 'Bathroom tiling cost in the UK: 2026 guide',
+    summary: 'Budget for bathroom wall and floor tiling, including labour, preparation and the tile choices that change the price.',
+    description: 'Typical UK bathroom tiling costs in 2026, including labour per m², full-room estimates, preparation and tile-price factors.',
+    appliesTo: 'UK homeowners. Published ranges are indicative and vary by bathroom size, preparation, tile type and region.',
+    reviewedAt: '2026-10-03',
+    keywords: ['bathroom tiling cost', 'cost to tile bathroom', 'bathroom tiler cost', 'tile bathroom price', 'bathroom tiling per m2'],
+    keyPoints: [
+      'Published 2026 guides currently place many bathroom-tiling jobs in the high hundreds to low thousands.',
+      'Preparation can cost as much time as laying tiles when walls or floors are poor.',
+      'Mosaics, patterns and large-format tiles can all increase labour for different reasons.',
+      'Ask whether waterproofing, trims, adhesive, grout and silicone are included.',
+    ],
+    sections: [
+      {
+        heading: 'Typical published ranges',
+        paragraphs: ['MyJobQuote currently says many UK homeowners pay around £500–£800 for bathroom tiling, while Checkatrade gives around £800–£1,200 for fully tiling bathroom walls and floors. Different room sizes and assumptions explain much of that gap. For a real budget, measure the actual tiled area and get itemised quotes.'],
+      },
+      {
+        heading: 'Walls, floors and shower areas are not equal',
+        paragraphs: ['A small floor may be quick, while walls around baths, windows, niches and pipework create far more cutting. Shower areas also need careful substrate preparation and, where required, an appropriate waterproofing system before tiles are installed.'],
+      },
+      {
+        heading: 'Main cost drivers',
+        bullets: [
+          'Total tiled area and ceiling height.',
+          'Removal of old tiles and making good.',
+          'Wall or floor levelling and repairs.',
+          'Tile material, format and pattern.',
+          'Waterproofing and movement-management systems where required.',
+          'Trims, mitres, niches, shelves and feature layouts.',
+        ],
+      },
+    ],
+    sources: [
+      { title: 'Bathroom tiling cost guide 2026', publisher: 'MyJobQuote', url: 'https://www.myjobquote.co.uk/costs/tiling-a-bathroom' },
+      { title: 'Tiling cost in 2026', publisher: 'Checkatrade', url: 'https://www.checkatrade.com/blog/cost-guides/tiling-cost/' },
+    ],
+    relatedSlugs: ['tiler-cost-per-square-metre-uk', 'floor-tiling-cost-uk', 'bathroom-renovation-cost-uk'],
+  },
+  {
+    slug: 'floor-tiling-cost-uk',
+    audience: 'homeowner',
+    category: 'Costs & pricing',
+    title: 'Floor tiling cost in the UK: 2026 price guide',
+    summary: 'Estimate floor-tiling costs by room size, tile choice and preparation rather than relying on one headline rate.',
+    description: 'UK floor tiling costs in 2026, including typical project ranges, labour, tile materials and preparation costs.',
+    appliesTo: 'UK homeowners. Prices vary by substrate, tile, pattern, access, room size and region.',
+    reviewedAt: '2026-10-03',
+    keywords: ['floor tiling cost', 'cost to tile floor', 'floor tiler cost', 'tile floor price per m2', 'kitchen floor tiling cost'],
+    keyPoints: [
+      'MyJobQuote currently publishes an average floor-tiling project around £700, with many jobs roughly £400–£1,000.',
+      'Material costs can vary far more than the labour rate.',
+      'Levelling, decoupling and removal of old flooring can materially increase the price.',
+      'Large simple areas can be cheaper per m² than tiny awkward rooms.',
+    ],
+    sections: [
+      {
+        heading: 'Published 2026 planning figures',
+        paragraphs: ['MyJobQuote currently gives an average floor-tiling project around £700 and a rough £400–£1,000 range depending on room size and tile. Checkatrade uses about £50 per m² as an average labour-only tiling figure. Use these only to sense-check a budget; actual preparation and tile choice can move the result substantially.'],
+      },
+      {
+        heading: 'Preparation matters',
+        paragraphs: ['A quoted laying rate often assumes a suitable flat, sound surface. Removal, repairs, levelling compounds, timber-floor preparation or decoupling systems can add both labour and materials before the first tile is laid.'],
+      },
+      {
+        heading: 'What to ask a tiler',
+        bullets: [
+          'Is removal of the existing floor included?',
+          'Is levelling or substrate preparation included?',
+          'Who supplies adhesive, grout, trims and movement profiles?',
+          'Is the layout straight, diagonal or patterned?',
+          'Are doorways, appliances, skirting or thresholds included?',
+        ],
+      },
+    ],
+    sources: [
+      { title: 'Floor tiling cost guide 2026', publisher: 'MyJobQuote', url: 'https://www.myjobquote.co.uk/costs/tiling-a-floor' },
+      { title: 'Tiling cost in 2026', publisher: 'Checkatrade', url: 'https://www.checkatrade.com/blog/cost-guides/tiling-cost/' },
+    ],
+    relatedSlugs: ['tiler-cost-per-square-metre-uk', 'bathroom-tiling-cost-uk'],
+  },
+  {
+    slug: 'shower-installation-cost-uk',
+    audience: 'homeowner',
+    category: 'Costs & pricing',
+    title: 'Shower installation cost in the UK: 2026 guide',
+    summary: 'Compare the cost of replacing a shower with a larger shower-area renovation involving plumbing, electrics and tiling.',
+    description: 'Typical UK shower installation costs in 2026, including replacement showers, walk-in showers, plumbing, electrical work and tiling.',
+    appliesTo: 'UK homeowners. Electrical and Building Regulations requirements depend on the work and UK nation.',
+    reviewedAt: '2026-10-03',
+    keywords: ['shower installation cost', 'cost to fit shower', 'new shower cost uk', 'walk in shower cost', 'replace shower cost'],
+    keyPoints: [
+      'Published 2026 guidance puts many standard shower supply-and-install jobs broadly between a few hundred pounds and around £1,500.',
+      'A full shower-area remodel can cost much more once the tray, enclosure, tiling and preparation are included.',
+      'Walk-in showers and wet rooms are different projects with different drainage and waterproofing requirements.',
+      'Electrical shower work needs appropriate electrical competence and may involve Building Regulations notification.',
+    ],
+    sections: [
+      {
+        heading: 'Replacement shower versus full shower remodel',
+        paragraphs: ['Checkatrade’s current 2026 guide gives a broad £300–£1,500 range for supplying and installing a new shower, depending on shower type and complexity. That does not mean a complete shower-area renovation with tray, enclosure, wall preparation and tiling will fit inside the same range.'],
+      },
+      {
+        heading: 'What changes the cost?',
+        bullets: [
+          'Electric, mixer, power, thermostatic or digital shower type.',
+          'Whether hot/cold supplies or drainage need changing.',
+          'New tray, enclosure, screens or wall panels.',
+          'Removing a bath or changing the room layout.',
+          'Electrical circuit or protection changes.',
+          'Tiling, waterproofing and making good.',
+        ],
+      },
+      {
+        heading: 'Check the regulated work separately',
+        paragraphs: ['If electrical work is required, use a competent electrician and confirm whether the work is notifiable under the rules that apply where the property is located. Do not assume a plumbing quote automatically covers electrical compliance.'],
+      },
+    ],
+    sources: [
+      { title: 'Shower installation cost breakdown 2026', publisher: 'Checkatrade', url: 'https://www.checkatrade.com/blog/cost-guides/shower-installation-cost/' },
+      { title: 'Electrical safety: Approved Document P', publisher: 'GOV.UK', url: 'https://www.gov.uk/government/publications/electrical-safety-approved-document-p' },
+    ],
+    relatedSlugs: ['bathroom-renovation-cost-uk', 'bathroom-tiling-cost-uk', 'electrical-work-building-regulations-england', 'wet-room-cost-uk'],
+  },
+  {
+    slug: 'wet-room-cost-uk',
+    audience: 'homeowner',
+    category: 'Costs & pricing',
+    title: 'Wet room cost in the UK: 2026 guide',
+    summary: 'Wet rooms cost more than a simple shower swap because drainage, waterproofing and floor construction all matter.',
+    description: 'Typical UK wet-room installation costs in 2026, including waterproofing, drainage, floor preparation and the factors that affect price.',
+    appliesTo: 'UK homeowners. Structural, drainage, electrical and Building Regulations requirements depend on the property and location.',
+    reviewedAt: '2026-10-03',
+    keywords: ['wet room cost', 'wet room installation cost uk', 'cost to install wet room', 'wetroom price', 'disabled wet room cost'],
+    keyPoints: [
+      'A wet room is a construction and waterproofing project, not just a shower without a tray.',
+      'Current published guidance gives a very broad range because floor structure, drainage and specification vary heavily.',
+      'Upstairs timber floors and major drainage changes can add complexity.',
+      'The quote should state exactly what waterproofing, floor preparation, drainage and tiling are included.',
+    ],
+    sections: [
+      {
+        heading: 'Typical published range',
+        paragraphs: ['Checkatrade’s current 2026 guide places wet-room installation broadly around £5,000–£13,000, with an average figure around £9,000. That is a planning estimate only: smaller straightforward rooms and major structural alterations can sit outside it.'],
+      },
+      {
+        heading: 'Why wet rooms can cost more',
+        bullets: [
+          'Falls to drainage need to be created accurately.',
+          'The floor may need strengthening or specialist former systems.',
+          'Waterproofing must be designed as a complete system.',
+          'More of the room may be tiled than in a standard shower enclosure.',
+          'Ventilation, electrics and accessibility details may add specialist work.',
+        ],
+      },
+      {
+        heading: 'What to see in the quote',
+        paragraphs: ['Look for separate detail on strip-out, floor construction, drainage changes, waterproofing system, tiling, sanitaryware, screens, ventilation and electrical work. “Wet room installation” is too vague on its own for a meaningful comparison.'],
+      },
+    ],
+    sources: [
+      { title: 'Wet room installation costs in the UK in 2026', publisher: 'Checkatrade', url: 'https://www.checkatrade.com/blog/cost-guides/wet-room-installation-cost/' },
+      { title: 'Building regulations approval', publisher: 'GOV.UK', url: 'https://www.gov.uk/building-regulations-approval' },
+    ],
+    relatedSlugs: ['shower-installation-cost-uk', 'bathroom-renovation-cost-uk', 'bathroom-tiling-cost-uk', 'do-i-need-building-regulations-approval'],
+  },
+
 ];
 
 export function adviceGuideBySlug(slug: string) {
