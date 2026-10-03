@@ -10,6 +10,7 @@ import { PublicSeo } from '@/components/PublicSeo';
 import { SemanticHeading } from '@/components/SemanticHeading';
 import { colors, publicResponsiveMetrics, radii } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { scrollToResults } from '@/lib/scroll-to-results';
 import { ADVICE_GUIDES, adviceAudienceLabel, adviceGuideBySlug, searchAdviceGuides, type AdviceAudience, type AdviceSource } from '@/lib/advice-library';
 
 type AudienceFilter = AdviceAudience | 'all';
@@ -41,6 +42,12 @@ export default function AdviceHub() {
     return category === 'all' ? matches : matches.filter((guide) => guide.category === category);
   }, [query, audience, category]);
 
+  const showGuideResults = () => {
+    setAiResult(null);
+    setAiError('');
+    scrollToResults('advice-guide-results');
+  };
+
   const askAdviceAi = async () => {
     const question = query.trim();
     if (question.length < 3) {
@@ -56,6 +63,7 @@ export default function AdviceHub() {
         body: JSON.stringify({ question, audience }),
       });
       setAiResult(result);
+      scrollToResults('advice-ai-result');
     } catch (error) {
       setAiError(errorMessage(error));
     } finally {
@@ -88,13 +96,16 @@ export default function AdviceHub() {
             mode="outlined"
             value={query}
             onChangeText={(value) => { setQuery(value); setAiResult(null); setAiError(''); }}
-            onSubmitEditing={askAdviceAi}
+            onSubmitEditing={showGuideResults}
             placeholder="e.g. How much deposit should I pay a builder?"
             accessibilityLabel="Search BuildPair advice"
             outlineStyle={styles.inputOutline}
             style={styles.searchInput}
           />
-          <Button mode="contained" icon="creation-outline" onPress={askAdviceAi} loading={asking} disabled={asking}>Ask BuildPair AI</Button>
+          <View style={styles.searchButtons}>
+            <Button mode="outlined" icon="magnify" style={[styles.searchAction, metrics.phone && styles.searchActionMobile]} onPress={showGuideResults}>Search guides</Button>
+            <Button mode="contained" icon="creation-outline" style={[styles.searchAction, metrics.phone && styles.searchActionMobile]} onPress={askAdviceAi} loading={asking} disabled={asking}>Ask BuildPair AI</Button>
+          </View>
         </View>
         <Text style={styles.aiNote}>Advice AI is constrained to BuildPair’s checked guidance. For regulated, legal or safety-critical questions, use the linked official source for the current detail.</Text>
       </View>
@@ -116,7 +127,7 @@ export default function AdviceHub() {
 
       {aiError ? <View style={styles.errorBox}><Text style={styles.errorText}>{aiError}</Text></View> : null}
 
-      {aiResult ? <View style={styles.aiCard}>
+      {aiResult ? <View nativeID="advice-ai-result" style={styles.aiCard}>
         <Text style={styles.eyebrow}>BuildPair AI answer</Text>
         <Text style={styles.aiAnswer}>{aiResult.answer}</Text>
         {aiResult.guideSlugs.length ? <View style={styles.aiLinks}>
@@ -128,12 +139,12 @@ export default function AdviceHub() {
           })}
         </View> : null}
         {aiResult.sources.length ? <View style={styles.aiLinks}>
-          <Text style={styles.cardLabel}>Checked sources used by these guides</Text>
+          <Text style={styles.cardLabel}>Official sources</Text>
           {aiResult.sources.map((source) => <Button key={source.url} mode="text" icon="open-in-new" onPress={() => Linking.openURL(source.url)}>{source.publisher}: {source.title}</Button>)}
         </View> : null}
       </View> : null}
 
-      <View style={styles.resultsHeader}>
+      <View nativeID="advice-guide-results" style={styles.resultsHeader}>
         <Text style={styles.resultsCount}>{guides.length} {guides.length === 1 ? 'guide' : 'guides'}</Text>
         {query.trim() ? <Text style={styles.resultsFor}>matching “{query.trim()}”</Text> : null}
       </View>
@@ -180,6 +191,9 @@ const styles = StyleSheet.create({
   heroBody: { color: colors.muted, maxWidth: 850, lineHeight: 27, textAlign: 'center' },
   searchBox: { width: '100%', maxWidth: 780, gap: 10, marginTop: 8 },
   searchInput: { backgroundColor: colors.surfaceRaised },
+  searchButtons: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
+  searchAction: { flexGrow: 1, flexBasis: 220 },
+  searchActionMobile: { flexBasis: '100%' },
   inputOutline: { borderRadius: radii.lg },
   aiNote: { color: colors.muted, fontSize: 12, lineHeight: 18, maxWidth: 760, textAlign: 'center' },
   content: { width: '100%', maxWidth: 1120, alignSelf: 'center', padding: 20, paddingBottom: 48, gap: 22 },
