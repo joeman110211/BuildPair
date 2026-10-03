@@ -679,7 +679,1449 @@ export const ADVICE_GUIDES: AdviceGuide[] = [
     ],
     relatedSlugs: ['shower-installation-cost-uk', 'bathroom-renovation-cost-uk', 'bathroom-tiling-cost-uk', 'do-i-need-building-regulations-approval'],
   },
-
+,
+{
+    "slug": "plumber-cost-uk-2026",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Plumber cost in the UK: hourly and day rates for 2026",
+    "summary": "Plan for plumber hourly rates, day rates, call-out fees and common small-job pricing before requesting quotes.",
+    "description": "Typical UK plumber costs in 2026, including hourly rates, day rates, call-out fees and common plumbing jobs.",
+    "appliesTo": "UK homeowners. Actual rates vary by region, urgency, business size and job complexity.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "plumber cost",
+      "plumber hourly rate",
+      "plumber day rate",
+      "plumbing cost uk",
+      "plumber prices 2026"
+    ],
+    "keyPoints": [
+      "Current UK guidance puts standard plumber rates around £40–£60 per hour, with an average near £50.",
+      "A typical published day rate is around £350.",
+      "Emergency and out-of-hours work costs materially more and may include a call-out fee.",
+      "For larger jobs, a fixed project quote is often more useful than multiplying an hourly rate."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 plumber rates",
+        "paragraphs": [
+          "Checkatrade's current 2026 guide publishes plumber rates of roughly £40–£60 per hour and £325–£375 per day, with an average around £50 per hour or £350 per day. These are budgeting figures rather than guaranteed local prices."
+        ]
+      },
+      {
+        "heading": "Why your quote can be higher or lower",
+        "bullets": [
+          "Urgent or out-of-hours attendance.",
+          "London and South East labour costs.",
+          "Access to pipework and the need to open walls or floors.",
+          "Materials, valves, fittings and replacement components.",
+          "Whether the plumber quotes by time or by the completed job."
+        ]
+      },
+      {
+        "heading": "What to ask before booking",
+        "paragraphs": [
+          "Confirm whether there is a call-out fee or minimum charge, whether VAT and materials are included, and whether the price is hourly or fixed for the described work."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Plumber costs in the UK: 2026 price guide",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/plumber-cost/"
+      },
+      {
+        "title": "Plumbing installation costs in the UK in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/plumbing-installation-costs/"
+      }
+    ],
+    "relatedSlugs": [
+      "emergency-plumber-cost-uk",
+      "leak-repair-cost-uk",
+      "bathroom-plumbing-cost-uk"
+    ]
+  },
+  {
+    "slug": "emergency-plumber-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Emergency plumber cost in the UK: 2026 call-out guide",
+    "summary": "Understand emergency hourly rates, call-out charges and why out-of-hours plumbing can cost significantly more.",
+    "description": "Typical UK emergency plumber costs in 2026, including call-out fees, hourly rates and urgent repair pricing.",
+    "appliesTo": "UK homeowners. Emergency rates vary significantly by time, region and severity.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "emergency plumber cost",
+      "emergency plumber call out fee",
+      "out of hours plumber",
+      "plumber emergency rate"
+    ],
+    "keyPoints": [
+      "Current published guidance puts emergency plumber hourly rates broadly around £75–£150.",
+      "A separate call-out fee around £100–£120 is common in current national guidance.",
+      "Night, weekend and bank-holiday work can cost more.",
+      "Ask for the attendance fee and labour rate before the visit where circumstances allow."
+    ],
+    "sections": [
+      {
+        "heading": "Typical emergency pricing",
+        "paragraphs": [
+          "Checkatrade's 2026 plumber guide lists emergency plumber hourly rates around £75–£150, averaging about £100, with typical emergency call-out fees around £100–£120."
+        ]
+      },
+      {
+        "heading": "What the call-out normally covers",
+        "paragraphs": [
+          "A call-out fee may cover travel and initial attendance rather than the full repair. Parts, additional labour and follow-up work can be charged separately."
+        ]
+      },
+      {
+        "heading": "Reduce surprises",
+        "bullets": [
+          "Ask whether the fee includes the first hour.",
+          "Confirm any out-of-hours premium.",
+          "Request approval before non-emergency extra work is added.",
+          "Keep the invoice and description of the repair."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Plumber costs in the UK: 2026 price guide",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/plumber-cost/"
+      }
+    ],
+    "relatedSlugs": [
+      "plumber-cost-uk-2026",
+      "leak-repair-cost-uk"
+    ]
+  },
+  {
+    "slug": "radiator-installation-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Radiator installation cost in the UK: 2026 guide",
+    "summary": "Budget for replacing or adding a radiator and understand when new pipework makes the job more expensive.",
+    "description": "Typical UK radiator installation costs in 2026, including replacement radiators, new pipework and labour factors.",
+    "appliesTo": "UK homeowners. Boiler, heating-system and pipework condition can materially affect the price.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "radiator installation cost",
+      "replace radiator cost",
+      "new radiator cost",
+      "radiator fitting price"
+    ],
+    "keyPoints": [
+      "A straightforward radiator installation is currently published around £150–£180 in one major UK cost guide.",
+      "Moving a radiator or adding new pipework is a different and usually more expensive job.",
+      "Designer or oversized radiators can increase both product and labour cost.",
+      "Heating-system balancing and valve changes may also be required."
+    ],
+    "sections": [
+      {
+        "heading": "Typical planning figure",
+        "paragraphs": [
+          "Checkatrade's current plumber-cost data lists radiator installation around £150–£180, averaging roughly £165 for a straightforward job."
+        ]
+      },
+      {
+        "heading": "What changes the price",
+        "bullets": [
+          "Like-for-like replacement versus a new location.",
+          "Access beneath floors or behind walls.",
+          "Thermostatic valve replacement.",
+          "Radiator size and weight.",
+          "System draining, refilling and balancing."
+        ]
+      },
+      {
+        "heading": "Describe the job accurately",
+        "paragraphs": [
+          "When requesting quotes, state whether the radiator is staying in the same location and whether you are supplying the radiator and valves."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Plumber costs in the UK: 2026 price guide",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/plumber-cost/"
+      }
+    ],
+    "relatedSlugs": [
+      "plumber-cost-uk-2026",
+      "whole-house-plumbing-cost-uk"
+    ]
+  },
+  {
+    "slug": "leak-repair-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Plumbing leak repair cost in the UK: 2026 guide",
+    "summary": "Estimate the cost of fixing an accessible leak and understand why hidden leaks can cost much more.",
+    "description": "Typical UK plumbing leak repair costs in 2026, including accessible leaks, burst pipes and hidden-access work.",
+    "appliesTo": "UK homeowners. Water damage, access and emergency attendance can dominate the final cost.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "leak repair cost",
+      "plumber leak cost",
+      "fix leaking pipe cost",
+      "burst pipe repair cost"
+    ],
+    "keyPoints": [
+      "Current published guidance puts many simple leak repairs around £77–£128, averaging about £100.",
+      "Burst-pipe repairs are often higher and emergency attendance can add a call-out fee.",
+      "Hidden leaks behind floors, ceilings or tiled walls can require access and making-good work.",
+      "Stopping active water damage quickly can matter more than finding the cheapest call-out."
+    ],
+    "sections": [
+      {
+        "heading": "Typical simple repair range",
+        "paragraphs": [
+          "Checkatrade currently publishes a typical leak-repair range around £77–£128 and an average near £100, while burst-pipe repair examples can rise to around £150 or more depending on the work."
+        ]
+      },
+      {
+        "heading": "Hidden costs are often access costs",
+        "paragraphs": [
+          "A cheap fitting can still become an expensive job if the plumber has to locate the leak, lift flooring, remove boxing or open a wall before reaching it."
+        ]
+      },
+      {
+        "heading": "For active leaks",
+        "bullets": [
+          "Shut off the water if safe and practical.",
+          "Protect electrics from water and seek urgent help where needed.",
+          "Photograph damage for your records.",
+          "Ask what repair and making-good are included."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Plumber costs in the UK: 2026 price guide",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/plumber-cost/"
+      }
+    ],
+    "relatedSlugs": [
+      "emergency-plumber-cost-uk",
+      "plumber-cost-uk-2026"
+    ]
+  },
+  {
+    "slug": "tap-installation-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Tap installation and replacement cost in the UK: 2026 guide",
+    "summary": "Compare kitchen, basin, bath and mixer-tap fitting costs and understand when pipework changes increase labour.",
+    "description": "Typical UK tap installation costs in 2026, including kitchen taps, basin taps, bath taps and labour-only replacements.",
+    "appliesTo": "UK homeowners. Tap type, access and existing isolation valves affect the price.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "tap installation cost",
+      "replace kitchen tap cost",
+      "bath tap replacement cost",
+      "mixer tap fitting cost"
+    ],
+    "keyPoints": [
+      "Current UK guidance puts average tap-installation labour around £140.",
+      "Like-for-like replacements are generally cheaper than adapting pipework or changing tap configuration.",
+      "Published replacement ranges vary by basin, bath and kitchen tap type.",
+      "Supplying your own tap can separate product cost from labour."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 figures",
+        "paragraphs": [
+          "Checkatrade's current guide gives average tap-installation labour around £140. It publishes basin-tap replacement around £140–£220, mixer tap replacement around £140–£260 and bath tap replacement around £200–£320."
+        ]
+      },
+      {
+        "heading": "Why some tap changes take longer",
+        "bullets": [
+          "No accessible isolation valves.",
+          "Corroded or old fittings.",
+          "Changing from separate hot/cold taps to a mixer.",
+          "Awkward access behind sinks or baths.",
+          "Non-standard pipe sizes or adapters."
+        ]
+      },
+      {
+        "heading": "Get a useful quote",
+        "paragraphs": [
+          "Tell the plumber the current tap type, the replacement type and whether isolation valves are present. Photos can help the plumber price a straightforward swap more accurately."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Tap installation cost in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/tap-installation-cost/"
+      }
+    ],
+    "relatedSlugs": [
+      "outside-tap-installation-cost-uk",
+      "plumber-cost-uk-2026"
+    ]
+  },
+  {
+    "slug": "outside-tap-installation-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Outside tap installation cost in the UK: 2026 guide",
+    "summary": "Budget for fitting an outside tap and understand how pipe-run length, access and frost protection affect the price.",
+    "description": "Typical UK outside tap installation costs in 2026, including materials, labour and common installation factors.",
+    "appliesTo": "UK homeowners. Water fittings requirements apply to the installation.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "outside tap cost",
+      "garden tap installation cost",
+      "fit outside tap price",
+      "outdoor tap installation"
+    ],
+    "keyPoints": [
+      "Current published guidance puts a standard outside-tap installation around £120–£200 including materials and labour.",
+      "Longer pipe runs and difficult wall access increase labour.",
+      "Hot-and-cold outdoor mixers normally cost more than a simple cold supply.",
+      "Backflow protection and compliant fittings matter."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 range",
+        "paragraphs": [
+          "Checkatrade currently publishes a typical outside-tap installation range of £120–£200 for materials and labour, averaging around £160."
+        ]
+      },
+      {
+        "heading": "What affects the quote",
+        "bullets": [
+          "Distance from the nearest suitable water supply.",
+          "Wall thickness and drilling access.",
+          "Cold-only versus hot-and-cold supply.",
+          "Frost-resistant fittings.",
+          "Whether pipework is surface-mounted or concealed."
+        ]
+      },
+      {
+        "heading": "Compliance still matters",
+        "paragraphs": [
+          "Outside water fittings should be installed in line with the applicable Water Supply (Water Fittings) Regulations or local equivalent requirements, including suitable backflow protection."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Tap installation cost in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/tap-installation-cost/"
+      }
+    ],
+    "relatedSlugs": [
+      "tap-installation-cost-uk",
+      "plumber-cost-uk-2026"
+    ]
+  },
+  {
+    "slug": "bathroom-plumbing-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Bathroom plumbing cost in the UK: 2026 guide",
+    "summary": "Plan the plumbing part of a bathroom project separately from sanitaryware, tiling and electrics.",
+    "description": "Typical UK bathroom plumbing costs in 2026, including new pipework, layout changes and the factors that increase labour.",
+    "appliesTo": "UK homeowners. Figures exclude many fixtures and finishes unless a quote says otherwise.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "bathroom plumbing cost",
+      "new bathroom plumbing cost",
+      "bathroom pipework cost",
+      "plumbing bathroom price"
+    ],
+    "keyPoints": [
+      "Current UK guidance puts bathroom plumbing installation around £3,250 excluding sanitaryware for a typical project example.",
+      "Keeping fixtures near existing services usually costs less than moving drainage and supplies.",
+      "A plumbing quote may exclude sanitaryware, tiling, electrics and decoration.",
+      "Ask for the plumbing scope to be itemised separately."
+    ],
+    "sections": [
+      {
+        "heading": "Current planning figure",
+        "paragraphs": [
+          "Checkatrade's 2026 plumbing-installation guide gives a typical bathroom plumbing cost around £3,250 excluding sanitaryware. The real figure depends heavily on the existing layout and the amount of new pipework required."
+        ]
+      },
+      {
+        "heading": "Expensive layout changes",
+        "bullets": [
+          "Moving a WC soil connection.",
+          "Relocating bath or shower wastes.",
+          "Running new hot and cold supplies.",
+          "Concealing pipework in floors or walls.",
+          "Working around joists, structural elements or limited access."
+        ]
+      },
+      {
+        "heading": "Separate plumbing from the rest",
+        "paragraphs": [
+          "For a useful comparison, identify which parts of the bathroom quote cover plumbing and which cover sanitaryware, tiling, waterproofing, electrical work and finishing."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Plumbing installation costs in the UK in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/plumbing-installation-costs/"
+      }
+    ],
+    "relatedSlugs": [
+      "bathroom-renovation-cost-uk",
+      "bathroom-fitter-cost-uk",
+      "plumber-cost-uk-2026"
+    ]
+  },
+  {
+    "slug": "whole-house-plumbing-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Whole-house plumbing cost in the UK: 2026 guide",
+    "summary": "Understand the scale of replumbing a home and why property size, access and heating work can change the budget dramatically.",
+    "description": "Typical UK whole-house plumbing costs in 2026, including 2-bed and 4-bed property planning figures and major cost drivers.",
+    "appliesTo": "UK homeowners. Scope can range from new water pipework only to much broader heating and drainage work.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "whole house plumbing cost",
+      "replumb house cost",
+      "new plumbing house cost",
+      "plumbing installation cost"
+    ],
+    "keyPoints": [
+      "Current 2026 guidance gives whole-house plumbing examples around £14,500 for a 2-bed property and £21,500 for a 4-bed property.",
+      "Clarify whether heating, drainage, sanitaryware and making-good are included.",
+      "Occupied homes and difficult access can increase labour.",
+      "Older properties can reveal additional work after floors and walls are opened."
+    ],
+    "sections": [
+      {
+        "heading": "Published planning figures",
+        "paragraphs": [
+          "Checkatrade's current plumbing-installation guide gives example whole-house plumbing costs of around £14,500 for a 2-bed property and £21,500 for a 4-bed property. These are broad planning figures, not fixed rates."
+        ]
+      },
+      {
+        "heading": "Define the scope before comparing prices",
+        "bullets": [
+          "Hot and cold water distribution.",
+          "Heating pipework and radiators.",
+          "Waste and soil pipework.",
+          "Bathrooms and kitchen connections.",
+          "Boiler or cylinder work.",
+          "Making good after access."
+        ]
+      },
+      {
+        "heading": "Why property condition matters",
+        "paragraphs": [
+          "Older homes may contain obsolete pipe materials, awkward routes or previous alterations that only become visible once work starts. A clear contingency is sensible on major replumbing projects."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Plumbing installation costs in the UK in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/plumbing-installation-costs/"
+      }
+    ],
+    "relatedSlugs": [
+      "plumber-cost-uk-2026",
+      "bathroom-plumbing-cost-uk"
+    ]
+  },
+  {
+    "slug": "electrician-cost-uk-2026",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Electrician cost in the UK: hourly and day rates for 2026",
+    "summary": "Plan for electrician hourly rates, day rates, minimum charges and common fixed-price electrical jobs.",
+    "description": "Typical UK electrician costs in 2026, including hourly rates, day rates, emergency rates and common job prices.",
+    "appliesTo": "UK homeowners. Rates vary by region, urgency, certification needs and job complexity.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "electrician cost",
+      "electrician hourly rate",
+      "electrician day rate",
+      "electrical cost uk",
+      "electrician prices 2026"
+    ],
+    "keyPoints": [
+      "Current 2026 guidance puts normal electrician rates around £45–£60 per hour, averaging about £50.",
+      "A typical published day rate is around £400.",
+      "Emergency work can approach £80–£100 per hour.",
+      "Small jobs may still attract a minimum charge or call-out fee."
+    ],
+    "sections": [
+      {
+        "heading": "Typical electrician rates",
+        "paragraphs": [
+          "Checkatrade's current guide publishes electrician rates around £45–£60 per hour, with an average near £50, and a typical day rate around £400. Emergency rates are published around £80–£100 per hour."
+        ]
+      },
+      {
+        "heading": "Fixed job prices are common",
+        "paragraphs": [
+          "Sockets, light fittings, consumer units, showers, EICRs and rewires are often priced as jobs rather than simply hours multiplied by a rate."
+        ]
+      },
+      {
+        "heading": "Compare the whole quote",
+        "bullets": [
+          "Materials and fittings.",
+          "Testing and certification.",
+          "Making good after chasing.",
+          "Travel or call-out charges.",
+          "VAT where applicable."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Electrician hourly rates in the UK in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/electrician-hourly-rate/"
+      }
+    ],
+    "relatedSlugs": [
+      "house-rewire-cost-uk",
+      "consumer-unit-replacement-cost-uk",
+      "eicr-cost-uk"
+    ]
+  },
+  {
+    "slug": "house-rewire-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "House rewiring cost in the UK: 2026 price guide",
+    "summary": "Budget for a full rewire by property size, access and specification rather than relying on one national average.",
+    "description": "Typical UK house rewiring costs in 2026, including property-size ranges, labour, materials and making-good factors.",
+    "appliesTo": "UK homeowners. Electrical work should be carried out by competent people and relevant notification requirements must be met.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "house rewire cost",
+      "rewiring cost uk",
+      "cost to rewire house",
+      "rewire 3 bed house",
+      "electrical rewire price"
+    ],
+    "keyPoints": [
+      "Current major UK guides place full house rewires broadly between about £2,500 and £12,500 depending on property size and scope.",
+      "Checkatrade's current range is roughly £3,900–£10,000 for common property sizes.",
+      "Occupied properties and difficult access can increase labour.",
+      "Making good, decorating and premium fittings may be extra."
+    ],
+    "sections": [
+      {
+        "heading": "Current 2026 ranges",
+        "paragraphs": [
+          "Checkatrade currently publishes typical rewiring costs from about £3,900 for a 1-bed flat to around £10,000 for a 5-bed house. MyJobQuote publishes a broader £2,500–£12,500 range across different property types and specifications."
+        ]
+      },
+      {
+        "heading": "What makes rewiring expensive",
+        "bullets": [
+          "Property size and circuit count.",
+          "Occupied versus empty property.",
+          "Access beneath floors and inside walls.",
+          "Number and type of sockets, lights and specialist circuits.",
+          "Consumer-unit replacement.",
+          "Making good and redecoration."
+        ]
+      },
+      {
+        "heading": "Check the condition first",
+        "paragraphs": [
+          "An Electrical Installation Condition Report can help identify the condition of an existing installation before a major rewire is specified."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "How much does it cost to rewire a house in the UK?",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/rewire-house-cost/"
+      },
+      {
+        "title": "How much to rewire a house in the UK? 2026 prices",
+        "publisher": "MyJobQuote",
+        "url": "https://www.myjobquote.co.uk/costs/rewiring-a-house"
+      },
+      {
+        "title": "Electrical safety: Approved Document P",
+        "publisher": "GOV.UK",
+        "url": "https://www.gov.uk/government/publications/electrical-safety-approved-document-p"
+      }
+    ],
+    "relatedSlugs": [
+      "electrician-cost-uk-2026",
+      "consumer-unit-replacement-cost-uk",
+      "eicr-cost-uk"
+    ]
+  },
+  {
+    "slug": "consumer-unit-replacement-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Consumer unit replacement cost in the UK: 2026 guide",
+    "summary": "Understand typical fuse-box replacement pricing, testing and why remedial work can change the final bill.",
+    "description": "Typical UK consumer unit replacement costs in 2026, including testing, certification and common extra work.",
+    "appliesTo": "UK homeowners. Consumer-unit work is safety-critical and may be notifiable depending on the nation and circumstances.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "consumer unit replacement cost",
+      "fuse box replacement cost",
+      "new fuse board cost",
+      "consumer unit price"
+    ],
+    "keyPoints": [
+      "Current 2026 guidance puts a typical consumer-unit replacement around £450–£800.",
+      "The published average is roughly £625.",
+      "Existing faults or non-compliant circuits can add remedial work.",
+      "Testing and certification should be included in the scope."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 cost",
+        "paragraphs": [
+          "Checkatrade currently publishes a consumer-unit replacement range of roughly £450–£800, averaging around £625."
+        ]
+      },
+      {
+        "heading": "Why the quote can grow",
+        "bullets": [
+          "Number of circuits.",
+          "Existing wiring defects.",
+          "Earthing and bonding issues.",
+          "Surge protection or additional protection requirements.",
+          "Access and labelling/testing work."
+        ]
+      },
+      {
+        "heading": "Do not compare the box price alone",
+        "paragraphs": [
+          "The consumer unit itself is only part of the job. Safe isolation, testing, fault identification, installation and certification are central to the work."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Electrician hourly rates in the UK in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/electrician-hourly-rate/"
+      },
+      {
+        "title": "Electrical safety: Approved Document P",
+        "publisher": "GOV.UK",
+        "url": "https://www.gov.uk/government/publications/electrical-safety-approved-document-p"
+      }
+    ],
+    "relatedSlugs": [
+      "electrician-cost-uk-2026",
+      "house-rewire-cost-uk",
+      "electrical-work-building-regulations-england"
+    ]
+  },
+  {
+    "slug": "socket-installation-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Plug socket installation cost in the UK: 2026 guide",
+    "summary": "Compare the cost of adding a socket with simple replacement work and understand how cable routes affect labour.",
+    "description": "Typical UK plug socket installation costs in 2026, including new sockets, cable runs and common extra work.",
+    "appliesTo": "UK homeowners. Electrical safety and notification requirements depend on the work and location.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "socket installation cost",
+      "new plug socket cost",
+      "add socket price",
+      "electrician socket cost"
+    ],
+    "keyPoints": [
+      "Current national guidance puts a standard socket installation around £55–£75, averaging about £65.",
+      "Long cable runs, chasing and difficult access can increase the price.",
+      "Several sockets done during one visit can be more efficient than separate call-outs.",
+      "Testing and safe circuit capacity still matter on small jobs."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 price",
+        "paragraphs": [
+          "Checkatrade currently publishes a typical socket-installation range around £55–£75, with an average near £65 for a straightforward installation."
+        ]
+      },
+      {
+        "heading": "What changes the cost",
+        "bullets": [
+          "Distance to a suitable circuit.",
+          "Surface wiring versus chasing walls.",
+          "Wall construction and making good.",
+          "Number of sockets installed in one visit.",
+          "Condition and capacity of the existing circuit."
+        ]
+      },
+      {
+        "heading": "Describe the location",
+        "paragraphs": [
+          "Photos and a clear description of the desired socket position can make initial quoting more useful, though the electrician still needs to confirm the circuit is suitable."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Electrician hourly rates in the UK in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/electrician-hourly-rate/"
+      }
+    ],
+    "relatedSlugs": [
+      "electrician-cost-uk-2026",
+      "light-fitting-installation-cost-uk"
+    ]
+  },
+  {
+    "slug": "light-fitting-installation-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Light fitting installation cost in the UK: 2026 guide",
+    "summary": "Budget for replacing a light fitting, moving a switch or installing more complex lighting.",
+    "description": "Typical UK light fitting and light switch installation costs in 2026, including straightforward replacements and more complex work.",
+    "appliesTo": "UK homeowners. Complex fittings, access and new wiring can materially increase labour.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "light fitting installation cost",
+      "replace light fitting cost",
+      "light switch replacement cost",
+      "electrician lighting cost"
+    ],
+    "keyPoints": [
+      "Current 2026 guidance puts a standard light-fitting replacement around £55–£75.",
+      "A like-for-like light-switch replacement is published around £75 in a current UK guide.",
+      "Moving switches or adding new points costs more because new wiring is needed.",
+      "High ceilings, exterior fittings and decorative fittings can increase labour."
+    ],
+    "sections": [
+      {
+        "heading": "Typical straightforward jobs",
+        "paragraphs": [
+          "Checkatrade currently publishes standard light-fitting replacement around £55–£75. Its 2026 light-switch guide gives about £75 for a like-for-like switch replacement and around £150 for moving or adding one switch."
+        ]
+      },
+      {
+        "heading": "What increases the quote",
+        "bullets": [
+          "New cable routes.",
+          "High or awkward access.",
+          "Multiple downlights.",
+          "Exterior or weatherproof fittings.",
+          "Heavy decorative fittings or specialist supports."
+        ]
+      },
+      {
+        "heading": "Small jobs still have minimum charges",
+        "paragraphs": [
+          "Even if the physical replacement takes less than an hour, an electrician may apply a minimum attendance or half-day charge."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Electrician hourly rates in the UK in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/electrician-hourly-rate/"
+      },
+      {
+        "title": "Cost to replace a light switch in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/cost-replace-light-switch/"
+      }
+    ],
+    "relatedSlugs": [
+      "socket-installation-cost-uk",
+      "electrician-cost-uk-2026"
+    ]
+  },
+  {
+    "slug": "electric-shower-installation-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Electric shower installation cost in the UK: 2026 guide",
+    "summary": "Separate the cost of the shower unit from the electrical installation and understand when circuit upgrades are needed.",
+    "description": "Typical UK electric shower installation costs in 2026, including electrical labour, shower units and circuit-upgrade factors.",
+    "appliesTo": "UK homeowners. Electrical and plumbing requirements depend on the existing installation and UK nation.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "electric shower installation cost",
+      "fit electric shower cost",
+      "electric shower electrician cost",
+      "new shower circuit cost"
+    ],
+    "keyPoints": [
+      "Current guidance puts electric-shower electrical installation around £250–£400 excluding the shower unit.",
+      "Supply and installation can rise toward roughly £800 in some current examples.",
+      "Existing cable size, circuit protection and consumer-unit capacity matter.",
+      "Bathroom electrical work may be notifiable under applicable Building Regulations."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 figures",
+        "paragraphs": [
+          "Checkatrade currently publishes electric-shower installation labour around £250–£400, averaging roughly £325, excluding the shower unit. It notes that supply-and-install jobs can rise closer to around £800 depending on the product and work required."
+        ]
+      },
+      {
+        "heading": "Why an existing shower does not guarantee a simple swap",
+        "bullets": [
+          "The new shower may have a different power rating.",
+          "Cable size may be unsuitable.",
+          "Circuit protection may need upgrading.",
+          "The consumer unit may need work.",
+          "Plumbing and electrical scopes may be separate."
+        ]
+      },
+      {
+        "heading": "Regulated work",
+        "paragraphs": [
+          "Use a competent electrician and confirm what certification or notification applies to the work where the property is located."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Electrician hourly rates in the UK in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/electrician-hourly-rate/"
+      },
+      {
+        "title": "Electrical safety: Approved Document P",
+        "publisher": "GOV.UK",
+        "url": "https://www.gov.uk/government/publications/electrical-safety-approved-document-p"
+      }
+    ],
+    "relatedSlugs": [
+      "shower-installation-cost-uk",
+      "electrical-work-building-regulations-england",
+      "electrician-cost-uk-2026"
+    ]
+  },
+  {
+    "slug": "eicr-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "EICR cost in the UK: 2026 electrical inspection guide",
+    "summary": "Understand typical Electrical Installation Condition Report pricing and why property size affects the inspection cost.",
+    "description": "Typical UK EICR costs in 2026, including property-size ranges, inspection scope and what happens if defects are found.",
+    "appliesTo": "UK homeowners and landlords. Legal duties differ by tenure, nation and circumstances.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "EICR cost",
+      "electrical safety certificate cost",
+      "electrical inspection cost",
+      "EICR price uk"
+    ],
+    "keyPoints": [
+      "Current UK guidance puts EICR pricing roughly from £125 for a small property to £300+ for larger homes.",
+      "A current national average is around £212.50.",
+      "Remedial work identified by the inspection is normally separate.",
+      "An EICR reports condition; it is not itself a repair quote."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 cost",
+        "paragraphs": [
+          "Checkatrade currently publishes EICR costs from around £125 for a one-bedroom property to £300+ for larger homes, with an average figure around £212.50."
+        ]
+      },
+      {
+        "heading": "What the inspection is for",
+        "paragraphs": [
+          "An EICR assesses the condition of an electrical installation and identifies observations that may need attention. Any repair or upgrade work is normally priced separately."
+        ]
+      },
+      {
+        "heading": "What changes the price",
+        "bullets": [
+          "Property size.",
+          "Number of circuits.",
+          "Access to boards and equipment.",
+          "Complexity of the installation.",
+          "Commercial versus domestic premises."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Electrician hourly rates in the UK in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/electrician-hourly-rate/"
+      }
+    ],
+    "relatedSlugs": [
+      "house-rewire-cost-uk",
+      "electrician-cost-uk-2026"
+    ]
+  },
+  {
+    "slug": "ev-charger-installation-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Home EV charger installation cost in the UK: 2026 guide",
+    "summary": "Budget for the charger, electrical installation and possible cable-route or groundworks extras.",
+    "description": "Typical UK home EV charger installation costs in 2026, including charger supply, labour, trenching and electrical-upgrade factors.",
+    "appliesTo": "UK homeowners. Grants and eligibility rules can change; check current official schemes before budgeting.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "EV charger installation cost",
+      "home car charger cost",
+      "electric car charger installation",
+      "7kw charger cost uk"
+    ],
+    "keyPoints": [
+      "Current published guidance puts a typical home EV charger supply-and-install figure around £1,000 before any applicable grant.",
+      "Long cable runs, trenching and electrical upgrades can increase the total.",
+      "A typical 7kW charger unit alone is currently published around £450–£800 in one major cost guide.",
+      "Grant availability and eligibility should be checked against current official rules."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 planning figure",
+        "paragraphs": [
+          "Checkatrade currently publishes an average home EV charger supply-and-install cost around £1,000. Its guide gives a typical 7kW charger supply-only range around £450–£800."
+        ]
+      },
+      {
+        "heading": "Common extras",
+        "bullets": [
+          "Long cable routes.",
+          "Consumer-unit or protective-device upgrades.",
+          "Groundworks and trenching.",
+          "Detached garages or parking away from the house.",
+          "Load-management equipment where required."
+        ]
+      },
+      {
+        "heading": "Do not assume a grant",
+        "paragraphs": [
+          "Grant schemes, eligibility and contribution levels can change. Check current government guidance before treating any grant as part of the project budget."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Electric car charger installation cost in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/electric-car-charger-installation-cost/"
+      }
+    ],
+    "relatedSlugs": [
+      "electrician-cost-uk-2026",
+      "consumer-unit-replacement-cost-uk"
+    ]
+  },
+  {
+    "slug": "builder-day-rate-uk-2026",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Builder day rate in the UK: 2026 guide",
+    "summary": "Understand typical builder day rates and why project quotes are more useful than day rates for extensions and renovations.",
+    "description": "Typical UK builder day rates in 2026, including hourly pricing, construction-company rates and factors that affect labour costs.",
+    "appliesTo": "UK homeowners. Builder rates vary by region, project type, business structure and included management.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "builder day rate",
+      "builder hourly rate",
+      "builder cost per day uk",
+      "builder rates 2026"
+    ],
+    "keyPoints": [
+      "Current 2026 guidance uses around £400 per day as a typical builder or construction-company rate.",
+      "Self-employed builders may quote around £40 per hour for smaller work in current national guidance.",
+      "Large projects are normally quoted as complete jobs rather than simple day rates.",
+      "A higher day rate can include project management, insurance, equipment and coordination."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 rate",
+        "paragraphs": [
+          "Checkatrade's current builder-rate guide uses around £400 per day as a typical builder/construction-company rate and around £40 per hour for some self-employed builder work."
+        ]
+      },
+      {
+        "heading": "Why a day rate can mislead",
+        "paragraphs": [
+          "An extension builder coordinating several trades may cost more per day than a sole trader doing a small repair, but the scope, supervision and overheads are completely different."
+        ]
+      },
+      {
+        "heading": "For larger projects",
+        "bullets": [
+          "Compare the full written scope.",
+          "Check materials and waste removal.",
+          "Understand who manages subcontractors.",
+          "Agree variation pricing.",
+          "Use staged payments tied to clear work milestones."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Builder day rates 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/builder-day-rate/"
+      }
+    ],
+    "relatedSlugs": [
+      "house-extension-cost-uk",
+      "how-to-compare-building-quotes"
+    ]
+  },
+  {
+    "slug": "house-extension-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "House extension cost in the UK: 2026 price guide",
+    "summary": "Plan extension costs per square metre and understand the difference between shell-only and finished space.",
+    "description": "Typical UK house extension costs in 2026, including per-m² rates, single-storey examples and major budget factors.",
+    "appliesTo": "UK homeowners. Planning, Building Regulations and party-wall requirements depend on the project and location.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "house extension cost",
+      "extension cost per m2",
+      "single storey extension cost",
+      "extension price uk 2026"
+    ],
+    "keyPoints": [
+      "Current UK guidance puts full extension costs broadly around £1,800–£3,000 per m².",
+      "Shell-only extensions are published around £1,200–£1,700 per m².",
+      "A 20m² single-storey extension is currently budgeted around £40,000–£56,000 in one major guide.",
+      "Kitchens, bathrooms and complex structural work push costs above basic living-space rates."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 extension rates",
+        "paragraphs": [
+          "Checkatrade currently publishes full house-extension costs around £1,800–£3,000 per m², averaging about £2,400 per m², and shell-only costs around £1,200–£1,700 per m²."
+        ]
+      },
+      {
+        "heading": "Example project sizes",
+        "paragraphs": [
+          "Its 2026 guide places a 20m² single-storey extension around £40,000–£56,000, a 30m² project around £60,000–£84,000 and larger 50m² projects around £100,000–£140,000."
+        ]
+      },
+      {
+        "heading": "Budget beyond the shell",
+        "bullets": [
+          "Design and structural engineering.",
+          "Building Control fees.",
+          "Kitchen or bathroom fit-out.",
+          "Glazing and doors.",
+          "Heating and electrical work.",
+          "Flooring and decoration.",
+          "Contingency for ground conditions and changes."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "House extension cost breakdown 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/house-extension-cost/"
+      },
+      {
+        "title": "Building regulations approval",
+        "publisher": "GOV.UK",
+        "url": "https://www.gov.uk/building-regulations-approval"
+      }
+    ],
+    "relatedSlugs": [
+      "builder-day-rate-uk-2026",
+      "structural-engineer-cost-uk",
+      "extension-over-garage-cost-uk"
+    ]
+  },
+  {
+    "slug": "loft-conversion-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Loft conversion cost in the UK: 2026 guide",
+    "summary": "Compare rooflight, dormer, hip-to-gable and other loft-conversion budgets before requesting specialist quotes.",
+    "description": "Typical UK loft conversion costs in 2026, including Velux, dormer, hip-to-gable and mansard project ranges.",
+    "appliesTo": "UK homeowners. Building Regulations apply and planning requirements depend on the design and property.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "loft conversion cost",
+      "dormer loft cost",
+      "velux loft conversion cost",
+      "loft conversion price 2026"
+    ],
+    "keyPoints": [
+      "Current guidance puts many loft conversions between about £27,500 and £75,000+.",
+      "Dormer projects are currently published around £50,000 on average in one major guide.",
+      "Structural changes, stairs, insulation and fire-safety work are major cost drivers.",
+      "Building Regulations approval is required for loft conversions."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 project figures",
+        "paragraphs": [
+          "Checkatrade's current guide places rooflight/Velux conversions around £27,500, dormers around £50,000, hip-to-gable projects around £60,000 and mansard conversions around £65,000 as typical examples."
+        ]
+      },
+      {
+        "heading": "Why loft costs vary",
+        "bullets": [
+          "Existing roof structure.",
+          "Required headroom and floor strengthening.",
+          "Dormer or roof-shape alterations.",
+          "New stairs.",
+          "Fire-safety upgrades.",
+          "Bathrooms or plumbing.",
+          "Insulation, windows and finishes."
+        ]
+      },
+      {
+        "heading": "Approvals",
+        "paragraphs": [
+          "Loft conversions must meet Building Regulations. Planning permission may also be needed depending on the type of alteration, permitted-development rights and property constraints."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Loft conversion cost: 2026 UK price guide",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/loft-conversion-cost/"
+      },
+      {
+        "title": "Building regulations approval",
+        "publisher": "GOV.UK",
+        "url": "https://www.gov.uk/building-regulations-approval"
+      }
+    ],
+    "relatedSlugs": [
+      "house-extension-cost-uk",
+      "structural-engineer-cost-uk"
+    ]
+  },
+  {
+    "slug": "garage-conversion-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Garage conversion cost in the UK: 2026 guide",
+    "summary": "Compare integral, attached and detached garage-conversion budgets and the work needed to make a garage habitable.",
+    "description": "Typical UK garage conversion costs in 2026, including per-m² ranges, project examples and major cost factors.",
+    "appliesTo": "UK homeowners. Planning and Building Regulations requirements depend on the property and intended use.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "garage conversion cost",
+      "convert garage cost uk",
+      "garage conversion price",
+      "garage to room cost"
+    ],
+    "keyPoints": [
+      "Current major UK guides place many standard garage conversions around £8,000–£20,000.",
+      "MyJobQuote currently publishes an average standard garage conversion around £14,500.",
+      "Detached garages and conversions adding kitchens or bathrooms can cost much more.",
+      "Insulation, floor levels, windows, ventilation and utility upgrades are common budget items."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 ranges",
+        "paragraphs": [
+          "MyJobQuote currently publishes garage-conversion costs from about £8,000 to £45,000 across different garage types, with an average standard project around £14,500. Checkatrade gives around £10,000–£20,000 for many integrated or attached 16m² garages."
+        ]
+      },
+      {
+        "heading": "What turns a garage into habitable space",
+        "bullets": [
+          "Thermal insulation.",
+          "Floor build-up and damp protection.",
+          "Replacing or infilling the garage door.",
+          "Windows and ventilation.",
+          "Heating and electrics.",
+          "Plastering and finishes.",
+          "Plumbing where required."
+        ]
+      },
+      {
+        "heading": "Check approvals early",
+        "paragraphs": [
+          "Garage conversions can require Building Regulations approval and may need planning permission in some situations, particularly where permitted-development rights are restricted."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Garage conversion cost UK: 2026 guide",
+        "publisher": "MyJobQuote",
+        "url": "https://www.myjobquote.co.uk/costs/garage-conversion-cost"
+      },
+      {
+        "title": "Garage conversion cost in the UK in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/garage-conversion-cost/"
+      }
+    ],
+    "relatedSlugs": [
+      "garage-build-cost-uk",
+      "house-extension-cost-uk"
+    ]
+  },
+  {
+    "slug": "structural-engineer-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Structural engineer cost in the UK: 2026 guide",
+    "summary": "Budget for site visits, reports, beam calculations and extension design work before structural building begins.",
+    "description": "Typical UK structural engineer costs in 2026, including site visits, reports, RSJ calculations and residential project fees.",
+    "appliesTo": "UK homeowners. Engineering fees vary with complexity, region and the level of design responsibility.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "structural engineer cost",
+      "structural engineer fees",
+      "RSJ calculation cost",
+      "structural survey cost"
+    ],
+    "keyPoints": [
+      "Current 2026 guidance puts structural engineer hourly rates around £100–£200.",
+      "A site inspection is currently published around £300 and a report around £700 in one major guide.",
+      "RSJ calculations may be around £200 where separately priced.",
+      "Complex residential design work can cost several thousand pounds."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 fees",
+        "paragraphs": [
+          "Checkatrade currently publishes structural engineer rates around £100–£200 per hour, a typical site inspection around £300, a report around £700 and an RSJ calculation around £200."
+        ]
+      },
+      {
+        "heading": "What you are paying for",
+        "bullets": [
+          "Structural assessment.",
+          "Load calculations.",
+          "Beam or lintel specification.",
+          "Drawings and details for Building Regulations.",
+          "Coordination with architects or builders where needed."
+        ]
+      },
+      {
+        "heading": "Check the deliverables",
+        "paragraphs": [
+          "Ask whether the fee includes the site visit, calculations, drawings, revisions and responses to Building Control queries."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Structural engineer costs UK: 2026 prices",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/structural-engineer-costs/"
+      }
+    ],
+    "relatedSlugs": [
+      "load-bearing-wall-removal-cost-uk",
+      "house-extension-cost-uk"
+    ]
+  },
+  {
+    "slug": "load-bearing-wall-removal-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Load-bearing wall removal cost in the UK: 2026 guide",
+    "summary": "Budget for structural calculations, temporary support, steelwork and making good when opening up a room.",
+    "description": "Typical UK load-bearing wall removal costs in 2026, including RSJs, structural engineer fees and open-plan knock-through examples.",
+    "appliesTo": "UK homeowners. Structural work requires competent design and Building Regulations compliance.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "load bearing wall removal cost",
+      "knock through wall cost",
+      "remove supporting wall price",
+      "RSJ wall removal cost"
+    ],
+    "keyPoints": [
+      "Current guidance puts many load-bearing wall removals around £1,250–£1,750.",
+      "Larger openings can cost materially more.",
+      "Steelwork, structural calculations and making good can be separate items.",
+      "Building Regulations approval is normally relevant to structural alterations."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 figures",
+        "paragraphs": [
+          "Checkatrade currently publishes an average range around £1,250–£1,750 for removing a load-bearing wall, with examples around £1,525 for a roughly 2m opening and £2,700 for a larger 4m open-plan opening."
+        ]
+      },
+      {
+        "heading": "What the price needs to cover",
+        "bullets": [
+          "Structural engineer calculations.",
+          "Temporary propping.",
+          "Steel beam or other support.",
+          "Padstones or bearings.",
+          "Labour and demolition.",
+          "Plastering, flooring and decoration afterwards."
+        ]
+      },
+      {
+        "heading": "Do not remove first and calculate later",
+        "paragraphs": [
+          "The support arrangement needs to be designed before structural elements are removed. Building Control requirements should be checked before work starts."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Load-bearing wall removal costs 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/cost-remove-load-bearing-wall/"
+      },
+      {
+        "title": "Building regulations approval",
+        "publisher": "GOV.UK",
+        "url": "https://www.gov.uk/building-regulations-approval"
+      }
+    ],
+    "relatedSlugs": [
+      "structural-engineer-cost-uk",
+      "house-extension-cost-uk"
+    ]
+  },
+  {
+    "slug": "extension-over-garage-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Extension over a garage cost in the UK: 2026 guide",
+    "summary": "Plan for structural checks, roof work and fit-out when adding a room above an existing garage.",
+    "description": "Typical UK extension-over-garage costs in 2026, including single-garage projects, ensuite additions and structural factors.",
+    "appliesTo": "UK homeowners. Planning permission or permitted-development confirmation and Building Regulations may be required.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "extension over garage cost",
+      "build above garage cost",
+      "garage first floor extension",
+      "room over garage price"
+    ],
+    "keyPoints": [
+      "Current 2026 guidance puts a single-garage overbuild around £25,000–£36,000.",
+      "A typical published average is around £30,000 before major extras.",
+      "Adding an ensuite can push the project toward roughly £40,000 in current examples.",
+      "Existing garage foundations must be checked for the additional load."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 range",
+        "paragraphs": [
+          "Checkatrade currently publishes a single-garage extension-over cost of roughly £25,000–£36,000, averaging around £30,000, with ensuite examples reaching around £40,000."
+        ]
+      },
+      {
+        "heading": "Structural checks come first",
+        "paragraphs": [
+          "An existing garage may not have been designed to carry another storey. Foundation capacity, walls and roof structure need assessment before the project can be priced with confidence."
+        ]
+      },
+      {
+        "heading": "Main cost drivers",
+        "bullets": [
+          "Underpinning or strengthening.",
+          "Roof alterations.",
+          "New stairs and access.",
+          "Ensuite plumbing.",
+          "Windows and insulation.",
+          "Structural steelwork.",
+          "Internal fit-out."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Extension over a garage cost in 2026",
+        "publisher": "Checkatrade",
+        "url": "https://www.checkatrade.com/blog/cost-guides/cost-of-extension-over-garage/"
+      }
+    ],
+    "relatedSlugs": [
+      "house-extension-cost-uk",
+      "structural-engineer-cost-uk",
+      "garage-conversion-cost-uk"
+    ]
+  },
+  {
+    "slug": "garage-build-cost-uk",
+    "audience": "homeowner",
+    "category": "Costs & pricing",
+    "title": "Cost to build a garage in the UK: 2026 guide",
+    "summary": "Compare prefab, single-brick and double-garage budgets before deciding whether to build, extend or convert.",
+    "description": "Typical UK garage build costs in 2026, including prefab and brick-built garages, labour and major specification factors.",
+    "appliesTo": "UK homeowners. Planning, Building Regulations and site constraints can affect both feasibility and cost.",
+    "reviewedAt": "2026-10-03",
+    "keywords": [
+      "garage build cost",
+      "cost to build garage uk",
+      "brick garage cost",
+      "double garage cost",
+      "garage construction price"
+    ],
+    "keyPoints": [
+      "Current MyJobQuote data puts traditional brick/block garages broadly around £21,000–£58,000.",
+      "A basic single brick garage is currently published around £21,000 in one 2026 guide.",
+      "Prefab garages can be much cheaper but are a different product and specification.",
+      "Foundations, roof type, doors, insulation, electrics and site access are major cost drivers."
+    ],
+    "sections": [
+      {
+        "heading": "Typical 2026 figures",
+        "paragraphs": [
+          "MyJobQuote currently publishes traditionally built garage costs around £21,000–£58,000, with a basic single brick garage example around £21,000 and a pitched-roof single brick garage around £25,000."
+        ]
+      },
+      {
+        "heading": "Prefab versus traditional build",
+        "paragraphs": [
+          "A prefab kit can cost far less than a traditional masonry garage, but the lifespan, security, insulation, appearance and future conversion potential are not directly comparable."
+        ]
+      },
+      {
+        "heading": "Budget items",
+        "bullets": [
+          "Groundworks and slab.",
+          "Brick or block walls.",
+          "Flat or pitched roof.",
+          "Garage doors and windows.",
+          "Drainage.",
+          "Electrics and security.",
+          "Insulation and internal finishes where required."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Cost to build a garage: 2026 UK prices",
+        "publisher": "MyJobQuote",
+        "url": "https://www.myjobquote.co.uk/costs/garage-extension"
+      }
+    ],
+    "relatedSlugs": [
+      "garage-conversion-cost-uk",
+      "extension-over-garage-cost-uk",
+      "house-extension-cost-uk"
+    ]
+  }
 ];
 
 export function adviceGuideBySlug(slug: string) {
