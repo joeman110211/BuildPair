@@ -27,8 +27,9 @@ const FAQS = [
 function SemanticHeading({ level, style, children }: { level: 1 | 2 | 3; style: StyleProp<TextStyle>; children: string }) {
   if (Platform.OS === 'web') {
     const flattened = StyleSheet.flatten(style) ?? {};
+    const lineHeight = typeof flattened.lineHeight === 'number' ? `${flattened.lineHeight}px` : flattened.lineHeight;
     return createElement(`h${level}`, {
-      style: { margin: 0, whiteSpace: 'pre-line', ...flattened },
+      style: { margin: 0, whiteSpace: 'pre-line', ...flattened, lineHeight },
     }, children);
   }
 
