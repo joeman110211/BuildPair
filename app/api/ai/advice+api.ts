@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 import { assertAiDailyBudget, recordAiRequest } from '@/lib/ai-audit';
-import { ADVICE_GUIDES, searchAdviceGuides } from '@/lib/advice-library';
+import { ADVICE_GUIDES, isOfficialAdviceSource, searchAdviceGuides } from '@/lib/advice-library';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { jsonError } from '@/lib/server';
 
@@ -17,7 +17,7 @@ function fallback(question: string, audience: 'homeowner' | 'tradesperson' | 'al
       ? 'I found BuildPair guidance that matches your question. Open the most relevant guide below for the checked detail and official sources.'
       : 'BuildPair does not have a checked guide that answers that reliably yet. Try a broader search or use the official-source links already available in the Advice Hub.',
     guideSlugs: guides.map((guide) => guide.slug),
-    sources: guides.flatMap((guide) => guide.sources).filter((source, index, all) => all.findIndex((item) => item.url === source.url) === index),
+    sources: guides.flatMap((guide) => guide.sources).filter(isOfficialAdviceSource).filter((source, index, all) => all.findIndex((item) => item.url === source.url) === index),
     source: 'library' as const,
   };
 }
@@ -26,6 +26,16 @@ export async function POST(request: Request) {
   try {
     await assertRateLimit(request, 'ai-advice', 20, 3600);
     const input = inputSchema.parse(await request.json());
+    const vagueQuestion = /^(cost|costs|price|prices|pricing|help|advice)$/i.test(input.question.trim());
+    if (vagueQuestion) {
+      return Response.json({
+        answer: 'Tell me the job or trade you mean, for example “bathroom renovation cost”, “electrician day rate” or “builder deposit”. I’ll use BuildPair’s checked guidance to give you a useful answer.',
+        guideSlugs: [],
+        sources: [],
+        source: 'library' as const,
+      });
+    }
+
     const matches = searchAdviceGuides(input.question, input.audience).slice(0, 4);
     const base = fallback(input.question, input.audience);
     const key = process.env.GEMINI_API_KEY;
@@ -92,7 +102,7 @@ Rules:
 - Do not give unsafe electrical, gas, structural or other hazardous instructions.
 - Do not call BuildPay escrow, insurance or a workmanship/refund guarantee.
 - Keep the answer under 260 words.
-- Do not include URLs. The product will show the checked source links separately.
+- Do not include URLs. The product may show official source links separately.
 - For legal or regulatory questions, remind the reader that the exact position can depend on location and facts.
 
 Checked evidence:
@@ -113,7 +123,7 @@ ${input.question}
     const result = {
       answer,
       guideSlugs: matches.map((guide) => guide.slug),
-      sources: matches.flatMap((guide) => guide.sources).filter((source, index, all) => all.findIndex((item) => item.url === source.url) === index),
+      sources: matches.flatMap((guide) => guide.sources).filter(isOfficialAdviceSource).filter((source, index, all) => all.findIndex((item) => item.url === source.url) === index),
       source: 'ai' as const,
     };
 
