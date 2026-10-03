@@ -7,6 +7,25 @@ export function PublicSeo({ title, description }: { title: string; description: 
   const pathname = usePathname();
   const pageTitle = `${title} | BuildPair`;
   const url = `https://www.buildpair.co.uk${pathname === '/' ? '/' : pathname}`;
+  const homepageStructuredData = pathname === '/' ? [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'BuildPair',
+      url: 'https://www.buildpair.co.uk/',
+      description,
+      inLanguage: 'en-GB',
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'BuildPair',
+      url: 'https://www.buildpair.co.uk/',
+      logo: PUBLIC_SHARE_IMAGE,
+      description: 'A UK marketplace and project platform connecting homeowners with local tradespeople.',
+    },
+  ] : null;
+
   return <Head>
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
@@ -23,5 +42,6 @@ export function PublicSeo({ title, description }: { title: string; description: 
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={PUBLIC_SHARE_IMAGE} />
+    {homepageStructuredData ? <script type="application/ld+json">{JSON.stringify(homepageStructuredData)}</script> : null}
   </Head>;
 }
