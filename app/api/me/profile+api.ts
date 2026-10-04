@@ -87,6 +87,28 @@ export async function GET(request: Request) {
       SELECT (date_trunc('month', now()) + interval '1 month') AS "resetAt"
     ` as unknown as { resetAt: string }[];
     const payoutRows = await getSql()`SELECT stripe_payouts_enabled AS "stripePayoutsEnabled" FROM trader_profiles WHERE user_id = ${trader.id} LIMIT 1` as unknown as { stripePayoutsEnabled: boolean }[];
+    const readinessRows = await getSql()`
+      SELECT
+        (SELECT count(*)::int FROM trader_credentials tc
+          WHERE tc.trader_id = ${trader.id}
+            AND tc.status = 'verified'
+            AND (tc.expires_at IS NULL OR tc.expires_at > now())) AS "verifiedCredentialCount",
+        (SELECT count(*)::int FROM trader_stories ts WHERE ts.trader_id = ${trader.id}) AS "storyCount",
+        (SELECT count(*)::int FROM trader_availability ta
+          WHERE ta.trader_id = ${trader.id}
+            AND ta.ends_at > now()
+            AND ta.status = 'available') AS "availabilityCount",
+        EXISTS(
+          SELECT 1 FROM google_review_connections grc
+          WHERE grc.trader_id = ${trader.id}
+            AND grc.verification_status = 'verified'
+        ) AS "googleReviewConnected"
+    ` as unknown as {
+      verifiedCredentialCount: number;
+      storyCount: number;
+      availabilityCount: number;
+      googleReviewConnected: boolean;
+    }[];
 
     const normalisedCategories = profile.tradeCategories?.length ? profile.tradeCategories : [profile.tradeCategory];
     const serviceSelections = normaliseServiceSelections(
@@ -99,6 +121,10 @@ export async function GET(request: Request) {
       ...profile,
       ...(showcase ?? {}),
       stripePayoutsEnabled: payoutRows[0]?.stripePayoutsEnabled ?? false,
+      verifiedCredentialCount: readinessRows[0]?.verifiedCredentialCount ?? 0,
+      storyCount: readinessRows[0]?.storyCount ?? 0,
+      availabilityCount: readinessRows[0]?.availabilityCount ?? 0,
+      googleReviewConnected: readinessRows[0]?.googleReviewConnected ?? false,
       tradeCategories: normalisedCategories,
       serviceSelections,
       isSubscriptionActive: active,
