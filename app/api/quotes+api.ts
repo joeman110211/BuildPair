@@ -79,12 +79,20 @@ export async function POST(request: Request) {
 
     const intakeRows = await getSql()`
       SELECT j.quote_intake_closed_at AS "quoteIntakeClosedAt",
-             count(q.id) FILTER (WHERE q.status = 'pending')::int AS "activeQuoteCount",
-             bool_or(q.trader_id = ${trader.id} AND q.status = 'pending') AS "traderAlreadyQuoted"
+             (
+               SELECT count(DISTINCT responder.trader_id)::int
+               FROM (
+                 SELECT q.trader_id FROM quotes q WHERE q.job_id = j.id AND q.status = 'pending'
+                 UNION
+                 SELECT p.trader_id FROM job_proposals p WHERE p.job_id = j.id AND p.status IN ('pending','shortlisted')
+               ) responder
+             ) AS "activeQuoteCount",
+             (
+               EXISTS(SELECT 1 FROM quotes q WHERE q.job_id = j.id AND q.trader_id = ${trader.id} AND q.status = 'pending')
+               OR EXISTS(SELECT 1 FROM job_proposals p WHERE p.job_id = j.id AND p.trader_id = ${trader.id} AND p.status IN ('pending','shortlisted'))
+             ) AS "traderAlreadyQuoted"
       FROM jobs j
-      LEFT JOIN quotes q ON q.job_id = j.id
       WHERE j.id = ${payload.jobId}
-      GROUP BY j.id
       LIMIT 1
     ` as unknown as { quoteIntakeClosedAt: string | null; activeQuoteCount: number; traderAlreadyQuoted: boolean | null }[];
     const intake = intakeRows[0];
@@ -153,6 +161,11 @@ export async function POST(request: Request) {
           buildpay_fee_mode = ${buildPayFeeMode},
           buildpay_customer_fee_estimate = ${buildPayCustomerFeeEstimate}, updated_at = now()
       WHERE id = ${quote.id}
+    `;
+    await getSql()`
+      UPDATE job_proposals
+      SET status = 'converted', responded_at = coalesce(responded_at, now()), updated_at = now()
+      WHERE job_id = ${payload.jobId} AND trader_id = ${trader.id} AND status IN ('pending','shortlisted')
     `;
     await db.update(jobs).set({ status: 'quoted', updatedAt: new Date() }).where(eq(jobs.id, payload.jobId));
     const conversations = await getSql()`INSERT INTO conversations(job_id, customer_id, trader_id) VALUES (${payload.jobId}, ${job.customerId}, ${trader.id}) ON CONFLICT (job_id, customer_id, trader_id) DO UPDATE SET updated_at = now() RETURNING id` as unknown as { id: string }[];
