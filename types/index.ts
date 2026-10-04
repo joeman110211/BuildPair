@@ -88,6 +88,7 @@ export interface TraderProfile {
   availabilitySummary?: string | null;
   responseRate?: number;
   averageResponseHours?: number;
+  completedJobs?: number;
   rankingScore?: number;
   prelaunchProfile?: boolean;
   foundingTrade?: boolean;

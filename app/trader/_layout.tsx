@@ -20,6 +20,7 @@ const PRELAUNCH_SETUP_ROUTES = [
   '/trader/google-reviews',
   '/trader/stories',
   '/trader/templates',
+  '/trader/reminder-settings',
   '/trader/quotes',
   '/trader/invoices',
   '/trader/customers',
@@ -83,6 +84,7 @@ export default function TraderLayout() {
     <Stack.Screen name="saved-searches" options={{ headerShown: false }} />
     <Stack.Screen name="stories" options={{ headerShown: false }} />
     <Stack.Screen name="templates" options={{ headerShown: false }} />
+    <Stack.Screen name="reminder-settings" options={{ headerShown: false }} />
     <Stack.Screen name="customers" options={{ headerShown: false }} />
     <Stack.Screen name="calendar" options={{ headerShown: false }} />
     <Stack.Screen name="project-plus" options={{ headerShown: false }} />
@@ -92,6 +94,7 @@ export default function TraderLayout() {
     <Stack.Screen name="quotes/index" options={{ headerShown: false }} />
     <Stack.Screen name="quotes/new" options={{ title: 'Create quote' }} />
     <Stack.Screen name="quotes/review" options={{ title: 'Review payment changes' }} />
+    <Stack.Screen name="proposals/new" options={{ title: 'Quick proposal' }} />
     <Stack.Screen name="visits/new" options={{ title: 'Arrange site visit' }} />
     <Stack.Screen name="invoices/new" options={{ title: 'Create invoice' }} />
     <Stack.Screen name="messages" options={{ headerShown: false }} />

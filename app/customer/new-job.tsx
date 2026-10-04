@@ -3,7 +3,7 @@ import type { Href } from 'expo-router';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Chip, HelperText, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
+import { Chip, HelperText, ProgressBar, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { AIJobSpecModal } from '@/components/AIJobSpecModal';
 import { AppCard } from '@/components/AppCard';
@@ -234,6 +234,19 @@ export default function NewJobScreen() {
     Boolean(category && propertyType && postcode.trim().length >= 5 && urgency && budgetRange && title.trim().length >= 5 && description.trim().length >= 30),
   ][step], [budgetRange, category, description, directRequest, postcode, propertyType, step, title, urgency]);
 
+  const readinessItems = useMemo(() => [
+    { label: 'Trade selected', complete: Boolean(category) },
+    { label: 'Property type added', complete: Boolean(propertyType) },
+    { label: 'Clear job title', complete: title.trim().length >= 5 },
+    { label: 'Detailed description', complete: description.trim().length >= 80 },
+    { label: 'Useful photos', complete: photos.length > 0 },
+    { label: 'Job area added', complete: postcode.trim().length >= 5 },
+    { label: 'Timing added', complete: Boolean(urgency) },
+    { label: 'Budget added', complete: Boolean(budgetRange) },
+  ], [budgetRange, category, description, photos.length, postcode, propertyType, title, urgency]);
+  const readinessComplete = readinessItems.filter((item) => item.complete).length;
+  const readinessScore = Math.round((readinessComplete / readinessItems.length) * 100);
+
   const aiPropertyType = propertyType ?? 'Other';
   const submitLabel = traderName ? 'Send request' : isEmergency ? 'Post urgent job' : 'Post job';
   const footer = <View style={styles.actions}>
@@ -295,12 +308,25 @@ export default function NewJobScreen() {
       {isEmergency ? <HelperText type="info">Emergency broadcast improves visibility but does not guarantee attendance or replace emergency services where there is immediate danger.</HelperText> : null}
     </AppCard> : null}
 
-    {step === 4 ? <AppCard>
+    {step === 4 ? <>
+      <AppCard>
+        <View style={styles.reviewHeader}>
+          <View style={styles.flex}>
+            <Text variant="titleLarge" style={styles.title}>Job readiness · {readinessScore}%</Text>
+            <Text style={styles.muted}>A fuller job gives tradespeople more useful information before they respond. This score is guidance and does not stop you posting.</Text>
+          </View>
+          <Chip icon={readinessScore >= 80 ? 'check-circle-outline' : 'progress-check'}>{readinessComplete}/{readinessItems.length}</Chip>
+        </View>
+        <ProgressBar progress={readinessScore / 100} color={colors.primary} style={styles.readinessProgress} />
+        <View style={styles.readinessGrid}>{readinessItems.map((item) => <Chip key={item.label} compact icon={item.complete ? 'check-circle-outline' : 'circle-outline'}>{item.label}</Chip>)}</View>
+      </AppCard>
+      <AppCard>
       <View style={styles.reviewHeader}><View style={styles.flex}><Text variant="headlineSmall" style={styles.title}>{title.trim() || `${category ?? 'Trade'} quote request`}</Text><Text style={styles.muted}>{category}{propertyType ? ` · ${propertyType}` : ''}</Text></View>{traderName ? <Chip icon="account-arrow-right">Direct request</Chip> : isEmergency ? <Chip icon="alert">Emergency broadcast</Chip> : <Chip icon="account-group-outline">Marketplace job</Chip>}</View>
       <View style={styles.reviewMeta}><Chip icon="map-marker-outline">{postcode}</Chip>{budgetRange ? <Chip icon="cash">{budgetRange}</Chip> : null}{urgency ? <Chip icon="clock-outline">{urgency}</Chip> : null}</View>
       <Text style={styles.description}>{description}</Text>
       <Text style={styles.muted}>{photos.length} photo{photos.length === 1 ? '' : 's'} attached{directRequest && !budgetRange ? ' · budget to discuss' : ''}{directRequest && !urgency ? ' · timing to discuss' : ''}{aiGeneratedSpec ? ' · description assisted by BuildPair AI' : ''}</Text>
-    </AppCard> : null}
+    </AppCard>
+    </> : null}
 
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
     {category ? <AIJobSpecModal visible={showAi} category={category} propertyType={aiPropertyType} onDismiss={() => setShowAi(false)} onGenerated={(spec) => { setDescription(spec); setAiGeneratedSpec(spec); }} /> : null}
@@ -323,4 +349,6 @@ const styles = StyleSheet.create({
   description: { color: colors.text, lineHeight: 23 },
   emergencyRow: { borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   emergencyActive: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  readinessProgress: { height: 8, borderRadius: 4, backgroundColor: colors.surfaceStrong },
+  readinessGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
 });

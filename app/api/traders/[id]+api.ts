@@ -175,6 +175,13 @@ export async function GET(request: Request, { id }: { id: string }) {
     ` as unknown as { responseRate: number; averageResponseHours: number }[];
     const responseRate = Number(responseRows[0]?.responseRate ?? 0);
     const averageResponseHours = Number(responseRows[0]?.averageResponseHours ?? 0);
+    const completedRows = await sqlClient`
+      SELECT count(*)::int AS count
+      FROM jobs j
+      JOIN quotes q ON q.id = j.accepted_quote_id
+      WHERE q.trader_id = ${profile.userId} AND j.status = 'completed'
+    ` as unknown as { count: number }[];
+    const completedJobs = Number(completedRows[0]?.count ?? 0);
 
     let contact: { email: string | null; phone: string | null } | null = null;
     let savedByViewer = false;
@@ -230,6 +237,7 @@ export async function GET(request: Request, { id }: { id: string }) {
       availabilitySummary: profile.subscriptionTier !== 'free' && availability.length ? 'Upcoming availability listed' : null,
       responseRate,
       averageResponseHours,
+      completedJobs,
       stories,
       savedByViewer,
       contact,

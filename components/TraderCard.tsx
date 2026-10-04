@@ -27,6 +27,7 @@ export function TraderCard({
     trader.reviewCount ? `${rating.toFixed(1)} ★ · ${trader.reviewCount} review${trader.reviewCount === 1 ? '' : 's'}` : 'New to BuildPair',
     `${trader.radiusMiles} mile radius`,
     trader.availabilitySummary ? `Available ${trader.availabilitySummary}` : null,
+    trader.completedJobs ? `${trader.completedJobs} completed BuildPair job${trader.completedJobs === 1 ? '' : 's'}` : null,
     responseLabel,
   ].filter(Boolean).join(' · ');
   const visibleServices = trader.subSkills.slice(0, 4);

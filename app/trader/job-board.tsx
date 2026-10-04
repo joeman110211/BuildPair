@@ -197,6 +197,13 @@ export default function TraderJobBoard() {
         {direct && !ownQuote ? <Text variant="bodySmall" style={styles.nextHint}>Next step: quote now if you have enough information, or arrange a site visit before quoting if you need to inspect the job.</Text> : null}
         <View style={styles.actions}>
           {job.isPreview ? <Button mode="outlined" disabled>Example only</Button> : <>
+            {!ownQuote ? <Button
+              mode="outlined"
+              icon="lightning-bolt-outline"
+              onPress={() => blockedByPlan
+                ? router.push('/trader/subscription')
+                : router.push({ pathname: '/trader/proposals/new', params: { jobId: job.id, title: job.title } } as Href)}
+            >{blockedByPlan ? 'Upgrade for proposals' : 'Quick proposal'}</Button> : null}
             <Button
               mode="contained"
               icon={blockedByPlan ? 'lock-open-outline' : conversation ? 'message-text-outline' : direct ? 'account-arrow-left' : 'handshake-outline'}

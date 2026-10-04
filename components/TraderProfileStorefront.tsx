@@ -172,6 +172,7 @@ export default function TraderProfileStorefront() {
     !profile.isPreview && profile.verifiedCredentialCount ? 'Verified trader' : null,
     `${profile.radiusMiles} mile radius`,
     profile.foundingTrade ? 'Founding BuildPair trade' : null,
+    profile.completedJobs ? `${profile.completedJobs} completed BuildPair job${profile.completedJobs === 1 ? '' : 's'}` : null,
     profile.isSubscriptionActive ? 'Active member' : null,
   ].filter(Boolean).join(' · ');
 

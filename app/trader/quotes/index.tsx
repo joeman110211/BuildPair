@@ -135,6 +135,7 @@ export default function TraderQuotesScreen() {
         <View style={styles.amountBlock}><Text variant="titleLarge" style={styles.amount}>{formatMoney(quote.totalAmount)}</Text><Chip compact>{statusLabel(quote.status)}</Chip></View>
       </View>
       <View style={styles.actions}>
+        <Button mode="outlined" icon="content-copy" onPress={() => router.push(`/trader/quotes/new?copyQuoteId=${encodeURIComponent(quote.id)}` as Href)}>Duplicate as new quote</Button>
         {quote.status === 'draft' ? <Button mode="contained" icon="pencil-outline" onPress={() => router.push(`/trader/quotes/new?quoteId=${encodeURIComponent(quote.id)}` as Href)}>Continue draft</Button> : <>
           <Button mode="contained" icon="share-variant-outline" onPress={() => void shareQuote(quote)}>Share</Button>
           <Button mode="outlined" icon="open-in-new" onPress={() => void Linking.openURL(quote.shareUrl)}>Open customer view</Button>

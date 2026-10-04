@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { type Href, Link, useLocalSearchParams } from 'expo-router';
+import { type Href, Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
@@ -51,10 +51,40 @@ type Detail = {
   timeline: JobTimelineEvent[];
 };
 
+type Proposal = {
+  id: string;
+  traderId: string;
+  traderProfileId: string;
+  businessName: string;
+  tradeCategory: string;
+  locationLabel: string | null;
+  priceMin: number | null;
+  priceMax: number | null;
+  earliestStartAt: string | null;
+  message: string;
+  portfolioPhotos: string[];
+  requiresSiteVisit: boolean;
+  status: 'sent' | 'shortlisted' | 'declined' | 'withdrawn' | 'converted';
+  averageRating: number;
+  reviewCount: number;
+  completedJobs: number;
+  averageResponseHours: number;
+};
+
+type ResponseLimitState = {
+  responseLimit: number;
+  responseCount: number;
+  remaining: number;
+  canOpenMore: boolean;
+};
+
 export default function JobDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getToken } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState<Detail>();
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [responseLimit, setResponseLimit] = useState<ResponseLimitState>();
   const [externalPayments, setExternalPayments] = useState<ExternalPaymentRecord[]>([]);
   const [disputes, setDisputes] = useState<PaymentDispute[]>([]);
   const [nextToFund, setNextToFund] = useState<ReleaseResult['nextMilestone']>();
@@ -75,6 +105,17 @@ export default function JobDetailScreen() {
     try {
       const detail = await apiFetch<Detail>(`/api/jobs/${id}`, {}, getToken);
       setData(detail);
+      if (!detail.acceptedQuote) {
+        const [proposalResult, responseResult] = await Promise.allSettled([
+          apiFetch<Proposal[]>(`/api/job-proposals?jobId=${encodeURIComponent(id)}`, {}, getToken),
+          apiFetch<ResponseLimitState>(`/api/jobs/${id}/response-limit`, {}, getToken),
+        ]);
+        setProposals(proposalResult.status === 'fulfilled' ? proposalResult.value : []);
+        setResponseLimit(responseResult.status === 'fulfilled' ? responseResult.value : undefined);
+      } else {
+        setProposals([]);
+        setResponseLimit(undefined);
+      }
       if (detail.acceptedQuote) {
         const [externalResult, disputeResult] = await Promise.allSettled([
           apiFetch<ExternalPaymentRecord[]>(`/api/external-payments?jobId=${encodeURIComponent(id)}`, {}, getToken),
@@ -91,6 +132,36 @@ export default function JobDetailScreen() {
   }, [getToken, id]);
 
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
+
+  async function proposalAction(proposalId: string, action: 'shortlist' | 'decline') {
+    try {
+      setBusy(true); setError('');
+      await apiFetch('/api/job-proposals', { method: 'PATCH', body: JSON.stringify({ id: proposalId, action }) }, getToken);
+      await load();
+    } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
+  }
+
+  async function openProposalConversation(proposal: Proposal) {
+    try {
+      setBusy(true); setError('');
+      const conversation = await apiFetch<{ id: string }>('/api/conversations', {
+        method: 'POST',
+        body: JSON.stringify({ jobId: id, traderId: proposal.traderId }),
+      }, getToken);
+      router.push(`/customer/messages/${conversation.id}` as Href);
+    } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
+  }
+
+  async function expandResponseLimit() {
+    try {
+      setBusy(true); setError('');
+      const next = await apiFetch<ResponseLimitState>(`/api/jobs/${id}/response-limit`, {
+        method: 'PATCH',
+        body: JSON.stringify({ action: 'expand' }),
+      }, getToken);
+      setResponseLimit(next);
+    } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
+  }
 
   async function review() {
     if (!data?.acceptedQuote) return;
@@ -212,6 +283,45 @@ export default function JobDetailScreen() {
     </AppCard>
 
     {data.job.photos?.length ? <View style={styles.gallery}>{data.job.photos.map((uri) => <Image key={uri} source={{ uri }} style={styles.photo} />)}</View> : null}
+
+    {!data.acceptedQuote && responseLimit ? <AppCard>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Text variant="titleLarge" style={styles.heading}>Job responses</Text>
+          <Text style={styles.muted}>{responseLimit.responseCount} of {responseLimit.responseLimit} current response places have been used. Keeping the first group small makes proposals easier to compare.</Text>
+        </View>
+        <Chip icon="account-group-outline">{responseLimit.remaining} places left</Chip>
+      </View>
+      {responseLimit.remaining === 0 && responseLimit.canOpenMore ? <Button mode="outlined" icon="account-plus-outline" loading={busy} disabled={busy} onPress={() => void expandResponseLimit()}>Open 5 more places</Button> : null}
+    </AppCard> : null}
+
+    {!data.acceptedQuote && proposals.length ? <>
+      <Text variant="titleLarge" style={styles.heading}>Quick proposals</Text>
+      {proposals.map((proposal) => <AppCard key={proposal.id} style={proposal.status === 'shortlisted' ? styles.shortlistedProposal : undefined}>
+        <View style={styles.row}>
+          <View style={styles.flex}>
+            <Text variant="titleLarge" style={styles.heading}>{proposal.businessName}</Text>
+            <Text style={styles.muted}>{proposal.tradeCategory}{proposal.locationLabel ? ` · ${proposal.locationLabel}` : ''}</Text>
+          </View>
+          <Chip icon={proposal.status === 'shortlisted' ? 'star-check-outline' : 'handshake-outline'}>{proposal.status === 'shortlisted' ? 'Shortlisted' : 'Proposal'}</Chip>
+        </View>
+        <View style={styles.proposalFacts}>
+          <Chip compact icon="cash">{proposal.priceMin != null && proposal.priceMax != null ? `${formatMoney(proposal.priceMin)}–${formatMoney(proposal.priceMax)}` : proposal.priceMin != null ? `From ${formatMoney(proposal.priceMin)}` : 'Price to confirm'}</Chip>
+          <Chip compact icon="calendar-outline">{proposal.earliestStartAt ? `From ${new Date(proposal.earliestStartAt).toLocaleDateString('en-GB')}` : 'Start to agree'}</Chip>
+          {proposal.requiresSiteVisit ? <Chip compact icon="calendar-account-outline">Visit requested</Chip> : null}
+          {proposal.reviewCount ? <Chip compact icon="star-outline">{proposal.averageRating.toFixed(1)} · {proposal.reviewCount} review{proposal.reviewCount === 1 ? '' : 's'}</Chip> : null}
+          {proposal.completedJobs ? <Chip compact icon="check-decagram-outline">{proposal.completedJobs} completed</Chip> : null}
+        </View>
+        <Text style={styles.proposalMessage}>{proposal.message}</Text>
+        {proposal.portfolioPhotos?.length ? <View style={styles.proposalPhotos}>{proposal.portfolioPhotos.map((uri) => <Image key={uri} source={{ uri }} style={styles.proposalPhoto} />)}</View> : null}
+        <View style={styles.stageActions}>
+          <Link href={`/(public)/traders/${proposal.traderProfileId}` as Href} asChild><Button mode="text">View profile</Button></Link>
+          <Button mode="outlined" icon="message-text-outline" disabled={busy} onPress={() => void openProposalConversation(proposal)}>Ask a question</Button>
+          {proposal.status !== 'shortlisted' ? <Button mode="contained" icon="star-outline" disabled={busy} onPress={() => void proposalAction(proposal.id, 'shortlist')}>Shortlist</Button> : null}
+          {proposal.status !== 'declined' ? <Button mode="text" textColor={colors.danger} disabled={busy} onPress={() => void proposalAction(proposal.id, 'decline')}>Decline</Button> : null}
+        </View>
+      </AppCard>)}
+    </> : null}
 
     {data.acceptedQuote && data.job.status === 'in_progress' ? <AppCard style={paymentMode === 'external' ? styles.externalCard : styles.protectionCard}>
       <Text variant="titleLarge" style={styles.heading}>{paymentMode === 'undecided' ? 'Choose how to pay' : paymentMode === 'buildpair' ? 'BuildPay' : 'Direct payment'}</Text>
@@ -372,6 +482,11 @@ const styles = StyleSheet.create({
   directBox: { gap: 8, padding: 12, borderRadius: 12, backgroundColor: colors.goldSoft, borderColor: colors.gold, borderWidth: 1 },
   reviewCard: { borderColor: colors.primary, borderWidth: 2 },
   rehireCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent, borderWidth: 2 },
+  shortlistedProposal: { borderColor: colors.primary, borderWidth: 2, backgroundColor: colors.primarySoft },
+  proposalFacts: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  proposalMessage: { color: colors.text, lineHeight: 22 },
+  proposalPhotos: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  proposalPhoto: { width: 120, height: 90, borderRadius: 10, backgroundColor: colors.border },
   issueBox: { backgroundColor: colors.goldSoft, borderColor: colors.gold },
   confirmBox: { backgroundColor: colors.surfaceSoft, borderColor: colors.primary },
   heading: { color: colors.charcoal, fontWeight: '900' },

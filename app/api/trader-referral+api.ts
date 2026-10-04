@@ -45,13 +45,33 @@ export async function POST(request: Request) {
           FROM launch_waitlist referred
           WHERE referred.referred_by_id = launch_waitlist.id
             AND referred.status <> 'removed'
-        ) AS "referralCount"
+        ) AS "referralCount",
+        (
+          SELECT count(*)::int
+          FROM trader_referral_visits rv
+          WHERE upper(rv.referral_code) = upper(launch_waitlist.referral_code)
+        ) AS "visitCount",
+        (
+          SELECT count(*)::int
+          FROM launch_waitlist referred
+          WHERE referred.referred_by_id = launch_waitlist.id
+            AND referred.status = 'registered'
+        ) AS "registeredCount",
+        (
+          SELECT count(*)::int
+          FROM launch_waitlist referred
+          JOIN trader_profiles tp ON tp.user_id = referred.registered_user_id
+          WHERE referred.referred_by_id = launch_waitlist.id
+            AND referred.status = 'registered'
+            AND char_length(trim(tp.business_name)) >= 2
+            AND (tp.postcode IS NOT NULL OR tp.location_label IS NOT NULL)
+        ) AS "completedProfileCount"
       FROM launch_waitlist
       WHERE registered_user_id = ${user.id}
          OR lower(coalesce(email, '')) = lower(${email})
       ORDER BY CASE WHEN registered_user_id = ${user.id} THEN 0 ELSE 1 END, created_at
       LIMIT 1
-    ` as unknown as { referralCode: string | null; referralCount: number }[];
+    ` as unknown as { referralCode: string | null; referralCount: number; visitCount: number; registeredCount: number; completedProfileCount: number }[];
 
     const referralCode = rows[0]?.referralCode;
     if (!referralCode) throw new HttpError(503, 'BuildPair could not create your referral link right now.');
@@ -59,6 +79,9 @@ export async function POST(request: Request) {
     return Response.json({
       referralCode,
       referralCount: rows[0]?.referralCount ?? 0,
+      visitCount: rows[0]?.visitCount ?? 0,
+      registeredCount: rows[0]?.registeredCount ?? 0,
+      completedProfileCount: rows[0]?.completedProfileCount ?? 0,
       referralUrl: `https://www.buildpair.co.uk/auth/founding-trade-signup?source=one-good-trade&ref=${encodeURIComponent(referralCode)}`,
     }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {

@@ -82,7 +82,7 @@ function itemLineTotal(item: DraftItem) {
 }
 
 export default function NewQuoteScreen() {
-  const { jobId, title, quoteId, customerName: presetCustomerName, customerEmail: presetCustomerEmail, customerPhone: presetCustomerPhone } = useLocalSearchParams<{ jobId?: string; title?: string; quoteId?: string; customerName?: string; customerEmail?: string; customerPhone?: string }>();
+  const { jobId, title, quoteId, copyQuoteId, customerName: presetCustomerName, customerEmail: presetCustomerEmail, customerPhone: presetCustomerPhone } = useLocalSearchParams<{ jobId?: string; title?: string; quoteId?: string; copyQuoteId?: string; customerName?: string; customerEmail?: string; customerPhone?: string }>();
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   const router = useRouter();
@@ -153,11 +153,13 @@ export default function NewQuoteScreen() {
             setJobTitle(found.title);
             if (found.description.trim().length >= QUOTE_SCOPE_MIN_LENGTH) setWorkIncluded(found.description.trim());
           }
-        } else if (quoteId) {
+        } else if (quoteId || copyQuoteId) {
           const rows = await apiFetch<BusinessQuote[]>('/api/business-quotes', {}, tokenGetter);
           if (!active) return;
-          const draft = rows.find((row) => row.id === quoteId);
-          if (!draft || draft.status !== 'draft') throw new Error('That quote draft is no longer editable.');
+          const sourceQuoteId = quoteId || copyQuoteId;
+          const draft = rows.find((row) => row.id === sourceQuoteId);
+          if (!draft) throw new Error('That quote could not be found.');
+          if (quoteId && draft.status !== 'draft') throw new Error('That quote draft is no longer editable.');
           setCustomerName(draft.customerName);
           setCustomerEmail(draft.customerEmail ?? '');
           setCustomerPhone(draft.customerPhone ?? '');
@@ -190,7 +192,7 @@ export default function NewQuoteScreen() {
     }
     void load();
     return () => { active = false; };
-  }, [jobId, quoteId]);
+  }, [copyQuoteId, jobId, quoteId]);
 
   const pricedItems = useMemo(() => items.filter((item) => item.description.trim() && itemLineTotal(item) > 0), [items]);
   const subtotal = useMemo(() => pricedItems.reduce((sum, item) => sum + itemLineTotal(item), 0), [pricedItems]);

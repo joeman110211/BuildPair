@@ -1,0 +1,3 @@
+export const DEFAULT_JOB_RESPONSE_LIMIT = 5;
+export const JOB_RESPONSE_LIMIT_STEP = 5;
+export const MAX_JOB_RESPONSE_LIMIT = 25;
