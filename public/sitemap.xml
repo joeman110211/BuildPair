@@ -1,61 +1,85 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://www.buildpair.co.uk/</loc><lastmod>2026-10-01</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>https://www.buildpair.co.uk/waitlist</loc><lastmod>2026-10-01</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://www.buildpair.co.uk/for-tradespeople</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://www.buildpair.co.uk/for-homeowners</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://www.buildpair.co.uk/how-it-works</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/directory</loc><lastmod>2026-09-13</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/jobs</loc><lastmod>2026-09-13</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/payments</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/rewards</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/trust-safety</loc><lastmod>2026-09-13</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.buildpair.co.uk/marketplace-standards</loc><lastmod>2026-09-13</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/how-to-compare-building-quotes</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/builder-deposits-and-payment-stages</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/what-to-do-if-building-work-goes-wrong</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/do-i-need-building-regulations-approval</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/electrical-work-building-regulations-england</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/how-to-check-a-gas-engineer</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/consumer-law-for-tradespeople</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/off-premises-contracts-and-cancellation-rights</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/cdm-2015-small-builder-duties</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/bathroom-renovation-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/bathroom-fitter-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/tiler-cost-per-square-metre-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/bathroom-tiling-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/floor-tiling-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/shower-installation-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/wet-room-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/plumber-cost-uk-2026</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/emergency-plumber-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/radiator-installation-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/leak-repair-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/tap-installation-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/outside-tap-installation-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/bathroom-plumbing-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/whole-house-plumbing-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/electrician-cost-uk-2026</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/house-rewire-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/consumer-unit-replacement-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/socket-installation-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/light-fitting-installation-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/electric-shower-installation-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/eicr-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/ev-charger-installation-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/builder-day-rate-uk-2026</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/house-extension-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/loft-conversion-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/garage-conversion-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/structural-engineer-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/load-bearing-wall-removal-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/extension-over-garage-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/advice/garage-build-cost-uk</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.buildpair.co.uk/building-regulations</loc><lastmod>2026-09-13</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.buildpair.co.uk/about</loc><lastmod>2026-09-13</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://www.buildpair.co.uk/contact</loc><lastmod>2026-09-13</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://www.buildpair.co.uk/pricing</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://www.buildpair.co.uk/privacy</loc><lastmod>2026-10-01</lastmod><changefreq>monthly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://www.buildpair.co.uk/terms</loc><lastmod>2026-10-01</lastmod><changefreq>monthly</changefreq><priority>0.3</priority></url>
+<url><loc>https://www.buildpair.co.uk/</loc></url>
+<url><loc>https://www.buildpair.co.uk/waitlist</loc></url>
+<url><loc>https://www.buildpair.co.uk/for-tradespeople</loc></url>
+<url><loc>https://www.buildpair.co.uk/for-homeowners</loc></url>
+<url><loc>https://www.buildpair.co.uk/how-it-works</loc></url>
+<url><loc>https://www.buildpair.co.uk/directory</loc></url>
+<url><loc>https://www.buildpair.co.uk/jobs</loc></url>
+<url><loc>https://www.buildpair.co.uk/payments</loc></url>
+<url><loc>https://www.buildpair.co.uk/rewards</loc></url>
+<url><loc>https://www.buildpair.co.uk/trust-safety</loc></url>
+<url><loc>https://www.buildpair.co.uk/marketplace-standards</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/how-to-compare-building-quotes</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/builder-deposits-and-payment-stages</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/what-to-do-if-building-work-goes-wrong</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/do-i-need-building-regulations-approval</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/electrical-work-building-regulations-england</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/how-to-check-a-gas-engineer</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/consumer-law-for-tradespeople</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/off-premises-contracts-and-cancellation-rights</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/cdm-2015-small-builder-duties</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/bathroom-renovation-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/bathroom-fitter-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/tiler-cost-per-square-metre-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/bathroom-tiling-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/floor-tiling-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/shower-installation-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/wet-room-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/plumber-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/emergency-plumber-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/radiator-installation-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/leak-repair-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/tap-installation-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/outside-tap-installation-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/bathroom-plumbing-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/whole-house-plumbing-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/electrician-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/house-rewire-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/consumer-unit-replacement-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/socket-installation-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/light-fitting-installation-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/electric-shower-installation-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/eicr-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/ev-charger-installation-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/builder-day-rate-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/house-extension-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/loft-conversion-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/garage-conversion-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/structural-engineer-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/load-bearing-wall-removal-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/extension-over-garage-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/garage-build-cost-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/roof-replacement-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/flat-roof-replacement-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/gutter-replacement-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/plasterer-day-rate-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/skim-plastering-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/painter-decorator-day-rate-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/painting-room-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/wallpapering-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/kitchen-fitting-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/kitchen-worktop-fitting-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/carpenter-day-rate-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/fitted-wardrobe-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/internal-door-hanging-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/window-fitting-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/double-glazing-cost-3-bed-house-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/boiler-replacement-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/damp-proofing-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/damp-survey-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/driveway-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/block-paving-driveway-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/resin-driveway-cost-uk-2026</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/roof-replacement-building-regulations-england</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/replacement-windows-building-regulations-england</loc></url>
+<url><loc>https://www.buildpair.co.uk/advice/asbestos-before-home-renovation-uk</loc></url>
+<url><loc>https://www.buildpair.co.uk/building-regulations</loc></url>
+<url><loc>https://www.buildpair.co.uk/about</loc></url>
+<url><loc>https://www.buildpair.co.uk/contact</loc></url>
+<url><loc>https://www.buildpair.co.uk/pricing</loc></url>
+<url><loc>https://www.buildpair.co.uk/privacy</loc></url>
+<url><loc>https://www.buildpair.co.uk/terms</loc></url>
 </urlset>
