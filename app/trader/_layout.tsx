@@ -85,6 +85,7 @@ export default function TraderLayout() {
     <Stack.Screen name="stories" options={{ headerShown: false }} />
     <Stack.Screen name="templates" options={{ headerShown: false }} />
     <Stack.Screen name="customers" options={{ headerShown: false }} />
+    <Stack.Screen name="customers/[contactKey]" options={{ headerShown: false }} />
     <Stack.Screen name="calendar" options={{ headerShown: false }} />
     <Stack.Screen name="reminders" options={{ headerShown: false }} />
     <Stack.Screen name="project-plus" options={{ headerShown: false }} />
