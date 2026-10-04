@@ -16,6 +16,7 @@ import { BUDGET_OPTIONS, PROPERTY_TYPES, TRADE_CATEGORIES, URGENCY_OPTIONS } fro
 import { colors, controlHeights, radii, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { clearDraft, loadDraft, saveDraft } from '@/lib/draft-storage';
+import { jobReadiness } from '@/lib/job-readiness';
 import type { Job } from '@/types';
 
 const STEP_TITLES = ['Trade & property', 'Describe job', 'Photos', 'Location & budget', 'Review'] as const;
@@ -235,6 +236,7 @@ export default function NewJobScreen() {
   ][step], [budgetRange, category, description, directRequest, postcode, propertyType, step, title, urgency]);
 
   const aiPropertyType = propertyType ?? 'Other';
+  const readiness = jobReadiness({ directRequest, category, propertyType, postcode, urgency, budgetRange, title, description, photos });
   const submitLabel = traderName ? 'Send request' : isEmergency ? 'Post urgent job' : 'Post job';
   const footer = <View style={styles.actions}>
     {step > 0 ? <Button mode="outlined" contentStyle={styles.button} onPress={() => setStep((value) => value - 1)}>Back</Button> : <Button mode="text" disabled={busy} onPress={() => void discardDraft()}>Clear draft</Button>}
@@ -295,12 +297,17 @@ export default function NewJobScreen() {
       {isEmergency ? <HelperText type="info">Emergency broadcast improves visibility but does not guarantee attendance or replace emergency services where there is immediate danger.</HelperText> : null}
     </AppCard> : null}
 
-    {step === 4 ? <AppCard>
+    {step === 4 ? <>
+      <AppCard>
+        <View style={styles.reviewHeader}><View style={styles.flex}><Text variant="titleLarge" style={styles.title}>Job readiness · {readiness.percent}%</Text><Text style={styles.muted}>The required details are ready. The extra signals below can help tradespeople understand and price the work before replying.</Text></View><Chip icon={readiness.percent === 100 ? 'check-circle-outline' : 'progress-check'}>{readiness.complete}/{readiness.total}</Chip></View>
+        <View style={styles.reviewMeta}>{readiness.items.map((item) => <Chip key={item.key} compact icon={item.complete ? 'check' : 'circle-outline'}>{item.label}</Chip>)}</View>
+      </AppCard>
+      <AppCard>
       <View style={styles.reviewHeader}><View style={styles.flex}><Text variant="headlineSmall" style={styles.title}>{title.trim() || `${category ?? 'Trade'} quote request`}</Text><Text style={styles.muted}>{category}{propertyType ? ` · ${propertyType}` : ''}</Text></View>{traderName ? <Chip icon="account-arrow-right">Direct request</Chip> : isEmergency ? <Chip icon="alert">Emergency broadcast</Chip> : <Chip icon="account-group-outline">Marketplace job</Chip>}</View>
       <View style={styles.reviewMeta}><Chip icon="map-marker-outline">{postcode}</Chip>{budgetRange ? <Chip icon="cash">{budgetRange}</Chip> : null}{urgency ? <Chip icon="clock-outline">{urgency}</Chip> : null}</View>
       <Text style={styles.description}>{description}</Text>
       <Text style={styles.muted}>{photos.length} photo{photos.length === 1 ? '' : 's'} attached{directRequest && !budgetRange ? ' · budget to discuss' : ''}{directRequest && !urgency ? ' · timing to discuss' : ''}{aiGeneratedSpec ? ' · description assisted by BuildPair AI' : ''}</Text>
-    </AppCard> : null}
+    </AppCard></> : null}
 
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
     {category ? <AIJobSpecModal visible={showAi} category={category} propertyType={aiPropertyType} onDismiss={() => setShowAi(false)} onGenerated={(spec) => { setDescription(spec); setAiGeneratedSpec(spec); }} /> : null}
