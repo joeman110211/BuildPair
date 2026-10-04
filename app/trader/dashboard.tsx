@@ -11,6 +11,7 @@ import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors, controlHeights, spacing } from '@/constants/theme';
 import { apiFetch, ApiError, errorMessage } from '@/lib/api';
 import { MARKETPLACE_OPEN } from '@/lib/launch';
+import { profileStrength } from '@/lib/profile-strength';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import type { Job, Quote, TraderProfile } from '@/types';
 
@@ -91,6 +92,8 @@ export default function TraderDashboard() {
   // always be based on payouts_enabled so every screen reports the same financial state.
   const payoutsReady = Boolean(profile.stripeAccountId && profile.stripePayoutsEnabled);
   const serviceArea = profile.locationLabel || profile.postcode || 'your saved service area';
+  const readiness = profileStrength(profile);
+  const nextReadinessItem = readiness.items.find((item) => !item.complete);
   const nextAction = !marketplaceEnabled
     ? { title: 'Get your profile launch-ready', body: 'Check your photos, services, working area and trust information so homeowners see the strongest version of your business when BuildPair opens.', label: 'Review profile', href: '/trader/profile' as Href }
     : activeJobs[0]
@@ -126,6 +129,22 @@ export default function TraderDashboard() {
     <AppCard style={styles.nextActionCard}>
       <View style={styles.row}><View style={styles.flex}><Text style={styles.nextActionEyebrow}>NEXT ACTION</Text><Text variant="titleLarge" style={styles.cardTitle}>{nextAction.title}</Text><Text style={styles.muted}>{nextAction.body}</Text></View><Chip icon="arrow-right-circle-outline">Next</Chip></View>
       <Button mode="contained" icon="arrow-right" onPress={() => router.push(nextAction.href)}>{nextAction.label}</Button>
+    </AppCard>
+
+    <AppCard>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Text style={styles.membershipEyebrow}>PROFILE READINESS</Text>
+          <Text variant="titleLarge" style={styles.cardTitle}>{readiness.percent}% complete</Text>
+          <Text style={styles.muted}>{readiness.complete} of {readiness.total} profile signals are ready. Complete the remaining items so homeowners see the strongest version of your business.</Text>
+        </View>
+        <Chip icon={readiness.percent === 100 ? 'check-circle-outline' : 'progress-check'}>{readiness.percent}%</Chip>
+      </View>
+      <ProgressBar progress={readiness.percent / 100} color={colors.primary} style={styles.progress} />
+      <View style={styles.quickActions}>
+        {readiness.items.map((item) => <Chip key={item.key} compact icon={item.complete ? 'check' : 'circle-outline'}>{item.label}</Chip>)}
+      </View>
+      {nextReadinessItem ? <Button mode="outlined" icon="arrow-right" onPress={() => router.push(nextReadinessItem.href as Href)} contentStyle={styles.actionButton}>Complete next profile item</Button> : <Link href="/trader/profile" asChild><Button mode="outlined" icon="account-check-outline" contentStyle={styles.actionButton}>Review completed profile</Button></Link>}
     </AppCard>
 
     <AppCard style={[styles.membershipCard, paidActive && styles.membershipCardPaid]}>
