@@ -93,6 +93,7 @@ export default function TraderLayout() {
     <Stack.Screen name="quotes/new" options={{ title: 'Create quote' }} />
     <Stack.Screen name="quotes/review" options={{ title: 'Review payment changes' }} />
     <Stack.Screen name="visits/new" options={{ title: 'Arrange site visit' }} />
+    <Stack.Screen name="proposals/new" options={{ title: 'Quick proposal' }} />
     <Stack.Screen name="invoices/new" options={{ title: 'Create invoice' }} />
     <Stack.Screen name="messages" options={{ headerShown: false }} />
     <Stack.Screen name="messages/[id]" options={{ title: 'Conversation' }} />
