@@ -88,14 +88,14 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
   async function remind(id: string) {
     try {
       setBusy(true); setError('');
-      await apiFetch('/api/business-reminders', { method: 'POST', body: JSON.stringify({ kind: 'aftercare', id }) }, () => tokenRef.current());
+      await apiFetch('/api/business-reminders', { method: 'POST', body: JSON.stringify({ kind: 'aftercare', id }) }, getToken);
     } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
   }
 
   async function update(id: string, action: 'done' | 'reopen' | 'approve' | 'archive') {
     try {
       setBusy(true); setError('');
-      await apiFetch('/api/jobs/workspace', { method: 'PATCH', body: JSON.stringify({ id, action }) }, () => tokenRef.current());
+      await apiFetch('/api/jobs/workspace', { method: 'PATCH', body: JSON.stringify({ id, action }) }, getToken);
       await load();
     } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
   }
