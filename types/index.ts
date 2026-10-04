@@ -85,6 +85,9 @@ export interface TraderProfile {
   serviceAreas?: string[];
   beforeAfterProjects?: BeforeAfterProject[];
   verifiedCredentialCount?: number;
+  storyCount?: number;
+  availabilityCount?: number;
+  googleReviewConnected?: boolean;
   availabilitySummary?: string | null;
   responseRate?: number;
   averageResponseHours?: number;
