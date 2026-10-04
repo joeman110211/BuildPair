@@ -100,6 +100,12 @@ Before enabling public paid traffic:
 - [x] UK privacy notice, cookie policy, marketplace terms and marketplace disclaimer pages are present.
 - [x] The product describes trade credentials carefully rather than silently claiming BuildPair has vetted every credential.
 - [x] Account deletion workflow exists.
+- [x] Current Online Safety Act illegal-content risk assessment and children's access/risk assessment are recorded in `docs/compliance/ONLINE_SAFETY_ACT_2026.md`.
+- [x] Public safety reporting is available without a BuildPair account and the Terms explain illegal-content protection, reporting and moderation complaints.
+- [ ] Register BuildPair and an authorised administrator on the NCA CSEA Industry Reporting Portal (CSEA-IRP) and retain the registration details.
+- [ ] Confirm the ICO data-protection fee position and register/pay if chargeable.
+- [ ] Reassess HMRC digital-platform-operator registration when seller transactions or seller payment information become reportable through BuildPair.
+- [ ] Reassess the FCA/payment-services perimeter before BuildPay is enabled to the public.
 - [ ] Review final legal wording before a wider paid launch, especially subscriptions, cancellation/refunds, consumer contracts, VAT invoicing, platform liability and payments.
 - [ ] Define and document complaints, dangerous-work, disputed-work, chargeback and trader-removal procedures for support/admin use.
 - [ ] Finalise the retention/deletion policy before app-store release.
