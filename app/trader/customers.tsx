@@ -3,7 +3,7 @@ import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
-import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Chip, Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
