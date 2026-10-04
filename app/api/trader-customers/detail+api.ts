@@ -13,10 +13,6 @@ const actionSchema = z.object({
   action: z.enum(['complete','reopen']),
 });
 
-function quoteKeySql(alias: string) {
-  return alias;
-}
-
 export async function GET(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
