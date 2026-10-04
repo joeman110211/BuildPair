@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { type Href, Link, useLocalSearchParams } from 'expo-router';
+import { type Href, Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
@@ -51,10 +51,30 @@ type Detail = {
   timeline: JobTimelineEvent[];
 };
 
+type QuickProposal = {
+  id: string;
+  traderId: string;
+  businessName: string;
+  tradeCategory: string;
+  estimateMin: number;
+  estimateMax: number;
+  availableFrom: string | null;
+  note: string;
+  portfolioUrls: string[];
+  siteVisitRequired: boolean;
+  status: 'pending' | 'shortlisted' | 'declined' | 'withdrawn' | 'converted';
+  averageRating: number;
+  reviewCount: number;
+  averageResponseHours: number;
+};
+
 export default function JobDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getToken } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState<Detail>();
+  const [proposals, setProposals] = useState<QuickProposal[]>([]);
+  const [proposalBusy, setProposalBusy] = useState<string>();
   const [externalPayments, setExternalPayments] = useState<ExternalPaymentRecord[]>([]);
   const [disputes, setDisputes] = useState<PaymentDispute[]>([]);
   const [nextToFund, setNextToFund] = useState<ReleaseResult['nextMilestone']>();
@@ -76,6 +96,7 @@ export default function JobDetailScreen() {
       const detail = await apiFetch<Detail>(`/api/jobs/${id}`, {}, getToken);
       setData(detail);
       if (detail.acceptedQuote) {
+        setProposals([]);
         const [externalResult, disputeResult] = await Promise.allSettled([
           apiFetch<ExternalPaymentRecord[]>(`/api/external-payments?jobId=${encodeURIComponent(id)}`, {}, getToken),
           apiFetch<PaymentDispute[]>(`/api/payment-disputes?jobId=${encodeURIComponent(id)}`, {}, getToken),
@@ -85,12 +106,30 @@ export default function JobDetailScreen() {
       } else {
         setExternalPayments([]);
         setDisputes([]);
+        const proposalRows = await apiFetch<QuickProposal[]>(`/api/job-proposals?jobId=${encodeURIComponent(id)}`, {}, getToken).catch(() => []);
+        setProposals(proposalRows);
       }
       setError('');
     } catch (e) { setError(errorMessage(e)); }
   }, [getToken, id]);
 
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
+
+  async function proposalAction(proposal: QuickProposal, action: 'shortlist' | 'decline') {
+    try {
+      setProposalBusy(proposal.id); setError('');
+      const result = await apiFetch<{ conversationId?: string | null }>('/api/job-proposals', {
+        method: 'PATCH',
+        body: JSON.stringify({ id: proposal.id, action }),
+      }, getToken);
+      if (action === 'shortlist' && result.conversationId) {
+        router.push(`/customer/messages/${result.conversationId}` as Href);
+      } else {
+        await load();
+      }
+    } catch (e) { setError(errorMessage(e)); }
+    finally { setProposalBusy(undefined); }
+  }
 
   async function review() {
     if (!data?.acceptedQuote) return;
@@ -212,6 +251,34 @@ export default function JobDetailScreen() {
     </AppCard>
 
     {data.job.photos?.length ? <View style={styles.gallery}>{data.job.photos.map((uri) => <Image key={uri} source={{ uri }} style={styles.photo} />)}</View> : null}
+
+    {!data.acceptedQuote && proposals.filter((proposal) => ['pending','shortlisted'].includes(proposal.status)).length ? <>
+      <Text variant="titleLarge" style={styles.heading}>Early proposals</Text>
+      <Text style={styles.muted}>These are early estimates and availability details, not final BuildPair quotes. Shortlist the tradespeople you want to discuss the job with.</Text>
+      {proposals.filter((proposal) => ['pending','shortlisted'].includes(proposal.status)).map((proposal) => <AppCard key={proposal.id}>
+        <View style={styles.row}>
+          <View style={styles.flex}>
+            <Text variant="titleLarge" style={styles.heading}>{proposal.businessName}</Text>
+            <Text style={styles.muted}>{proposal.tradeCategory}{proposal.reviewCount ? ` · ${Number(proposal.averageRating || 0).toFixed(1)} ★ · ${proposal.reviewCount} review${proposal.reviewCount === 1 ? '' : 's'}` : ' · New to BuildPair'}</Text>
+          </View>
+          <Chip icon={proposal.status === 'shortlisted' ? 'account-check-outline' : 'flash-outline'}>{proposal.status === 'shortlisted' ? 'Shortlisted' : 'Quick proposal'}</Chip>
+        </View>
+        <Text variant="headlineSmall" style={styles.money}>{proposal.estimateMin === proposal.estimateMax ? formatMoney(proposal.estimateMin) : `${formatMoney(proposal.estimateMin)}–${formatMoney(proposal.estimateMax)}`}</Text>
+        <View style={styles.row}>
+          <Text style={styles.muted}>{proposal.availableFrom ? `Available from ${new Date(`${proposal.availableFrom}T12:00:00`).toLocaleDateString('en-GB')}` : 'Availability to confirm'}</Text>
+          {proposal.siteVisitRequired ? <Chip compact icon="calendar-account-outline">Visit before final quote</Chip> : null}
+          {proposal.averageResponseHours > 0 ? <Chip compact icon="reply-outline">Replies in ~{proposal.averageResponseHours < 1 ? '<1' : Math.round(proposal.averageResponseHours)}h</Chip> : null}
+        </View>
+        <Text>{proposal.note}</Text>
+        {proposal.portfolioUrls?.length ? <View style={styles.gallery}>{proposal.portfolioUrls.map((uri) => <Image key={uri} source={{ uri }} style={styles.photo} />)}</View> : null}
+        <View style={styles.row}>
+          {proposal.status === 'pending' ? <>
+            <Button mode="outlined" textColor={colors.danger} disabled={Boolean(proposalBusy)} onPress={() => void proposalAction(proposal, 'decline')}>Decline</Button>
+            <Button mode="contained" icon="account-check-outline" loading={proposalBusy === proposal.id} disabled={Boolean(proposalBusy)} onPress={() => void proposalAction(proposal, 'shortlist')}>Shortlist & message</Button>
+          </> : <Button mode="contained" icon="message-text-outline" onPress={() => void proposalAction(proposal, 'shortlist')}>Open conversation</Button>}
+        </View>
+      </AppCard>)}
+    </> : null}
 
     {data.acceptedQuote && data.job.status === 'in_progress' ? <AppCard style={paymentMode === 'external' ? styles.externalCard : styles.protectionCard}>
       <Text variant="titleLarge" style={styles.heading}>{paymentMode === 'undecided' ? 'Choose how to pay' : paymentMode === 'buildpair' ? 'BuildPay' : 'Direct payment'}</Text>
