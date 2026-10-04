@@ -2,6 +2,12 @@
 -- Adds quick proposals, automatic reminder preferences and richer site-visit slot handling
 -- without changing existing customer-facing wording or existing records.
 
+ALTER TABLE jobs
+  ADD COLUMN IF NOT EXISTS response_limit integer NOT NULL DEFAULT 5;
+
+ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_response_limit_valid;
+ALTER TABLE jobs ADD CONSTRAINT jobs_response_limit_valid CHECK (response_limit BETWEEN 1 AND 25);
+
 CREATE TABLE IF NOT EXISTS job_proposals (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   job_id uuid NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
