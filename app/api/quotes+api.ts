@@ -170,6 +170,7 @@ export async function POST(request: Request) {
       WHERE id = ${quote.id}
     `;
     await db.update(jobs).set({ status: 'quoted', updatedAt: new Date() }).where(eq(jobs.id, payload.jobId));
+    await getSql()`UPDATE job_proposals SET status = 'converted', updated_at = now() WHERE job_id = ${payload.jobId} AND trader_id = ${trader.id} AND status <> 'withdrawn'`;
     const conversations = await getSql()`INSERT INTO conversations(job_id, customer_id, trader_id) VALUES (${payload.jobId}, ${job.customerId}, ${trader.id}) ON CONFLICT (job_id, customer_id, trader_id) DO UPDATE SET updated_at = now() RETURNING id` as unknown as { id: string }[];
 
     const buildPayCopy = requestBuildPay ? buildPayFeeMode === 'trader_absorbs' ? ' BuildPay is requested and the tradesperson has chosen to absorb the BuildPay fee.' : ` BuildPay is requested with an estimated ${formatPence(buildPayCustomerFeeEstimate)} service fee shown separately to the homeowner.` : '';
