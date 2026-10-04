@@ -18,8 +18,27 @@ export function QuoteComparisonOverview({ quotes }: { quotes: Quote[] }) {
   const compact = width < 760;
   const active = quotes.filter((quote) => quote.status === 'pending');
   if (active.length < 2) return null;
-  const lowest = Math.min(...active.map(customerTotal));
+  const totals = active.map(customerTotal);
+  const lowest = Math.min(...totals);
+  const highest = Math.max(...totals);
   const earliest = Math.min(...active.filter((quote) => quote.proposedStartAt).map((quote) => new Date(quote.proposedStartAt!).getTime()), Number.POSITIVE_INFINITY);
+  const latest = Math.max(...active.filter((quote) => quote.proposedStartAt).map((quote) => new Date(quote.proposedStartAt!).getTime()), Number.NEGATIVE_INFINITY);
+  const durations = [...new Set(active.map((quote) => quote.durationDays ?? null))];
+  const warranties = [...new Set(active.map((quote) => quote.warrantyMonths ?? null))];
+  const materialValues = [...new Set(active.map((quote) => quote.materialsCost))];
+  const stageCounts = [...new Set(active.map((quote) => quote.paymentSchedule?.length ?? 0))];
+  const buildPayModes = [...new Set(active.map((quote) => Boolean(quote.buildPayRequestedBy)))];
+  const exclusionsDiffer = new Set(active.map((quote) => (quote.exclusions || '').trim().toLowerCase())).size > 1;
+  const differenceSignals = [
+    highest > lowest ? `Totals differ by ${formatMoney(highest - lowest)}` : null,
+    Number.isFinite(earliest) && Number.isFinite(latest) && latest > earliest ? 'Proposed start dates differ' : null,
+    durations.length > 1 ? 'Job durations differ' : null,
+    warranties.length > 1 ? 'Warranty terms differ' : null,
+    materialValues.length > 1 ? 'Materials allowances differ' : null,
+    stageCounts.length > 1 ? 'Payment stages differ' : null,
+    buildPayModes.length > 1 ? 'BuildPay choices differ' : null,
+    exclusionsDiffer ? 'Exclusions differ' : null,
+  ].filter(Boolean) as string[];
 
   return <AppCard style={styles.shell}>
     <View style={styles.heading}>
@@ -29,6 +48,10 @@ export function QuoteComparisonOverview({ quotes }: { quotes: Quote[] }) {
       </View>
       <Chip icon="compare-horizontal">{active.length} quotes</Chip>
     </View>
+    {differenceSignals.length ? <View style={styles.differences}>
+      <Text variant="titleSmall" style={styles.title}>Differences worth checking</Text>
+      <View style={styles.tags}>{differenceSignals.map((signal) => <Chip key={signal} compact icon="alert-circle-outline">{signal}</Chip>)}</View>
+    </View> : null}
     <View style={styles.grid}>
       {active.map((quote) => {
         const allIn = customerTotal(quote);
@@ -57,6 +80,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 4 },
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 20 },
+  differences: { gap: 7, borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: 12, backgroundColor: colors.surfaceSoft },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   quote: { flexGrow: 1, flexBasis: 240, minWidth: 0, flexShrink: 1, maxWidth: 380, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 14, gap: 8, backgroundColor: '#FFFFFF' },
   quoteCompact: { flexBasis: '100%', maxWidth: '100%' },

@@ -210,7 +210,8 @@ export default function TraderJobBoard() {
                 void openOffer(job);
               }}
             >{conversation ? 'Open Conversation' : direct ? 'Open Direct Request' : blockedByPlan ? 'Upgrade to quote' : blockedByAllowance ? `${used}/${limit} offers used` : 'Offer / Message'}</Button>
-            {conversation || ownQuote ? <Button mode="outlined" icon="file-document-edit-outline" onPress={() => paid ? router.push({ pathname: '/trader/quotes/new', params: { jobId: job.id, title: job.title } }) : router.push('/trader/subscription')}>{paid ? (ownQuote ? 'Update Quote' : 'Quote now') : 'Upgrade to quote'}</Button> : null}
+            {!ownQuote && paid ? <Button mode="outlined" icon="flash-outline" onPress={() => router.push({ pathname: '/trader/proposals/new', params: { jobId: job.id, title: job.title } } as Href)}>Quick proposal</Button> : null}
+                        {conversation || ownQuote ? <Button mode="outlined" icon="file-document-edit-outline" onPress={() => paid ? router.push({ pathname: '/trader/quotes/new', params: { jobId: job.id, title: job.title } }) : router.push('/trader/subscription')}>{paid ? (ownQuote ? 'Update Quote' : 'Quote now') : 'Upgrade to quote'}</Button> : null}
             {conversation && !ownQuote ? <Button mode="outlined" icon="calendar-account-outline" onPress={() => router.push({ pathname: '/trader/visits/new', params: { jobId: job.id, conversationId: conversation.id, title: job.title } } as Href)}>Visit before quote</Button> : null}
             {blockedByAllowance ? <Button mode="text" onPress={() => router.push('/trader/subscription')}>{profile?.subscriptionTier === 'basic' ? 'Upgrade to Pro' : 'View plans'}</Button> : null}
           </>}

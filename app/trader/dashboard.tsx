@@ -11,12 +11,16 @@ import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors, controlHeights, spacing } from '@/constants/theme';
 import { apiFetch, ApiError, errorMessage } from '@/lib/api';
 import { MARKETPLACE_OPEN } from '@/lib/launch';
+import { profileStrength } from '@/lib/profile-strength';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import type { Job, Quote, TraderProfile } from '@/types';
 
 type ReferralState = {
   referralCode: string;
   referralCount: number;
+  visitCount: number;
+  registeredCount: number;
+  profileCompleteCount: number;
   referralUrl: string;
 };
 
@@ -74,6 +78,19 @@ export default function TraderDashboard() {
     }
   }
 
+  async function copyReferralLink() {
+    if (!referral?.referralUrl) return;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(referral.referralUrl);
+        return;
+      }
+      await Share.share({ message: referral.referralUrl, url: referral.referralUrl });
+    } catch {
+      // Clipboard/share cancellation needs no dashboard error state.
+    }
+  }
+
   if (loading) return <LoadingScreen />;
   if (!profile) return <Screen title="Build your tradesperson profile" subtitle="Your profile is your shop window on BuildPair."><EmptyState title="Your profile is waiting" body="Add your trade, service area, skills and business details so homeowners can find you." action={<Link href="/trader/onboarding" asChild><Button mode="contained" contentStyle={styles.actionButton}>Build my profile</Button></Link>} /></Screen>;
 
@@ -91,6 +108,8 @@ export default function TraderDashboard() {
   // always be based on payouts_enabled so every screen reports the same financial state.
   const payoutsReady = Boolean(profile.stripeAccountId && profile.stripePayoutsEnabled);
   const serviceArea = profile.locationLabel || profile.postcode || 'your saved service area';
+  const readiness = profileStrength(profile);
+  const nextReadinessItem = readiness.items.find((item) => !item.complete);
   const nextAction = !marketplaceEnabled
     ? { title: 'Get your profile launch-ready', body: 'Check your photos, services, working area and trust information so homeowners see the strongest version of your business when BuildPair opens.', label: 'Review profile', href: '/trader/profile' as Href }
     : activeJobs[0]
@@ -126,6 +145,22 @@ export default function TraderDashboard() {
     <AppCard style={styles.nextActionCard}>
       <View style={styles.row}><View style={styles.flex}><Text style={styles.nextActionEyebrow}>NEXT ACTION</Text><Text variant="titleLarge" style={styles.cardTitle}>{nextAction.title}</Text><Text style={styles.muted}>{nextAction.body}</Text></View><Chip icon="arrow-right-circle-outline">Next</Chip></View>
       <Button mode="contained" icon="arrow-right" onPress={() => router.push(nextAction.href)}>{nextAction.label}</Button>
+    </AppCard>
+
+    <AppCard>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Text style={styles.membershipEyebrow}>PROFILE READINESS</Text>
+          <Text variant="titleLarge" style={styles.cardTitle}>{readiness.percent}% complete</Text>
+          <Text style={styles.muted}>{readiness.complete} of {readiness.total} profile signals are ready. Complete the remaining items so homeowners see the strongest version of your business.</Text>
+        </View>
+        <Chip icon={readiness.percent === 100 ? 'check-circle-outline' : 'progress-check'}>{readiness.percent}%</Chip>
+      </View>
+      <ProgressBar progress={readiness.percent / 100} color={colors.primary} style={styles.progress} />
+      <View style={styles.quickActions}>
+        {readiness.items.map((item) => <Chip key={item.key} compact icon={item.complete ? 'check' : 'circle-outline'}>{item.label}</Chip>)}
+      </View>
+      {nextReadinessItem ? <Button mode="outlined" icon="arrow-right" onPress={() => router.push(nextReadinessItem.href as Href)} contentStyle={styles.actionButton}>Complete next profile item</Button> : <Link href="/trader/profile" asChild><Button mode="outlined" icon="account-check-outline" contentStyle={styles.actionButton}>Review completed profile</Button></Link>}
     </AppCard>
 
     <AppCard style={[styles.membershipCard, paidActive && styles.membershipCardPaid]}>
@@ -170,7 +205,16 @@ export default function TraderDashboard() {
           {referral.referralCount > 0 ? `${referral.referralCount} joined` : 'Your turn'}
         </Chip>
       </View>
-      <Button mode="contained" icon="share-variant-outline" onPress={() => void shareOneGoodTrade()} contentStyle={styles.actionButton}>Pass my One Good Trade invite</Button>
+      <View style={styles.quickActions}>
+        <Chip compact icon="eye-outline">{referral.visitCount} visited</Chip>
+        <Chip compact icon="account-plus-outline">{referral.referralCount} joined</Chip>
+        <Chip compact icon="account-check-outline">{referral.registeredCount} registered</Chip>
+        <Chip compact icon="check-decagram-outline">{referral.profileCompleteCount} completed profile</Chip>
+      </View>
+      <View style={styles.membershipActions}>
+        <Button mode="contained" icon="share-variant-outline" onPress={() => void shareOneGoodTrade()} contentStyle={styles.actionButton}>Pass my One Good Trade invite</Button>
+        <Button mode="outlined" icon="content-copy" onPress={() => void copyReferralLink()} contentStyle={styles.actionButton}>Copy invite link</Button>
+      </View>
       <Text selectable style={styles.relayLink}>{referral.referralUrl}</Text>
       <Text style={styles.relayNote}>No paid-lead nonsense and no cash-for-random-invites scheme. The point is to seed BuildPair with real local working networks before launch.</Text>
     </AppCard> : null}
@@ -189,6 +233,7 @@ export default function TraderDashboard() {
       <Link href="/trader/quotes" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Quote any customer</Button></Link>
       <Link href="/trader/invoices/new" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Create invoice</Button></Link>
       <Link href="/trader/customers" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Customer book</Button></Link>
+      <Link href="/trader/reminders" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Reminder rules</Button></Link>
       <Link href="/trader/calendar" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Working calendar</Button></Link>
       <Link href="/trader/attention" asChild><Button mode="outlined" icon="bell-alert-outline" contentStyle={styles.actionButton}>Needs attention</Button></Link>
       <Link href="/trader/profile" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Manage profile</Button></Link>

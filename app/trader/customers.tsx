@@ -35,6 +35,7 @@ export default function TraderCustomersScreen() {
       <View style={styles.actions}>
         <Button compact mode="contained" icon="file-document-edit-outline" onPress={() => router.push({ pathname: '/trader/quotes/new', params: { customerName: row.name, customerEmail: row.email ?? '', customerPhone: row.phone ?? '' } } as Href)}>New quote</Button>
         {row.email ? <Button compact mode="outlined" icon="receipt-text-outline" onPress={() => router.push({ pathname: '/trader/invoices/new', params: { customerName: row.name, customerEmail: row.email } } as Href)}>New invoice</Button> : null}
+        <Button compact mode="outlined" icon="account-details-outline" onPress={() => router.push(`/trader/customers/${encodeURIComponent(row.contactKey)}` as Href)}>View history</Button>
         {row.email ? <Button compact icon="email-outline" onPress={() => void Linking.openURL(`mailto:${row.email}`)}>Email</Button> : null}
         {row.phone ? <Button compact icon="phone-outline" onPress={() => void Linking.openURL(`tel:${row.phone}`)}>Call</Button> : null}
       </View>

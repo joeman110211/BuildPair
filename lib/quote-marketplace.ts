@@ -1,4 +1,4 @@
-export const MAX_ACTIVE_QUOTES_PER_JOB = 10;
+export const MAX_ACTIVE_QUOTES_PER_JOB = 5;
 
 export function canAcceptNewQuote(input: {
   intakeClosedAt?: string | null;

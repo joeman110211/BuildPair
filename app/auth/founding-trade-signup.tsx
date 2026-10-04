@@ -1,6 +1,6 @@
 import { useSignUp } from '@clerk/expo';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
@@ -27,6 +27,29 @@ export default function FoundingTradeSignup() {
   const busy = fetchStatus === 'fetching';
   const source = firstParam(params.source)?.slice(0, 150) || 'founding-trade-signup';
   const referralCode = firstParam(params.ref)?.slice(0, 40) || '';
+
+  useEffect(() => {
+    if (!referralCode) return;
+    let visitorKey = '';
+    try {
+      if (typeof window !== 'undefined') {
+        visitorKey = window.localStorage.getItem('buildpair_referral_visitor') || '';
+        if (!visitorKey) {
+          visitorKey = globalThis.crypto?.randomUUID?.() || `bp-ref-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+          window.localStorage.setItem('buildpair_referral_visitor', visitorKey);
+        }
+      } else {
+        visitorKey = globalThis.crypto?.randomUUID?.() || `bp-ref-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      }
+    } catch {
+      visitorKey = `bp-ref-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+    void fetch('/api/referral-visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ referralCode, visitorKey }),
+    }).catch(() => undefined);
+  }, [referralCode]);
   const normalisedEmail = email.trim().toLowerCase();
   const canCreate = useMemo(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalisedEmail) && password.length >= 8, [normalisedEmail, password.length]);
   const needsEmailVerification = signUp.status === 'missing_requirements'

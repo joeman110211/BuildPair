@@ -122,6 +122,15 @@ export async function POST(request: Request) {
     }
 
     if (row.milestoneKind === 'materials') throw new HttpError(409, 'Materials are released only after you fund the opening BuildPay payment and the tradesperson acknowledges it');
+    const earlierStages = await getSql()`
+      SELECT title, status
+      FROM job_milestones
+      WHERE job_id = ${row.jobId}
+        AND sort_order < (SELECT sort_order FROM job_milestones WHERE id = ${row.milestoneId})
+      ORDER BY sort_order ASC
+    ` as unknown as { title: string; status: string }[];
+    const unfinishedEarlierStage = earlierStages.find((stage) => stage.status !== 'paid');
+    if (unfinishedEarlierStage) throw new HttpError(409, `${unfinishedEarlierStage.title} must be released before this stage can be released`);
     if (row.milestoneStatus !== 'completed') throw new HttpError(409, 'The tradesperson must mark the agreed stage complete before you can release it');
     if (effectivePaymentStatus !== 'funded') throw new HttpError(409, 'This stage is not waiting for release');
     if (!row.stripeAccountId || !row.stripePayoutsEnabled) throw new HttpError(409, 'The tradesperson payout account is not ready for release');
