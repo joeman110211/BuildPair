@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/expo';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
@@ -80,8 +80,8 @@ function ReportForm() {
   }
 
   if (!isSignedIn) return <View style={styles.formCard}>
-    <Text variant="headlineSmall" style={styles.title}>Sign in to submit a marketplace report</Text>
-    <Text style={styles.body}>Reports are tied to a BuildPair account so the moderation team can review relevant platform context and reduce anonymous misuse of the reporting system.</Text>
+    <Text variant="headlineSmall" style={styles.title}>Sign in for an account-linked report</Text>
+    <Text style={styles.body}>Signing in lets BuildPair connect your report to relevant marketplace records. You do not need an account to report illegal or harmful content: use the public safety reporting option below.</Text>
     <Link href="/auth/account" asChild><Button mode="contained">Sign in to BuildPair</Button></Link>
   </View>;
 
@@ -137,6 +137,26 @@ function ReportForm() {
   </View>;
 }
 
+function PublicSafetyReportCard() {
+  const emailSafety = () => void Linking.openURL('mailto:info@buildpair.co.uk?subject=BuildPair%20safety%20report');
+
+  return <View style={styles.formCard}>
+    <View style={styles.formHeader}>
+      <View style={styles.flex}>
+        <Text variant="headlineSmall" style={styles.title}>Report illegal or harmful content without an account</Text>
+        <Text style={styles.body}>Anyone can report content or behaviour they believe is illegal, unsafe or harmful. Include the BuildPair page, profile, job or other reference if you have it, what you saw, when you saw it and why you are concerned.</Text>
+      </View>
+      <Chip icon="shield-alert-outline">No sign-in required</Chip>
+    </View>
+    <View style={styles.notice}>
+      <Text variant="titleSmall" style={styles.title}>Child sexual abuse material</Text>
+      <Text style={styles.body}>Do not download, copy or email suspected child sexual abuse images or videos to BuildPair. Send only the information needed to identify where the material appears. If a child or anyone else is in immediate danger, call 999.</Text>
+    </View>
+    <Button mode="contained" icon="email-alert-outline" onPress={emailSafety}>Email a safety report</Button>
+    <Text style={styles.body}>If you are complaining about how BuildPair handled a previous safety report or moderation decision, include the report reference or account email so the decision can be reviewed.</Text>
+  </View>;
+}
+
 export default function ReportPage() {
   const authAvailable = useAuthAvailable();
   const { width } = useWindowDimensions();
@@ -150,11 +170,8 @@ export default function ReportPage() {
       </View>
     </View>
     <View style={styles.content}>
-      {authAvailable ? <ReportForm /> : <View style={styles.formCard}>
-        <Text variant="headlineSmall" style={styles.title}>Sign in to submit a marketplace report</Text>
-        <Text style={styles.body}>Reports are tied to a BuildPair account so the moderation team can review relevant platform context and reduce anonymous misuse of the system.</Text>
-        <Link href="/auth/account" asChild><Button mode="contained">Sign in to BuildPair</Button></Link>
-      </View>}
+      {authAvailable ? <ReportForm /> : null}
+      <PublicSafetyReportCard />
       <View style={styles.actions}>
         <Link href="/(public)/advice" asChild><Button mode="outlined">Advice Hub</Button></Link>
         <Link href="/(public)/marketplace-standards" asChild><Button mode="outlined">Marketplace Standards</Button></Link>
