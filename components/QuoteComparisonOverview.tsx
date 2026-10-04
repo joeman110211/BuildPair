@@ -34,16 +34,22 @@ export function QuoteComparisonOverview({ quotes }: { quotes: Quote[] }) {
         const allIn = customerTotal(quote);
         const isLowest = allIn === lowest;
         const isEarliest = Boolean(quote.proposedStartAt) && new Date(quote.proposedStartAt!).getTime() === earliest;
+        const exclusions = quote.exclusions?.trim() ?? '';
+        const exclusionsDiffer = active.some((other) => other.id !== quote.id && (other.exclusions?.trim() ?? '') !== exclusions);
+        const stageCount = quote.paymentSchedule?.length ?? 0;
         return <View key={quote.id} style={[styles.quote, compact && styles.quoteCompact, isLowest && styles.quoteBest]}>
           <Text variant="titleMedium" numberOfLines={2} style={styles.title}>{quote.businessName ?? 'Tradesperson'}</Text>
           <Text variant="headlineSmall" style={styles.price}>{formatMoney(allIn)}</Text>
           <Text variant="bodySmall" style={styles.muted}>{quote.buildPayRequestedBy ? 'BuildPay included in proposal' : 'BuildPay optional after acceptance'}</Text>
-          <View style={styles.tags}>{isLowest ? <Chip compact icon="cash-check">Lowest total</Chip> : null}{isEarliest ? <Chip compact icon="calendar-fast">Earliest start</Chip> : null}</View>
+          <View style={styles.tags}>{isLowest ? <Chip compact icon="cash-check">Lowest total</Chip> : null}{isEarliest ? <Chip compact icon="calendar-fast">Earliest start</Chip> : null}{exclusionsDiffer ? <Chip compact icon="text-box-search-outline">Different exclusions</Chip> : null}{quote.warrantyMonths == null ? <Chip compact icon="alert-circle-outline">Warranty not stated</Chip> : null}</View>
           <View style={styles.fact}><Text style={styles.label}>Start</Text><Text style={styles.value}>{quote.proposedStartAt ? new Date(quote.proposedStartAt).toLocaleDateString('en-GB') : 'To agree'}</Text></View>
           <View style={styles.fact}><Text style={styles.label}>Duration</Text><Text style={styles.value}>{quote.durationDays ? `${quote.durationDays} day${quote.durationDays === 1 ? '' : 's'}` : 'To agree'}</Text></View>
           <View style={styles.fact}><Text style={styles.label}>Warranty</Text><Text style={styles.value}>{quote.warrantyMonths != null ? `${quote.warrantyMonths} months` : 'Not stated'}</Text></View>
           <View style={styles.fact}><Text style={styles.label}>Materials</Text><Text style={styles.value}>{formatMoney(quote.materialsCost)}</Text></View>
           <View style={styles.fact}><Text style={styles.label}>Labour/service</Text><Text style={styles.value}>{formatMoney(quote.laborCost)}</Text></View>
+          <View style={styles.fact}><Text style={styles.label}>Deposit</Text><Text style={styles.value}>{quote.depositAmount > 0 ? formatMoney(quote.depositAmount) : 'None stated'}</Text></View>
+          <View style={styles.fact}><Text style={styles.label}>Payment stages</Text><Text style={styles.value}>{stageCount || 'Single / not staged'}</Text></View>
+          <View style={styles.differenceBox}><Text style={styles.differenceLabel}>Exclusions</Text><Text style={styles.differenceText}>{exclusions ? exclusions.slice(0, 220) : 'No exclusions stated'}</Text></View>
         </View>;
       })}
     </View>
@@ -66,4 +72,7 @@ const styles = StyleSheet.create({
   fact: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 7 },
   label: { color: colors.muted, fontWeight: '700' },
   value: { color: colors.charcoal, fontWeight: '800', textAlign: 'right' },
+  differenceBox: { gap: 4, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 8 },
+  differenceLabel: { color: colors.muted, fontWeight: '800', fontSize: 12 },
+  differenceText: { color: colors.charcoalSoft, lineHeight: 19, fontSize: 12 },
 });
