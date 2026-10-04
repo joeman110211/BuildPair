@@ -74,7 +74,7 @@ export async function POST(request: Request) {
          OR lower(coalesce(email, '')) = lower(${email})
       ORDER BY CASE WHEN registered_user_id = ${user.id} THEN 0 ELSE 1 END, created_at
       LIMIT 1
-    ` as unknown as { referralCode: string | null; referralCount: number }[];
+    ` as unknown as { referralCode: string | null; referralCount: number; visitCount: number; registeredCount: number; profileCompleteCount: number }[];
 
     const referralCode = rows[0]?.referralCode;
     if (!referralCode) throw new HttpError(503, 'BuildPair could not create your referral link right now.');
