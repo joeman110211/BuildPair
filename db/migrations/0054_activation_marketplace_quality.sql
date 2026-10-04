@@ -37,6 +37,19 @@ CREATE INDEX IF NOT EXISTS job_proposals_job_status_idx
 CREATE INDEX IF NOT EXISTS job_proposals_trader_idx
   ON job_proposals(trader_id, created_at DESC);
 
+CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+  event_id text PRIMARY KEY,
+  event_type text NOT NULL,
+  status text NOT NULL DEFAULT 'processing'
+    CHECK (status IN ('processing','processed','failed')),
+  error text,
+  processed_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS stripe_webhook_events_status_idx
+  ON stripe_webhook_events(status, updated_at);
+
 CREATE TABLE IF NOT EXISTS trader_referral_visits (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   referral_code text NOT NULL,
