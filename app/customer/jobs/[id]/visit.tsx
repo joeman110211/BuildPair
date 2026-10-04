@@ -13,6 +13,8 @@ type Visit = {
   jobId: string;
   jobTitle: string;
   proposedAt: string;
+  proposedSlots: string[];
+  selectedAt: string | null;
   status: 'proposed' | 'confirmed' | 'declined' | 'completed' | 'cancelled';
   note: string;
   privateAddress: JobPrivateAddress | null;
@@ -24,6 +26,7 @@ export default function ConfirmVisitScreen() {
   const { getToken } = useAuth();
   const router = useRouter();
   const [visit, setVisit] = useState<Visit>();
+  const [selectedAt, setSelectedAt] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [townCity, setTownCity] = useState('');
@@ -40,6 +43,7 @@ export default function ConfirmVisitScreen() {
         apiFetch<JobPrivateDetails>(`/api/job-private-details?jobId=${encodeURIComponent(id)}`, {}, getToken),
       ]);
       setVisit(nextVisit);
+      setSelectedAt(nextVisit.selectedAt || nextVisit.proposedAt);
       setAddressLine1(details.addressLine1);
       setAddressLine2(details.addressLine2);
       setTownCity(details.townCity);
@@ -59,7 +63,7 @@ export default function ConfirmVisitScreen() {
         method: 'PUT',
         body: JSON.stringify({ jobId: id, addressLine1, addressLine2, townCity, accessNotes }),
       }, getToken);
-      await apiFetch('/api/site-visits', { method: 'PATCH', body: JSON.stringify({ id: visitId, action: 'accept' }) }, getToken);
+      await apiFetch('/api/site-visits', { method: 'PATCH', body: JSON.stringify({ id: visitId, action: 'accept', selectedAt: selectedAt || visit?.proposedAt }) }, getToken);
       router.replace(`/customer/jobs/${id}` as Href);
     } catch (e) { setError(errorMessage(e)); }
     finally { setBusy(false); }
@@ -77,11 +81,16 @@ export default function ConfirmVisitScreen() {
 
   if (!visit && !error) return <LoadingScreen label="Loading visit…" />;
   const canConfirm = addressLine1.trim().length >= 3 && townCity.trim().length >= 2;
-  const when = visit?.proposedAt ? new Date(visit.proposedAt).toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '';
+  const slots = visit?.proposedSlots?.length ? visit.proposedSlots : visit?.proposedAt ? [visit.proposedAt] : [];
+  const when = selectedAt ? new Date(selectedAt).toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '';
 
   return <Screen title="Confirm site visit" subtitle={visit?.jobTitle ?? 'BuildPair job'}>
     <AppCard>
-      <Text variant="titleLarge">{when || 'Proposed site visit'}</Text>
+      <Text variant="titleLarge">{slots.length > 1 ? 'Choose a site visit time' : when || 'Proposed site visit'}</Text>
+      {slots.length > 1 ? slots.map((slot) => {
+        const label = new Date(slot).toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+        return <Button key={slot} mode={selectedAt === slot ? 'contained-tonal' : 'outlined'} icon="calendar-clock" onPress={() => setSelectedAt(slot)}>{label}</Button>;
+      }) : null}
       {visit?.note ? <Text>{visit.note}</Text> : null}
       <Text>Only confirm a visit you are happy for this tradesperson to attend.</Text>
     </AppCard>
@@ -99,7 +108,7 @@ export default function ConfirmVisitScreen() {
 
     {error ? <HelperText type="error">{error}</HelperText> : null}
     <AppCard>
-      <Button mode="contained" icon="calendar-check" loading={busy} disabled={busy || !canConfirm || visit?.status !== 'proposed'} onPress={() => void confirm()}>Save address & confirm visit</Button>
+      <Button mode="contained" icon="calendar-check" loading={busy} disabled={busy || !canConfirm || !selectedAt || visit?.status !== 'proposed'} onPress={() => void confirm()}>Save address & confirm visit</Button>
       <Button mode="outlined" disabled={busy || visit?.status !== 'proposed'} onPress={() => void decline()}>Decline visit</Button>
     </AppCard>
   </Screen>;
