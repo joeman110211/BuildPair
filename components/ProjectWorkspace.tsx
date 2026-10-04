@@ -101,6 +101,12 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
   }
 
   const typeOptions = role === 'trader' ? TRADER_TYPES : [{ value: 'snag' as const, label: 'Snag / issue' }, { value: 'note' as const, label: 'Project note' }];
+  const groups = [
+    { key: 'updates', label: 'Updates', types: ['task','note','progress'] as EntryType[] },
+    { key: 'money', label: 'Money & materials', types: ['material','expense'] as EntryType[] },
+    { key: 'issues', label: 'Issues', types: ['snag'] as EntryType[] },
+    { key: 'handover', label: 'Files & handover', types: ['document','handover','warranty','aftercare'] as EntryType[] },
+  ].map((group) => ({ ...group, items: items.filter((item) => group.types.includes(item.entryType)) })).filter((group) => group.items.length);
 
   return <View style={styles.wrap}>
     <View style={styles.headingRow}><View style={styles.flex}><Text variant="headlineSmall" style={styles.title}>Project workspace</Text><Text style={styles.muted}>Keep the practical middle of the job here: tasks, progress, materials, expenses, snagging, handover, warranty and aftercare. Contract price changes still use Variations.</Text></View><View style={styles.actions}><Button compact mode="outlined" icon="file-document-outline" onPress={() => router.push(`/${role}/jobs/${jobId}/handover` as Href)}>Project pack</Button><Chip icon="clipboard-check-outline">{items.filter((item) => item.status === 'open').length} open</Chip></View></View>
@@ -117,14 +123,19 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
     </AppCard>
 
-    {!items.length ? <EmptyState title="Workspace is clear" body="Project tasks, progress updates, snagging and handover information will stay together here." /> : items.map((item) => <AppCard key={item.id} style={item.status === 'open' ? undefined : styles.doneCard}>
-      <View style={styles.headingRow}><View style={styles.flex}><View style={styles.typeWrap}><Chip compact>{item.entryType.replaceAll('_',' ')}</Chip>{item.visibility === 'trader_only' ? <Chip compact icon="lock-outline">Private</Chip> : null}<Chip compact>{item.status}</Chip></View><Text variant="titleMedium" style={styles.title}>{item.title}</Text>{item.body ? <Text style={styles.muted}>{item.body}</Text> : null}{item.mediaUrl ? <Image source={{ uri: item.mediaUrl }} style={styles.evidenceImage} resizeMode="cover" /> : null}{item.amount != null ? <Text style={styles.amount}>{formatMoney(item.amount)}</Text> : null}{item.dueAt ? <Text style={styles.muted}>Due {new Date(item.dueAt).toLocaleDateString('en-GB')}</Text> : null}</View><View style={styles.actions}>{role === 'trader' && item.entryType === 'aftercare' && item.visibility === 'shared' ? <Button compact mode="text" icon="bell-outline" disabled={busy} onPress={() => void remind(item.id)}>Remind customer</Button> : null}{item.status === 'open' ? <Button compact mode="outlined" disabled={busy} onPress={() => void update(item.id, role === 'customer' && item.entryType === 'snag' ? 'approve' : 'done')}>{role === 'customer' && item.entryType === 'snag' ? 'Resolved' : 'Done'}</Button> : <Button compact disabled={busy} onPress={() => void update(item.id, 'reopen')}>Reopen</Button>}</View></View>
-    </AppCard>)}
+    {!items.length ? <EmptyState title="Workspace is clear" body="Project tasks, progress updates, snagging and handover information will stay together here." /> : groups.map((group) => <View key={group.key} style={styles.group}>
+      <View style={styles.groupHeading}><Text variant="titleMedium" style={styles.title}>{group.label}</Text><Chip compact>{group.items.length}</Chip></View>
+      {group.items.map((item) => <AppCard key={item.id} style={item.status === 'open' ? undefined : styles.doneCard}>
+        <View style={styles.headingRow}><View style={styles.flex}><View style={styles.typeWrap}><Chip compact>{item.entryType.replaceAll('_',' ')}</Chip>{item.visibility === 'trader_only' ? <Chip compact icon="lock-outline">Private</Chip> : null}<Chip compact>{item.status}</Chip></View><Text variant="titleMedium" style={styles.title}>{item.title}</Text>{item.body ? <Text style={styles.muted}>{item.body}</Text> : null}{item.mediaUrl ? <Image source={{ uri: item.mediaUrl }} style={styles.evidenceImage} resizeMode="cover" /> : null}{item.amount != null ? <Text style={styles.amount}>{formatMoney(item.amount)}</Text> : null}{item.dueAt ? <Text style={styles.muted}>Due {new Date(item.dueAt).toLocaleDateString('en-GB')}</Text> : null}</View><View style={styles.actions}>{role === 'trader' && item.entryType === 'aftercare' && item.visibility === 'shared' ? <Button compact mode="text" icon="bell-outline" disabled={busy} onPress={() => void remind(item.id)}>Remind customer</Button> : null}{item.status === 'open' ? <Button compact mode="outlined" disabled={busy} onPress={() => void update(item.id, role === 'customer' && item.entryType === 'snag' ? 'approve' : 'done')}>{role === 'customer' && item.entryType === 'snag' ? 'Resolved' : 'Done'}</Button> : <Button compact disabled={busy} onPress={() => void update(item.id, 'reopen')}>Reopen</Button>}</View></View>
+      </AppCard>)}
+    </View>)}
   </View>;
 }
 
 const styles = StyleSheet.create({
   wrap: { gap: 10 },
+  group: { gap: 8 },
+  groupHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 4 },
   headingRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' },
   flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: 5 },
   title: { color: colors.charcoal, fontWeight: '900' },
