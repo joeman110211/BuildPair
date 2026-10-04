@@ -24,6 +24,21 @@ async function ensureMarketplaceOfferAllowance(traderId: string, jobId: string, 
   const sql = getSql();
   const existing = await sql`SELECT id FROM trader_job_offers WHERE job_id = ${jobId} AND trader_id = ${traderId} LIMIT 1`;
   if (existing.length) return;
+
+  const responseState = await sql`
+    SELECT j.response_limit AS "responseLimit",
+           count(DISTINCT o.trader_id)::int AS "responseCount"
+    FROM jobs j
+    LEFT JOIN trader_job_offers o ON o.job_id = j.id
+    WHERE j.id = ${jobId}
+    GROUP BY j.id
+    LIMIT 1
+  ` as unknown as { responseLimit: number; responseCount: number }[];
+  const response = responseState[0];
+  if (response && response.responseCount >= response.responseLimit) {
+    throw new HttpError(409, 'This job has reached its current response limit. The homeowner can open more places if they want more responses.');
+  }
+
   const limit = traderMonthlyQuoteLimit(profile);
   const usage = await sql`
     SELECT count(*)::int AS count FROM trader_job_offers
