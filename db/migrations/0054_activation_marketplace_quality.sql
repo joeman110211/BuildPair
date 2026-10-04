@@ -47,6 +47,15 @@ CREATE TABLE IF NOT EXISTS trader_referral_visits (
 CREATE INDEX IF NOT EXISTS trader_referral_visits_code_idx
   ON trader_referral_visits(referral_code, visited_at DESC);
 
+CREATE TABLE IF NOT EXISTS trader_customer_notes (
+  trader_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  contact_key text NOT NULL,
+  notes text NOT NULL DEFAULT '',
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (trader_id, contact_key),
+  CONSTRAINT trader_customer_notes_length CHECK (char_length(notes) <= 4000)
+);
+
 CREATE TABLE IF NOT EXISTS trader_reminder_rules (
   trader_id text PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   quote_reminders_enabled boolean NOT NULL DEFAULT false,
