@@ -5,13 +5,15 @@ import { getSql } from '@/lib/sql';
 
 const proposeSchema = z.object({
   jobId: z.string().uuid(),
-  proposedAt: z.iso.datetime(),
+  proposedAt: z.iso.datetime().optional(),
+  proposedOptions: z.array(z.iso.datetime()).min(1).max(3).optional(),
   note: z.string().trim().max(1000).default(''),
-});
+}).refine((value) => Boolean(value.proposedAt || value.proposedOptions?.length), { message: 'Choose at least one visit time' });
 
 const actionSchema = z.object({
   id: z.string().uuid(),
   action: z.enum(['accept', 'decline', 'cancel', 'complete']),
+  selectedAt: z.iso.datetime().optional(),
 });
 
 type SiteVisitRow = {
@@ -48,7 +50,16 @@ function visitLabel(value: string) {
   });
 }
 
-function publicVisit(row: VisitDetailRow, userId: string) {
+async function visitOptions(visitId: string) {
+  return await getSql()`
+    SELECT proposed_at AS "proposedAt", selected
+    FROM job_site_visit_options
+    WHERE visit_id = ${visitId}
+    ORDER BY proposed_at
+  ` as unknown as { proposedAt: string; selected: boolean }[];
+}
+
+async function publicVisit(row: VisitDetailRow, userId: string) {
   const addressAllowed = userId === row.customerId || (userId === row.traderId && ['confirmed', 'completed'].includes(row.status));
   return {
     id: row.id,
@@ -64,6 +75,7 @@ function publicVisit(row: VisitDetailRow, userId: string) {
     updatedAt: row.updatedAt,
     jobTitle: row.jobTitle,
     conversationId: row.conversationId,
+    options: await visitOptions(row.id),
     privateAddress: addressAllowed && row.addressLine1 && row.townCity ? {
       addressLine1: row.addressLine1,
       addressLine2: row.addressLine2 ?? '',
@@ -139,7 +151,7 @@ export async function GET(request: Request) {
       LIMIT 20
     `;
 
-    const visits = (rows as unknown as VisitDetailRow[]).map((row) => publicVisit(row, userId));
+    const visits = await Promise.all((rows as unknown as VisitDetailRow[]).map((row) => publicVisit(row, userId)));
     return Response.json(id ? visits[0] ?? null : visits);
   } catch (error) { return jsonError(error); }
 }
@@ -148,8 +160,10 @@ export async function POST(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
     const payload = proposeSchema.parse(await request.json());
-    const proposed = new Date(payload.proposedAt);
-    if (proposed.getTime() <= Date.now()) throw new HttpError(400, 'Choose a future date and time for the site visit');
+    const optionValues = [...new Set((payload.proposedOptions?.length ? payload.proposedOptions : [payload.proposedAt!]).filter(Boolean))];
+    const proposedDates = optionValues.map((value) => new Date(value));
+    if (proposedDates.some((value) => Number.isNaN(value.getTime()) || value.getTime() <= Date.now())) throw new HttpError(400, 'Choose future dates and times for the site visit');
+    const proposed = proposedDates[0];
 
     const sql = getSql();
     const jobs = await sql`
@@ -221,12 +235,24 @@ export async function POST(request: Request) {
 
     const visit = rows[0] as unknown as SiteVisitRow | undefined;
     if (!visit) throw new Error('Site visit could not be saved');
-    const when = visitLabel(visit.proposedAt);
+    await sql`DELETE FROM job_site_visit_options WHERE visit_id = ${visit.id}`;
+    for (const option of proposedDates) {
+      await sql`
+        INSERT INTO job_site_visit_options(visit_id, proposed_at)
+        VALUES (${visit.id}, ${option.toISOString()})
+        ON CONFLICT (visit_id, proposed_at) DO NOTHING
+      `;
+    }
+    const when = proposedDates.length === 1
+      ? visitLabel(visit.proposedAt)
+      : proposedDates.map((value) => visitLabel(value.toISOString())).join(' · ');
     await addJobEvent(payload.jobId, trader.id, 'site_visit_proposed', 'Site visit proposed', `${when}${payload.note ? ` · ${payload.note}` : ''}`, { siteVisitId: visit.id });
     await createNotification(job.customerId, {
       type: 'site_visit_proposed',
       title: 'Site visit requested before quote',
-      body: `${job.jobTitle}: the tradesperson would like to visit on ${when} before giving a firm quote. Confirm the visit and privately share the job address in BuildPair.`,
+      body: proposedDates.length === 1
+        ? `${job.jobTitle}: the tradesperson would like to visit on ${when} before giving a firm quote. Confirm the visit and privately share the job address in BuildPair.`
+        : `${job.jobTitle}: the tradesperson suggested ${proposedDates.length} possible visit times before giving a firm quote. Choose one and privately share the job address in BuildPair.`,
       href: `/customer/jobs/${payload.jobId}/visit?visitId=${encodeURIComponent(visit.id)}`,
       email: true,
     });
@@ -286,6 +312,13 @@ export async function PATCH(request: Request) {
       if (userId !== visit.customerId) throw new HttpError(403, 'Only the homeowner can confirm this visit');
       if (visit.status !== 'proposed') throw new HttpError(409, 'This visit is no longer awaiting confirmation');
       if (!visit.addressLine1 || !visit.townCity) throw new HttpError(409, 'Add the private job address before confirming the site visit');
+      if (payload.selectedAt) {
+        const allowed = await sql`SELECT 1 FROM job_site_visit_options WHERE visit_id = ${visit.id} AND proposed_at = ${payload.selectedAt}::timestamptz LIMIT 1`;
+        if (!allowed.length) throw new HttpError(400, 'Choose one of the proposed visit times');
+        visit.proposedAt = new Date(payload.selectedAt).toISOString();
+        await sql`UPDATE job_site_visits SET proposed_at = ${visit.proposedAt}, updated_at = now() WHERE id = ${visit.id}`;
+        await sql`UPDATE job_site_visit_options SET selected = (proposed_at = ${visit.proposedAt}::timestamptz) WHERE visit_id = ${visit.id}`;
+      }
       nextStatus = 'confirmed'; eventType = 'site_visit_confirmed'; eventTitle = 'Site visit confirmed'; recipientId = visit.traderId;
       notificationTitle = 'Site visit confirmed'; notificationBody = `${visit.jobTitle}: the homeowner confirmed ${visitLabel(visit.proposedAt)}. The private visit address is now available to you in BuildPair.`;
       notificationHref = `/trader/visits/${visit.id}`;
