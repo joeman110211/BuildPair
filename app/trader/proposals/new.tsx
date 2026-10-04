@@ -64,7 +64,7 @@ export default function NewProposalScreen() {
     finally { setLoading(false); }
   }, [jobId]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   function togglePhoto(url: string) {
     setSelectedPhotos((current) => current.includes(url)
