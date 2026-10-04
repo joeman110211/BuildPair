@@ -19,12 +19,21 @@ async function readState(jobId: string) {
   const rows = await getSql()`
     SELECT j.customer_id AS "customerId", j.status, j.accepted_quote_id AS "acceptedQuoteId",
            j.quote_intake_closed_at AS "quoteIntakeClosedAt",
-           count(q.id) FILTER (WHERE q.status = 'pending')::int AS "activeQuoteCount",
-           count(q.id) FILTER (WHERE q.status IN ('declined','withdrawn'))::int AS "archivedQuoteCount"
+           (
+             SELECT count(DISTINCT responder.trader_id)::int
+             FROM (
+               SELECT q.trader_id FROM quotes q WHERE q.job_id = j.id AND q.status = 'pending'
+               UNION
+               SELECT p.trader_id FROM job_proposals p WHERE p.job_id = j.id AND p.status IN ('pending','shortlisted')
+             ) responder
+           ) AS "activeQuoteCount",
+           (
+             (SELECT count(*) FROM quotes q WHERE q.job_id = j.id AND q.status IN ('declined','withdrawn'))
+             +
+             (SELECT count(*) FROM job_proposals p WHERE p.job_id = j.id AND p.status IN ('declined','withdrawn'))
+           )::int AS "archivedQuoteCount"
     FROM jobs j
-    LEFT JOIN quotes q ON q.job_id = j.id
     WHERE j.id = ${jobId}
-    GROUP BY j.id
     LIMIT 1
   ` as unknown as IntakeRow[];
   return rows[0];
