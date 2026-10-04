@@ -163,7 +163,7 @@ export async function POST(request: Request) {
     const optionValues = [...new Set((payload.proposedOptions?.length ? payload.proposedOptions : [payload.proposedAt!]).filter(Boolean))];
     const proposedDates = optionValues.map((value) => new Date(value));
     if (proposedDates.some((value) => Number.isNaN(value.getTime()) || value.getTime() <= Date.now())) throw new HttpError(400, 'Choose future dates and times for the site visit');
-    const proposed = proposedDates[0];
+    const proposed = proposedDates[0]!;
 
     const sql = getSql();
     const jobs = await sql`
