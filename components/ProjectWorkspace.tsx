@@ -44,6 +44,7 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
   const router = useRouter();
   const tokenRef = useRef(getToken);
   const [items, setItems] = useState<Entry[]>([]);
+  const [section, setSection] = useState<'all' | 'updates' | 'money' | 'issues' | 'handover'>('all');
   const [entryType, setEntryType] = useState<EntryType>(role === 'trader' ? 'task' : 'snag');
   const [visibility, setVisibility] = useState<'shared' | 'trader_only'>('shared');
   const [title, setTitle] = useState('');
@@ -101,9 +102,23 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
   }
 
   const typeOptions = role === 'trader' ? TRADER_TYPES : [{ value: 'snag' as const, label: 'Snag / issue' }, { value: 'note' as const, label: 'Project note' }];
+  const sectionTypes: Record<Exclude<typeof section, 'all'>, EntryType[]> = {
+    updates: ['task', 'note', 'progress'],
+    money: ['material', 'expense'],
+    issues: ['snag'],
+    handover: ['document', 'handover', 'warranty', 'aftercare'],
+  };
+  const visibleItems = section === 'all' ? items : items.filter((item) => sectionTypes[section].includes(item.entryType));
 
   return <View style={styles.wrap}>
     <View style={styles.headingRow}><View style={styles.flex}><Text variant="headlineSmall" style={styles.title}>Project workspace</Text><Text style={styles.muted}>Keep the practical middle of the job here: tasks, progress, materials, expenses, snagging, handover, warranty and aftercare. Contract price changes still use Variations.</Text></View><View style={styles.actions}><Button compact mode="outlined" icon="file-document-outline" onPress={() => router.push(`/${role}/jobs/${jobId}/handover` as Href)}>Project pack</Button><Chip icon="clipboard-check-outline">{items.filter((item) => item.status === 'open').length} open</Chip></View></View>
+    {items.length ? <View style={styles.sectionFilters}>
+      <Chip selected={section === 'all'} showSelectedCheck onPress={() => setSection('all')}>All</Chip>
+      <Chip selected={section === 'updates'} showSelectedCheck onPress={() => setSection('updates')}>Updates</Chip>
+      <Chip selected={section === 'money'} showSelectedCheck onPress={() => setSection('money')}>Money & materials</Chip>
+      <Chip selected={section === 'issues'} showSelectedCheck onPress={() => setSection('issues')}>Issues</Chip>
+      <Chip selected={section === 'handover'} showSelectedCheck onPress={() => setSection('handover')}>Handover</Chip>
+    </View> : null}
     <AppCard>
       <Text variant="titleMedium" style={styles.title}>{role === 'trader' ? 'Add to the job record' : 'Add a note or snagging item'}</Text>
       <View style={styles.typeWrap}>{typeOptions.map((option) => <Chip key={option.value} selected={entryType === option.value} showSelectedCheck onPress={() => setEntryType(option.value)}>{option.label}</Chip>)}</View>
@@ -117,7 +132,7 @@ export function ProjectWorkspace({ jobId, role }: { jobId: string; role: 'trader
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
     </AppCard>
 
-    {!items.length ? <EmptyState title="Workspace is clear" body="Project tasks, progress updates, snagging and handover information will stay together here." /> : items.map((item) => <AppCard key={item.id} style={item.status === 'open' ? undefined : styles.doneCard}>
+    {!items.length ? <EmptyState title="Workspace is clear" body="Project tasks, progress updates, snagging and handover information will stay together here." /> : !visibleItems.length ? <EmptyState title="Nothing in this section yet" body="Choose another workspace section or add a new project entry above." /> : visibleItems.map((item) => <AppCard key={item.id} style={item.status === 'open' ? undefined : styles.doneCard}>
       <View style={styles.headingRow}><View style={styles.flex}><View style={styles.typeWrap}><Chip compact>{item.entryType.replaceAll('_',' ')}</Chip>{item.visibility === 'trader_only' ? <Chip compact icon="lock-outline">Private</Chip> : null}<Chip compact>{item.status}</Chip></View><Text variant="titleMedium" style={styles.title}>{item.title}</Text>{item.body ? <Text style={styles.muted}>{item.body}</Text> : null}{item.mediaUrl ? <Image source={{ uri: item.mediaUrl }} style={styles.evidenceImage} resizeMode="cover" /> : null}{item.amount != null ? <Text style={styles.amount}>{formatMoney(item.amount)}</Text> : null}{item.dueAt ? <Text style={styles.muted}>Due {new Date(item.dueAt).toLocaleDateString('en-GB')}</Text> : null}</View><View style={styles.actions}>{role === 'trader' && item.entryType === 'aftercare' && item.visibility === 'shared' ? <Button compact mode="text" icon="bell-outline" disabled={busy} onPress={() => void remind(item.id)}>Remind customer</Button> : null}{item.status === 'open' ? <Button compact mode="outlined" disabled={busy} onPress={() => void update(item.id, role === 'customer' && item.entryType === 'snag' ? 'approve' : 'done')}>{role === 'customer' && item.entryType === 'snag' ? 'Resolved' : 'Done'}</Button> : <Button compact disabled={busy} onPress={() => void update(item.id, 'reopen')}>Reopen</Button>}</View></View>
     </AppCard>)}
   </View>;
@@ -130,6 +145,7 @@ const styles = StyleSheet.create({
   title: { color: colors.charcoal, fontWeight: '900' },
   muted: { color: colors.muted, lineHeight: 21 },
   typeWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  sectionFilters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   amount: { color: colors.primary, fontWeight: '900' },
   evidence: { gap: 6 },
