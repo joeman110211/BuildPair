@@ -28,6 +28,7 @@ type JobRow = {
   status: string;
   latitude: number | null;
   longitude: number | null;
+  responseLimit: number;
 };
 type CreatedConversation = { id: string; jobId: string; customerId: string; traderId: string; lastMessageAt: string };
 type TraderPlanRow = {
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
     const sql = getSql();
     const jobRows = await sql`
       SELECT id, customer_id AS "customerId", target_trader_id AS "targetTraderId",
-             category, status, latitude, longitude
+             category, status, latitude, longitude, response_limit AS "responseLimit"
       FROM jobs WHERE id = ${payload.jobId} LIMIT 1
     ` as unknown as JobRow[];
     const job = jobRows[0];
@@ -146,6 +147,14 @@ export async function POST(request: Request) {
 
       const existing = await sql`SELECT id FROM trader_job_offers WHERE job_id = ${job.id} AND trader_id = ${traderId} LIMIT 1`;
       if (!existing.length) {
+        const responseRows = await sql`
+          SELECT count(DISTINCT trader_id)::int AS count
+          FROM trader_job_offers
+          WHERE job_id = ${job.id}
+        ` as unknown as { count: number }[];
+        if ((responseRows[0]?.count ?? 0) >= job.responseLimit) {
+          throw new HttpError(409, 'This job has reached its current response limit. The homeowner can open more places if they want more responses.');
+        }
         const limit = traderMonthlyQuoteLimit(profile);
         const usage = await sql`
           SELECT count(*)::int AS count
