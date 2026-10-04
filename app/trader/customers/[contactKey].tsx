@@ -39,7 +39,7 @@ export default function CustomerDetailScreen() {
     } catch (e) { setError(errorMessage(e)); }
   }, [contactKey, getToken]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
 
   async function addNote() {
     if (!data || note.trim().length < 1) return;
