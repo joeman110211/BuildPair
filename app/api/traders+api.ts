@@ -24,6 +24,7 @@ type DirectoryTrader = {
   availabilitySummary: string | null;
   responseRate: number;
   averageResponseHours: number;
+  completedJobs: number;
   rankingScore: number;
   createdAt: string;
 };
@@ -83,6 +84,11 @@ export async function GET(request: Request) {
                ) first_reply
                WHERE c.trader_id = tp.user_id
              ), 0)::float AS "averageResponseHours",
+             (SELECT count(*)::int
+                FROM jobs cj
+                JOIN quotes cq ON cq.id = cj.accepted_quote_id
+               WHERE cq.trader_id = tp.user_id
+                 AND cj.status = 'completed') AS "completedJobs",
              (
                coalesce(avg(r.rating), 0) * 10
                + least(count(r.id), 20) * 0.5
