@@ -31,6 +31,16 @@ CREATE INDEX IF NOT EXISTS job_proposals_job_status_idx
 CREATE INDEX IF NOT EXISTS job_proposals_trader_idx
   ON job_proposals(trader_id, created_at DESC);
 
+CREATE TABLE IF NOT EXISTS trader_referral_visits (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  referral_code text NOT NULL,
+  visitor_key text NOT NULL,
+  visited_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (referral_code, visitor_key)
+);
+CREATE INDEX IF NOT EXISTS trader_referral_visits_code_idx
+  ON trader_referral_visits(referral_code, visited_at DESC);
+
 CREATE TABLE IF NOT EXISTS trader_reminder_rules (
   trader_id text PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   quote_reminders_enabled boolean NOT NULL DEFAULT false,
