@@ -17,7 +17,17 @@ import type { Job, Quote, TraderProfile } from '@/types';
 type ReferralState = {
   referralCode: string;
   referralCount: number;
+  visitCount: number;
+  registeredCount: number;
+  completedProfileCount: number;
   referralUrl: string;
+};
+
+type ProfileStrengthState = {
+  score: number;
+  completed: number;
+  total: number;
+  items: { key: string; label: string; complete: boolean; href: string }[];
 };
 
 export default function TraderDashboard() {
@@ -30,6 +40,7 @@ export default function TraderDashboard() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [referral, setReferral] = useState<ReferralState>();
+  const [profileStrength, setProfileStrength] = useState<ProfileStrengthState>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -40,8 +51,12 @@ export default function TraderDashboard() {
       const tokenGetter = () => getTokenRef.current();
       const ownProfile = await apiFetch<TraderProfile>('/api/me/profile', {}, tokenGetter);
       setProfile(ownProfile);
-      const referralState = await apiFetch<ReferralState>('/api/trader-referral', { method: 'POST' }, tokenGetter).catch(() => undefined);
+      const [referralState, strengthState] = await Promise.all([
+        apiFetch<ReferralState>('/api/trader-referral', { method: 'POST' }, tokenGetter).catch(() => undefined),
+        apiFetch<ProfileStrengthState>('/api/trader-profile-strength', {}, tokenGetter).catch(() => undefined),
+      ]);
       setReferral(referralState);
+      setProfileStrength(strengthState);
       if (marketplaceEnabled) {
         const [jobRows, quoteRows] = await Promise.all([
           apiFetch<Job[]>('/api/jobs', {}, tokenGetter),
@@ -148,6 +163,24 @@ export default function TraderDashboard() {
       </View>
     </AppCard>
 
+    {profileStrength ? <AppCard>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Text style={styles.membershipEyebrow}>PROFILE STRENGTH</Text>
+          <Text variant="titleLarge" style={styles.cardTitle}>Your BuildPair profile is {profileStrength.score}% ready</Text>
+          <Text style={styles.muted}>{profileStrength.completed} of {profileStrength.total} profile signals are complete. Finish the missing items so homeowners see the strongest version of your business.</Text>
+        </View>
+        <Chip icon={profileStrength.score >= 90 ? 'check-circle-outline' : 'progress-check'}>{profileStrength.score}%</Chip>
+      </View>
+      <ProgressBar progress={profileStrength.score / 100} color={colors.primary} style={styles.progress} />
+      <View style={styles.profileStrengthGrid}>
+        {profileStrength.items.map((item) => <View key={item.key} style={styles.profileStrengthItem}>
+          <Chip compact icon={item.complete ? 'check-circle-outline' : 'circle-outline'}>{item.label}</Chip>
+          {!item.complete ? <Button compact mode="text" onPress={() => router.push(item.href as Href)}>Complete</Button> : null}
+        </View>)}
+      </View>
+    </AppCard> : null}
+
     <AppCard>
       <View style={styles.row}>
         <View style={styles.flex}>
@@ -169,6 +202,11 @@ export default function TraderDashboard() {
         <Chip icon={referral.referralCount > 0 ? 'check-circle-outline' : 'account-multiple-plus-outline'}>
           {referral.referralCount > 0 ? `${referral.referralCount} joined` : 'Your turn'}
         </Chip>
+      </View>
+      <View style={styles.relayMetrics}>
+        <View style={styles.relayMetric}><Text variant="titleLarge" style={styles.statNumber}>{referral.visitCount}</Text><Text style={styles.statLabel}>Visited</Text></View>
+        <View style={styles.relayMetric}><Text variant="titleLarge" style={styles.statNumber}>{referral.registeredCount}</Text><Text style={styles.statLabel}>Joined</Text></View>
+        <View style={styles.relayMetric}><Text variant="titleLarge" style={styles.statNumber}>{referral.completedProfileCount}</Text><Text style={styles.statLabel}>Profiles ready</Text></View>
       </View>
       <Button mode="contained" icon="share-variant-outline" onPress={() => void shareOneGoodTrade()} contentStyle={styles.actionButton}>Pass my One Good Trade invite</Button>
       <Text selectable style={styles.relayLink}>{referral.referralUrl}</Text>
@@ -212,7 +250,7 @@ export default function TraderDashboard() {
 
 const styles = StyleSheet.create({
   nextActionCard: { backgroundColor: colors.primarySoft, borderColor: '#F0C9AA' }, nextActionEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.1 },
-  payoutCard: { backgroundColor: colors.goldSoft, borderColor: colors.gold }, payoutReadyCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent }, prelaunchCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary }, relayCard: { backgroundColor: '#FFF9F5', borderColor: colors.primary, borderWidth: 2 }, relayLink: { color: colors.primary, fontSize: 12, fontWeight: '700' }, relayNote: { color: colors.muted, fontSize: 12, lineHeight: 18 }, activeJobCard: { borderColor: colors.primary, borderWidth: 2 },
+  payoutCard: { backgroundColor: colors.goldSoft, borderColor: colors.gold }, payoutReadyCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent }, prelaunchCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary }, relayCard: { backgroundColor: '#FFF9F5', borderColor: colors.primary, borderWidth: 2 }, relayLink: { color: colors.primary, fontSize: 12, fontWeight: '700' }, relayNote: { color: colors.muted, fontSize: 12, lineHeight: 18 }, relayMetrics: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, relayMetric: { flexGrow: 1, flexBasis: 110, minWidth: 90, padding: spacing.sm, borderRadius: 12, backgroundColor: colors.surfaceRaised, alignItems: 'center' }, profileStrengthGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, profileStrengthItem: { flexGrow: 1, flexBasis: 210, minWidth: 0, maxWidth: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xs }, activeJobCard: { borderColor: colors.primary, borderWidth: 2 },
   membershipCard: { backgroundColor: colors.surfaceRaised, borderColor: colors.border }, membershipCardPaid: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' }, membershipEyebrow: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.1, marginBottom: spacing.xxs }, membershipActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center', justifyContent: 'flex-start' }, offerMeta: { color: colors.muted, fontSize: 11, fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' }, cardActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }, flex: { flex: 1, minWidth: 0, flexBasis: 220, flexShrink: 1, maxWidth: '100%', gap: spacing.xxs }, cardTitle: { fontWeight: '900', color: colors.charcoal }, muted: { color: colors.muted, lineHeight: 21 }, progress: { height: 7, borderRadius: 4, backgroundColor: colors.surfaceStrong }, stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }, stat: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 145, minWidth: 135, paddingVertical: spacing.lg, alignItems: 'center' }, statNumber: { color: colors.primary, fontWeight: '900', textAlign: 'center' }, statLabel: { color: colors.muted, fontWeight: '700', textAlign: 'center' }, sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.xxs }, quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'center' }, actionButton: { minHeight: controlHeights.standard, paddingHorizontal: spacing.xs }, description: { color: colors.text, lineHeight: 21 },
 });
