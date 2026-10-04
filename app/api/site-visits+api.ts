@@ -5,13 +5,17 @@ import { getSql } from '@/lib/sql';
 
 const proposeSchema = z.object({
   jobId: z.string().uuid(),
-  proposedAt: z.iso.datetime(),
+  proposedAt: z.iso.datetime().optional(),
+  proposedSlots: z.array(z.iso.datetime()).min(1).max(3).optional(),
   note: z.string().trim().max(1000).default(''),
+}).refine((value) => Boolean(value.proposedAt || value.proposedSlots?.length), {
+  message: 'Choose at least one future date and time for the site visit.',
 });
 
 const actionSchema = z.object({
   id: z.string().uuid(),
   action: z.enum(['accept', 'decline', 'cancel', 'complete']),
+  selectedAt: z.iso.datetime().optional(),
 });
 
 type SiteVisitRow = {
@@ -20,6 +24,8 @@ type SiteVisitRow = {
   customerId: string;
   traderId: string;
   proposedAt: string;
+  proposedSlots: string[];
+  selectedAt: string | null;
   status: 'proposed' | 'confirmed' | 'declined' | 'completed' | 'cancelled';
   note: string;
   respondedAt: string | null;
@@ -56,6 +62,8 @@ function publicVisit(row: VisitDetailRow, userId: string) {
     customerId: row.customerId,
     traderId: row.traderId,
     proposedAt: row.proposedAt,
+    proposedSlots: row.proposedSlots?.length ? row.proposedSlots : [row.proposedAt],
+    selectedAt: row.selectedAt,
     status: row.status,
     note: row.note,
     respondedAt: row.respondedAt,
@@ -90,6 +98,8 @@ export async function GET(request: Request) {
              v.customer_id AS "customerId",
              v.trader_id AS "traderId",
              v.proposed_at AS "proposedAt",
+             v.proposed_slots AS "proposedSlots",
+             v.selected_at AS "selectedAt",
              v.status,
              v.note,
              v.responded_at AS "respondedAt",
@@ -116,6 +126,8 @@ export async function GET(request: Request) {
              v.customer_id AS "customerId",
              v.trader_id AS "traderId",
              v.proposed_at AS "proposedAt",
+             v.proposed_slots AS "proposedSlots",
+             v.selected_at AS "selectedAt",
              v.status,
              v.note,
              v.responded_at AS "respondedAt",
@@ -148,8 +160,12 @@ export async function POST(request: Request) {
   try {
     const trader = await requireRole(request, 'trader');
     const payload = proposeSchema.parse(await request.json());
-    const proposed = new Date(payload.proposedAt);
-    if (proposed.getTime() <= Date.now()) throw new HttpError(400, 'Choose a future date and time for the site visit');
+    const rawSlots = payload.proposedSlots?.length ? payload.proposedSlots : payload.proposedAt ? [payload.proposedAt] : [];
+    const proposedSlots = [...new Set(rawSlots)].map((value) => new Date(value)).sort((a, b) => a.getTime() - b.getTime());
+    if (!proposedSlots.length || proposedSlots.some((value) => Number.isNaN(value.getTime()) || value.getTime() <= Date.now())) {
+      throw new HttpError(400, 'Choose future dates and times for the site visit');
+    }
+    const proposed = proposedSlots[0]!;
 
     const sql = getSql();
     const jobs = await sql`
@@ -185,6 +201,8 @@ export async function POST(request: Request) {
       ? await sql`
           UPDATE job_site_visits
           SET proposed_at = ${proposed.toISOString()},
+              proposed_slots = ${proposedSlots.map((slot) => slot.toISOString())},
+              selected_at = NULL,
               note = ${payload.note},
               status = 'proposed',
               responded_at = NULL,
@@ -196,6 +214,8 @@ export async function POST(request: Request) {
                     customer_id AS "customerId",
                     trader_id AS "traderId",
                     proposed_at AS "proposedAt",
+                    proposed_slots AS "proposedSlots",
+                    selected_at AS "selectedAt",
                     status,
                     note,
                     responded_at AS "respondedAt",
@@ -204,13 +224,15 @@ export async function POST(request: Request) {
                     updated_at AS "updatedAt"
         `
       : await sql`
-          INSERT INTO job_site_visits(job_id, customer_id, trader_id, proposed_at, note)
-          VALUES (${payload.jobId}, ${job.customerId}, ${trader.id}, ${proposed.toISOString()}, ${payload.note})
+          INSERT INTO job_site_visits(job_id, customer_id, trader_id, proposed_at, proposed_slots, note)
+          VALUES (${payload.jobId}, ${job.customerId}, ${trader.id}, ${proposed.toISOString()}, ${proposedSlots.map((slot) => slot.toISOString())}, ${payload.note})
           RETURNING id,
                     job_id AS "jobId",
                     customer_id AS "customerId",
                     trader_id AS "traderId",
                     proposed_at AS "proposedAt",
+                    proposed_slots AS "proposedSlots",
+                    selected_at AS "selectedAt",
                     status,
                     note,
                     responded_at AS "respondedAt",
@@ -222,11 +244,12 @@ export async function POST(request: Request) {
     const visit = rows[0] as unknown as SiteVisitRow | undefined;
     if (!visit) throw new Error('Site visit could not be saved');
     const when = visitLabel(visit.proposedAt);
-    await addJobEvent(payload.jobId, trader.id, 'site_visit_proposed', 'Site visit proposed', `${when}${payload.note ? ` · ${payload.note}` : ''}`, { siteVisitId: visit.id });
+    const slotSummary = visit.proposedSlots.length > 1 ? `${visit.proposedSlots.length} times proposed · first ${when}` : when;
+    await addJobEvent(payload.jobId, trader.id, 'site_visit_proposed', 'Site visit proposed', `${slotSummary}${payload.note ? ` · ${payload.note}` : ''}`, { siteVisitId: visit.id });
     await createNotification(job.customerId, {
       type: 'site_visit_proposed',
       title: 'Site visit requested before quote',
-      body: `${job.jobTitle}: the tradesperson would like to visit on ${when} before giving a firm quote. Confirm the visit and privately share the job address in BuildPair.`,
+      body: `${job.jobTitle}: the tradesperson proposed ${visit.proposedSlots.length > 1 ? `${visit.proposedSlots.length} possible visit times` : when} before giving a firm quote. Confirm the visit and privately share the job address in BuildPair.`,
       href: `/customer/jobs/${payload.jobId}/visit?visitId=${encodeURIComponent(visit.id)}`,
       email: true,
     });
@@ -246,6 +269,8 @@ export async function PATCH(request: Request) {
              v.customer_id AS "customerId",
              v.trader_id AS "traderId",
              v.proposed_at AS "proposedAt",
+             v.proposed_slots AS "proposedSlots",
+             v.selected_at AS "selectedAt",
              v.status,
              v.note,
              v.responded_at AS "respondedAt",
@@ -282,12 +307,19 @@ export async function PATCH(request: Request) {
     let notificationBody: string;
     let notificationHref: string;
 
+    let acceptedAt = visit.proposedAt;
     if (payload.action === 'accept') {
       if (userId !== visit.customerId) throw new HttpError(403, 'Only the homeowner can confirm this visit');
       if (visit.status !== 'proposed') throw new HttpError(409, 'This visit is no longer awaiting confirmation');
       if (!visit.addressLine1 || !visit.townCity) throw new HttpError(409, 'Add the private job address before confirming the site visit');
+      const availableSlots = visit.proposedSlots?.length ? visit.proposedSlots : [visit.proposedAt];
+      acceptedAt = payload.selectedAt ?? visit.proposedAt;
+      const acceptedMs = new Date(acceptedAt).getTime();
+      if (!availableSlots.some((slot) => Math.abs(new Date(slot).getTime() - acceptedMs) < 1000)) {
+        throw new HttpError(400, 'Choose one of the proposed visit times.');
+      }
       nextStatus = 'confirmed'; eventType = 'site_visit_confirmed'; eventTitle = 'Site visit confirmed'; recipientId = visit.traderId;
-      notificationTitle = 'Site visit confirmed'; notificationBody = `${visit.jobTitle}: the homeowner confirmed ${visitLabel(visit.proposedAt)}. The private visit address is now available to you in BuildPair.`;
+      notificationTitle = 'Site visit confirmed'; notificationBody = `${visit.jobTitle}: the homeowner confirmed ${visitLabel(acceptedAt)}. The private visit address is now available to you in BuildPair.`;
       notificationHref = `/trader/visits/${visit.id}`;
     } else if (payload.action === 'decline') {
       if (userId !== visit.customerId) throw new HttpError(403, 'Only the homeowner can decline this visit');
@@ -312,6 +344,8 @@ export async function PATCH(request: Request) {
     const updated = await sql`
       UPDATE job_site_visits
       SET status = ${nextStatus},
+          proposed_at = CASE WHEN ${nextStatus} = 'confirmed' THEN ${acceptedAt}::timestamptz ELSE proposed_at END,
+          selected_at = CASE WHEN ${nextStatus} = 'confirmed' THEN ${acceptedAt}::timestamptz ELSE selected_at END,
           responded_at = CASE WHEN ${nextStatus} IN ('confirmed', 'declined') THEN now() ELSE responded_at END,
           completed_at = CASE WHEN ${nextStatus} = 'completed' THEN now() ELSE completed_at END,
           updated_at = now()
@@ -321,6 +355,8 @@ export async function PATCH(request: Request) {
                 customer_id AS "customerId",
                 trader_id AS "traderId",
                 proposed_at AS "proposedAt",
+                proposed_slots AS "proposedSlots",
+                selected_at AS "selectedAt",
                 status,
                 note,
                 responded_at AS "respondedAt",
@@ -329,7 +365,7 @@ export async function PATCH(request: Request) {
                 updated_at AS "updatedAt"
     ` as unknown as SiteVisitRow[];
 
-    await addJobEvent(visit.jobId, userId, eventType, eventTitle, visitLabel(visit.proposedAt), { siteVisitId: visit.id });
+    await addJobEvent(visit.jobId, userId, eventType, eventTitle, visitLabel(nextStatus === 'confirmed' ? acceptedAt : visit.proposedAt), { siteVisitId: visit.id });
     await createNotification(recipientId, {
       type: eventType,
       title: notificationTitle,
