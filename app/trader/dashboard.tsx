@@ -233,6 +233,7 @@ export default function TraderDashboard() {
       <Link href="/trader/quotes" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Quote any customer</Button></Link>
       <Link href="/trader/invoices/new" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Create invoice</Button></Link>
       <Link href="/trader/customers" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Customer book</Button></Link>
+      <Link href="/trader/reminders" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Reminder rules</Button></Link>
       <Link href="/trader/calendar" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Working calendar</Button></Link>
       <Link href="/trader/attention" asChild><Button mode="outlined" icon="bell-alert-outline" contentStyle={styles.actionButton}>Needs attention</Button></Link>
       <Link href="/trader/profile" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Manage profile</Button></Link>
