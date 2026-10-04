@@ -62,7 +62,16 @@ export async function GET(request: Request) {
         select 1 from jobs quote_job
         where quote_job.id = ${jobs.id}
           and quote_job.quote_intake_closed_at is null
-          and (select count(*) from quotes active_quote where active_quote.job_id = quote_job.id and active_quote.status = 'pending') < ${MAX_ACTIVE_QUOTES_PER_JOB}
+          and (
+            select count(distinct responder.trader_id)
+            from (
+              select active_quote.trader_id from quotes active_quote
+                where active_quote.job_id = quote_job.id and active_quote.status = 'pending'
+              union
+              select active_proposal.trader_id from job_proposals active_proposal
+                where active_proposal.job_id = quote_job.id and active_proposal.status in ('pending','shortlisted')
+            ) responder
+          ) < ${MAX_ACTIVE_QUOTES_PER_JOB}
       )`;
       const openMarketplace = and(
         inArray(jobs.status, ['open', 'quoted']),
