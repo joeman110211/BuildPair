@@ -1,7 +1,7 @@
 import { useSignUp } from '@clerk/expo';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
@@ -32,6 +32,25 @@ export default function FoundingTradeSignup() {
   const needsEmailVerification = signUp.status === 'missing_requirements'
     && signUp.unverifiedFields.includes('email_address')
     && signUp.missingFields.length === 0;
+
+  useEffect(() => {
+    if (!referralCode || Platform.OS !== 'web' || typeof window === 'undefined') return;
+    try {
+      const storageKey = `buildpair-relay-visit:${referralCode}`;
+      let visitorKey = window.sessionStorage.getItem(storageKey);
+      if (!visitorKey) {
+        visitorKey = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        window.sessionStorage.setItem(storageKey, visitorKey);
+      }
+      void fetch('/api/referral-visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ referralCode, visitorKey }),
+      }).catch(() => undefined);
+    } catch {
+      // Referral attribution must never block account creation.
+    }
+  }, [referralCode]);
 
   async function startSignup() {
     if (!legalAccepted) return;
