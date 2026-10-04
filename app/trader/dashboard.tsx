@@ -18,6 +18,9 @@ import type { Job, Quote, TraderProfile } from '@/types';
 type ReferralState = {
   referralCode: string;
   referralCount: number;
+  visitCount: number;
+  registeredCount: number;
+  profileCompleteCount: number;
   referralUrl: string;
 };
 
@@ -72,6 +75,19 @@ export default function TraderDashboard() {
       await Share.share({ title: 'BuildPair · One Good Trade', message: text, url: referral.referralUrl });
     } catch {
       // Cancelling the native share sheet is not an error.
+    }
+  }
+
+  async function copyReferralLink() {
+    if (!referral?.referralUrl) return;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(referral.referralUrl);
+        return;
+      }
+      await Share.share({ message: referral.referralUrl, url: referral.referralUrl });
+    } catch {
+      // Clipboard/share cancellation needs no dashboard error state.
     }
   }
 
@@ -189,7 +205,16 @@ export default function TraderDashboard() {
           {referral.referralCount > 0 ? `${referral.referralCount} joined` : 'Your turn'}
         </Chip>
       </View>
-      <Button mode="contained" icon="share-variant-outline" onPress={() => void shareOneGoodTrade()} contentStyle={styles.actionButton}>Pass my One Good Trade invite</Button>
+      <View style={styles.quickActions}>
+        <Chip compact icon="eye-outline">{referral.visitCount} visited</Chip>
+        <Chip compact icon="account-plus-outline">{referral.referralCount} joined</Chip>
+        <Chip compact icon="account-check-outline">{referral.registeredCount} registered</Chip>
+        <Chip compact icon="check-decagram-outline">{referral.profileCompleteCount} completed profile</Chip>
+      </View>
+      <View style={styles.membershipActions}>
+        <Button mode="contained" icon="share-variant-outline" onPress={() => void shareOneGoodTrade()} contentStyle={styles.actionButton}>Pass my One Good Trade invite</Button>
+        <Button mode="outlined" icon="content-copy" onPress={() => void copyReferralLink()} contentStyle={styles.actionButton}>Copy invite link</Button>
+      </View>
       <Text selectable style={styles.relayLink}>{referral.referralUrl}</Text>
       <Text style={styles.relayNote}>No paid-lead nonsense and no cash-for-random-invites scheme. The point is to seed BuildPair with real local working networks before launch.</Text>
     </AppCard> : null}
