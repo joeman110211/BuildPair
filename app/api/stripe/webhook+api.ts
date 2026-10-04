@@ -18,8 +18,34 @@ export async function POST(request: Request) {
       catch { /* Platform and Connect destinations have different signing secrets. */ }
     }
     if (!event) return new Response('Invalid webhook', { status: 400 });
-    await handleEvent(event);
-    return Response.json({ received: true });
+
+    const claimed = await getSql()`
+      INSERT INTO stripe_webhook_events(event_id, event_type, status, updated_at)
+      VALUES (${event.id}, ${event.type}, 'processing', now())
+      ON CONFLICT (event_id)
+      DO UPDATE SET status = 'processing', error = NULL, updated_at = now()
+      WHERE stripe_webhook_events.status = 'failed'
+         OR stripe_webhook_events.updated_at < now() - interval '5 minutes'
+      RETURNING event_id
+    `;
+    if (!claimed.length) return Response.json({ received: true, duplicate: true });
+
+    try {
+      await handleEvent(event);
+      await getSql()`
+        UPDATE stripe_webhook_events
+        SET status = 'processed', processed_at = now(), error = NULL, updated_at = now()
+        WHERE event_id = ${event.id}
+      `;
+      return Response.json({ received: true });
+    } catch (error) {
+      await getSql()`
+        UPDATE stripe_webhook_events
+        SET status = 'failed', error = ${error instanceof Error ? error.message.slice(0, 1000) : 'Unknown webhook error'}, updated_at = now()
+        WHERE event_id = ${event.id}
+      `;
+      throw error;
+    }
   } catch (error) {
     console.error('Stripe webhook failure', error);
     return new Response('Invalid webhook', { status: 400 });
