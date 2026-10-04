@@ -82,7 +82,7 @@ function itemLineTotal(item: DraftItem) {
 }
 
 export default function NewQuoteScreen() {
-  const { jobId, title, quoteId, customerName: presetCustomerName, customerEmail: presetCustomerEmail, customerPhone: presetCustomerPhone } = useLocalSearchParams<{ jobId?: string; title?: string; quoteId?: string; customerName?: string; customerEmail?: string; customerPhone?: string }>();
+  const { jobId, title, quoteId, cloneQuoteId, customerName: presetCustomerName, customerEmail: presetCustomerEmail, customerPhone: presetCustomerPhone } = useLocalSearchParams<{ jobId?: string; title?: string; quoteId?: string; cloneQuoteId?: string; customerName?: string; customerEmail?: string; customerPhone?: string }>();
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   const router = useRouter();
@@ -153,11 +153,13 @@ export default function NewQuoteScreen() {
             setJobTitle(found.title);
             if (found.description.trim().length >= QUOTE_SCOPE_MIN_LENGTH) setWorkIncluded(found.description.trim());
           }
-        } else if (quoteId) {
+        } else if (quoteId || cloneQuoteId) {
           const rows = await apiFetch<BusinessQuote[]>('/api/business-quotes', {}, tokenGetter);
           if (!active) return;
-          const draft = rows.find((row) => row.id === quoteId);
-          if (!draft || draft.status !== 'draft') throw new Error('That quote draft is no longer editable.');
+          const sourceId = quoteId || cloneQuoteId;
+          const draft = rows.find((row) => row.id === sourceId);
+          if (!draft) throw new Error(cloneQuoteId ? 'That quote could not be copied.' : 'That quote draft is no longer available.');
+          if (quoteId && draft.status !== 'draft') throw new Error('That quote draft is no longer editable.');
           setCustomerName(draft.customerName);
           setCustomerEmail(draft.customerEmail ?? '');
           setCustomerPhone(draft.customerPhone ?? '');
@@ -174,13 +176,13 @@ export default function NewQuoteScreen() {
           setPaymentTerms(draft.paymentTerms);
           setNotes(draft.notes ?? '');
           setShowBreakdown(draft.showBreakdown);
-          setItems(draft.items.map((item, index) => ({ key: item.id ?? `item-${index}`, description: item.description, category: item.category, quantity: String(Number(item.quantity)), unitPrice: (item.unitPrice / 100).toFixed(2) })));
-          setQuoteOptions((draft.options ?? []).map((option, index) => ({ key: option.id ?? `option-${index}`, kind: option.kind, title: option.title, description: option.description ?? '', priceDelta: (option.priceDelta / 100).toFixed(2) })));
+          setItems(draft.items.map((item, index) => ({ key: `item-${index}`, description: item.description, category: item.category, quantity: String(Number(item.quantity)), unitPrice: (item.unitPrice / 100).toFixed(2) })));
+          setQuoteOptions((draft.options ?? []).map((option, index) => ({ key: `option-${index}`, kind: option.kind, title: option.title, description: option.description ?? '', priceDelta: (option.priceDelta / 100).toFixed(2) })));
           const depositStage = draft.paymentSchedule.find((stage) => stage.kind === 'deposit');
           const progressStages = draft.paymentSchedule.filter((stage) => stage.kind === 'stage' || stage.kind === 'materials');
           setPlanMode(progressStages.length ? 'staged' : depositStage ? 'deposit' : 'single');
           if (depositStage) setDepositValue((depositStage.amount / 100).toFixed(2));
-          setStages(progressStages.map((stage, index) => ({ key: stage.key || `stage-${index}`, title: stage.title, amount: (stage.amount / 100).toFixed(2), trigger: stage.trigger, kind: stage.kind === 'materials' ? 'materials' : 'stage' })));
+          setStages(progressStages.map((stage, index) => ({ key: `stage-${index}`, title: stage.title, amount: (stage.amount / 100).toFixed(2), trigger: stage.trigger, kind: stage.kind === 'materials' ? 'materials' : 'stage' })));
         }
       } catch (e) {
         if (active) setError(errorMessage(e));
@@ -190,7 +192,7 @@ export default function NewQuoteScreen() {
     }
     void load();
     return () => { active = false; };
-  }, [jobId, quoteId]);
+  }, [cloneQuoteId, jobId, quoteId]);
 
   const pricedItems = useMemo(() => items.filter((item) => item.description.trim() && itemLineTotal(item) > 0), [items]);
   const subtotal = useMemo(() => pricedItems.reduce((sum, item) => sum + itemLineTotal(item), 0), [pricedItems]);
@@ -537,7 +539,7 @@ export default function NewQuoteScreen() {
     ? [{ value: 'single', label: 'Materials + balance' }, { value: 'deposit', label: 'Materials + deposit' }, { value: 'staged', label: 'Materials + stages' }]
     : [{ value: 'single', label: 'Full amount' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Stage payments' }];
 
-  return <Screen title={quoteId ? 'Edit quote draft' : 'Create quote'} subtitle={external ? 'A straightforward quote for any customer. No BuildPair job required.' : (job?.title ?? title ?? 'BuildPair job')} backHref="/trader/quotes" footer={footer}>
+  return <Screen title={quoteId ? 'Edit quote draft' : cloneQuoteId ? 'Duplicate quote' : 'Create quote'} subtitle={external ? 'A straightforward quote for any customer. No BuildPair job required.' : (job?.title ?? title ?? 'BuildPair job')} backHref="/trader/quotes" footer={footer}>
     {external ? <AppCard>
       <Text variant="titleLarge" style={styles.title}>Customer</Text>
       <Text style={styles.muted}>Who is this quote for?</Text>
