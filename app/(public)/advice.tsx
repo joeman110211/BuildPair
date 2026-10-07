@@ -12,6 +12,8 @@ import { colors, publicResponsiveMetrics, radii } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { scrollToResults } from '@/lib/scroll-to-results';
 import { ADVICE_GUIDES, adviceAudienceLabel, adviceGuideBySlug, searchAdviceGuides, type AdviceAudience, type AdviceSource } from '@/lib/advice-library';
+import { SEO_ADVICE_BATCH } from '@/components/SeoAdviceBatchPage';
+import { SEO_ADVICE_BATCH_THREE } from '@/components/SeoAdviceBatchThreePage';
 
 type AudienceFilter = AdviceAudience | 'all';
 
@@ -158,6 +160,19 @@ export default function AdviceHub() {
           <Link href={('/(public)/advice/' + guide.slug) as Href} asChild><Button mode="outlined">Read guide</Button></Link>
         </View>)}
       </View>
+
+      {!query.trim() && category === 'all' ? <View style={styles.filterBlock}>
+        <SemanticHeading level={2} style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>More cost & project guides</SemanticHeading>
+        <Text style={styles.body}>Current UK budgeting, compliance and project-planning guides, checked against the cited market and official sources.</Text>
+        <View style={styles.grid}>
+          {[...SEO_ADVICE_BATCH, ...SEO_ADVICE_BATCH_THREE].map((guide) => <View key={guide.slug} style={styles.card}>
+            <Text style={styles.cardMeta}>Homeowner · {guide.category}</Text>
+            <SemanticHeading level={2} style={styles.cardTitle}>{guide.title}</SemanticHeading>
+            <Text style={styles.cardBody}>{guide.summary}</Text>
+            <Link href={('/(public)/advice/' + guide.slug) as Href} asChild><Button mode="outlined">Read guide</Button></Link>
+          </View>)}
+        </View>
+      </View> : null}
 
       {!guides.length ? <View style={styles.empty}>
         <Text style={styles.emptyTitle}>No checked guide matches that yet.</Text>
