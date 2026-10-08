@@ -4,7 +4,8 @@ import { Text } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { PLAN_POSITIONING, SITE_LANGUAGE } from '@/constants/site-language';
 import { colors, controlHeights, radii, shadows, spacing } from '@/constants/theme';
-import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
+import { REGISTRATION_OPEN, PAID_PLANS_OPEN, waitlistHref } from '@/lib/launch';
+import { signUpHref } from '@/lib/account-mode';
 
 const plans = [
   {
@@ -120,14 +121,15 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
     </View>)}
   </View>;
   return <View style={styles.wrap}>
+    {!PAID_PLANS_OPEN ? <Text style={styles.note}>Introductory offer: three months of BuildPair Pro free from activating your trade profile. No card details or automatic paid subscription. The prices below are for future optional plans.</Text> : null}
     <View style={styles.grid}>
       {plans.map((plan) => {
         const featured = plan.tone === 'plus';
         const pro = plan.tone === 'pro';
         const starter = plan.tone === 'starter';
         const features = compact ? plan.compactFeatures : plan.features;
-        const href = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', `pricing-${plan.tone}`);
-        const cta = REGISTRATION_OPEN ? plan.cta : SITE_LANGUAGE.createProfile;
+        const href = REGISTRATION_OPEN ? signUpHref('trader') : waitlistHref('trader', `pricing-${plan.tone}`);
+        const cta = !PAID_PLANS_OPEN ? 'Start free Pro access' : REGISTRATION_OPEN ? plan.cta : SITE_LANGUAGE.createProfile;
         return <View key={plan.name} style={[styles.card, compact && styles.cardCompact, featured && styles.cardFeatured, pro && styles.cardPro]}>
           <Text style={[styles.eyebrow, featured && styles.eyebrowFeatured, pro && styles.eyebrowPro]}>{plan.eyebrow}</Text>
           <Text variant="titleLarge" style={styles.name}>{plan.name}</Text>
