@@ -95,7 +95,7 @@ export default function ChooseRoleScreen() {
       backHref="/auth/account"
     >
       <View style={styles.grid}>
-        {([['customer', '🏠 Homeowner', 'Post jobs, compare quotes and pay safely.'], ['trader', '🔨 Tradesperson', 'Build a public profile, find work, quote and invoice customers.']] as const).map(([value, title, body]) => {
+        {([['customer', '🏠 Homeowner', 'Post jobs, compare quotes and manage the work.'], ['trader', '🔨 Tradesperson', 'Build a public profile, find work, quote and invoice customers.']] as const).map(([value, title, body]) => {
           const enabled = value === 'customer' ? user?.customerEnabled : user?.traderEnabled;
           const selected = role === value;
           return (
