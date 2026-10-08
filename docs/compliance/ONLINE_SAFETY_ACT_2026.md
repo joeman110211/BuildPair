@@ -157,3 +157,20 @@ Safety reports should be triaged according to seriousness, with illegal-content 
   https://www.ofcom.org.uk/online-safety/protecting-children/age-assurance
 - National Crime Agency: Child Sexual Exploitation & Abuse Industry Reporting Portal  
   https://www.nationalcrimeagency.gov.uk/what-we-do/crime-threats/child-sexual-abuse-and-exploitation/the-child-sexual-exploitation-abuse-industry-reporting-portal
+
+
+## 9. Significant-change review (proposed regional marketplace opening, 8 October 2026)
+
+**Status: CONDITIONAL, not approved for public activation.** This is an additional pre-change risk review of enabling actual homeowner job posting, quote exchange, private job-scoped messaging and direct-payment job records across Surrey, London and neighbouring regions. BuildPay remains unavailable.
+
+**Exposure changes:** Public job descriptions and media increase risks of illegal posts, personal data exposure and content viewable by children. Private messaging and sharing addresses can facilitate harassment, stalking, fraud and abuse. Scams and user-to-user contact carry at least medium inherent risk pending incident evidence; address disclosure can have high-impact consequences.
+
+**Children:** BuildPair serves adults but its public marketplace cannot be assumed inaccessible to children without effective age assurance. Existing child-access and children's-risk findings continue to apply; monitor public user-generated content closely.
+
+**Safeguards to validate:** Private address redaction, role/participant authorization on messages and jobs, media screening and metadata stripping, anti-spam limits, abuse reporting without requiring an account, admin moderation escalation, account restrictions and incident logs. Users arranging direct payments must be told that BuildPair does not hold, guarantee, refund or protect those funds.
+
+**Mandatory pre-opening checks:** Confirm in-scope NCA CSEA-IRP organisation and administrator registration and response procedure; ICO assessment/fee status; test safety and abuse controls with real non-admin QA accounts; appoint a person responsible for daily moderation; verify independent BuildPay endpoint shutdown; log founder sign-off after final tests.
+
+**Assessment decision:** Existing controls plausibly support a small controlled release after those checks, but implementation and external registrations are not independently verified. Do not open the marketplace or make unqualified safety promises until all required checks are complete. Reassess after a serious incident or a material new feature.
+
+Sources reviewed: Ofcom guidance on illegal content duties and protections for children (2026); NCA CSEA Industry Reporting Portal (reporting duty effective 7 April 2026).
