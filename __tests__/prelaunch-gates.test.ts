@@ -1,16 +1,20 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  REGISTRATION_OPEN,
   HOMEOWNER_REGISTRATION_OPEN,
+  BUILDPAY_OPEN,
   MARKETPLACE_OPEN,
   TRADER_PRELAUNCH_REGISTRATION_OPEN,
 } from '@/lib/launch-config';
 
-describe('BuildPair prelaunch gates', () => {
-  it('opens trade setup while keeping homeowner registration and the marketplace closed', () => {
+describe('BuildPair regional launch gates', () => {
+  it('enables real trade and homeowner accounts while keeping BuildPay disabled', () => {
     expect(TRADER_PRELAUNCH_REGISTRATION_OPEN).toBe(true);
-    expect(HOMEOWNER_REGISTRATION_OPEN).toBe(false);
-    expect(MARKETPLACE_OPEN).toBe(false);
+    expect(REGISTRATION_OPEN).toBe(true);
+    expect(HOMEOWNER_REGISTRATION_OPEN).toBe(true);
+    expect(MARKETPLACE_OPEN).toBe(true);
+    expect(BUILDPAY_OPEN).toBe(false);
   });
 
   it('lets Founding Trades synchronize a real account while public registration stays closed', () => {
