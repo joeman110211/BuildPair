@@ -157,3 +157,15 @@ Safety reports should be triaged according to seriousness, with illegal-content 
   https://www.ofcom.org.uk/online-safety/protecting-children/age-assurance
 - National Crime Agency: Child Sexual Exploitation & Abuse Industry Reporting Portal  
   https://www.nationalcrimeagency.gov.uk/what-we-do/crime-threats/child-sexual-abuse-and-exploitation/the-child-sexual-exploitation-abuse-industry-reporting-portal
+
+## 10. Material change review for opening homeowner job posts and private communication (8 October 2026)
+
+**Decision:** The previous risk analysis is expanded to cover real public job posting, site-visit arrangements, quote comparison and job-scoped messaging. These increase the volume of user-generated content, private contact, location-sensitive data and fraud opportunities. BuildPay processing is excluded.
+
+**Specific risk changes:** Fraud and malicious payment requests remain medium and may increase at launch. Harassment, stalking and improper disclosure of private job addresses remain medium with potentially severe individual impact. Sexual exploitation/grooming, illegal media and child access are material considerations even though accounts are intended for adults. Public UGC may be encountered without an account; contractual age limits are not effective age assurance.
+
+**Controls and release safeguards:** Maintain account and role verification through Clerk, postcode/radius matching, private address access only after agreed contact, image safety screening and metadata removal, message risk detection and user reports, admin moderation records and account restrictions, rate limits on posts and messages, and clear user obligations. Do not imply paid or verified status is a workmanship guarantee. Keep BuildPay unavailable in both UI and server requests. Monitor actual abuse patterns and reassess promptly.
+
+**Uncompleted external duties:** NCA CSEA-IRP reporting portal organisation/authorised staff registration, plus ICO fee assessment/payment where required, remain for the operator to complete. A production deployment is not evidence those actions have been completed. The operator must monitor reports from opening day and follow the reporting and complaint procedures above. Confirm available moderation staffing and review this assessment after significant change or incident.
+
+**Source and responsibility:** Ofcom illegal content guidance (updated June 2026), Online Safety Act 2023 section 9(4) assessment before a significant change, Ofcom July 2026 CSEA reporting guidance, ICO fee checker. BuildPair owner is responsible for any required external filings and specialist legal sign-off.
