@@ -1,5 +1,4 @@
-import { Redirect } from 'expo-router';
-import { Link, useLocalSearchParams } from 'expo-router';
+import { Link, Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 import { Checkbox, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
