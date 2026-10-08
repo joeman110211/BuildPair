@@ -83,6 +83,17 @@ function isBlockedPrelaunchApi(pathName) {
   return PRELAUNCH_BLOCKED_API_PREFIXES.some((prefix) => pathName === prefix || pathName.startsWith(`${prefix}/`));
 }
 
+function isBuildPayLockedApi(path, method) {
+  const blocked = ['/api/stripe/payment-intent', '/api/stripe/connect', '/api/payments', '/api/payment-disputes'];
+  if (blocked.some((prefix) => path === prefix || path.startsWith(prefix + '/'))) return true;
+  return (path === '/api/buildpay' || path.startsWith('/api/buildpay/')) && !['GET', 'HEAD'].includes(String(method).toUpperCase());
+}
+function sendBuildPayLocked(res) {
+  res.statusCode = 423;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.end(JSON.stringify({ error: 'BuildPay is coming soon. Arrange payments directly with your tradesperson.', code: 'buildpay_unavailable' }));
+}
 function sendPrelaunchLocked(res) {
   res.statusCode = 423;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -311,6 +322,7 @@ const server = http.createServer(async (req, res) => {
     if (handleAdminHostRouting(req, res)) return;
 
     const pathName = requestPathname(req);
+    if (isBuildPayLockedApi(pathName, req.method)) { sendBuildPayLocked(res); return; }
     if (isBlockedPrelaunchApi(pathName)) {
       sendPrelaunchLocked(res);
       return;
