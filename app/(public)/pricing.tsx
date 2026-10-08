@@ -13,8 +13,8 @@ import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 export default function PricingPage() {
   const { width } = useWindowDimensions();
   const metrics = publicResponsiveMetrics(width);
-  const primaryHref = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', 'pricing-hero');
-  const primaryLabel = REGISTRATION_OPEN ? 'Create trade account' : 'Create profile';
+  const primaryHref = REGISTRATION_OPEN ? '/auth/sign-up?mode=trader' : waitlistHref('trader', 'pricing-hero');
+  const primaryLabel = REGISTRATION_OPEN ? 'Start free Pro access' : 'Create profile';
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
     <PublicSeo title="Trade membership pricing" description="Compare Starter, Core, Plus and Pro memberships, marketplace allowances and business tools. No pay-per-lead charges." />
