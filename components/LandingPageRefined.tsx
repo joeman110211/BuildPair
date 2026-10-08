@@ -61,7 +61,7 @@ export default function LandingPageRefined() {
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.pageContent} keyboardShouldPersistTaps="handled">
     <PublicSeo title="Find local tradespeople. Keep the whole job together" description="Find local tradespeople, compare clear quotes and keep messages, changes and payment stages together. Business tools for tradespeople, with no pay-per-lead fees." />
-    <View style={styles.localNotice}><Text style={styles.localNoticeText}>BuildPair is onboarding tradespeople in London, Surrey and nearby areas. Homeowner job posting and BuildPay payments are coming soon.</Text></View>
+    <View style={styles.localNotice}><Text style={styles.localNoticeText}>BuildPair is onboarding tradespeople in London, Surrey and nearby areas. Homeowner job posting and BuildPay payments are coming soon.</Text><Link href="/auth/founding-trade-signup?source=homepage-notice" asChild><Button mode="text" compact>Create trade profile</Button></Link></View>
     <View style={[styles.hero, mobile && styles.heroMobile]}>
       <Text style={styles.eyebrow}>ONE PROJECT. BOTH SIDES CONNECTED.</Text>
       <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
@@ -130,7 +130,7 @@ export default function LandingPageRefined() {
 }
 
 const styles = StyleSheet.create({
-  localNotice: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: colors.surfaceRaised, borderBottomWidth: 1, borderBottomColor: colors.border, alignItems: 'center' },
+  localNotice: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surfaceRaised, borderBottomWidth: 1, borderBottomColor: colors.border, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 8 },
   localNoticeText: { maxWidth: 1100, color: colors.charcoalSoft, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   page: { flex: 1, backgroundColor: colors.background }, pageContent: { flexGrow: 1, width: '100%', maxWidth: '100%' }, hidden: { display: 'none' },
   hero: { width: '100%', maxWidth: 1100, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 64, alignItems: 'center', gap: 20 },
