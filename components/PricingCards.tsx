@@ -72,7 +72,7 @@ const plans = [
       'Direct homeowner quote requests do not use your allowance',
       'Full Quote Builder with itemised pricing, VAT, stages, terms and revisions',
       'Bring accepted outside-customer quotes into managed BuildPair projects',
-      'Offer staged BuildPay after the customer claims the project',
+      'Manage accepted outside-customer projects with direct payment records',
       'Connect an approved Google business listing and show Google reviews separately',
       'Full AI reply and quote-writing assistance',
       'Up to 5 saved job searches',
@@ -126,8 +126,8 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
         const pro = plan.tone === 'pro';
         const starter = plan.tone === 'starter';
         const features = compact ? plan.compactFeatures : plan.features;
-        const href = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', `pricing-${plan.tone}`);
-        const cta = REGISTRATION_OPEN ? plan.cta : SITE_LANGUAGE.createProfile;
+        const href = REGISTRATION_OPEN ? '/auth/sign-up?mode=trader' : waitlistHref('trader', `pricing-${plan.tone}`);
+        const cta = REGISTRATION_OPEN ? 'Get 3 months Pro free' : SITE_LANGUAGE.createProfile;
         return <View key={plan.name} style={[styles.card, compact && styles.cardCompact, featured && styles.cardFeatured, pro && styles.cardPro]}>
           <Text style={[styles.eyebrow, featured && styles.eyebrowFeatured, pro && styles.eyebrowPro]}>{plan.eyebrow}</Text>
           <Text variant="titleLarge" style={styles.name}>{plan.name}</Text>
@@ -150,6 +150,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
         </View>;
       })}
     </View>
+    <Text style={styles.launchNote}>Prices shown are for paid plans when billing becomes available. Every new trade profile starts with three months of Pro free, no card or automatic charge.</Text>
     <Text style={styles.note}>Category limits count broad trade categories, not every service inside them. Core direct homeowner requests use the same five-opportunity monthly allowance. On Plus and Pro, direct homeowner requests do not use the open-marketplace allowance. Google reviews remain clearly labelled as Google reviews and only appear after the business listing connection is approved.</Text>
   </View>;
 }
