@@ -2,12 +2,13 @@ import { Linking, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { PublicInfoPage, infoStyles } from '@/components/PublicInfoPage';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 
 export default function TermsPage() {
   return <PublicInfoPage
     eyebrow="Legal"
     title="BuildPair Terms of Use"
-    intro="These terms apply to homeowners, tradespeople and visitors using BuildPair. Where BuildPay is used, the payment notices shown before a payment, issue action or release also form part of the relevant transaction workflow."
+    intro={BUILDPAY_OPEN ? 'These terms apply to all BuildPair users. BuildPay-specific notices shown during payment also form part of that transaction.' : 'These terms apply to all BuildPair users. BuildPay job-payment processing and payouts are not available during the current launch phase. Homeowners and tradespeople arrange and agree payment directly; BuildPair does not receive, hold, refund or protect those funds. BuildPay-specific sections below apply only if BuildPay is made available in future.'}
     updated="4 October 2026"
     sections={[
       { title: '1. The platform', body: 'BuildPair provides marketplace, introduction and project-workflow technology that helps homeowners and tradespeople find each other, communicate, arrange visits, quote, agree project stages, record variations and manage project records. BuildPair is not the contractor, employer or person carrying out the building work.' },
