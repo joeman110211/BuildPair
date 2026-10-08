@@ -18,7 +18,7 @@ import { colors, controlHeights, publicResponsiveMetrics, radii } from '@/consta
 const POPULAR_TRADES = ['Tiling', 'Plumbing', 'Electrical', 'Building & Extensions', 'Roofing & Roofline', 'Painting & Decorating', 'Kitchens', 'Bathrooms'] as const;
 const FAQS = [
   ['Can a tradesperson visit before quoting?', 'Yes. Arrange a site visit through the job when the work needs a closer look, then agree a written quote through BuildPair.'],
-  ['Who pays the BuildPay fee?', 'The party requesting BuildPay carries the disclosed cost. The fee, payment stages and total are shown before you commit.'],
+  ['Is BuildPay available?', 'BuildPay staged payments are coming soon. For now, homeowners and tradespeople arrange any payments directly with one another.'],
   ['Can we pay directly?', 'Yes, when both sides agree. BuildPair keeps the project record, but does not process, hold or refund money paid directly.'],
   ['What do trade memberships include?', 'Starter is free. Core, Plus and Pro add marketplace allowances and business tools. The Pricing page sets out each plan’s features and limits.'],
 ] as const;
@@ -61,7 +61,11 @@ export default function LandingPageRefined() {
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.pageContent} keyboardShouldPersistTaps="handled">
     <PublicSeo title="Find local tradespeople. Keep the whole job together" description="Find local tradespeople, compare clear quotes and keep messages, changes and payment stages together. Business tools for tradespeople, with no pay-per-lead fees." />
-    <View style={styles.localNotice}><Text style={styles.localNoticeText}>BuildPair is onboarding tradespeople in London, Surrey and nearby areas. Homeowner job posting and BuildPay payments are coming soon.</Text><Link href="/auth/founding-trade-signup?source=homepage-notice" asChild><Button mode="text" compact>Create trade profile</Button></Link></View>
+    <View style={styles.localNotice}><Text style={styles.localNoticeText}>Now onboarding local tradespeople. Get 3 months of BuildPair Pro free when you join. Homeowners can post jobs now. BuildPay coming soon.</Text></View>
+    <View style={styles.signupStrip}>
+      <Link href="/auth/sign-up?mode=trader" asChild><Button mode="contained" style={styles.signupButton} contentStyle={styles.buttonContent}>Tradesperson sign up</Button></Link>
+      <Link href="/auth/sign-up?mode=customer" asChild><Button mode="outlined" style={styles.signupButton} contentStyle={styles.buttonContent}>Homeowner sign up</Button></Link>
+    </View>
     <View style={[styles.hero, mobile && styles.heroMobile]}>
       <Text style={styles.eyebrow}>ONE PROJECT. BOTH SIDES CONNECTED.</Text>
       <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
@@ -108,8 +112,8 @@ export default function LandingPageRefined() {
     <Reveal delay={160}><View style={styles.section}>
       <Heading eyebrow="Payments & trust" title="Clear choices. A better record." />
       <View style={styles.choiceGrid}>
-        <View style={[styles.choice, styles.paymentChoice]}><Text style={styles.eyebrow}>BUILDPAY</Text><Text style={styles.cardTitle}>Agree stages. Record releases.</Text><Text style={styles.cardText}>Stripe processes supported payments. BuildPair connects funding and release decisions to the agreed work.</Text><Text style={styles.smallText}>BuildPay is not escrow, insurance or a guarantee of workmanship or refunds.</Text><Link href="/(public)/payments" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>How payments work →</Button></Link></View>
-        <View style={styles.choice}><Text style={styles.eyebrow}>DIRECT PAYMENT</Text><Text style={styles.cardTitle}>Pay directly when you both agree.</Text><Text style={styles.cardText}>Keep the quote, messages and project record in BuildPair while arranging payment privately.</Text><Text style={styles.smallText}>BuildPair does not receive, hold, release or refund money paid directly.</Text><Link href="/(public)/payments" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>Compare payment routes →</Button></Link></View>
+        {BUILDPAY_OPEN ? <View style={[styles.choice, styles.paymentChoice]}><Text style={styles.eyebrow}>BUILDPAY</Text><Text style={styles.cardTitle}>Agree stages. Record releases.</Text><Text style={styles.cardText}>Stripe processes supported payments. BuildPair connects funding and release decisions to the agreed work.</Text><Text style={styles.smallText}>BuildPay is not escrow, insurance or a guarantee of workmanship or refunds.</Text><Link href="/(public)/payments" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>How payments work →</Button></Link></View> : <View style={[styles.choice, styles.paymentChoice]}><Text style={styles.eyebrow}>BUILDPAY · COMING SOON</Text><Text style={styles.cardTitle}>Protected stage payments are on the way.</Text><Text style={styles.cardText}>For now, agree and arrange payments directly with your tradesperson. BuildPair does not hold or protect job money.</Text></View>}
+        <View style={styles.choice}><Text style={styles.eyebrow}>DIRECT PAYMENT</Text><Text style={styles.cardTitle}>Pay directly when you both agree.</Text><Text style={styles.cardText}>Keep the quote, messages and project record in BuildPair while arranging payment privately.</Text><Text style={styles.smallText}>BuildPair does not receive, hold, release or refund money paid directly.</Text><Link href="/(public)/payments" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>How direct payments work →</Button></Link></View>
       </View>
       <View style={styles.trustStrip}><Text style={styles.trustTitle}>Make an informed choice.</Text><Text style={styles.cardText}>Explore real work, service areas, review sources and the status of submitted credentials. Report concerns for review.</Text><Link href="/(public)/trust-safety" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>Trust & safety →</Button></Link></View>
     </View></Reveal>
@@ -132,6 +136,8 @@ export default function LandingPageRefined() {
 const styles = StyleSheet.create({
   localNotice: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surfaceRaised, borderBottomWidth: 1, borderBottomColor: colors.border, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 8 },
   localNoticeText: { maxWidth: 1100, color: colors.charcoalSoft, fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  signupStrip: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surfaceRaised },
+  signupButton: { minWidth: 155, borderRadius: radii.md },
   page: { flex: 1, backgroundColor: colors.background }, pageContent: { flexGrow: 1, width: '100%', maxWidth: '100%' }, hidden: { display: 'none' },
   hero: { width: '100%', maxWidth: 1100, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 64, alignItems: 'center', gap: 20 },
   heroMobile: { paddingHorizontal: 16, paddingVertical: 36, gap: 16 }, heroTitle: { color: colors.charcoal, fontSize: 48, lineHeight: 55, fontWeight: '900', letterSpacing: -1.6, textAlign: 'center' }, heroTitleMobile: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
