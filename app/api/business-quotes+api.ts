@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { paymentScheduleSchema, validatePaymentSchedule } from '@/lib/payment-plan';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import { appUrl } from '@/lib/stripe';
 import { hasPlanSetupAccess, tierAtLeast } from '@/lib/subscription';
 import { requireTraderPlanSetupAccess } from '@/lib/trader-plan-access';
@@ -173,6 +174,7 @@ export async function POST(request: Request) {
     const trader = await requireRole(request, 'trader');
     const plan = await requireTraderPlanSetupAccess(trader.id, 'core', 'Standalone customer quotes are included with BuildPair Core, Plus and Pro.');
     const payload = businessQuoteSchema.parse(await request.json());
+    if (!BUILDPAY_OPEN && payload.paymentMethod === 'buildpair') throw new HttpError(423, 'BuildPay is coming soon.');
     const managedProjectEligible = tierAtLeast(plan.subscriptionTier, 'basic') && hasPlanSetupAccess(plan, 'basic');
     if (payload.paymentMethod === 'buildpair' && !managedProjectEligible) {
       throw new HttpError(402, 'Outside-customer BuildPay and managed projects are included with BuildPair Plus and Pro.');
