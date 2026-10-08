@@ -7,6 +7,7 @@ import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { FeaturedTraderHero } from '@/components/FeaturedTraderHero';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import { PricingCards } from '@/components/PricingCards';
 import { ProductPreview } from '@/components/ProductPreview';
 import { PublicFooter } from '@/components/PublicFooter';
