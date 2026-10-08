@@ -63,6 +63,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     const modes = await accountModes(userId);
     const payload = await request.json() as { action?: string; mode?: 'buildpair' | 'external'; acknowledgedPaymentTerms?: boolean; startAt?: string };
     if (!BUILDPAY_OPEN && payload.action === 'set_payment_mode' && payload.mode === 'buildpair') throw new HttpError(423, 'BuildPay is not available yet. Choose direct payment instead.');
+    if (!BUILDPAY_OPEN && payload.action === 'set_payment_mode' && payload.mode === 'external') throw new HttpError(409, 'Both parties must agree direct payment through the payment-arrangement workflow.');
     const db = getDb();
 
     if (payload.action === 'cancel') {
