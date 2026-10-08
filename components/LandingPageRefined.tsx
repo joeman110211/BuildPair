@@ -68,7 +68,7 @@ export default function LandingPageRefined() {
       <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
       <Text style={styles.heroBody}>Compare clear quotes. Agree the work. Keep messages, changes and payment stages in one place.</Text>
       <View style={styles.heroActions}>
-        <Link href={signUpHref('customer', '/customer/post-job')} asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Homeowner sign up</Button></Link>
+        <Link href={signUpHref('customer', '/customer/new-job')} asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Homeowner sign up</Button></Link>
         <Link href={signUpHref('trader')} asChild><Button mode="outlined" style={styles.button} contentStyle={styles.buttonContent}>Tradesperson sign up</Button></Link>
         <Link href="/(public)/directory" asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Browse local trades</Button></Link>
         <Link href="/(public)/how-it-works" asChild><Button mode="text" textColor={colors.primaryDark} style={styles.button} contentStyle={styles.buttonContent}>See how it works →</Button></Link>
