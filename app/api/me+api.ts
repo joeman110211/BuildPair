@@ -4,7 +4,7 @@ import { traderProfiles } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
 import { InvalidPostcodeError, lookupPostcode } from '@/lib/postcode';
 import { getSql } from '@/lib/sql';
-import { FOUNDING_PRO_END_ISO, LAUNCH_DATE_ISO, HOMEOWNER_REGISTRATION_OPEN } from '@/lib/launch-config';
+import { FOUNDING_PRO_START_ISO, FOUNDING_PRO_END_ISO, LAUNCH_DATE_ISO, HOMEOWNER_REGISTRATION_OPEN } from '@/lib/launch-config';
 import { assertApprovedMediaUrls } from '@/lib/media-safety';
 import { accountAccess, accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { categoryChangeAllowed, categoryChangeAvailableAt, traderWorkTypeLimit } from '@/lib/subscription';
@@ -235,7 +235,7 @@ export async function PUT(request: Request) {
 
     return Response.json({
       ...profile,
-      foundingProStartsAt: profile?.trialEndsAt ? LAUNCH_DATE_ISO : null,
+      foundingProStartsAt: profile?.trialEndsAt ? FOUNDING_PRO_START_ISO : null,
       categoryLimit,
       categoryChangeAvailableAt: categoryChangeAvailableAt(profile?.categoriesChangedAt)?.toISOString() ?? null,
     });
