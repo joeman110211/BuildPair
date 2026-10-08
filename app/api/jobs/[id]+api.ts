@@ -5,6 +5,7 @@ import { addJobEvent, createNotification } from '@/lib/notifications';
 import { validateProtectedPaymentEconomics } from '@/lib/payment-protection';
 import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 
 export async function GET(request: Request, { id }: { id: string }) {
   try {
@@ -61,6 +62,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     await ensureDbUser(userId);
     const modes = await accountModes(userId);
     const payload = await request.json() as { action?: string; mode?: 'buildpair' | 'external'; acknowledgedPaymentTerms?: boolean; startAt?: string };
+    if (!BUILDPAY_OPEN && payload.action === 'set_payment_mode' && payload.mode === 'buildpair') throw new HttpError(423, 'BuildPay is coming soon.');
     const db = getDb();
 
     if (payload.action === 'cancel') {
