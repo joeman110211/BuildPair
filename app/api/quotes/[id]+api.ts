@@ -7,6 +7,7 @@ import { fullFundingSchedule, paymentScheduleSchema, type PaymentStagePlan, vali
 import { validateProtectedPaymentEconomics } from '@/lib/payment-protection';
 import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 
 type QuotePaymentTermsRow = {
   paymentSchedule: unknown;
@@ -55,6 +56,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       return Response.json({ declined: true });
     }
 
+    if (!BUILDPAY_OPEN && (payload.action === 'edit_payment_plan' || payload.action === 'accept_payment_plan')) throw new HttpError(423, 'BuildPay payment plans are unavailable.');
     if (payload.action === 'edit_payment_plan') {
       if (!modes.customerEnabled || candidate.job.customerId !== userId) throw new HttpError(403, 'Customer account required');
       if (candidate.quote.status !== 'pending' || !['open', 'quoted'].includes(candidate.job.status)) throw new HttpError(409, 'This quote can no longer be changed');
