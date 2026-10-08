@@ -10,6 +10,7 @@ import { AppCard } from '@/components/AppCard';
 import { PayMilestoneButton } from '@/components/PayMilestoneButton';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import { allocateCustomerBuildPayFee } from '@/lib/buildpay-fees';
 import { formatMoney } from '@/lib/money';
 import type { BuildPayFeeMode, BuildPayRequestedBy, Job, PaymentStageStatus, Quote, TraderProfile } from '@/types';
@@ -153,7 +154,7 @@ export default function StartAwardedJobScreen() {
       <Chip icon="check-circle-outline">Quote accepted</Chip>
       <Text variant="headlineSmall">{data.trader?.businessName ?? 'Tradesperson'} has the job</Text>
       <Text>The quote is agreed. BuildPair now keeps the private address, start time and payment setup in one place so both sides know exactly what happens next.</Text>
-      {buildPaySummary.buildPayRequestedBy ? <Text>{buildPaySummary.buildPayRequestedBy === 'trader' ? 'The tradesperson included BuildPay in the accepted proposal.' : 'You requested BuildPay protected stages before acceptance.'} {buildPaySummary.buildPayFeeMode === 'customer_pays' ? `Work price ${formatMoney(buildPaySummary.contractAmount)} + BuildPay service fee ${formatMoney(buildPaySummary.buildPayCustomerFeeTotal)} = ${formatMoney(buildPaySummary.allInTotal)} all-in.` : `The tradesperson is absorbing the agreed BuildPay costs, so your total remains ${formatMoney(buildPaySummary.contractAmount)}.`}</Text> : null}
+      {BUILDPAY_OPEN && buildPaySummary.buildPayRequestedBy ? <Text>{buildPaySummary.buildPayRequestedBy === 'trader' ? 'The tradesperson included BuildPay in the accepted proposal.' : 'You requested BuildPay protected stages before acceptance.'} {buildPaySummary.buildPayFeeMode === 'customer_pays' ? `Work price ${formatMoney(buildPaySummary.contractAmount)} + BuildPay service fee ${formatMoney(buildPaySummary.buildPayCustomerFeeTotal)} = ${formatMoney(buildPaySummary.allInTotal)} all-in.` : `The tradesperson is absorbing the agreed BuildPay costs, so your total remains ${formatMoney(buildPaySummary.contractAmount)}.`}</Text> : null}
     </AppCard>
 
     <AppCard>
@@ -190,7 +191,7 @@ export default function StartAwardedJobScreen() {
     <AppCard>
       <Text variant="titleLarge">3. Agree how the money moves</Text>
       {paymentMode === 'undecided' ? <>
-        <AppCard elevated={false}>
+        {BUILDPAY_OPEN ? <AppCard elevated={false}>
           <Chip icon="shield-lock-outline">Optional BuildPay</Chip>
           <Text variant="titleMedium">Use protected staged payments</Text>
           <Text>Stripe processes the card payments. When the schedule starts with materials, the materials amount and first protected work stage are paid together in one opening payment. Only the materials amount is released after the tradesperson acknowledges that payment; the first work-stage money stays protected until the agreed stage is finished and you approve release.</Text>
@@ -202,7 +203,7 @@ export default function StartAwardedJobScreen() {
           <Text variant="bodySmall">Because you are choosing BuildPay after accepting a quote that did not require it, you pay the disclosed BuildPay service fee. It is a BuildPay protection/administration fee, not a card surcharge. Your tradesperson's accepted work price is not reduced by this fee.</Text>
           <Button mode="contained" icon="shield-check-outline" loading={busy} disabled={busy || !addressReady} onPress={() => void chooseBuildPay()}>Use BuildPay · {formatMoney(buildPaySummary.previewAllInTotal)} all-in</Button>
           {!addressReady ? <HelperText type="info">Save the private job address first.</HelperText> : null}
-        </AppCard>
+        </AppCard> : null}
 
         <AppCard elevated={false}>
           <Chip icon="bank-transfer-out">Pay outside BuildPair</Chip>
@@ -228,7 +229,7 @@ export default function StartAwardedJobScreen() {
       </>}
     </AppCard>
 
-    {paymentMode === 'buildpair' ? <AppCard>
+    {BUILDPAY_OPEN && paymentMode === 'buildpair' ? <AppCard>
       <Text variant="titleLarge">4. Opening BuildPay payment</Text>
       {!startAgreed ? <Text>Nothing is charged yet. First agree the start date and time above.</Text> : openingBundle.length ? <>
         {openingBundle.length === 2 ? <>
