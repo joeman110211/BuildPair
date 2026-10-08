@@ -7,7 +7,6 @@ import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { FeaturedTraderHero } from '@/components/FeaturedTraderHero';
-import { PrelaunchBanner } from '@/components/PrelaunchBanner';
 import { PricingCards } from '@/components/PricingCards';
 import { ProductPreview } from '@/components/ProductPreview';
 import { PublicFooter } from '@/components/PublicFooter';
@@ -62,7 +61,7 @@ export default function LandingPageRefined() {
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.pageContent} keyboardShouldPersistTaps="handled">
     <PublicSeo title="Find local tradespeople. Keep the whole job together" description="Find local tradespeople, compare clear quotes and keep messages, changes and payment stages together. Business tools for tradespeople, with no pay-per-lead fees." />
-    <PrelaunchBanner />
+    <View style={styles.localNotice}><Text style={styles.localNoticeText}>BuildPair is onboarding tradespeople in London, Surrey and nearby areas. Homeowner job posting and BuildPay payments are coming soon.</Text><Link href="/auth/founding-trade-signup?source=homepage-notice" asChild><Button mode="text" compact>Create trade profile</Button></Link></View>
     <View style={[styles.hero, mobile && styles.heroMobile]}>
       <Text style={styles.eyebrow}>ONE PROJECT. BOTH SIDES CONNECTED.</Text>
       <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
@@ -131,6 +130,8 @@ export default function LandingPageRefined() {
 }
 
 const styles = StyleSheet.create({
+  localNotice: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surfaceRaised, borderBottomWidth: 1, borderBottomColor: colors.border, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 8 },
+  localNoticeText: { maxWidth: 1100, color: colors.charcoalSoft, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   page: { flex: 1, backgroundColor: colors.background }, pageContent: { flexGrow: 1, width: '100%', maxWidth: '100%' }, hidden: { display: 'none' },
   hero: { width: '100%', maxWidth: 1100, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 64, alignItems: 'center', gap: 20 },
   heroMobile: { paddingHorizontal: 16, paddingVertical: 36, gap: 16 }, heroTitle: { color: colors.charcoal, fontSize: 48, lineHeight: 55, fontWeight: '900', letterSpacing: -1.6, textAlign: 'center' }, heroTitleMobile: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
