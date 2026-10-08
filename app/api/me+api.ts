@@ -144,7 +144,8 @@ export async function PUT(request: Request) {
 
     const foundingOffer = TRADE_FREE_PRO_OFFER_OPEN
       && !existingProfile?.stripeSubscriptionId
-      && !existingProfile?.trialEndsAt;
+      && !existingProfile?.trialEndsAt
+      && !existingProfile?.isSubscriptionActive;
     const categoryLimit = existingProfile
       ? traderWorkTypeLimit(existingProfile)
       : foundingOffer ? 6 : 2;
