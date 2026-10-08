@@ -1,5 +1,5 @@
 import { useSignUp } from '@clerk/expo';
-import { Link, Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, TextInput } from 'react-native-paper';
@@ -30,6 +30,7 @@ export default function SignUpScreen() {
     jobTitle?: string | string[];
     jobCategory?: string | string[];
     jobLocation?: string | string[];
+    returnTo?: string | string[];
   }>();
   const inviteToken = firstParam(params.invite)?.trim() ?? '';
   const requestedMode = parseAccountMode(params.mode);
@@ -38,6 +39,7 @@ export default function SignUpScreen() {
   const jobLocation = firstParam(params.jobLocation);
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>();
   const [checkingInvite, setCheckingInvite] = useState(Boolean(inviteToken));
+  const [emailInput, setEmailInput] = useState('');
   const [password, setPassword] = useState('');
   const [legalAccepted, setLegalAccepted] = useState(false);
   const [code, setCode] = useState('');
@@ -54,11 +56,11 @@ export default function SignUpScreen() {
     return () => { active = false; };
   }, [inviteToken]);
 
-  if (!inviteToken) return <Redirect href={waitlistHref(requestedMode, 'direct-signup')} />;
-  if (checkingInvite || !inviteStatus) return <LoadingScreen label="Checking your BuildPair early-access invite…" />;
 
-  const mode = inviteStatus.mode === 'homeowner' ? 'customer' : 'trader';
-  const email = inviteStatus.email?.trim().toLowerCase() ?? '';
+  if (inviteToken && (checkingInvite || !inviteStatus)) return <LoadingScreen label="Checking your BuildPair early-access invite…" />;
+
+  const mode = inviteToken ? (inviteStatus?.mode === 'homeowner' ? 'customer' : 'trader') : (requestedMode ?? 'customer');
+  const email = inviteToken ? (inviteStatus?.email?.trim().toLowerCase() ?? '') : emailInput.trim().toLowerCase();
   const busy = fetchStatus === 'fetching';
   const needsEmailVerification = signUp.status === 'missing_requirements'
     && signUp.unverifiedFields.includes('email_address')
@@ -76,8 +78,8 @@ export default function SignUpScreen() {
     </Screen>;
   }
 
-  if (!inviteStatus.valid || !email) {
-    return <Screen title="This early-access invite is no longer available" subtitle={inviteStatus.claimed ? 'This invite has already been used.' : 'The link may have expired, been replaced or been withdrawn.'}>
+  if (inviteToken && (!inviteStatus?.valid || !email)) {
+    return <Screen title="This early-access invite is no longer available" subtitle={inviteStatus?.claimed ? 'This invite has already been used.' : 'The link may have expired, been replaced or been withdrawn.'}>
       <AppCard style={styles.inviteCard}>
         <Text style={styles.inviteText}>If you already created an account, sign in normally. Otherwise, your place on the launch list is unaffected.</Text>
       </AppCard>
@@ -87,6 +89,7 @@ export default function SignUpScreen() {
   }
 
   async function confirmInvite() {
+    if (!inviteToken) return;
     const result = await apiFetch<InviteStatus>(`/api/early-access-invite?invite=${encodeURIComponent(inviteToken)}`);
     if (!result.valid || result.email?.trim().toLowerCase() !== email) throw new Error('This early-access invite is no longer valid.');
   }
@@ -100,7 +103,7 @@ export default function SignUpScreen() {
         emailAddress: email,
         password,
         legalAccepted,
-        unsafeMetadata: { buildpairMode: mode, buildpairEarlyAccess: true },
+        unsafeMetadata: { buildpairMode: mode, ...(inviteToken ? { buildpairEarlyAccess: true } : {}) },
       });
       if (result.error) throw result.error;
       const verification = await signUp.verifications.sendEmailCode();
@@ -125,7 +128,7 @@ export default function SignUpScreen() {
       const finalized = await signUp.finalize({
         navigate: async ({ session }) => {
           if (session?.currentTask) throw new Error('Account needs another setup step before BuildPair can continue.');
-          router.replace(modeSetupHref(mode));
+          router.replace(modeSetupHref(mode, firstParam(params.returnTo)));
         },
       });
       if (finalized.error) throw finalized.error;
@@ -161,19 +164,17 @@ export default function SignUpScreen() {
     </Screen>;
   }
 
-  return <Screen title={title} subtitle="You’ve been approved for BuildPair early access before the public launch.">
+  return <Screen title={title} subtitle={inviteToken ? 'Complete your early-access registration.' : mode === 'customer' ? 'Create an account to post your job and compare quotes.' : 'Create an account to find work and manage customers.'}>
     {jobContext}
-    <AppCard style={styles.inviteCard}>
-      <Text variant="titleMedium" style={styles.inviteTitle}>Early access approved</Text>
-      <Text style={styles.inviteText}>This invite is locked to <Text style={styles.strong}>{email}</Text>. Create your account and complete your real trade profile now. Marketplace jobs, quotes, messaging and payments stay locked until launch.</Text>
-    </AppCard>
-    <TextInput label="Approved email address" accessibilityLabel="Approved email address" value={email} editable={false} mode="outlined" />
+    {inviteToken ? <AppCard style={styles.inviteCard}><Text variant="titleMedium" style={styles.inviteTitle}>Early access approved</Text><Text style={styles.inviteText}>This invitation is linked to <Text style={styles.strong}>{email}</Text>.</Text></AppCard> : null}
+    {!inviteToken && mode === 'trader' ? <AppCard style={styles.inviteCard}><Text variant="titleMedium" style={styles.inviteTitle}>Three months of BuildPair Pro free</Text><Text style={styles.inviteText}>Your three free months begin when you complete your trade profile. No card details or automatic subscription required. BuildPay is coming soon.</Text></AppCard> : null}
+    <TextInput label="Email address" accessibilityLabel="Email address" value={email} onChangeText={setEmailInput} editable={!inviteToken} keyboardType="email-address" autoCapitalize="none" autoComplete="email" mode="outlined" />
     <TextInput label="Choose a password" accessibilityLabel="Choose a password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" mode="outlined" />
     <Text variant="bodySmall" style={styles.hint}>Use at least 8 characters. Your email will be verified before the account is activated.</Text>
     <LegalAcceptance accepted={legalAccepted} onChange={setLegalAccepted} disabled={busy} />
     <View nativeID="clerk-captcha" />
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
-    <Button mode="contained" loading={busy} disabled={busy || !legalAccepted || password.length < 8} onPress={() => void startEmailSignUp()} contentStyle={styles.button}>Create my BuildPair account</Button>
+    <Button mode="contained" loading={busy} disabled={busy || !legalAccepted || password.length < 8 || !email.includes('@')} onPress={() => void startEmailSignUp()} contentStyle={styles.button}>Create my BuildPair account</Button>
     <View style={styles.footer}><Text>Already registered?</Text><Link href={signInHref(mode)} asChild><Button>Sign in</Button></Link></View>
   </Screen>;
 }
