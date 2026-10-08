@@ -10,7 +10,8 @@ export const MARKETPLACE_OPEN = true;
 // Independently held closed. BuildPay must never inherit the marketplace launch switch.
 export const BUILDPAY_OPEN = false;
 
-export const FOUNDING_PRO_START_ISO = LAUNCH_DATE_ISO;
+// Founding Trades gain extra early access, while the promised 15 October–15 January period remains intact.
+export const FOUNDING_PRO_START_ISO = '2026-10-08T00:00:00+01:00';
 export const FOUNDING_PRO_END_ISO = '2027-01-15T00:00:00+00:00';
 export const FOUNDING_PRO_MONTHS = 3;
 
