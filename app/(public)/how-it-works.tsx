@@ -1,5 +1,6 @@
 import { Text, View } from 'react-native';
 import { PublicInfoPage, infoStyles } from '@/components/PublicInfoPage';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 
 export default function HowItWorksPage() {
   return <PublicInfoPage
@@ -18,20 +19,20 @@ export default function HowItWorksPage() {
         <Text style={infoStyles.item}>• Exclusions: what is not included.</Text>
         <Text style={infoStyles.item}>• Timing: proposed start, expected duration and warranty where supplied.</Text>
         <Text style={infoStyles.item}>• Payment schedule: materials, deposits, progress stages and final payment.</Text>
-        <Text style={infoStyles.item}>• BuildPay terms: whether BuildPay staged payment is included and who is paying the separately disclosed BuildPay service fee.</Text>
+        {BUILDPAY_OPEN ? <Text style={infoStyles.item}>• BuildPay terms: whether protected stages are included and who covers the disclosed service fee.</Text> : null}
       </View> },
       { title: '6. Accept one quote', body: 'The homeowner can decline individual quotes or accept the one they want. Once a quote is accepted, the job is awarded to that tradesperson, other active quotes move out of the live comparison and those tradespeople are notified that another quote was chosen. Non-winning quotes are retained in the project record rather than being physically deleted.' },
-      { title: '7. Agree the payment stages', body: 'Before accepting a quote, the homeowner can propose a different service-stage split or completion point without silently changing the tradesperson’s quoted total or materials amount. If the homeowner changes the staged schedule, the tradesperson must accept the revision before the quote can be awarded.' },
-      { title: '8. Choose BuildPay or mutually agree direct payment', body: <View style={infoStyles.list}>
-        <Text style={infoStyles.item}>• BuildPay: use the accepted structured schedule for supported Stripe-processed payments and recorded release decisions.</Text>
+      { title: '7. Agree the payment stages', body: BUILDPAY_OPEN ? 'Before accepting a quote, the homeowner can propose a different service-stage split or completion point without changing the total, subject to trader agreement.' : 'Agree any deposits or staged direct payments directly with the tradesperson in writing. BuildPair does not hold, transfer or protect the money.' },
+      { title: BUILDPAY_OPEN ? '8. Choose BuildPay or direct payment' : '8. Agree direct payment', body: <View style={infoStyles.list}>
+        {BUILDPAY_OPEN ? <Text style={infoStyles.item}>• BuildPay: supported payments follow the agreed stage-release workflow.</Text> : <Text style={infoStyles.item}>• BuildPay is not currently available. Agree payments directly with the tradesperson.</Text>}
         <Text style={infoStyles.item}>• Direct payment: either side can propose arranging payment outside BuildPair. The other party must explicitly agree before the whole job switches to direct payment.</Text>
-        <Text style={infoStyles.item}>• BuildPair does not force BuildPay simply because the introduction, site visit or quote happened on BuildPair.</Text>
+        {BUILDPAY_OPEN ? <Text style={infoStyles.item}>• BuildPay is optional.</Text> : null}
         <Text style={infoStyles.item}>• If payment is arranged privately, BuildPair can retain the quote, messages, variations and optional two-party payment confirmations, but it does not process or protect the money.</Text>
       </View> },
-      { title: '9. BuildPay materials and first work stage', body: 'When a staged BuildPay schedule begins with materials and then a protected work stage, the homeowner funds those two contract amounts together in the opening card payment. After Stripe confirms it, the tradesperson acknowledges the opening payment. Only the exact materials allocation is transferred at that point; the first protected work-stage allocation remains controlled until its recorded completion point is reached and release is approved.' },
+      ...(BUILDPAY_OPEN ? [{ title: '9. BuildPay materials and first work stage', body: 'Where offered, protected stages follow the disclosed card-payment and release workflow; the agreed payment schedule specifies when materials and work stages can be transferred.' }] : []),
       { title: '10. Run the project from one record', body: 'The job remains visible on both dashboards with the agreed quote, messages, payment stages, variations, timeline and next actions. If scope, price or timing changes, a variation should record and agree that change before the additional work proceeds.' },
       { title: '11. Complete the job and keep the history', body: 'When the agreed work and outstanding variations are resolved, the project can be completed. The accepted quote, messages, timeline, payment record and review context remain attached to the job where applicable.' },
-      { title: 'Important payment limits', body: <View style={infoStyles.callout}><Text style={infoStyles.calloutText}>BuildPair is not an escrow service and does not guarantee workmanship, completion or recovery of loss. Stripe handles supported payment processing and tradesperson payout onboarding. Direct payments remain between the homeowner and tradesperson. Users retain their applicable statutory, contractual and payment rights.</Text></View> },
+      { title: 'Important payment limits', body: <View style={infoStyles.callout}><Text style={infoStyles.calloutText}>BuildPair is not an escrow service and does not guarantee workmanship, completion or recovery of loss. Direct payments remain between the homeowner and tradesperson, and BuildPair neither receives nor protects those funds. Users retain their applicable statutory, contractual and payment rights.</Text></View> },
     ]}
   />;
 }
