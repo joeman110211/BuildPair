@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { PublicInfoPage } from '@/components/PublicInfoPage';
 import { PAYMENT_LANGUAGE } from '@/constants/site-language';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import { colors, radii, shadows, spacing } from '@/constants/theme';
 
 export default function PaymentsPage() {
@@ -10,7 +11,7 @@ export default function PaymentsPage() {
     title={PAYMENT_LANGUAGE.title}
     intro={PAYMENT_LANGUAGE.short}
     summary={<View style={styles.summary}>
-      <View style={[styles.choice, styles.buildPay]}><Text style={styles.kicker}>BUILDPAY</Text><Text variant="titleLarge" style={styles.title}>Agreed payment stages</Text><Text style={styles.copy}>Agree the quote, fund the next stage and approve stage releases when the recorded stage is ready.</Text></View>
+      {BUILDPAY_OPEN ? <View style={[styles.choice, styles.buildPay]}><Text style={styles.kicker}>BUILDPAY</Text><Text variant="titleLarge" style={styles.title}>Agreed payment stages</Text><Text style={styles.copy}>Agree the quote, fund the next stage and approve stage releases when the recorded stage is ready.</Text></View>
       <View style={styles.choice}><Text style={styles.kicker}>DIRECT</Text><Text variant="titleLarge" style={styles.title}>Pay directly</Text><Text style={styles.copy}>If both sides agree, arrange payment privately while keeping the quote, messages and project record in BuildPair.</Text></View>
     </View>}
     updated="2 October 2026"
