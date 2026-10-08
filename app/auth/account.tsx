@@ -5,7 +5,7 @@ import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { BuildPairLogo } from '@/components/BuildPairLogo';
 import { LoadingScreen, Screen } from '@/components/Screen';
-import { LAUNCH_OFFER, SITE_LANGUAGE } from '@/constants/site-language';
+import { LAUNCH_OFFER } from '@/constants/site-language';
 import { colors } from '@/constants/theme';
 import { dashboardHref, signInHref, signUpHref } from '@/lib/account-mode';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
