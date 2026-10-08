@@ -4,7 +4,7 @@ import { traderProfiles } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
 import { InvalidPostcodeError, lookupPostcode } from '@/lib/postcode';
 import { getSql } from '@/lib/sql';
-import { FOUNDING_PRO_END_ISO, LAUNCH_DATE_ISO, HOMEOWNER_REGISTRATION_OPEN } from '@/lib/launch-config';
+import { LAUNCH_DATE_ISO, HOMEOWNER_REGISTRATION_OPEN, TRADE_FREE_PRO_OFFER_OPEN, TRADE_FREE_PRO_MONTHS } from '@/lib/launch-config';
 import { assertApprovedMediaUrls } from '@/lib/media-safety';
 import { accountAccess, accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { categoryChangeAllowed, categoryChangeAvailableAt, traderWorkTypeLimit } from '@/lib/subscription';
@@ -77,6 +77,13 @@ function sameCategories(a: readonly string[], b: readonly string[]) {
   return [...a].sort().every((value, index) => value === [...b].sort()[index]);
 }
 
+function trialExpiryFrom(start: Date, calendarMonths: number) {
+  const year = start.getUTCFullYear();
+  const month = start.getUTCMonth() + calendarMonths;
+  const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(year, month, Math.min(start.getUTCDate(), lastDay), start.getUTCHours(), start.getUTCMinutes(), start.getUTCSeconds()));
+}
+
 export async function PUT(request: Request) {
   try {
     const userId = await authenticatedUserId(request);
@@ -135,7 +142,7 @@ export async function PUT(request: Request) {
       throw new HttpError(403, 'Your published service base is locked to keep BuildPair jobs genuinely local. If your home or business base has moved, contact info@buildpair.co.uk to request an update. We may ask for reasonable evidence of the new location.');
     }
 
-    const foundingOffer = Date.now() < new Date(LAUNCH_DATE_ISO).getTime()
+    const foundingOffer = TRADE_FREE_PRO_OFFER_OPEN
       && !existingProfile?.stripeSubscriptionId
       && !existingProfile?.trialEndsAt;
     const categoryLimit = existingProfile
@@ -183,7 +190,7 @@ export async function PUT(request: Request) {
       ...(foundingOffer ? {
         subscriptionTier: 'featured' as const,
         isSubscriptionActive: false,
-        trialEndsAt: new Date(FOUNDING_PRO_END_ISO),
+        trialEndsAt: trialExpiryFrom(new Date(), TRADE_FREE_PRO_MONTHS),
       } : {}),
     }).onConflictDoUpdate({
       target: traderProfiles.userId,
