@@ -8,7 +8,7 @@ import { Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { FeaturedTraderHero } from '@/components/FeaturedTraderHero';
 import { PrelaunchBanner } from '@/components/PrelaunchBanner';
-import { MARKETPLACE_OPEN } from '@/lib/launch';
+import { MARKETPLACE_OPEN, BUILDPAY_OPEN } from '@/lib/launch';
 import { PricingCards } from '@/components/PricingCards';
 import { ProductPreview } from '@/components/ProductPreview';
 import { PublicFooter } from '@/components/PublicFooter';
@@ -20,7 +20,7 @@ import { colors, controlHeights, publicResponsiveMetrics, radii } from '@/consta
 const POPULAR_TRADES = ['Tiling', 'Plumbing', 'Electrical', 'Building & Extensions', 'Roofing & Roofline', 'Painting & Decorating', 'Kitchens', 'Bathrooms'] as const;
 const FAQS = [
   ['Can a tradesperson visit before quoting?', 'Yes. Arrange a site visit through the job when the work needs a closer look, then agree a written quote through BuildPair.'],
-  ['Who pays the BuildPay fee?', 'The party requesting BuildPay carries the disclosed cost. The fee, payment stages and total are shown before you commit.'],
+  ['Is BuildPay available?', 'Not during this phase. Arrange payments directly with the tradesperson. BuildPair does not process, hold or protect your job payments.'],
   ['Can we pay directly?', 'Yes, when both sides agree. BuildPair keeps the project record, but does not process, hold or refund money paid directly.'],
   ['What do trade memberships include?', 'Starter is free. Core, Plus and Pro add marketplace allowances and business tools. The Pricing page sets out each plan’s features and limits.'],
 ] as const;
@@ -110,8 +110,8 @@ export default function LandingPageRefined() {
     <Reveal delay={160}><View style={styles.section}>
       <Heading eyebrow="Payments & trust" title="Clear choices. A better record." />
       <View style={styles.choiceGrid}>
-        <View style={[styles.choice, styles.paymentChoice]}><Text style={styles.eyebrow}>BUILDPAY</Text><Text style={styles.cardTitle}>Agree stages. Record releases.</Text><Text style={styles.cardText}>Stripe processes supported payments. BuildPair connects funding and release decisions to the agreed work.</Text><Text style={styles.smallText}>BuildPay is not escrow, insurance or a guarantee of workmanship or refunds.</Text><Link href="/(public)/payments" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>How payments work →</Button></Link></View>
-        <View style={styles.choice}><Text style={styles.eyebrow}>DIRECT PAYMENT</Text><Text style={styles.cardTitle}>Pay directly when you both agree.</Text><Text style={styles.cardText}>Keep the quote, messages and project record in BuildPair while arranging payment privately.</Text><Text style={styles.smallText}>BuildPair does not receive, hold, release or refund money paid directly.</Text><Link href="/(public)/payments" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>Compare payment routes →</Button></Link></View>
+        {BUILDPAY_OPEN ? <View style={[styles.choice, styles.paymentChoice]}><Text style={styles.eyebrow}>BUILDPAY</Text><Text style={styles.cardTitle}>Agree stages. Record releases.</Text><Text style={styles.cardText}>Stripe processes supported payments. BuildPair connects funding and release decisions to the agreed work.</Text><Text style={styles.smallText}>BuildPay is not escrow, insurance or a guarantee of workmanship or refunds.</Text><Link href="/(public)/payments" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>How payments work →</Button></Link></View> : null}
+        <View style={styles.choice}><Text style={styles.eyebrow}>DIRECT PAYMENT</Text><Text style={styles.cardTitle}>Pay directly when you both agree.</Text><Text style={styles.cardText}>Keep the quote, messages and project record in BuildPair while arranging payment privately.</Text><Text style={styles.smallText}>BuildPair does not receive, hold, release or refund money paid directly.</Text><Link href="/(public)/payments" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>How direct payment works →</Button></Link></View>
       </View>
       <View style={styles.trustStrip}><Text style={styles.trustTitle}>Make an informed choice.</Text><Text style={styles.cardText}>Explore real work, service areas, review sources and the status of submitted credentials. Report concerns for review.</Text><Link href="/(public)/trust-safety" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>Trust & safety →</Button></Link></View>
     </View></Reveal>
