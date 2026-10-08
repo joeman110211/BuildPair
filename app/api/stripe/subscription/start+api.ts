@@ -3,6 +3,7 @@ import { getDb } from '@/db/client';
 import { traderProfiles } from '@/db/schema';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { appUrl, getStripe, providerReturnUrl } from '@/lib/stripe';
+import { PAID_PLANS_OPEN } from '@/lib/launch-config';
 
 const plans = {
   core: { name: 'BuildPair Core', unitAmount: 999, priceEnv: 'STRIPE_CORE_PRICE_ID' },
@@ -14,6 +15,7 @@ type Tier = keyof typeof plans;
 
 export async function GET(request: Request) {
   try {
+    if (!PAID_PLANS_OPEN) throw new HttpError(423, 'Paid trade subscriptions are coming later. Three months of BuildPair Pro is included for eligible newly activated profiles.');
     const trader = await requireRole(request, 'trader');
     const tierParam = new URL(request.url).searchParams.get('tier');
     if (tierParam !== 'core' && tierParam !== 'basic' && tierParam !== 'featured') {
