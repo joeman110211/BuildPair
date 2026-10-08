@@ -10,7 +10,7 @@ import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors, controlHeights, spacing } from '@/constants/theme';
 import { apiFetch, ApiError, errorMessage } from '@/lib/api';
-import { MARKETPLACE_OPEN } from '@/lib/launch';
+import { MARKETPLACE_OPEN, BUILDPAY_OPEN } from '@/lib/launch';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import type { Job, Quote, TraderProfile } from '@/types';
 
@@ -62,7 +62,7 @@ export default function TraderDashboard() {
 
   async function shareOneGoodTrade() {
     if (!referral?.referralUrl) return;
-    const text = `I’m getting BuildPair ready before launch. They’re asking each founding trade to invite one decent Surrey trade they’d genuinely be happy to work alongside. I’m passing my One Good Trade invite to you: ${referral.referralUrl}`;
+    const text = `I’m using BuildPair to find work and keep my jobs organised. They’re asking each founding trade to invite one decent Surrey trade they’d genuinely be happy to work alongside. I’m passing my One Good Trade invite to you: ${referral.referralUrl}`;
     try {
       if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
         await navigator.share({ title: 'BuildPair · One Good Trade', text, url: referral.referralUrl });
@@ -118,7 +118,7 @@ export default function TraderDashboard() {
         </View>
         <Chip icon="rocket-launch-outline">Launch ready</Chip>
       </View>
-    </AppCard> : !payoutsReady ? <AppCard style={styles.payoutCard}>
+    </AppCard> : BUILDPAY_OPEN && !payoutsReady ? <AppCard style={styles.payoutCard}>
       <View style={styles.row}>
         <View style={styles.flex}>
           <Text variant="titleLarge" style={styles.cardTitle}>Payout verification incomplete</Text>
@@ -127,9 +127,9 @@ export default function TraderDashboard() {
         <Chip icon="alert-circle-outline">Action required</Chip>
       </View>
       <Link href="/trader/subscription" asChild><Button mode="contained" icon="bank-outline" contentStyle={styles.actionButton}>Check Stripe payout status</Button></Link>
-    </AppCard> : <AppCard style={styles.payoutReadyCard}>
+    </AppCard> : BUILDPAY_OPEN ? <AppCard style={styles.payoutReadyCard}>
       <View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.cardTitle}>BuildPair payouts ready</Text><Text style={styles.muted}>Stripe has confirmed that your connected account can receive materials, deposit and released staged payments.</Text></View><Chip icon="check-circle-outline">Ready</Chip></View>
-    </AppCard>}
+    </AppCard> : null}
 
     <AppCard>
       <View style={styles.row}>
@@ -194,7 +194,7 @@ export default function TraderDashboard() {
       </View>
       <Button mode="contained" icon="share-variant-outline" onPress={() => void shareOneGoodTrade()} contentStyle={styles.actionButton}>Pass my One Good Trade invite</Button>
       <Text selectable style={styles.relayLink}>{referral.referralUrl}</Text>
-      <Text style={styles.relayNote}>No paid-lead nonsense and no cash-for-random-invites scheme. The point is to seed BuildPair with real local working networks before launch.</Text>
+      <Text style={styles.relayNote}>No paid-lead nonsense and no cash-for-random-invites scheme. The point is to seed BuildPair with real local working networks as our local trade network grows.</Text>
     </AppCard> : null}
 
     <View style={styles.stats}>

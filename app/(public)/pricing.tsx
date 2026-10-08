@@ -13,8 +13,8 @@ import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 export default function PricingPage() {
   const { width } = useWindowDimensions();
   const metrics = publicResponsiveMetrics(width);
-  const primaryHref = REGISTRATION_OPEN ? '/auth/account' : waitlistHref('trader', 'pricing-hero');
-  const primaryLabel = REGISTRATION_OPEN ? 'Create trade account' : 'Create profile';
+  const primaryHref = REGISTRATION_OPEN ? '/auth/sign-up?mode=trader' : waitlistHref('trader', 'pricing-hero');
+  const primaryLabel = REGISTRATION_OPEN ? 'Start free Pro access' : 'Create profile';
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
     <PublicSeo title="Trade membership pricing" description="Compare Starter, Core, Plus and Pro memberships, marketplace allowances and business tools. No pay-per-lead charges." />
@@ -57,13 +57,13 @@ export default function PricingPage() {
 
       <View style={styles.notice}>
         <Text variant="titleMedium" style={styles.noticeTitle}>BuildPair job payment fee</Text>
-        <Text style={styles.noticeText}>BuildPay is optional. The party requesting it carries the disclosed cost, while direct payment remains available when both sides agree.</Text>
+        <Text style={styles.noticeText}>BuildPay is coming soon. Homeowners and tradespeople currently arrange payments directly. BuildPair does not process, hold or protect job payments.</Text>
         <Link href="/(public)/payments" asChild><Button mode="text">Learn about payments</Button></Link>
       </View>
 
       <View style={styles.notice}>
         <Text variant="titleMedium" style={styles.noticeTitle}>Plan billing</Text>
-        <Text style={styles.noticeText}>Starter is £0 per month. BuildPair Core is £9.99, BuildPair Plus is £19.99 and BuildPair Pro is £29.99 per month. Subscription purchases, renewals, plan changes and cancellations are handled through the BuildPair billing flow and Stripe. The applicable amount is shown before a paid subscription is confirmed.</Text>
+        <Text style={styles.noticeText}>Every eligible tradesperson joining now receives three months of BuildPair Pro free from profile activation, without entering payment details or agreeing to a paid subscription. Published monthly prices are for future optional subscriptions. No charge will start automatically at the end of the offer.</Text>
       </View>
     </View>
     <PublicFooter />

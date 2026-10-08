@@ -5,14 +5,14 @@ export default function RewardsPage() {
   return <PublicInfoPage
     eyebrow="BuildPair Rewards"
     title="The more genuine work you complete well, the more BuildPair gives back."
-    intro="BuildPair Rewards is designed to recognise active, reliable tradespeople without charging for individual leads. Member offers and achievement rewards recognise genuine completed projects, strong customer outcomes and useful BuildPay adoption."
+    intro="BuildPair Rewards is designed to recognise active, reliable tradespeople without charging for individual leads. Member offers and achievement rewards recognise genuine completed projects and strong customer outcomes. BuildPay-specific rewards will launch only when BuildPay becomes available."
     sections={[
       { title: 'Member offers', body: <View style={infoStyles.list}>
-        <Text style={infoStyles.item}>• No lead fee is added simply because a tradesperson receives or responds to a job through BuildPair. Normal membership and any separately disclosed BuildPay terms apply after promotional periods end.</Text>
+        <Text style={infoStyles.item}>• No lead fee is added simply because a tradesperson receives or responds to a job through BuildPair. No subscription starts automatically when the introductory Pro offer ends. Future paid memberships and BuildPay terms will be disclosed separately.</Text>
       </View> },
       { title: 'Complete real jobs, unlock more', body: <View style={infoStyles.list}>
         <Text style={infoStyles.item}>• First 10 eligible tradespeople to complete 10 genuine BuildPair-recorded jobs: a further 3 months of Pro free.</Text>
-        <Text style={infoStyles.item}>• First 10 eligible tradespeople to complete 3 genuine jobs using BuildPay through completion: 1 further month of Pro free.</Text>
+        <Text style={infoStyles.item}>• BuildPay-specific rewards are not active. Any future reward will have clearly published terms when BuildPay launches.</Text>
         <Text style={infoStyles.item}>• Five eligible active tradespeople may be selected each month for a further 3 months of Pro under the published monthly reward terms.</Text>
         <Text style={infoStyles.item}>• BuildPair may run additional rewards for consistently strong project-linked ratings, reliable project completion and useful platform participation.</Text>
       </View> },

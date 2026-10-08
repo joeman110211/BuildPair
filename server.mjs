@@ -57,6 +57,8 @@ const SERVER_BUILD_DIR = path.resolve(process.cwd(), 'dist/server');
 const NOINDEX = /^(1|true|yes)$/i.test(process.env.BUILDPAIR_NOINDEX || '');
 const ADMIN_HOST = String(process.env.BUILDPAIR_ADMIN_HOST || 'admin.buildpair.co.uk').trim().toLowerCase();
 const MARKETPLACE_OPEN = /^(1|true|yes)$/i.test(process.env.BUILDPAIR_MARKETPLACE_OPEN || 'false');
+// BuildPay is intentionally unavailable independent of marketplace opening.
+const BUILDPAY_OPEN = false;
 const PRELAUNCH_BLOCKED_API_PREFIXES = [
   '/api/jobs',
   '/api/public/jobs',
@@ -81,6 +83,26 @@ const PRELAUNCH_BLOCKED_API_PREFIXES = [
 function isBlockedPrelaunchApi(pathName) {
   if (MARKETPLACE_OPEN) return false;
   return PRELAUNCH_BLOCKED_API_PREFIXES.some((prefix) => pathName === prefix || pathName.startsWith(`${prefix}/`));
+}
+
+function isBlockedBuildPayApi(pathName, method) {
+  if (BUILDPAY_OPEN) return false;
+  const protectedPaths = [
+    '/api/stripe/payment-intent',
+    '/api/stripe/connect',
+    '/api/payments',
+    '/api/payment-disputes',
+  ];
+  if (protectedPaths.some((prefix) => pathName === prefix || pathName.startsWith(prefix + '/'))) return true;
+  return (pathName === '/api/buildpay' || pathName.startsWith('/api/buildpay/'))
+    && !['GET', 'HEAD'].includes((method || '').toUpperCase());
+}
+
+function sendBuildPayLocked(res) {
+  res.statusCode = 423;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.end(JSON.stringify({ error: 'BuildPay is not available yet. Arrange payments directly with the tradesperson by mutual agreement.', code: 'buildpay_unavailable' }));
 }
 
 function sendPrelaunchLocked(res) {
@@ -311,6 +333,10 @@ const server = http.createServer(async (req, res) => {
     if (handleAdminHostRouting(req, res)) return;
 
     const pathName = requestPathname(req);
+    if (isBlockedBuildPayApi(pathName, req.method)) {
+      sendBuildPayLocked(res);
+      return;
+    }
     if (isBlockedPrelaunchApi(pathName)) {
       sendPrelaunchLocked(res);
       return;

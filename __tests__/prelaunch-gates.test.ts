@@ -6,14 +6,14 @@ import {
   TRADER_PRELAUNCH_REGISTRATION_OPEN,
 } from '@/lib/launch-config';
 
-describe('BuildPair prelaunch gates', () => {
-  it('opens trade setup while keeping homeowner registration and the marketplace closed', () => {
+describe('BuildPair launch gates', () => {
+  it('opens homeowner signup and the marketplace while retaining trade registration', () => {
     expect(TRADER_PRELAUNCH_REGISTRATION_OPEN).toBe(true);
-    expect(HOMEOWNER_REGISTRATION_OPEN).toBe(false);
-    expect(MARKETPLACE_OPEN).toBe(false);
+    expect(HOMEOWNER_REGISTRATION_OPEN).toBe(true);
+    expect(MARKETPLACE_OPEN).toBe(true);
   });
 
-  it('lets Founding Trades synchronize a real account while public registration stays closed', () => {
+  it('retains the legacy founding trade route for existing invite links', () => {
     const server = readFileSync('lib/server.ts', 'utf8');
     expect(server).toContain('TRADER_PRELAUNCH_REGISTRATION_OPEN');
     expect(server).toContain("identity.mode === 'trader'");

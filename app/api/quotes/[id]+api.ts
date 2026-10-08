@@ -7,6 +7,7 @@ import { fullFundingSchedule, paymentScheduleSchema, type PaymentStagePlan, vali
 import { validateProtectedPaymentEconomics } from '@/lib/payment-protection';
 import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 
 type QuotePaymentTermsRow = {
   paymentSchedule: unknown;
@@ -54,6 +55,8 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       await createNotification(candidate.quote.traderId, { type: 'quote_declined', title: 'Your quote was declined', body: `${candidate.job.title}: the homeowner has declined this quote.`, href: '/trader/my-jobs', email: true });
       return Response.json({ declined: true });
     }
+
+    if (!BUILDPAY_OPEN && (payload.action === 'edit_payment_plan' || payload.action === 'accept_payment_plan')) throw new HttpError(423, 'BuildPay payment-plan changes are unavailable during the direct-payment launch.');
 
     if (payload.action === 'edit_payment_plan') {
       if (!modes.customerEnabled || candidate.job.customerId !== userId) throw new HttpError(403, 'Customer account required');
@@ -128,6 +131,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
 
     const plannedChargeCount = plannedBuildPayChargeCount(acceptedSchedule);
     const buildPayRequestedBy = quoteTerms?.buildPayRequestedBy ?? null;
+    if (!BUILDPAY_OPEN && buildPayRequestedBy) throw new HttpError(423, 'This quote requests BuildPay, which is not available yet. Ask the tradesperson to issue a direct-payment quote.');
     const buildPayFeeMode = buildPayRequestedBy ? (quoteTerms?.buildPayFeeMode ?? 'customer_pays') : null;
     const buildPayCustomerFeeTotal = buildPayRequestedBy && buildPayFeeMode === 'customer_pays'
       ? buildPayCustomerFee({ contractAmount: candidate.quote.totalAmount, laborServiceAmount: candidate.quote.laborCost, plannedChargeCount }).customerFee
@@ -183,7 +187,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       ? `The homeowner accepted the quote with materials first and one remaining service-balance stage.${feeCopy}`
       : `The homeowner accepted the quote with the agreed staged payment schedule.${feeCopy}`, { quoteId: id, traderId: candidate.quote.traderId, totalAmount: candidate.quote.totalAmount, paymentPlanChoice, homeownerAcknowledgedPaymentSchedule: true, buildPayRequestedBy, buildPayFeeMode, buildPayCustomerFeeTotal, buildPayFeeTermsVersion: buildPayRequestedBy ? BUILDPAY_FEE_TERMS_VERSION : null, homeownerAcknowledgedBuildPayFee: buildPayFeeMode === 'customer_pays' ? true : undefined });
     await createNotification(candidate.quote.traderId, { type: 'quote_accepted', title: 'Your quote was accepted', body: `You have won ${candidate.job.title}. The agreed ${paymentPlanChoice === 'full' ? 'one-balance' : 'staged'} payment schedule is now attached to the project.${buildPayRequestedBy ? ' BuildPay terms are locked to the accepted quote.' : ''}`, href: `/trader/jobs/${candidate.job.id}`, email: true });
-    await createNotification(candidate.job.customerId, { type: 'job_started', title: 'Quote accepted · finish job setup', body: `${candidate.job.title} is now active. Confirm the private job address${buildPayRequestedBy ? ' and start details before the opening BuildPay payment' : ', then choose BuildPay or direct payment'}.`, href: `/customer/jobs/${candidate.job.id}/start`, email: true });
+    await createNotification(candidate.job.customerId, { type: 'job_started', title: 'Quote accepted · finish job setup', body: `${candidate.job.title} is now active. Confirm the private job address${buildPayRequestedBy ? ' and start details before the opening BuildPay payment' : ', then agree direct payment'}.`, href: `/customer/jobs/${candidate.job.id}/start`, email: true });
     await Promise.allSettled(otherQuotes.filter((quote) => quote.traderId !== candidate.quote.traderId).map((quote) => createNotification(quote.traderId, { type: 'quote_declined', title: 'Customer chose another quote', body: `${candidate.job.title} has been awarded to another tradesperson.`, href: '/trader/my-jobs' })));
     return Response.json({ accepted: true, paymentPlanChoice, paymentMode: buildPayRequestedBy ? 'buildpair' : 'undecided', buildPayRequestedBy, buildPayFeeMode, buildPayCustomerFeeTotal, scheduledStartAt: candidate.quote.proposedStartAt ?? null, next: `/customer/jobs/${candidate.job.id}/start` });
   } catch (error) { return jsonError(error); }

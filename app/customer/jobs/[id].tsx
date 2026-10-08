@@ -14,6 +14,7 @@ import { ProjectWorkspace } from '@/components/ProjectWorkspace';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import { formatMoney } from '@/lib/money';
 import type { Job, JobTimelineEvent, JobVariation, PaymentStageStatus, Quote, TraderProfile } from '@/types';
 import type { ExternalPaymentRecord, PaymentDispute } from '@/types/project-payments';
@@ -192,7 +193,7 @@ export default function JobDetailScreen() {
   return <Screen title={data.job.title} subtitle={`${data.job.category} · ${data.job.status.replace('_', ' ')}`}>
     <HomeownerNextStep data={data} jobId={id} reviewAllowed={reviewAllowed} />
 
-    {nextToFund && paymentMode === 'buildpair' && data.job.status === 'in_progress' ? <AppCard style={styles.nextPaymentCard}>
+    {BUILDPAY_OPEN && nextToFund && paymentMode === 'buildpair' && data.job.status === 'in_progress' ? <AppCard style={styles.nextPaymentCard}>
       <Chip icon="arrow-right-circle">Stage released ✓</Chip>
       <Text variant="titleLarge" style={styles.heading}>Next: fund {nextToFund.title.toLowerCase()}</Text>
       <Text variant="headlineSmall" style={styles.money}>{formatMoney(nextToFund.amount)}</Text>
@@ -216,8 +217,8 @@ export default function JobDetailScreen() {
     {data.acceptedQuote && data.job.status === 'in_progress' ? <AppCard style={paymentMode === 'external' ? styles.externalCard : styles.protectionCard}>
       <Text variant="titleLarge" style={styles.heading}>{paymentMode === 'undecided' ? 'Choose how to pay' : paymentMode === 'buildpair' ? 'BuildPay' : 'Direct payment'}</Text>
       {paymentMode === 'undecided' ? <>
-        <Text style={styles.muted}>Your quote and payment stages are agreed. Use BuildPay for controlled payments or pay the tradesperson directly outside BuildPair.</Text>
-        <AppCard elevated={false}>
+        <Text style={styles.muted}>Your quote and payment stages are agreed. Arrange payment directly with the tradesperson outside BuildPair.</Text>
+        {BUILDPAY_OPEN ? <AppCard elevated={false}>
           <Text variant="titleMedium" style={styles.heading}>Use BuildPay</Text>
           <Text>Stripe processes the card payment. Materials can be paid with the first work stage in one opening payment. The tradesperson must acknowledge it before the exact materials amount is released. Work-stage money stays protected until the agreed point is reached and you approve release.</Text>
           <Text style={styles.muted}>BuildPair's fee is 1% of labour/service only, never materials or VAT. Stripe processing is recovered at cost from controlled service payouts.</Text>
@@ -226,12 +227,12 @@ export default function JobDetailScreen() {
             <Text>I have reviewed the payment stages. I understand materials release only after the tradesperson acknowledges the opening payment, and protected work stages need my approval before release.</Text>
             <View style={styles.row}><Button disabled={busy} onPress={() => setConfirmBuildPay(false)}>Go back</Button><Button mode="contained" loading={busy} disabled={busy} onPress={() => void setPaymentMode('buildpair')}>Confirm BuildPay</Button></View>
           </AppCard>}
-        </AppCard>
+        </AppCard> : null}
         {!confirmExternal ? <Button mode="outlined" onPress={() => setConfirmExternal(true)}>Pay tradesperson directly instead</Button> : <AppCard style={styles.externalCard} elevated={false}>
           <Text variant="titleMedium" style={styles.heading}>Use direct payments?</Text>
           <Text>Money is arranged directly between you and the tradesperson. BuildPair can keep the quote, messages, variations and optional two-party payment confirmations, but cannot process, protect, pause, refund or recover money it never handled.</Text>
           <Text style={styles.muted}>Direct payment does not remove either party's legal or contractual rights and responsibilities. BuildPair's role for the money is limited to the introduction and project record.</Text>
-          <View style={styles.row}><Button onPress={() => setConfirmExternal(false)}>Go back</Button><Button mode="contained" buttonColor={colors.danger} loading={busy} disabled={busy} onPress={() => void setPaymentMode('external')}>Use direct payments</Button></View>
+          <View style={styles.row}><Button onPress={() => setConfirmExternal(false)}>Go back</Button><Link href={`/customer/jobs/${id}/start` as Href} asChild><Button mode="contained">Arrange direct payment</Button></Link></View>
         </AppCard>}
       </> : paymentMode === 'buildpair' ? <Text style={styles.muted}>Opening materials can be funded with the first work stage. Materials release only after tradesperson acknowledgement. Every work payment stays protected until its agreed completion point is reached and you approve release.</Text> : <><Text style={styles.muted}>BuildPair is not processing this job's money. Payment confirmations below are declarations by you and the tradesperson, not BuildPair verification or protection.</Text><Button mode="outlined" loading={busy} disabled={busy} onPress={() => void completeExternalJob()}>Mark directly paid job complete</Button></>}
     </AppCard> : null}

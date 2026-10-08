@@ -8,7 +8,7 @@ export const PUBLIC_NAV_ITEMS: { label: string; href: Href }[] = [
 ];
 
 export const SITE_LANGUAGE = {
-  launchingSoon: 'Launching soon',
+  launchingSoon: 'Open for homeowners and tradespeople',
   joinBuildPair: 'Join BuildPair',
   signIn: 'Sign in',
   pricing: 'Pricing',
@@ -25,9 +25,9 @@ export const SITE_LANGUAGE = {
 
 export const LAUNCH_OFFER = {
   badge: '3 months Pro free',
-  short: 'Join before launch and get 3 months of BuildPair Pro free from launch.',
-  trade: 'Tradespeople can join free and build their profile now. Your 3 months of BuildPair Pro starts when the marketplace opens.',
-  homeowner: 'Homeowners can join the launch list now. We’ll notify you when BuildPair opens and you can start posting jobs.',
+  short: 'Tradespeople get 3 months of BuildPair Pro free from signup. No payment details required.',
+  trade: 'Create your tradesperson profile and use BuildPair Pro free for three months from signup. No automatic subscription or payment details required.',
+  homeowner: 'Create a homeowner account, post work, compare quotes and manage your job.',
 } as const;
 
 export const FAIR_FOR_BOTH = {
@@ -48,7 +48,7 @@ export const PLAN_POSITIONING = {
 
 export const PAYMENT_LANGUAGE = {
   title: 'Pay your way',
-  short: 'Use BuildPay to manage agreed payment stages, or pay directly when both sides agree.',
+  short: 'Arrange payment directly with your tradesperson. BuildPay protected stages are coming soon.',
 } as const;
 
 export const WHY_BUILDPAIR = [

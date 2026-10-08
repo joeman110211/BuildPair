@@ -4,7 +4,7 @@ import { traderProfiles } from '@/db/schema';
 import { traderProfileShowcase } from '@/db/showcase-schema';
 import { InvalidPostcodeError, lookupPostcode } from '@/lib/postcode';
 import { getSql } from '@/lib/sql';
-import { FOUNDING_PRO_END_ISO, LAUNCH_DATE_ISO, HOMEOWNER_REGISTRATION_OPEN } from '@/lib/launch-config';
+import { LAUNCH_DATE_ISO, HOMEOWNER_REGISTRATION_OPEN } from '@/lib/launch-config';
 import { assertApprovedMediaUrls } from '@/lib/media-safety';
 import { accountAccess, accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { categoryChangeAllowed, categoryChangeAvailableAt, traderWorkTypeLimit } from '@/lib/subscription';
@@ -135,9 +135,11 @@ export async function PUT(request: Request) {
       throw new HttpError(403, 'Your published service base is locked to keep BuildPair jobs genuinely local. If your home or business base has moved, contact info@buildpair.co.uk to request an update. We may ask for reasonable evidence of the new location.');
     }
 
-    const foundingOffer = Date.now() < new Date(LAUNCH_DATE_ISO).getTime()
-      && !existingProfile?.stripeSubscriptionId
-      && !existingProfile?.trialEndsAt;
+    // Every eligible tradesperson receives three full calendar months of Pro from profile activation.
+    // Existing reservations and paid memberships are preserved.
+    const foundingOffer = !existingProfile?.stripeSubscriptionId && !existingProfile?.trialEndsAt;
+    const trialEnd = new Date();
+    trialEnd.setUTCMonth(trialEnd.getUTCMonth() + 3);
     const categoryLimit = existingProfile
       ? traderWorkTypeLimit(existingProfile)
       : foundingOffer ? 6 : 2;
@@ -183,7 +185,7 @@ export async function PUT(request: Request) {
       ...(foundingOffer ? {
         subscriptionTier: 'featured' as const,
         isSubscriptionActive: false,
-        trialEndsAt: new Date(FOUNDING_PRO_END_ISO),
+        trialEndsAt: trialEnd,
       } : {}),
     }).onConflictDoUpdate({
       target: traderProfiles.userId,
@@ -192,7 +194,7 @@ export async function PUT(request: Request) {
         ...(foundingOffer ? {
           subscriptionTier: 'featured' as const,
           isSubscriptionActive: false,
-          trialEndsAt: new Date(FOUNDING_PRO_END_ISO),
+          trialEndsAt: trialEnd,
         } : {}),
         updatedAt: new Date(),
       },

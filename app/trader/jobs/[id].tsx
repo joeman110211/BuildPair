@@ -202,8 +202,8 @@ export default function TraderJobDetail() {
       </> : data.job.scheduledStartAt ? <>
         <Chip icon="clock-outline">Waiting for homeowner</Chip>
         <Text variant="titleMedium">{formatProjectStart(data.job.scheduledStartAt)}</Text>
-        <Text style={styles.muted}>The homeowner has been asked to approve this start. The opening BuildPay payment cannot be taken until they agree it.</Text>
-      </> : <Text style={styles.muted}>Confirm when you actually expect to start. The homeowner approves this before the opening BuildPay payment.</Text>}
+        <Text style={styles.muted}>The homeowner has been asked to approve this start. The homeowner must confirm the start date before work begins.</Text>
+      </> : <Text style={styles.muted}>Confirm when you actually expect to start. The homeowner approves this before work begins.</Text>}
       <View style={styles.row}>
         <TextInput style={styles.moneyInput} mode="outlined" label="Start date (DD/MM/YYYY)" value={startDate} onChangeText={setStartDate} placeholder="14/09/2026" />
         <TextInput style={styles.moneyInput} mode="outlined" label="Start time (HH:MM)" value={startTime} onChangeText={setStartTime} placeholder="08:00" />
@@ -230,7 +230,7 @@ export default function TraderJobDetail() {
     </AppCard> : paymentMode === 'external' ? <AppCard style={styles.externalCard}>
       <Text variant="titleLarge" style={styles.title}>Direct payments selected</Text>
       <Text style={styles.muted}>The homeowner pays you directly. BuildPair can record the quote, project, variations and what both sides say about payment, but it does not receive, hold, protect, refund or recover that money. BuildPay controls do not apply.</Text>
-    </AppCard> : <AppCard style={styles.externalCard}><Text variant="titleLarge" style={styles.title}>Waiting for payment choice</Text><Text style={styles.muted}>The quote is accepted. The homeowner now confirms the job address and chooses BuildPay or direct payment.</Text></AppCard>}
+    </AppCard> : <AppCard style={styles.externalCard}><Text variant="titleLarge" style={styles.title}>Waiting for payment choice</Text><Text style={styles.muted}>The quote is accepted. The homeowner now confirms the job address and agrees the direct payment arrangement.</Text></AppCard>}
 
     {paymentMode === 'buildpair' && pendingAcknowledgement ? <AppCard style={styles.ackCard}>
       <Chip icon="cash-check">Opening payment received</Chip>

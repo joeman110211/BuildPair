@@ -7,7 +7,6 @@ import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { LegalAcceptance } from '@/components/LegalAcceptance';
 import { Screen } from '@/components/Screen';
-import { PrelaunchBanner } from '@/components/PrelaunchBanner';
 import { colors } from '@/constants/theme';
 import { modeSetupHref, signInHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
@@ -105,11 +104,11 @@ export default function FoundingTradeSignup() {
   }
 
   return <Screen title="Create your BuildPair trade profile" subtitle="Show your business, services and completed work in one place.">
-    <PrelaunchBanner />
+
     <AppCard style={styles.heroCard}>
       <Text variant="headlineSmall" style={styles.heading}>Build your profile. Show your work.</Text>
       <Text style={styles.body}>Create your BuildPair account and add your business details, service area, portfolio, credentials and Google review connection.</Text>
-      <Text style={styles.body}>Profile setup is free. Choose the services you offer and help homeowners understand what makes your business a good fit.</Text>
+      <Text style={styles.body}>Get three months of BuildPair Pro free from completing your profile. No payment details or automatic paid subscription required. BuildPay is coming soon.</Text>
     </AppCard>
 
     <AppCard>
