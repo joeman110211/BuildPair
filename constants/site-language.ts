@@ -8,7 +8,7 @@ export const PUBLIC_NAV_ITEMS: { label: string; href: Href }[] = [
 ];
 
 export const SITE_LANGUAGE = {
-  launchingSoon: 'Launching soon',
+  launchingSoon: 'BuildPay coming soon',
   joinBuildPair: 'Join BuildPair',
   signIn: 'Sign in',
   pricing: 'Pricing',
@@ -47,8 +47,8 @@ export const PLAN_POSITIONING = {
 } as const;
 
 export const PAYMENT_LANGUAGE = {
-  title: 'Pay your way',
-  short: 'Use BuildPay to manage agreed payment stages, or pay directly when both sides agree.',
+  title: 'Payments between homeowners and tradespeople',
+  short: 'Agree and arrange payment directly. BuildPay staged payments are coming soon.',
 } as const;
 
 export const WHY_BUILDPAIR = [
