@@ -44,7 +44,7 @@ export default function FoundingTradeSignup() {
         legalAccepted,
         unsafeMetadata: {
           buildpairMode: 'trader',
-          buildpairPrelaunch: true,
+          buildpairPrelaunch: false,
           buildpairFoundingTrade: true,
           buildpairAcquisitionSource: source,
           buildpairReferralCode: referralCode || undefined,
