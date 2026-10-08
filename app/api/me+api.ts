@@ -200,7 +200,7 @@ export async function PUT(request: Request) {
         ...(foundingOffer ? {
           subscriptionTier: 'featured' as const,
           isSubscriptionActive: false,
-          trialEndsAt: new Date(FOUNDING_PRO_END_ISO),
+          trialEndsAt: trialExpiryFrom(new Date(), TRADE_FREE_PRO_MONTHS),
         } : {}),
         updatedAt: new Date(),
       },
