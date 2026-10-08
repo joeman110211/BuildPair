@@ -20,9 +20,9 @@ export default function AccountEntryScreen() {
   return <Screen>
     <View style={styles.hero}>
       <BuildPairLogo tagline />
-      <Chip icon="rocket-launch-outline">{SITE_LANGUAGE.launchingSoon}</Chip>
+      <Chip icon="account-multiple-check-outline">Open for local homeowners and tradespeople</Chip>
       <Text variant="headlineSmall" style={styles.heading}>Choose how you want to join BuildPair.</Text>
-      <Text style={styles.subheading}>Tradespeople can create a profile now. Homeowners can join the launch list and we’ll notify you when job posting opens.</Text>
+      <Text style={styles.subheading}>Join the London and Surrey marketplace. Homeowners can post work and tradespeople can build their business profile.</Text>
     </View>
 
     <View style={styles.cards}>
@@ -34,8 +34,8 @@ export default function AccountEntryScreen() {
             <Text variant="bodySmall" style={styles.kicker}>POST • COMPARE • HIRE</Text>
           </View>
         </View>
-        <Text style={styles.body}>Find trades, compare quotes and keep the whole job together when BuildPair opens.</Text>
-        <Link href={signUpHref('customer')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Join launch list</Button></Link>
+        <Text style={styles.body}>Find local trades, post jobs, compare quotes and manage the work.</Text>
+        <Link href={signUpHref('customer')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Create homeowner account</Button></Link>
         <Link href={signInHref('customer')} asChild><Button mode="text">Homeowner sign in</Button></Link>
       </AppCard>
 
@@ -56,7 +56,7 @@ export default function AccountEntryScreen() {
     <AppCard elevated={false} style={styles.browseCard}>
       <View style={styles.browseCopy}>
         <Text variant="titleMedium" style={styles.title}>Explore BuildPair now</Text>
-        <Text style={styles.browseText}>The public site stays open while we finish release work. Browse trade profiles, jobs, pricing, guides and how BuildPay works without creating an account.</Text>
+        <Text style={styles.browseText}>Browse trade profiles, jobs, pricing and guides without creating an account. BuildPay payments are coming soon.</Text>
       </View>
       <View style={styles.browseActions}>
         <Link href="/(public)/directory" asChild><Button mode="outlined" contentStyle={styles.browseButton}>Browse trades</Button></Link>
