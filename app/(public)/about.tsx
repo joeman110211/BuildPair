@@ -5,7 +5,7 @@ export default function AboutPage() {
   return <PublicInfoPage
     eyebrow="About BuildPair"
     title="A better way to manage home-improvement work from first search to completion."
-    intro="BuildPair is a UK marketplace and project platform for homeowners and tradespeople. It brings discovery, quoting, communication, agreed changes, payments and project history into one connected workflow."
+    intro="BuildPair is a UK marketplace and project platform for homeowners and tradespeople. It brings discovery, quoting, communication, agreed changes and project history into one connected workflow."
     sections={[
       {
         title: 'Why BuildPair exists',
@@ -36,7 +36,7 @@ export default function AboutPage() {
       },
       {
         title: 'Clearer quoting, changes and payments',
-        body: 'Structured quotes can show labour, materials, VAT, scope, exclusions, timing, warranty and payment stages in a consistent format. If the work changes, variations can record the effect on price or timing before approval. Where BuildPair payments are used, the agreed stages and release decisions remain connected to the project.'
+        body: 'Structured quotes can show labour, materials, VAT, scope, exclusions, timing, warranty and payment stages in a consistent format. If the work changes, variations can record the effect on price or timing before approval. BuildPay staged payments are coming soon. Payments for current jobs are made directly between the homeowner and tradesperson.'
       },
       {
         title: 'Useful for trades after the lead is won',
@@ -48,7 +48,7 @@ export default function AboutPage() {
       },
       {
         title: 'What BuildPair is not',
-        body: 'BuildPair is not the contractor carrying out the work, an employer of independent tradespeople, a regulator, a building-control body or a substitute for professional advice. It provides marketplace, communication, project-management and payment-workflow technology.'
+        body: 'BuildPair is not the contractor carrying out the work, an employer of independent tradespeople, a regulator, a building-control body or a substitute for professional advice. It provides marketplace, communication and project-management technology. BuildPay payment tools are coming soon.'
       },
     ]}
   />;
