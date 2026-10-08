@@ -227,7 +227,7 @@ export default function JobDetailScreen() {
             <Text>I have reviewed the payment stages. I understand materials release only after the tradesperson acknowledges the opening payment, and protected work stages need my approval before release.</Text>
             <View style={styles.row}><Button disabled={busy} onPress={() => setConfirmBuildPay(false)}>Go back</Button><Button mode="contained" loading={busy} disabled={busy} onPress={() => void setPaymentMode('buildpair')}>Confirm BuildPay</Button></View>
           </AppCard>}
-        </AppCard>
+        </AppCard> : null}
         {!confirmExternal ? <Button mode="outlined" onPress={() => setConfirmExternal(true)}>Pay tradesperson directly instead</Button> : <AppCard style={styles.externalCard} elevated={false}>
           <Text variant="titleMedium" style={styles.heading}>Use direct payments?</Text>
           <Text>Money is arranged directly between you and the tradesperson. BuildPair can keep the quote, messages, variations and optional two-party payment confirmations, but cannot process, protect, pause, refund or recover money it never handled.</Text>
