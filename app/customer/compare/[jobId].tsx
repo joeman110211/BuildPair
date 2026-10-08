@@ -10,6 +10,7 @@ import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { QuoteComparison } from '@/components/QuoteComparison';
 import { QuoteComparisonOverview } from '@/components/QuoteComparisonOverview';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import { formatMoney } from '@/lib/money';
 import type { Job, PaymentStagePlan, Quote } from '@/types';
 
@@ -79,7 +80,7 @@ export default function CompareQuotesScreen() {
       ? quote.buildPayFeeMode === 'customer_pays'
         ? ` BuildPay is part of this proposal. Work price: ${formatMoney(quote.totalAmount)}. BuildPay service fee: ${formatMoney(buildPayFee)}. All-in total with BuildPay: ${formatMoney(allIn)}.`
         : ` BuildPay is part of this proposal. The tradesperson is absorbing its agreed fees, so your all-in total remains ${formatMoney(quote.totalAmount)}.`
-      : ' Accepting does not charge your card. After acceptance, both of you can agree to pay directly outside BuildPair, or you can request BuildPay and review its service fee before you commit.';
+      : BUILDPAY_OPEN ? ' Accepting does not charge your card. You can agree to pay directly or request BuildPay after acceptance.' : ' Accepting does not charge your card. Arrange any payments directly with the tradesperson by mutual agreement; BuildPair does not hold or protect those payments.';
     const message = `You are accepting the quote from ${quote.businessName ?? 'this tradesperson'}. ${paymentText}${buildPayText} Other active quotes will be archived and those tradespeople will be notified that another quote was chosen.`;
     if (typeof window !== 'undefined') {
       if (window.confirm(message)) void performAccept(quote, paymentPlanChoice);
@@ -154,6 +155,6 @@ export default function CompareQuotesScreen() {
       <Text variant="bodySmall">{intake.archivedQuoteCount} declined or withdrawn quote{intake.archivedQuoteCount === 1 ? '' : 's'} archived. They stay in the BuildPair project record rather than cluttering your active comparison.</Text>
     </AppCard> : null}
 
-    {!visibleQuotes.length ? <EmptyState title="No active quotes yet" body={intake.quoteIntakeClosed ? 'You have paused new quotes. Reopen quote intake above if you want more tradespeople to respond.' : 'We’ll keep structured quotes organised here when tradespeople respond.'} /> : <QuoteComparison quotes={visibleQuotes} accepting={accepting} messaging={messaging} acting={acting} onAccept={accept} onMessage={message} onDecline={decline} onEditPlan={editPaymentPlan} />}
+    {!visibleQuotes.length ? <EmptyState title="No active quotes yet" body={intake.quoteIntakeClosed ? 'You have paused new quotes. Reopen quote intake above if you want more tradespeople to respond.' : 'We’ll keep structured quotes organised here when tradespeople respond.'} /> : <QuoteComparison quotes={visibleQuotes} accepting={accepting} messaging={messaging} acting={acting} onAccept={accept} onMessage={message} onDecline={decline} onEditPlan={BUILDPAY_OPEN ? editPaymentPlan : undefined} />}
   </Screen>;
 }
