@@ -8,6 +8,7 @@ import { canAcceptNewQuote } from '@/lib/quote-marketplace';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import { effectiveTraderCategories, hasActiveLeadAccess, traderMonthlyQuoteLimit } from '@/lib/subscription';
 import { quoteSchema } from '@/lib/validation';
 
@@ -71,6 +72,7 @@ export async function POST(request: Request) {
     if (!profile) throw new HttpError(409, 'Complete your trader profile before quoting');
 
     const raw = await request.json() as Record<string, unknown>;
+    if (!BUILDPAY_OPEN && raw.requestBuildPay === true) throw new HttpError(423, 'BuildPay is not available yet. Send a quote without requesting BuildPay.');
     const payload = quoteSchema.parse(raw);
     const job = await db.query.jobs.findFirst({ where: eq(jobs.id, payload.jobId) });
     if (!job || !['open', 'quoted'].includes(job.status)) throw new HttpError(409, 'This job is not open for quotes');
