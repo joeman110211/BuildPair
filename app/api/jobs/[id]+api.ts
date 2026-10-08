@@ -5,6 +5,7 @@ import { addJobEvent, createNotification } from '@/lib/notifications';
 import { validateProtectedPaymentEconomics } from '@/lib/payment-protection';
 import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 
 export async function GET(request: Request, { id }: { id: string }) {
   try {
@@ -61,6 +62,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     await ensureDbUser(userId);
     const modes = await accountModes(userId);
     const payload = await request.json() as { action?: string; mode?: 'buildpair' | 'external'; acknowledgedPaymentTerms?: boolean; startAt?: string };
+    if (!BUILDPAY_OPEN && payload.action === 'set_payment_mode' && payload.mode === 'buildpair') throw new HttpError(423, 'BuildPay is coming soon. Choose direct payment.');
     const db = getDb();
 
     if (payload.action === 'cancel') {
@@ -89,8 +91,8 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       if (row.status !== 'in_progress') throw new HttpError(409, 'A start date can only be proposed for an active awarded job');
       await getSql()`UPDATE jobs SET scheduled_start_at = ${startAt.toISOString()}, start_agreed_at = NULL, start_proposed_by = ${userId}, updated_at = now() WHERE id = ${id}`;
       const when = formatUkDateTime(startAt);
-      await addJobEvent(id, userId, 'job_start_proposed', 'Start date proposed', `${when} proposed by the tradesperson. The homeowner must confirm it before the opening BuildPay payment can be taken.`, { startAt: startAt.toISOString() });
-      await createNotification(row.customerId, { type: 'job_start_proposed', title: `Start proposed · ${when}`, body: `${row.title}: confirm the proposed start date and time in BuildPair before making the opening BuildPay payment.`, href: `/customer/jobs/${id}/start`, email: true });
+      await addJobEvent(id, userId, 'job_start_proposed', 'Start date proposed', `${when} proposed by the tradesperson. The homeowner must confirm it before the agreed work begins.`, { startAt: startAt.toISOString() });
+      await createNotification(row.customerId, { type: 'job_start_proposed', title: `Start proposed · ${when}`, body: `${row.title}: confirm the proposed start date and time in BuildPair before work begins.`, href: `/customer/jobs/${id}/start`, email: true });
       return Response.json({ proposed: true, scheduledStartAt: startAt.toISOString(), startAgreedAt: null });
     }
 

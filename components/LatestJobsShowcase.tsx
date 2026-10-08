@@ -116,12 +116,12 @@ export function LatestJobsShowcase({ wide }: { wide: boolean }) {
       <View style={styles.headingRow}>
         <View style={styles.headingCopy}>
           <Text style={styles.eyebrow}>LATEST JOBS</Text>
-          <Text variant="headlineSmall" style={styles.title}>New local jobs will appear here after launch.</Text>
-          <Text style={styles.muted}>When homeowners start posting work through the live marketplace, the latest genuine local opportunities will appear here automatically for tradespeople to browse.</Text>
+          <Text variant="headlineSmall" style={styles.title}>New local jobs will appear here as homeowners post work.</Text>
+          <Text style={styles.muted}>As homeowners post work, genuine local opportunities will appear here automatically for tradespeople to browse.</Text>
         </View>
         <Button mode="text" style={styles.button} contentStyle={styles.buttonContent} onPress={() => router.push('/(public)/jobs')}>Browse jobs →</Button>
       </View>
-      <View style={styles.preloadCard}><Text style={styles.preloadText}>No live marketplace jobs yet. This section is ready for launch.</Text></View>
+      <View style={styles.preloadCard}><Text style={styles.preloadText}>No jobs posted yet. Homeowners can post a job now.</Text></View>
     </View>;
   }
 

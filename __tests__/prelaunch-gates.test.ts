@@ -1,48 +1,43 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import {
-  HOMEOWNER_REGISTRATION_OPEN,
-  MARKETPLACE_OPEN,
-  TRADER_PRELAUNCH_REGISTRATION_OPEN,
-} from '@/lib/launch-config';
+import { BUILDPAY_OPEN, HOMEOWNER_REGISTRATION_OPEN, MARKETPLACE_OPEN, REGISTRATION_OPEN } from '@/lib/launch-config';
 
-describe('BuildPair prelaunch gates', () => {
-  it('opens trade setup while keeping homeowner registration and the marketplace closed', () => {
-    expect(TRADER_PRELAUNCH_REGISTRATION_OPEN).toBe(true);
-    expect(HOMEOWNER_REGISTRATION_OPEN).toBe(false);
-    expect(MARKETPLACE_OPEN).toBe(false);
+describe('BuildPair regional launch gates', () => {
+  it('enables genuine homeowner and tradesperson signups and marketplace activities', () => {
+    expect(REGISTRATION_OPEN).toBe(true);
+    expect(HOMEOWNER_REGISTRATION_OPEN).toBe(true);
+    expect(MARKETPLACE_OPEN).toBe(true);
   });
 
-  it('lets Founding Trades synchronize a real account while public registration stays closed', () => {
-    const server = readFileSync('lib/server.ts', 'utf8');
-    expect(server).toContain('TRADER_PRELAUNCH_REGISTRATION_OPEN');
-    expect(server).toContain("identity.mode === 'trader'");
-    expect(server).toContain('prelaunchTraderAllowed');
-    expect(server).toContain('recordPrelaunchTraderRegistration');
-  });
-
-  it('allows public trader discovery before launch while transactional public routes stay locked', () => {
-    const layout = readFileSync('app/(public)/_layout.tsx', 'utf8');
-    expect(layout).toContain("const MARKETPLACE_PATHS = ['/jobs']");
-    expect(layout).not.toContain("['/directory', '/jobs', '/traders', '/quote']");
-    expect(layout).toContain('visitors can browse those profiles before launch');
-  });
-
-  it('keeps a server-side marketplace lock around transactional API families', () => {
+  it('keeps BuildPay entirely unavailable for the launch', () => {
+    expect(BUILDPAY_OPEN).toBe(false);
     const server = readFileSync('server.mjs', 'utf8');
-    for (const path of [
-      '/api/jobs',
-      '/api/quotes',
-      '/api/buildpay',
-      '/api/payments',
-      '/api/conversations',
-      '/api/stripe/subscription',
-      '/api/stripe/payment-intent',
-      '/api/stripe/connect',
-    ]) {
-      expect(server).toContain(path);
+    expect(server).toContain('function isUnavailableLaunchApi(');
+    expect(server).toContain('if (unavailableFeature)');
+    for (const route of ['/api/payments', '/api/stripe/payment-intent', '/api/stripe/connect', '/api/buildpay']) {
+      expect(server).toContain(route);
     }
-    expect(server).toContain('marketplace_prelaunch');
-    expect(server).not.toContain("'/api/stripe/webhook'");
+    expect(server).not.toContain("'/api/stripe/webhook',");
+  });
+
+  it('rejects selection of BuildPay inside normal marketplace jobs and quotes', () => {
+    for (const path of [
+      'app/api/jobs/[id]+api.ts',
+      'app/api/quotes+api.ts',
+      'app/api/quotes/[id]+api.ts',
+      'app/api/business-quotes+api.ts',
+    ]) {
+      const source = readFileSync(path, 'utf8');
+      expect(source).toContain('BUILDPAY_OPEN');
+      expect(source).toContain('HttpError(423');
+    }
+  });
+
+  it('preserves direct-payment workflows while subscription checkout is unavailable', () => {
+    const server = readFileSync('server.mjs', 'utf8');
+    const section = server.slice(server.indexOf('function isUnavailableLaunchApi('), server.indexOf('function sendFeatureUnavailable('));
+    expect(section).not.toContain("'/api/payment-arrangement'");
+    expect(section).not.toContain("'/api/external-payments'");
+    expect(section).toContain('NEW_SUBSCRIPTIONS_OPEN');
   });
 });

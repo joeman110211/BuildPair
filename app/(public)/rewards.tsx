@@ -5,10 +5,10 @@ export default function RewardsPage() {
   return <PublicInfoPage
     eyebrow="BuildPair Rewards"
     title="The more genuine work you complete well, the more BuildPair gives back."
-    intro="BuildPair Rewards is designed to recognise active, reliable tradespeople without charging for individual leads. Member offers and achievement rewards recognise genuine completed projects, strong customer outcomes and useful BuildPay adoption."
+    intro="BuildPair Rewards is designed to recognise active, reliable tradespeople without charging for individual leads. Member offers and achievement rewards recognise genuine completed projects and strong customer outcomes. BuildPay-specific rewards will be reviewed after BuildPay becomes available."
     sections={[
       { title: 'Member offers', body: <View style={infoStyles.list}>
-        <Text style={infoStyles.item}>• No lead fee is added simply because a tradesperson receives or responds to a job through BuildPair. Normal membership and any separately disclosed BuildPay terms apply after promotional periods end.</Text>
+        <Text style={infoStyles.item}>• No lead fee is added simply because a tradesperson receives or responds to a job through BuildPair. Future paid memberships are optional, and BuildPay is not currently available.</Text>
       </View> },
       { title: 'Complete real jobs, unlock more', body: <View style={infoStyles.list}>
         <Text style={infoStyles.item}>• First 10 eligible tradespeople to complete 10 genuine BuildPair-recorded jobs: a further 3 months of Pro free.</Text>

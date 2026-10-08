@@ -89,7 +89,7 @@ export function PublicFooter() {
     </View>
     <View style={[styles.bottom, compact && styles.bottomCompact]}>
       <Text style={[styles.small, compact && styles.smallCompact]}>© {new Date().getFullYear()} BuildPair. All rights reserved.</Text>
-      <Text style={[styles.small, compact && styles.smallCompact]}>BuildPair is a marketplace and project platform, not a building contractor or building-control body. See Payments, Terms and Disclaimer for full details.</Text>
+      <Text style={[styles.small, compact && styles.smallCompact]}>BuildPair is a marketplace and project platform, not a building contractor or building-control body. BuildPay is coming soon; direct job payments are outside BuildPair. See Payments, Terms and Disclaimer for details.</Text>
     </View>
   </View>;
 }

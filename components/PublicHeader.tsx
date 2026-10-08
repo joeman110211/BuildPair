@@ -38,13 +38,15 @@ function NavMenu({ dashboard, signedIn, onDashboard, onSignOut, preview = false 
   ];
 
   if (preview) {
-    items.push({ label: SITE_LANGUAGE.joinBuildPair, sectionLabel: 'Get started', dividerBefore: true, onPress: () => go('/auth/account') });
+    items.push({ label: 'Tradesperson sign up', sectionLabel: 'Get started', dividerBefore: true, onPress: () => go('/auth/sign-up?mode=trader') });
+    items.push({ label: 'Homeowner sign up', onPress: () => go('/auth/sign-up?mode=customer') });
   } else if (signedIn && dashboard) {
     items.push({ label: 'Dashboard', sectionLabel: 'Account', dividerBefore: true, onPress: () => onDashboard ? onDashboard() : go(dashboard) });
     items.push({ label: 'Sign out', onPress: () => onSignOut?.() });
   } else {
     items.push({ label: 'Sign in', sectionLabel: 'Account', dividerBefore: true, onPress: () => go('/auth/account') });
-    items.push({ label: SITE_LANGUAGE.joinBuildPair, onPress: () => go('/auth/account') });
+    items.push({ label: 'Tradesperson sign up', onPress: () => go('/auth/sign-up?mode=trader') });
+    items.push({ label: 'Homeowner sign up', onPress: () => go('/auth/sign-up?mode=customer') });
   }
 
   return <CompactNavMenu items={items} accessibilityLabel="Menu" />;

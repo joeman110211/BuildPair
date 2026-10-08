@@ -44,7 +44,7 @@ export default function FoundingTradeSignup() {
         legalAccepted,
         unsafeMetadata: {
           buildpairMode: 'trader',
-          buildpairPrelaunch: true,
+          buildpairPrelaunch: false,
           buildpairFoundingTrade: true,
           buildpairAcquisitionSource: source,
           buildpairReferralCode: referralCode || undefined,
@@ -109,7 +109,7 @@ export default function FoundingTradeSignup() {
     <AppCard style={styles.heroCard}>
       <Text variant="headlineSmall" style={styles.heading}>Build your profile. Show your work.</Text>
       <Text style={styles.body}>Create your BuildPair account and add your business details, service area, portfolio, credentials and Google review connection.</Text>
-      <Text style={styles.body}>Profile setup is free. Choose the services you offer and help homeowners understand what makes your business a good fit.</Text>
+      <Text style={styles.body}>Create your profile and get three months of BuildPair Pro free, no payment card needed. Choose the genuine services and areas you cover.</Text>
     </AppCard>
 
     <AppCard>
