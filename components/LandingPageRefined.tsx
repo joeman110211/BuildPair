@@ -62,7 +62,7 @@ export default function LandingPageRefined() {
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.pageContent} keyboardShouldPersistTaps="handled">
     <PublicSeo title="Find local tradespeople. Keep the whole job together" description="Find local tradespeople, compare clear quotes and keep messages, changes and payment stages together. Business tools for tradespeople, with no pay-per-lead fees." />
-    <View style={styles.localNotice}><Text style={styles.localNoticeText}>We're onboarding local tradespeople. Sign up now for three months of trade membership free. Homeowners can post jobs today. BuildPay is coming soon.</Text></View>
+    <View style={styles.localNotice}><Text style={styles.localNoticeText}>We are onboarding local tradespeople. Sign up now for three months of trade membership free. Homeowners can post jobs today. BuildPay is coming soon.</Text></View>
     <View style={[styles.hero, mobile && styles.heroMobile]}>
       <Text style={styles.eyebrow}>ONE PROJECT. BOTH SIDES CONNECTED.</Text>
       <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
