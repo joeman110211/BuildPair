@@ -172,7 +172,7 @@ export default function StartAwardedJobScreen() {
       <Text variant="titleLarge">2. Agree the start</Text>
       {!startProposed ? <>
         <Chip icon="clock-outline">Waiting for tradesperson</Chip>
-        <Text>The tradesperson now confirms the date and time they plan to start. You will approve it here before the opening BuildPay payment can be taken.</Text>
+        <Text>The tradesperson now confirms the date and time they plan to start. You can approve it here before the job begins.</Text>
       </> : startAgreed ? <>
         <Chip icon="calendar-check">Start agreed ✓</Chip>
         <Text variant="titleMedium">{formatProjectStart(data.job.scheduledStartAt!)}</Text>
