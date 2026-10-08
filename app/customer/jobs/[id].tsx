@@ -14,6 +14,7 @@ import { ProjectWorkspace } from '@/components/ProjectWorkspace';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import { formatMoney } from '@/lib/money';
 import type { Job, JobTimelineEvent, JobVariation, PaymentStageStatus, Quote, TraderProfile } from '@/types';
 import type { ExternalPaymentRecord, PaymentDispute } from '@/types/project-payments';
@@ -192,7 +193,7 @@ export default function JobDetailScreen() {
   return <Screen title={data.job.title} subtitle={`${data.job.category} · ${data.job.status.replace('_', ' ')}`}>
     <HomeownerNextStep data={data} jobId={id} reviewAllowed={reviewAllowed} />
 
-    {nextToFund && paymentMode === 'buildpair' && data.job.status === 'in_progress' ? <AppCard style={styles.nextPaymentCard}>
+    {BUILDPAY_OPEN && nextToFund && paymentMode === 'buildpair' && data.job.status === 'in_progress' ? <AppCard style={styles.nextPaymentCard}>
       <Chip icon="arrow-right-circle">Stage released ✓</Chip>
       <Text variant="titleLarge" style={styles.heading}>Next: fund {nextToFund.title.toLowerCase()}</Text>
       <Text variant="headlineSmall" style={styles.money}>{formatMoney(nextToFund.amount)}</Text>
@@ -216,8 +217,8 @@ export default function JobDetailScreen() {
     {data.acceptedQuote && data.job.status === 'in_progress' ? <AppCard style={paymentMode === 'external' ? styles.externalCard : styles.protectionCard}>
       <Text variant="titleLarge" style={styles.heading}>{paymentMode === 'undecided' ? 'Choose how to pay' : paymentMode === 'buildpair' ? 'BuildPay' : 'Direct payment'}</Text>
       {paymentMode === 'undecided' ? <>
-        <Text style={styles.muted}>Your quote and payment stages are agreed. Use BuildPay for controlled payments or pay the tradesperson directly outside BuildPair.</Text>
-        <AppCard elevated={false}>
+        <Text style={styles.muted}>Your quote and payment stages are agreed. Arrange payment directly with the tradesperson outside BuildPair.</Text>
+        {BUILDPAY_OPEN ? <AppCard elevated={false}>
           <Text variant="titleMedium" style={styles.heading}>Use BuildPay</Text>
           <Text>Stripe processes the card payment. Materials can be paid with the first work stage in one opening payment. The tradesperson must acknowledge it before the exact materials amount is released. Work-stage money stays protected until the agreed point is reached and you approve release.</Text>
           <Text style={styles.muted}>BuildPair's fee is 1% of labour/service only, never materials or VAT. Stripe processing is recovered at cost from controlled service payouts.</Text>
