@@ -153,7 +153,7 @@ export default function StartAwardedJobScreen() {
     <AppCard>
       <Chip icon="check-circle-outline">Quote accepted</Chip>
       <Text variant="headlineSmall">{data.trader?.businessName ?? 'Tradesperson'} has the job</Text>
-      <Text>The quote is agreed. BuildPair now keeps the private address, start time and payment setup in one place so both sides know exactly what happens next.</Text>
+      <Text>The quote is agreed. BuildPair keeps the private job address, agreed start time and direct-payment arrangements together for both sides.</Text>
       {BUILDPAY_OPEN && buildPaySummary.buildPayRequestedBy ? <Text>{buildPaySummary.buildPayRequestedBy === 'trader' ? 'The tradesperson included BuildPay in the accepted proposal.' : 'You requested BuildPay protected stages before acceptance.'} {buildPaySummary.buildPayFeeMode === 'customer_pays' ? `Work price ${formatMoney(buildPaySummary.contractAmount)} + BuildPay service fee ${formatMoney(buildPaySummary.buildPayCustomerFeeTotal)} = ${formatMoney(buildPaySummary.allInTotal)} all-in.` : `The tradesperson is absorbing the agreed BuildPay costs, so your total remains ${formatMoney(buildPaySummary.contractAmount)}.`}</Text> : null}
     </AppCard>
 
