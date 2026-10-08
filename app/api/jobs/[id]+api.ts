@@ -91,8 +91,8 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       if (row.status !== 'in_progress') throw new HttpError(409, 'A start date can only be proposed for an active awarded job');
       await getSql()`UPDATE jobs SET scheduled_start_at = ${startAt.toISOString()}, start_agreed_at = NULL, start_proposed_by = ${userId}, updated_at = now() WHERE id = ${id}`;
       const when = formatUkDateTime(startAt);
-      await addJobEvent(id, userId, 'job_start_proposed', 'Start date proposed', `${when} proposed by the tradesperson. The homeowner must confirm it before the opening BuildPay payment can be taken.`, { startAt: startAt.toISOString() });
-      await createNotification(row.customerId, { type: 'job_start_proposed', title: `Start proposed · ${when}`, body: `${row.title}: confirm the proposed start date and time in BuildPair before making the opening BuildPay payment.`, href: `/customer/jobs/${id}/start`, email: true });
+      await addJobEvent(id, userId, 'job_start_proposed', 'Start date proposed', `${when} proposed by the tradesperson. The homeowner must confirm it before the agreed work begins.`, { startAt: startAt.toISOString() });
+      await createNotification(row.customerId, { type: 'job_start_proposed', title: `Start proposed · ${when}`, body: `${row.title}: confirm the proposed start date and time in BuildPair before work begins.`, href: `/customer/jobs/${id}/start`, email: true });
       return Response.json({ proposed: true, scheduledStartAt: startAt.toISOString(), startAgreedAt: null });
     }
 
