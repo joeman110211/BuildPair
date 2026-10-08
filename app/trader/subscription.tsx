@@ -99,7 +99,7 @@ export default function SubscriptionScreen() {
     } catch (e) {
       setError(errorMessage(e));
     }
-    await refreshPayoutStatus();
+    if (BUILDPAY_OPEN) await refreshPayoutStatus();
   }, [getToken, refreshPayoutStatus]);
 
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
