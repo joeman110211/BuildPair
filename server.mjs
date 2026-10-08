@@ -57,6 +57,38 @@ const SERVER_BUILD_DIR = path.resolve(process.cwd(), 'dist/server');
 const NOINDEX = /^(1|true|yes)$/i.test(process.env.BUILDPAIR_NOINDEX || '');
 const ADMIN_HOST = String(process.env.BUILDPAIR_ADMIN_HOST || 'admin.buildpair.co.uk').trim().toLowerCase();
 const MARKETPLACE_OPEN = /^(1|true|yes)$/i.test(process.env.BUILDPAIR_MARKETPLACE_OPEN || 'false');
+const BUILDPAY_OPEN = false;
+// Three-month launch period: no new subscription checkout until billing is verified.
+const NEW_SUBSCRIPTIONS_OPEN = false;
+const CLOSED_BUILDPAY_PREFIXES = [
+  '/api/payments', '/api/payment-disputes', '/api/stripe/payment-intent',
+  '/api/stripe/connect',
+];
+const CLOSED_SUBSCRIPTION_CHECKOUTS = [
+  '/api/stripe/subscription', '/api/stripe/project-plus/start',
+];
+function isUnavailableLaunchApi(pathName, method) {
+  if (!BUILDPAY_OPEN) {
+    if (CLOSED_BUILDPAY_PREFIXES.some(prefix => pathName === prefix || pathName.startsWith(prefix + '/'))) return 'buildpay_unavailable';
+    if ((pathName === '/api/buildpay' || pathName.startsWith('/api/buildpay/'))
+        && !['GET', 'HEAD'].includes(String(method).toUpperCase())) return 'buildpay_unavailable';
+  }
+  if (!NEW_SUBSCRIPTIONS_OPEN && String(method).toUpperCase() === 'POST'
+      && CLOSED_SUBSCRIPTION_CHECKOUTS.some(prefix => pathName === prefix || pathName.startsWith(prefix + '/'))) return 'subscription_checkout_unavailable';
+  return null;
+}
+function sendFeatureUnavailable(res, code) {
+  res.statusCode = 423;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.end(JSON.stringify({
+    code,
+    error: code === 'buildpay_unavailable'
+      ? 'BuildPay is coming soon. Arrange job payments directly with the tradesperson.'
+      : 'New paid subscriptions are coming soon. Your eligible three-month Pro trial needs no payment card.',
+  }));
+}
+
 const PRELAUNCH_BLOCKED_API_PREFIXES = [
   '/api/jobs',
   '/api/public/jobs',
@@ -311,6 +343,8 @@ const server = http.createServer(async (req, res) => {
     if (handleAdminHostRouting(req, res)) return;
 
     const pathName = requestPathname(req);
+    const unavailableFeature = isUnavailableLaunchApi(pathName, req.method);
+    if (unavailableFeature) { sendFeatureUnavailable(res, unavailableFeature); return; }
     if (isBlockedPrelaunchApi(pathName)) {
       sendPrelaunchLocked(res);
       return;
