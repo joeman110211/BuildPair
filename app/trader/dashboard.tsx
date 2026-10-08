@@ -10,6 +10,7 @@ import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors, controlHeights, spacing } from '@/constants/theme';
 import { apiFetch, ApiError, errorMessage } from '@/lib/api';
+import { hasActiveLeadAccess } from '@/lib/subscription';
 import { MARKETPLACE_OPEN, BUILDPAY_OPEN } from '@/lib/launch';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import type { Job, Quote, TraderProfile } from '@/types';
@@ -86,7 +87,7 @@ export default function TraderDashboard() {
   const offerLimit = profile.monthlyQuoteLimit ?? plan.monthlyMarketplaceQuotes;
   const offersUsed = profile.monthlyQuotesUsed ?? 0;
   const offerProgress = offerLimit > 0 ? Math.min(1, offersUsed / offerLimit) : 0;
-  const paidActive = profile.subscriptionTier !== 'free' && profile.isSubscriptionActive;
+  const paidActive = hasActiveLeadAccess(profile);
   // Stripe charges and Stripe payouts are separate capabilities. BuildPair payout readiness must
   // always be based on payouts_enabled so every screen reports the same financial state.
   const payoutsReady = Boolean(profile.stripeAccountId && profile.stripePayoutsEnabled);
