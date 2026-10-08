@@ -91,6 +91,15 @@ export default function TraderDashboard() {
   // always be based on payouts_enabled so every screen reports the same financial state.
   const payoutsReady = Boolean(profile.stripeAccountId && profile.stripePayoutsEnabled);
   const serviceArea = profile.locationLabel || profile.postcode || 'your saved service area';
+  // Advisory profile-strength checklist. Optional photos and trust details never block publication.
+  const profileChecks = [
+    { label: 'Business and trade details', done: Boolean(profile.businessName.trim() && profile.tradeCategory) },
+    { label: 'Working area', done: Boolean(profile.postcode && profile.radiusMiles > 0) },
+    { label: 'About your business', done: profile.bio.trim().length >= 50 },
+    { label: 'Examples of your work', done: profile.photos.length > 0 || (profile.beforeAfterProjects?.length ?? 0) > 0 },
+    { label: 'Qualifications or verified credentials', done: (profile.qualifications?.length ?? 0) > 0 || (profile.verifiedCredentialCount ?? 0) > 0 },
+  ];
+  const completedProfileChecks = profileChecks.filter((check) => check.done).length;
   const nextAction = !marketplaceEnabled
     ? { title: 'Get your profile launch-ready', body: 'Check your photos, services, working area and trust information so homeowners see the strongest version of your business when BuildPair opens.', label: 'Review profile', href: '/trader/profile' as Href }
     : activeJobs[0]
@@ -122,6 +131,20 @@ export default function TraderDashboard() {
     </AppCard> : <AppCard style={styles.payoutReadyCard}>
       <View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.cardTitle}>BuildPair payouts ready</Text><Text style={styles.muted}>Stripe has confirmed that your connected account can receive materials, deposit and released staged payments.</Text></View><Chip icon="check-circle-outline">Ready</Chip></View>
     </AppCard>}
+
+    <AppCard>
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Text variant="titleLarge" style={styles.cardTitle}>Strengthen your profile</Text>
+          <Text style={styles.muted}>{completedProfileChecks} of {profileChecks.length} suggested details completed</Text>
+        </View>
+        <Chip icon={completedProfileChecks === profileChecks.length ? 'check-circle-outline' : 'progress-check'}>{Math.round(completedProfileChecks / profileChecks.length * 100)}%</Chip>
+      </View>
+      <ProgressBar progress={completedProfileChecks / profileChecks.length} color={colors.primary} style={styles.progress} />
+      {profileChecks.map((check) => <Text key={check.label} style={styles.muted}>{check.done ? '✓' : '○'} {check.label}</Text>)}
+      <Text style={styles.muted}>Photos and qualifications are optional. Any listed qualifications remain trader-declared unless BuildPair verifies them.</Text>
+      {completedProfileChecks < profileChecks.length ? <Link href="/trader/onboarding" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Improve profile</Button></Link> : null}
+    </AppCard>
 
     <AppCard style={styles.nextActionCard}>
       <View style={styles.row}><View style={styles.flex}><Text style={styles.nextActionEyebrow}>NEXT ACTION</Text><Text variant="titleLarge" style={styles.cardTitle}>{nextAction.title}</Text><Text style={styles.muted}>{nextAction.body}</Text></View><Chip icon="arrow-right-circle-outline">Next</Chip></View>
