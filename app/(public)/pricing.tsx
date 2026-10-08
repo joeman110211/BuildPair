@@ -8,7 +8,7 @@ import { PublicSeo } from '@/components/PublicSeo';
 import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
 import { colors, publicResponsiveMetrics } from '@/constants/theme';
-import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
+import { REGISTRATION_OPEN, BUILDPAY_OPEN, waitlistHref } from '@/lib/launch';
 
 export default function PricingPage() {
   const { width } = useWindowDimensions();
@@ -56,8 +56,8 @@ export default function PricingPage() {
       </View>
 
       <View style={styles.notice}>
-        <Text variant="titleMedium" style={styles.noticeTitle}>BuildPair job payment fee</Text>
-        <Text style={styles.noticeText}>BuildPay is optional. The party requesting it carries the disclosed cost, while direct payment remains available when both sides agree.</Text>
+        <Text variant="titleMedium" style={styles.noticeTitle}>Job payment arrangements</Text>
+        <Text style={styles.noticeText}>{BUILDPAY_OPEN ? "BuildPay is optional. The party requesting it carries the disclosed cost, while direct payment remains available when both sides agree." : "BuildPay is not available yet. Homeowners and tradespeople arrange payment directly; BuildPair does not receive, hold or protect that money."}</Text>
         <Link href="/(public)/payments" asChild><Button mode="text">Learn about payments</Button></Link>
       </View>
 
