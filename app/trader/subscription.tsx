@@ -11,6 +11,7 @@ import { StripeConnectOnboarding } from '@/components/StripeConnectOnboarding';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import type { PayoutStatus } from '@/lib/payout-status';
 import type { SubscriptionTier, TraderProfile } from '@/types';
 
@@ -47,7 +48,7 @@ const PLAN_COPY = {
       '15 open-marketplace offers per calendar month',
       'Direct homeowner requests do not use your allowance',
       'Full Quote Builder with revisions and outside-customer managed projects',
-      'Staged BuildPay can follow an accepted outside quote once the customer claims the project',
+      BUILDPAY_OPEN ? 'Staged BuildPay can follow an accepted outside quote once the customer claims the project' : 'Outside-customer jobs can be managed with direct-payment records',
       'Google review connection and full AI assistance',
       '5 saved searches and full conversion analytics',
       'Working calendar and availability up to roughly 12 weeks',
@@ -130,7 +131,7 @@ export default function SubscriptionScreen() {
     ? new Date(profile.monthlyQuoteResetAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
     : 'next month';
   const usageProgress = limit > 0 ? Math.min(1, used / limit) : 0;
-  const screenSubtitle = isWeb
+  const screenSubtitle = !BUILDPAY_OPEN ? 'Membership and trade business tools. BuildPay payout setup is not currently available.' : isWeb
     ? 'Membership controls marketplace access. Stripe payout readiness is a separate account status.'
     : 'See your current BuildPair plan, entitlements and payout readiness.';
   const payoutLabel = checkingPayouts && !payoutStatus ? 'Checking…' : payoutStatus?.label ?? (payoutsReady ? 'Ready' : 'Not confirmed');
@@ -183,7 +184,7 @@ export default function SubscriptionScreen() {
       <Text style={styles.muted}>Core adds a real business-tool layer as well as occasional marketplace access. Plus triples Core’s open-market capacity, removes direct-request usage from the allowance and adds the full outside-customer/project workflow. Pro then raises capacity to 35 and adds the longest availability horizon, advanced project tools, deeper analytics, templates and Project+. Paying more never creates a trust badge: reviews, credentials, relevance and profile quality remain separate.</Text>
     </AppCard> : null}
 
-    <AppCard style={payoutsReady ? styles.payoutReady : undefined}>
+    {BUILDPAY_OPEN ? <AppCard style={payoutsReady ? styles.payoutReady : undefined}>
       <View style={styles.currentRow}>
         <View style={styles.flex}>
           <Text variant="titleLarge" style={styles.title}>Stripe payouts</Text>
@@ -224,7 +225,7 @@ export default function SubscriptionScreen() {
           <Button mode="outlined" icon="refresh" loading={checkingPayouts} disabled={checkingPayouts} onPress={() => void refreshPayoutStatus()}>Refresh Stripe status</Button>
         </View>
       )}
-    </AppCard>
+    </AppCard> : null}
     {isWeb ? <Button mode="outlined" onPress={() => openEndpoint('/api/stripe/billing-portal')}>Manage or cancel subscription</Button> : null}
     {error ? <Text style={styles.error}>{error}</Text> : null}
   </Screen>;
