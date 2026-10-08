@@ -7,6 +7,8 @@ export const REGISTRATION_OPEN = false;
 export const TRADER_PRELAUNCH_REGISTRATION_OPEN = true;
 export const HOMEOWNER_REGISTRATION_OPEN = false;
 export const MARKETPLACE_OPEN = false;
+// Independently held closed. BuildPay must never inherit the marketplace launch switch.
+export const BUILDPAY_OPEN = false;
 
 export const FOUNDING_PRO_START_ISO = LAUNCH_DATE_ISO;
 export const FOUNDING_PRO_END_ISO = '2027-01-15T00:00:00+00:00';
