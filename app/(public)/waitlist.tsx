@@ -1,3 +1,4 @@
+import { Redirect } from 'expo-router';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
@@ -323,7 +324,7 @@ export function WaitlistPageContent({ fixedAudience }: { fixedAudience?: Audienc
 }
 
 export default function WaitlistPage() {
-  return <WaitlistPageContent fixedAudience="homeowner" />;
+  return <Redirect href="/auth/account" />;
 }
 
 const styles = StyleSheet.create({
