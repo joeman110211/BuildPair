@@ -155,6 +155,6 @@ export default function CompareQuotesScreen() {
       <Text variant="bodySmall">{intake.archivedQuoteCount} declined or withdrawn quote{intake.archivedQuoteCount === 1 ? '' : 's'} archived. They stay in the BuildPair project record rather than cluttering your active comparison.</Text>
     </AppCard> : null}
 
-    {!visibleQuotes.length ? <EmptyState title="No active quotes yet" body={intake.quoteIntakeClosed ? 'You have paused new quotes. Reopen quote intake above if you want more tradespeople to respond.' : 'We’ll keep structured quotes organised here when tradespeople respond.'} /> : <QuoteComparison quotes={visibleQuotes} accepting={accepting} messaging={messaging} acting={acting} onAccept={accept} onMessage={message} onDecline={decline} onEditPlan={editPaymentPlan} />}
+    {!visibleQuotes.length ? <EmptyState title="No active quotes yet" body={intake.quoteIntakeClosed ? 'You have paused new quotes. Reopen quote intake above if you want more tradespeople to respond.' : 'We’ll keep structured quotes organised here when tradespeople respond.'} /> : <QuoteComparison quotes={visibleQuotes} accepting={accepting} messaging={messaging} acting={acting} onAccept={accept} onMessage={message} onDecline={decline} onEditPlan={BUILDPAY_OPEN ? editPaymentPlan : undefined} />}
   </Screen>;
 }
