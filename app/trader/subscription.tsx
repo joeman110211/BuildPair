@@ -11,7 +11,7 @@ import { StripeConnectOnboarding } from '@/components/StripeConnectOnboarding';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { BUILDPAY_OPEN } from '@/lib/launch-config';
+import { BUILDPAY_OPEN, PAID_PLANS_OPEN } from '@/lib/launch-config';
 import type { PayoutStatus } from '@/lib/payout-status';
 import type { SubscriptionTier, TraderProfile } from '@/types';
 
@@ -132,7 +132,7 @@ export default function SubscriptionScreen() {
     : 'next month';
   const usageProgress = limit > 0 ? Math.min(1, used / limit) : 0;
   const screenSubtitle = !BUILDPAY_OPEN ? 'Membership and trade business tools. BuildPay payout setup is not currently available.' : isWeb
-    ? 'Membership controls marketplace access. Stripe payout readiness is a separate account status.'
+    ? 'Membership controls marketplace access. BuildPay payout onboarding is not available yet.'
     : 'See your current BuildPair plan, entitlements and payout readiness.';
   const payoutLabel = checkingPayouts && !payoutStatus ? 'Checking…' : payoutStatus?.label ?? (payoutsReady ? 'Ready' : 'Not confirmed');
 
@@ -157,6 +157,7 @@ export default function SubscriptionScreen() {
       <Text style={styles.muted}>Plan purchases and plan changes are not offered inside this mobile app. If your BuildPair account already has Core, Plus or Pro, the same entitlement and allowance are available here automatically.</Text>
     </AppCard> : null}
 
+    {!PAID_PLANS_OPEN ? <AppCard><Text variant="titleLarge" style={styles.title}>Your introductory membership</Text><Text style={styles.muted}>Eligible tradespeople receive three months of BuildPair Pro from profile activation at no charge. No card details are needed and no subscription starts automatically. Paid subscriptions will be available later.</Text></AppCard> : null}
     <View style={styles.grid}>{(Object.entries(PLAN_COPY) as [SubscriptionTier, (typeof PLAN_COPY)[SubscriptionTier]][]).map(([key, tier]) => {
       const isCurrent = key === activeTier;
       return <View key={key} style={styles.plan}>
@@ -170,7 +171,7 @@ export default function SubscriptionScreen() {
           </View>
           <Text style={styles.categoryLine}>Up to {tier.categoryLimit} main trade categories</Text>
           {tier.detail.map((feature) => <Text key={feature} style={styles.feature}>✓ {feature}</Text>)}
-          {isWeb && key !== 'free' ? <Button
+          {isWeb && key !== 'free' && PAID_PLANS_OPEN ? <Button
             mode={isCurrent ? 'outlined' : 'contained'}
             disabled={isCurrent}
             onPress={() => openEndpoint('/api/stripe/subscription', { tier: key })}
