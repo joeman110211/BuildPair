@@ -22,7 +22,7 @@ export default function AccountEntryScreen() {
       <BuildPairLogo tagline />
       <Chip icon="rocket-launch-outline">{SITE_LANGUAGE.launchingSoon}</Chip>
       <Text variant="headlineSmall" style={styles.heading}>Choose how you want to join BuildPair.</Text>
-      <Text style={styles.subheading}>Tradespeople can create a profile now. Homeowners can join the launch list and we’ll notify you when job posting opens.</Text>
+      <Text style={styles.subheading}>Homeowners can post jobs now. Tradespeople can sign up for three months of Pro access free, with no payment card required.</Text>
     </View>
 
     <View style={styles.cards}>
@@ -34,8 +34,8 @@ export default function AccountEntryScreen() {
             <Text variant="bodySmall" style={styles.kicker}>POST • COMPARE • HIRE</Text>
           </View>
         </View>
-        <Text style={styles.body}>Find trades, compare quotes and keep the whole job together when BuildPair opens.</Text>
-        <Link href={signUpHref('customer')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Join launch list</Button></Link>
+        <Text style={styles.body}>Post your job, find local tradespeople, compare quotes and manage the work in one place.</Text>
+        <Link href={signUpHref('customer')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Homeowner sign up</Button></Link>
         <Link href={signInHref('customer')} asChild><Button mode="text">Homeowner sign in</Button></Link>
       </AppCard>
 
@@ -48,7 +48,7 @@ export default function AccountEntryScreen() {
           </View>
         </View>
         <Text style={styles.body}>{LAUNCH_OFFER.trade}</Text>
-        <Link href={signUpHref('trader')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Create profile</Button></Link>
+        <Link href={signUpHref('trader')} asChild><Button mode="contained" icon="account-clock-outline" contentStyle={styles.primaryButton} style={styles.primaryAction}>Tradesperson sign up</Button></Link>
         <Link href={signInHref('trader')} asChild><Button mode="text">Tradesperson sign in</Button></Link>
       </AppCard>
     </View>
@@ -56,7 +56,7 @@ export default function AccountEntryScreen() {
     <AppCard elevated={false} style={styles.browseCard}>
       <View style={styles.browseCopy}>
         <Text variant="titleMedium" style={styles.title}>Explore BuildPair now</Text>
-        <Text style={styles.browseText}>The public site stays open while we finish release work. Browse trade profiles, jobs, pricing, guides and how BuildPay works without creating an account.</Text>
+        <Text style={styles.browseText}>Browse local tradespeople, open jobs, pricing and practical advice. BuildPay staged payments are coming soon; job payments are arranged directly.</Text>
       </View>
       <View style={styles.browseActions}>
         <Link href="/(public)/directory" asChild><Button mode="outlined" contentStyle={styles.browseButton}>Browse trades</Button></Link>
