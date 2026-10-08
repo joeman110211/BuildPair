@@ -32,6 +32,7 @@ export default function PricingPage() {
     </View>
 
     <View style={[styles.content, metrics.phone && styles.contentMobile]}>
+      <View style={styles.notice}><Text variant="titleLarge" style={styles.noticeTitle}>Three months of Pro free for new tradespeople</Text><Text style={styles.noticeText}>Create your trade profile and receive three months of Pro access with no payment card. There is no automatic charge when your free period ends.</Text></View>
       <PricingCards />
 
       <View style={styles.explainerGrid}>
@@ -56,14 +57,14 @@ export default function PricingPage() {
       </View>
 
       <View style={styles.notice}>
-        <Text variant="titleMedium" style={styles.noticeTitle}>BuildPair job payment fee</Text>
-        <Text style={styles.noticeText}>BuildPay is optional. The party requesting it carries the disclosed cost, while direct payment remains available when both sides agree.</Text>
+        <Text variant="titleMedium" style={styles.noticeTitle}>BuildPay · coming soon</Text>
+        <Text style={styles.noticeText}>BuildPay is not available yet. Homeowners and tradespeople currently arrange all job payments directly with each other. BuildPair does not hold or protect these payments.</Text>
         <Link href="/(public)/payments" asChild><Button mode="text">Learn about payments</Button></Link>
       </View>
 
       <View style={styles.notice}>
         <Text variant="titleMedium" style={styles.noticeTitle}>Plan billing</Text>
-        <Text style={styles.noticeText}>Starter is £0 per month. BuildPair Core is £9.99, BuildPair Plus is £19.99 and BuildPair Pro is £29.99 per month. Subscription purchases, renewals, plan changes and cancellations are handled through the BuildPair billing flow and Stripe. The applicable amount is shown before a paid subscription is confirmed.</Text>
+        <Text style={styles.noticeText}>All new tradespeople receive three months of BuildPair Pro free when their trade profile is created, with no card and no automatic payment. New paid subscription checkout is temporarily unavailable while billing is finalised. When the free Pro period ends, choose a paid plan when available or continue using Starter for free. Indicative future monthly prices: Core £9.99, Plus £19.99 and Pro £29.99. BuildPair will show final fees before any subscription purchase.</Text>
       </View>
     </View>
     <PublicFooter />
