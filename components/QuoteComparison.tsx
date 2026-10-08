@@ -7,6 +7,7 @@ import { MilestoneTimeline } from '@/components/MilestoneTimeline';
 import { colors, radii, spacing } from '@/constants/theme';
 import { formatMoney, poundsToPence } from '@/lib/money';
 import { fullFundingSchedule } from '@/lib/payment-plan';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import type { PaymentStagePlan, Quote } from '@/types';
 
 type PaymentChoice = 'full' | 'milestones';
@@ -92,7 +93,7 @@ export function QuoteComparison({ quotes, accepting, messaging, acting, onAccept
             </View>
             <Text variant="titleLarge" style={styles.title}>{quote.businessName ?? 'Trade quote'}</Text>
             <Text variant="displaySmall" style={styles.total}>{formatMoney(allInTotal)}</Text>
-            <Text style={styles.muted}>{fee > 0 ? `All-in BuildPay total. Work price ${formatMoney(quote.totalAmount)} + BuildPay service fee ${formatMoney(fee)}.` : quote.buildPayRequestedBy && quote.buildPayFeeMode === 'trader_absorbs' ? `All-in total. The tradesperson is absorbing the agreed BuildPay fees, so you pay the ${formatMoney(quote.totalAmount)} work price.` : 'Quoted job price. If you later request optional BuildPay, its service fee and all-in total will be shown before you commit.'}</Text>
+            <Text style={styles.muted}>{fee > 0 ? `All-in BuildPay total. Work price ${formatMoney(quote.totalAmount)} + BuildPay service fee ${formatMoney(fee)}.` : quote.buildPayRequestedBy && quote.buildPayFeeMode === 'trader_absorbs' ? `All-in total. The tradesperson is absorbing the agreed BuildPay fees, so you pay the ${formatMoney(quote.totalAmount)} work price.` : BUILDPAY_OPEN ? 'Quoted job price. If you later request optional BuildPay, its service fee and all-in total will be shown before you commit.' : 'Quoted job price. Arrange payments directly by mutual agreement; BuildPair does not hold these funds.'}</Text>
           </View>
           <View style={styles.summaryFacts}>
             <Fact label="Start" value={quote.proposedStartAt ? new Date(quote.proposedStartAt).toLocaleDateString('en-GB') : 'To agree'} />
@@ -105,7 +106,7 @@ export function QuoteComparison({ quotes, accepting, messaging, acting, onAccept
 
         <Divider />
         <Pressable accessibilityRole="button" onPress={() => setExpandedCostId(expanded ? undefined : quote.id)} style={styles.expandHeader}>
-          <View><Text variant="titleMedium" style={styles.title}>Cost breakdown</Text><Text style={styles.muted}>Work price and any BuildPay service fee</Text></View>
+          <View><Text variant="titleMedium" style={styles.title}>Cost breakdown</Text><Text style={styles.muted}>{BUILDPAY_OPEN ? 'Work price and any BuildPay service fee' : 'Work price breakdown'}</Text></View>
           <Chip compact icon={expanded ? 'chevron-up' : 'chevron-down'}>{expanded ? 'Hide' : 'View'}</Chip>
         </Pressable>
         {expanded ? <View style={styles.breakdown}>
