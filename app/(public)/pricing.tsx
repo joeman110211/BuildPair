@@ -8,7 +8,7 @@ import { PublicSeo } from '@/components/PublicSeo';
 import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
 import { colors, publicResponsiveMetrics } from '@/constants/theme';
-import { REGISTRATION_OPEN, PAID_PLANS_OPEN, waitlistHref } from '@/lib/launch';
+import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
 export default function PricingPage() {
   const { width } = useWindowDimensions();
