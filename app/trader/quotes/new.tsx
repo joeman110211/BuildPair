@@ -234,7 +234,7 @@ export default function NewQuoteScreen() {
         title: 'Materials payment',
         amount: materialsCost,
         kind: 'materials',
-        trigger: 'Included in the opening BuildPay payment. Released after the tradesperson acknowledges the payment so the quoted materials can be ordered.',
+        trigger: BUILDPAY_OPEN ? 'Included in the opening BuildPay payment. Released after the tradesperson acknowledges the payment so the quoted materials can be ordered.' : 'Pay directly to the tradesperson under the agreed terms before materials are ordered.',
         sortOrder: result.length + 1,
       });
     }
@@ -242,10 +242,10 @@ export default function NewQuoteScreen() {
     if (depositAmount > 0) {
       result.push({
         key: 'deposit',
-        title: external ? 'Deposit' : 'Protected deposit',
+        title: external || !BUILDPAY_OPEN ? 'Deposit' : 'Protected deposit',
         amount: depositAmount,
         kind: 'deposit',
-        trigger: external ? 'Due when the quote is accepted and before work starts.' : 'Held in BuildPay until the agreed deposit release point is reached and the homeowner approves it.',
+        trigger: external || !BUILDPAY_OPEN ? 'Due directly to the tradesperson at the agreed point.' : 'Held in BuildPay until the agreed deposit release point is reached and the homeowner approves it.',
         sortOrder: result.length + 1,
       });
     }
@@ -263,7 +263,7 @@ export default function NewQuoteScreen() {
       title: external ? 'Final balance' : 'Final payment',
       amount: finalAmount,
       kind: 'final',
-      trigger: external ? 'Due when the agreed work is complete.' : 'Held in BuildPay and released after final completion is approved by the homeowner.',
+      trigger: external || !BUILDPAY_OPEN ? 'Due directly when the agreed work is complete.' : 'Held in BuildPay and released after final completion is approved by the homeowner.',
       sortOrder: result.length + 1,
     });
     return result;
@@ -604,7 +604,7 @@ export default function NewQuoteScreen() {
 
     <AppCard>
       <Text variant="titleLarge" style={styles.title}>Payment stages</Text>
-      <Text style={styles.muted}>{external ? 'Choose how you want this customer to pay.' : materialsCost > 0 ? 'Materials are split out automatically. A deposit or progress stages makes BuildPay part of your quote so both sides know the protected payment terms before acceptance.' : 'Choose one balance, a protected deposit + balance, or protected progress stages.'}</Text>
+      <Text style={styles.muted}>{external ? 'Choose how you want this customer to pay.' : materialsCost > 0 ? 'Materials are split out automatically. Deposit and progress stages can be agreed with the homeowner. Payments are made directly, outside BuildPair.' : 'Choose one balance, a protected deposit + balance, or protected progress stages.'}</Text>
       <SegmentedButtons value={planMode} onValueChange={choosePlanMode} buttons={external ? [{ value: 'single', label: 'Full at end' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Stage payments' }] : BUILDPAY_OPEN ? buildPayPlanButtons : [{ value: 'single', label: 'Full at end' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Stage payments' }]} />
       {planMode !== 'single' ? <View style={styles.depositBlock}>
         <Text variant="labelLarge" style={styles.label}>{external || !BUILDPAY_OPEN ? 'Deposit' : 'Protected deposit'}</Text>
