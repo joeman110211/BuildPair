@@ -72,7 +72,7 @@ const plans = [
       'Direct homeowner quote requests do not use your allowance',
       'Full Quote Builder with itemised pricing, VAT, stages, terms and revisions',
       'Bring accepted outside-customer quotes into managed BuildPair projects',
-      'Offer staged BuildPay after the customer claims the project',
+      'Manage accepted outside-customer work within your BuildPair projects',
       'Connect an approved Google business listing and show Google reviews separately',
       'Full AI reply and quote-writing assistance',
       'Up to 5 saved job searches',
