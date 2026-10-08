@@ -230,7 +230,7 @@ export default function TraderJobDetail() {
     </AppCard> : paymentMode === 'external' ? <AppCard style={styles.externalCard}>
       <Text variant="titleLarge" style={styles.title}>Direct payments selected</Text>
       <Text style={styles.muted}>The homeowner pays you directly. BuildPair can record the quote, project, variations and what both sides say about payment, but it does not receive, hold, protect, refund or recover that money. BuildPay controls do not apply.</Text>
-    </AppCard> : <AppCard style={styles.externalCard}><Text variant="titleLarge" style={styles.title}>Waiting for payment choice</Text><Text style={styles.muted}>The quote is accepted. The homeowner now confirms the job address and chooses BuildPay or direct payment.</Text></AppCard>}
+    </AppCard> : <AppCard style={styles.externalCard}><Text variant="titleLarge" style={styles.title}>Waiting for payment choice</Text><Text style={styles.muted}>The quote is accepted. The homeowner now confirms the job address and agrees how to pay you directly.</Text></AppCard>}
 
     {paymentMode === 'buildpair' && pendingAcknowledgement ? <AppCard style={styles.ackCard}>
       <Chip icon="cash-check">Opening payment received</Chip>
