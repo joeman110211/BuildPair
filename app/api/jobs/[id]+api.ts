@@ -92,8 +92,8 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       if (row.status !== 'in_progress') throw new HttpError(409, 'A start date can only be proposed for an active awarded job');
       await getSql()`UPDATE jobs SET scheduled_start_at = ${startAt.toISOString()}, start_agreed_at = NULL, start_proposed_by = ${userId}, updated_at = now() WHERE id = ${id}`;
       const when = formatUkDateTime(startAt);
-      await addJobEvent(id, userId, 'job_start_proposed', 'Start date proposed', `${when} proposed by the tradesperson. The homeowner must confirm it before the opening BuildPay payment can be taken.`, { startAt: startAt.toISOString() });
-      await createNotification(row.customerId, { type: 'job_start_proposed', title: `Start proposed · ${when}`, body: `${row.title}: confirm the proposed start date and time in BuildPair before making the opening BuildPay payment.`, href: `/customer/jobs/${id}/start`, email: true });
+      await addJobEvent(id, userId, 'job_start_proposed', 'Start date proposed', `${when} proposed by the tradesperson. The homeowner must confirm the start date before work begins.`, { startAt: startAt.toISOString() });
+      await createNotification(row.customerId, { type: 'job_start_proposed', title: `Start proposed · ${when}`, body: `${row.title}: confirm the proposed start date and time in BuildPair before work begins.`, href: `/customer/jobs/${id}/start`, email: true });
       return Response.json({ proposed: true, scheduledStartAt: startAt.toISOString(), startAgreedAt: null });
     }
 
@@ -109,7 +109,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       await getSql()`UPDATE jobs SET start_agreed_at = now(), updated_at = now() WHERE id = ${id}`;
       const when = formatUkDateTime(new Date(row.scheduledStartAt));
       await addJobEvent(id, userId, 'job_start_agreed', 'Start date agreed', `${when} confirmed by the homeowner.`, { startAt: row.scheduledStartAt });
-      await createNotification(row.traderId, { type: 'job_start_agreed', title: `Start agreed · ${when}`, body: `${row.title}: the homeowner confirmed the start date and time. BuildPay setup can now move to the opening payment.`, href: `/trader/jobs/${id}`, email: true });
+      await createNotification(row.traderId, { type: 'job_start_agreed', title: `Start agreed · ${when}`, body: `${row.title}: the homeowner confirmed the start date and time. Both parties can now proceed with their agreed direct-payment arrangement.`, href: `/trader/jobs/${id}`, email: true });
       return Response.json({ confirmed: true, scheduledStartAt: row.scheduledStartAt, startAgreedAt: new Date().toISOString() });
     }
 
