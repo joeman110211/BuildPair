@@ -4,6 +4,7 @@ import { getDb } from '@/db/client';
 import { traderProfiles } from '@/db/schema';
 import { HttpError, jsonError, requireRole } from '@/lib/server';
 import { getStripe, providerReturnUrl } from '@/lib/stripe';
+import { PAID_PLANS_OPEN } from '@/lib/launch-config';
 
 const inputSchema = z.object({ tier: z.enum(['core', 'basic', 'featured']) });
 
@@ -15,6 +16,7 @@ const plans = {
 
 export async function POST(request: Request) {
   try {
+    if (!PAID_PLANS_OPEN) throw new HttpError(423, 'Paid subscriptions are not available during the three-month Pro introductory offer. No payment is required.');
     const trader = await requireRole(request, 'trader');
     const { tier } = inputSchema.parse(await request.json());
     const db = getDb();
