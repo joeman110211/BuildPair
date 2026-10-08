@@ -10,7 +10,7 @@ import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors, controlHeights, spacing } from '@/constants/theme';
 import { apiFetch, ApiError, errorMessage } from '@/lib/api';
-import { MARKETPLACE_OPEN } from '@/lib/launch';
+import { MARKETPLACE_OPEN, BUILDPAY_OPEN } from '@/lib/launch';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import type { Job, Quote, TraderProfile } from '@/types';
 
@@ -118,7 +118,7 @@ export default function TraderDashboard() {
         </View>
         <Chip icon="rocket-launch-outline">Launch ready</Chip>
       </View>
-    </AppCard> : !payoutsReady ? <AppCard style={styles.payoutCard}>
+    </AppCard> : BUILDPAY_OPEN && !payoutsReady ? <AppCard style={styles.payoutCard}>
       <View style={styles.row}>
         <View style={styles.flex}>
           <Text variant="titleLarge" style={styles.cardTitle}>Payout verification incomplete</Text>
@@ -127,9 +127,9 @@ export default function TraderDashboard() {
         <Chip icon="alert-circle-outline">Action required</Chip>
       </View>
       <Link href="/trader/subscription" asChild><Button mode="contained" icon="bank-outline" contentStyle={styles.actionButton}>Check Stripe payout status</Button></Link>
-    </AppCard> : <AppCard style={styles.payoutReadyCard}>
+    </AppCard> : BUILDPAY_OPEN ? <AppCard style={styles.payoutReadyCard}>
       <View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.cardTitle}>BuildPair payouts ready</Text><Text style={styles.muted}>Stripe has confirmed that your connected account can receive materials, deposit and released staged payments.</Text></View><Chip icon="check-circle-outline">Ready</Chip></View>
-    </AppCard>}
+    </AppCard> : null}
 
     <AppCard>
       <View style={styles.row}>
@@ -165,7 +165,7 @@ export default function TraderDashboard() {
       </View>
       {offerLimit > 0 ? <><ProgressBar progress={offerProgress} color={colors.primary} style={styles.progress} /><Text style={styles.offerMeta}>{offersUsed} used · {offerLimit} monthly allowance</Text></> : null}
       <View style={styles.membershipActions}>
-        <Link href="/trader/subscription" asChild><Button mode={profile.subscriptionTier === 'free' ? 'contained' : 'outlined'} contentStyle={styles.actionButton}>{profile.subscriptionTier === 'free' ? 'View pricing' : 'Plans & payouts'}</Button></Link>
+        <Link href="/trader/subscription" asChild><Button mode={profile.subscriptionTier === 'free' ? 'contained' : 'outlined'} contentStyle={styles.actionButton}>{profile.subscriptionTier === 'free' ? 'View pricing' : 'Plans & membership'}</Button></Link>
         <Link href="/trader/analytics" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Business analytics</Button></Link>
       </View>
     </AppCard>
