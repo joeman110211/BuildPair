@@ -11,6 +11,7 @@ import { QuoteDocument, type QuoteDocumentData } from '@/components/QuoteDocumen
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import { formatMoney, poundsToPence } from '@/lib/money';
 import { buildQuoteStartDateOptions, closestQuoteDuration, QUOTE_DURATION_OPTIONS, QUOTE_SCOPE_MIN_LENGTH } from '@/lib/quote-options';
 import type { BuildPayFeeMode, Job, PaymentStagePlan, TraderProfile } from '@/types';
@@ -170,7 +171,7 @@ export default function NewQuoteScreen() {
           setDurationText(draft.durationText ?? '');
           setWarrantyText(draft.warrantyText ?? '');
           setVatRate(String(draft.vatRate ?? 0));
-          setPaymentMethod(draft.paymentMethod === 'buildpair' ? 'buildpair' : 'external');
+          setPaymentMethod(BUILDPAY_OPEN && draft.paymentMethod === 'buildpair' ? 'buildpair' : 'external');
           setPaymentTerms(draft.paymentTerms);
           setNotes(draft.notes ?? '');
           setShowBreakdown(draft.showBreakdown);
@@ -233,7 +234,7 @@ export default function NewQuoteScreen() {
         title: 'Materials payment',
         amount: materialsCost,
         kind: 'materials',
-        trigger: 'Included in the opening BuildPay payment. Released after the tradesperson acknowledges the payment so the quoted materials can be ordered.',
+        trigger: BUILDPAY_OPEN ? 'Included in the opening BuildPay payment. Released after the tradesperson acknowledges the payment so the quoted materials can be ordered.' : 'Payment arranged directly between homeowner and tradesperson before ordering materials.',
         sortOrder: result.length + 1,
       });
     }
@@ -241,10 +242,10 @@ export default function NewQuoteScreen() {
     if (depositAmount > 0) {
       result.push({
         key: 'deposit',
-        title: external ? 'Deposit' : 'Protected deposit',
+        title: external || !BUILDPAY_OPEN ? 'Deposit' : 'Protected deposit',
         amount: depositAmount,
         kind: 'deposit',
-        trigger: external ? 'Due when the quote is accepted and before work starts.' : 'Held in BuildPay until the agreed deposit release point is reached and the homeowner approves it.',
+        trigger: external || !BUILDPAY_OPEN ? 'Due directly as agreed before work starts.' : 'Held in BuildPay until the agreed deposit release point is reached and the homeowner approves it.',
         sortOrder: result.length + 1,
       });
     }
@@ -262,13 +263,13 @@ export default function NewQuoteScreen() {
       title: external ? 'Final balance' : 'Final payment',
       amount: finalAmount,
       kind: 'final',
-      trigger: external ? 'Due when the agreed work is complete.' : 'Held in BuildPay and released after final completion is approved by the homeowner.',
+      trigger: external || !BUILDPAY_OPEN ? 'Due directly when the agreed work is complete.' : 'Held in BuildPay and released after final completion is approved by the homeowner.',
       sortOrder: result.length + 1,
     });
     return result;
   }, [depositAmount, external, finalAmount, materialsCost, planMode, stages, totalAmount]);
 
-  const buildPayRequested = !external && (requestBuildPay || planMode !== 'single');
+  const buildPayRequested = BUILDPAY_OPEN && !external && (requestBuildPay || planMode !== 'single');
   const validUntil = useMemo(() => new Date(Date.now() + Number(validDays) * 24 * 60 * 60 * 1000).toISOString(), [validDays]);
   const previewQuote = useMemo<QuoteDocumentData>(() => ({
     businessName: profile?.businessName ?? 'Your business',
@@ -313,7 +314,7 @@ export default function NewQuoteScreen() {
   function addStage(kind: DraftStage['kind'], title: string, trigger: string) {
     setStages((current) => [...current, { key: `stage-${Date.now()}-${current.length}`, title, amount: '', trigger, kind }]);
     setPlanMode('staged');
-    if (!external) setRequestBuildPay(true);
+    if (!external && BUILDPAY_OPEN) setRequestBuildPay(true);
   }
 
   function updateStage(index: number, patch: Partial<DraftStage>) {
@@ -339,7 +340,7 @@ export default function NewQuoteScreen() {
   function choosePlanMode(value: string) {
     const next = value as PlanMode;
     setPlanMode(next);
-    if (!external) setRequestBuildPay(next !== 'single');
+    if (!external) setRequestBuildPay(BUILDPAY_OPEN && next !== 'single');
   }
 
   async function buildWithAi() {
@@ -603,11 +604,11 @@ export default function NewQuoteScreen() {
 
     <AppCard>
       <Text variant="titleLarge" style={styles.title}>Payment stages</Text>
-      <Text style={styles.muted}>{external ? 'Choose how you want this customer to pay.' : materialsCost > 0 ? 'Materials are split out automatically. A deposit or progress stages makes BuildPay part of your quote so both sides know the protected payment terms before acceptance.' : 'Choose one balance, a protected deposit + balance, or protected progress stages.'}</Text>
-      <SegmentedButtons value={planMode} onValueChange={choosePlanMode} buttons={external ? [{ value: 'single', label: 'Full at end' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Stage payments' }] : buildPayPlanButtons} />
+      <Text style={styles.muted}>{external ? 'Choose how you want this customer to pay.' : materialsCost > 0 ? 'Materials are split out automatically. A deposit or progress stages can be agreed in the written quote. Job payments are currently arranged directly.' : 'Choose one balance, a protected deposit + balance, or protected progress stages.'}</Text>
+      <SegmentedButtons value={planMode} onValueChange={choosePlanMode} buttons={external ? [{ value: 'single', label: 'Full at end' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Stage payments' }] : BUILDPAY_OPEN ? buildPayPlanButtons : [{ value: 'single', label: 'Full at end' }, { value: 'deposit', label: 'Deposit + balance' }, { value: 'staged', label: 'Stage payments' }]} />
       {planMode !== 'single' ? <View style={styles.depositBlock}>
-        <Text variant="labelLarge" style={styles.label}>{external ? 'Deposit' : 'Protected deposit'}</Text>
-        {!external ? <Text style={styles.muted}>{materialsCost > 0 ? 'This deposit is part of the work balance, separate from the materials amount. It stays protected until its agreed release point is reached.' : 'This deposit stays protected in BuildPay until its agreed release point is reached and the homeowner approves it.'}</Text> : null}
+        <Text variant="labelLarge" style={styles.label}>{external || !BUILDPAY_OPEN ? 'Deposit' : 'Protected deposit'}</Text>
+        {!external && BUILDPAY_OPEN ? <Text style={styles.muted}>{materialsCost > 0 ? 'This deposit is part of the work balance, separate from the materials amount. It stays protected until its agreed release point is reached.' : 'This deposit stays protected in BuildPay until its agreed release point is reached and the homeowner approves it.'}</Text> : null}
         <SegmentedButtons value={depositUnit} onValueChange={(value) => setDepositUnit(value as DepositUnit)} buttons={[{ value: 'amount', label: '£ amount' }, { value: 'percent', label: '%' }]} />
         <TextInput label={depositUnit === 'percent' ? 'Deposit (%)' : 'Deposit (£)'} value={depositValue} onChangeText={setDepositValue} keyboardType="decimal-pad" mode="outlined" />
         {depositAmount > 0 ? <Text style={styles.muted}>Deposit: {formatMoney(depositAmount)}</Text> : null}
@@ -651,7 +652,7 @@ export default function NewQuoteScreen() {
       </AppCard> : null}
       {external ? <>
         <Text variant="labelLarge" style={styles.label}>Payment method</Text>
-        <SegmentedButtons value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'external' | 'buildpair')} buttons={[{ value: 'external', label: 'Paid directly' }, { value: 'buildpair', label: 'BuildPay', disabled: !payoutReady || !plusBusinessTools }]} />
+        <SegmentedButtons value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'external' | 'buildpair')} buttons={BUILDPAY_OPEN ? [{ value: 'external', label: 'Paid directly' }, { value: 'buildpair', label: 'BuildPay', disabled: !payoutReady || !plusBusinessTools }] : [{ value: 'external', label: 'Paid directly' }]} />
         {!plusBusinessTools ? <HelperText type="info">Core can quote and invoice outside customers. Converting an accepted outside quote into a managed BuildPair project with staged BuildPay is included with Plus and Pro.</HelperText> : null}
         {paymentMethod === 'buildpair' ? <HelperText type="info">You are asking to use BuildPay for this outside customer, so you carry the BuildPay cost. After the customer accepts and claims the project, the agreed stages move into the normal BuildPay project flow.</HelperText> : null}
         {!payoutReady ? <HelperText type="info">BuildPay is unavailable until Stripe has confirmed that payouts are enabled. You can still create, send and track quotes normally.</HelperText> : null}
