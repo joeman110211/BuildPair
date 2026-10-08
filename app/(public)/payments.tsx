@@ -2,9 +2,31 @@ import { StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { PublicInfoPage } from '@/components/PublicInfoPage';
 import { PAYMENT_LANGUAGE } from '@/constants/site-language';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import { colors, radii, shadows, spacing } from '@/constants/theme';
 
 export default function PaymentsPage() {
+  if (!BUILDPAY_OPEN) {
+    return <PublicInfoPage
+      eyebrow="Payments"
+      title="Pay directly during our regional launch"
+      intro="BuildPay is not available yet. Homeowners and tradespeople agree payments directly, outside BuildPair."
+      summary={<View style={styles.summary}>
+        <View style={styles.choice}>
+          <Text style={styles.kicker}>DIRECT PAYMENTS</Text>
+          <Text variant="titleLarge" style={styles.title}>You agree how to pay</Text>
+          <Text style={styles.copy}>Keep the quote, messages and job record in BuildPair while arranging payment directly between yourselves.</Text>
+        </View>
+      </View>}
+      updated="8 October 2026"
+      sections={[
+        { title: '1. Agree the quote', body: 'Review the scope, materials, price and terms together before accepting a quote. Site visits are allowed and extra work should be agreed in writing.' },
+        { title: '2. Arrange payment directly', body: 'The homeowner and tradesperson agree their payment method and timing themselves. BuildPair does not collect, hold, transfer or refund those payments.' },
+        { title: '3. Keep a project record', body: 'Use BuildPair to keep the quote, messages, variations and user-confirmed payment details together. A payment recorded by the parties is not independently verified by BuildPair.' },
+        { title: '4. BuildPay is unavailable', body: 'BuildPay staged-payment processing and protections are not available during this launch phase. Do not pay money to BuildPair for job materials or labour. Ordinary consumer and contractual rights still apply to payments made directly to a tradesperson.' },
+      ]}
+    />;
+  }
   return <PublicInfoPage
     eyebrow="Payments"
     title={PAYMENT_LANGUAGE.title}
