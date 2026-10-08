@@ -7,6 +7,7 @@ import { fullFundingSchedule, paymentScheduleSchema, type PaymentStagePlan, vali
 import { validateProtectedPaymentEconomics } from '@/lib/payment-protection';
 import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 
 type QuotePaymentTermsRow = {
   paymentSchedule: unknown;
@@ -54,6 +55,8 @@ export async function PATCH(request: Request, { id }: { id: string }) {
       await createNotification(candidate.quote.traderId, { type: 'quote_declined', title: 'Your quote was declined', body: `${candidate.job.title}: the homeowner has declined this quote.`, href: '/trader/my-jobs', email: true });
       return Response.json({ declined: true });
     }
+
+    if (!BUILDPAY_OPEN && (payload.action === 'edit_payment_plan' || payload.action === 'accept_payment_plan')) throw new HttpError(423, 'BuildPay payment-plan changes are unavailable during the direct-payment launch.');
 
     if (payload.action === 'edit_payment_plan') {
       if (!modes.customerEnabled || candidate.job.customerId !== userId) throw new HttpError(403, 'Customer account required');
@@ -128,6 +131,7 @@ export async function PATCH(request: Request, { id }: { id: string }) {
 
     const plannedChargeCount = plannedBuildPayChargeCount(acceptedSchedule);
     const buildPayRequestedBy = quoteTerms?.buildPayRequestedBy ?? null;
+    if (!BUILDPAY_OPEN && buildPayRequestedBy) throw new HttpError(423, 'This quote requests BuildPay, which is not available yet. Ask the tradesperson to issue a direct-payment quote.');
     const buildPayFeeMode = buildPayRequestedBy ? (quoteTerms?.buildPayFeeMode ?? 'customer_pays') : null;
     const buildPayCustomerFeeTotal = buildPayRequestedBy && buildPayFeeMode === 'customer_pays'
       ? buildPayCustomerFee({ contractAmount: candidate.quote.totalAmount, laborServiceAmount: candidate.quote.laborCost, plannedChargeCount }).customerFee
