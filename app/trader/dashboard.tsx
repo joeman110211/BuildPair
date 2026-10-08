@@ -130,7 +130,7 @@ export default function TraderDashboard() {
       <Link href="/trader/subscription" asChild><Button mode="contained" icon="bank-outline" contentStyle={styles.actionButton}>Check Stripe payout status</Button></Link>
     </AppCard> : BUILDPAY_OPEN ? <AppCard style={styles.payoutReadyCard}>
       <View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.cardTitle}>BuildPair payouts ready</Text><Text style={styles.muted}>Stripe has confirmed that your connected account can receive materials, deposit and released staged payments.</Text></View><Chip icon="check-circle-outline">Ready</Chip></View>
-    </AppCard>}
+    </AppCard> : null}
 
     <AppCard>
       <View style={styles.row}>
