@@ -1,5 +1,4 @@
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
-import { FOUNDING_PRO_START_ISO } from '@/lib/launch-config';
 
 export const CATEGORY_CHANGE_COOLDOWN_DAYS = 14;
 
@@ -82,10 +81,9 @@ export function hasActiveLeadAccess(profile: {
   if (profile.isSubscriptionActive === true) return true;
   if (!profile.trialEndsAt) return false;
 
-  const startsAt = new Date(FOUNDING_PRO_START_ISO).getTime();
   const endsAt = profile.trialEndsAt instanceof Date ? profile.trialEndsAt.getTime() : new Date(profile.trialEndsAt).getTime();
   const current = now.getTime();
-  return Number.isFinite(endsAt) && current >= startsAt && current < endsAt;
+  return Number.isFinite(endsAt) && current < endsAt;
 }
 
 export function isPubliclySearchable(profile: {
