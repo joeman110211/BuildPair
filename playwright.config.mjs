@@ -9,7 +9,7 @@ export default defineConfig({
   retries: 1,
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   use: {
-    baseURL: process.env.E2E_BASE_URL || 'https://staging.buildpair.co.uk',
+    baseURL: process.env.E2E_BASE_URL || 'https://www.buildpair.co.uk',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
