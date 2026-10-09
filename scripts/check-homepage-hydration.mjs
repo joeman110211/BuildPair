@@ -21,6 +21,10 @@ try {
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error.message)));
 
+    // Force a quiet, newly opened marketplace to verify its honest empty state.
+    await page.route('**/api/public/jobs', (route) => route.fulfill({
+      status: 200, contentType: 'application/json', body: '[]',
+    }));
     const response = await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 45_000 });
     assert.ok(response?.ok(), size.name + ': initial document did not load');
 
@@ -36,6 +40,14 @@ try {
     assert.ok(await homeowner.isVisible(), size.name + ': homeowner button vanished');
     assert.ok(await trader.isVisible(), size.name + ': tradesperson button vanished');
     assert.ok(await page.getByTestId('bp-home-browse').isVisible(), size.name + ': browse action missing');
+    const latestEmpty = page.getByTestId('bp-home-latest-jobs-empty');
+    await latestEmpty.waitFor({ state: 'visible', timeout: 20_000 });
+    assert.ok((await latestEmpty.innerText()).includes('Our job marketplace has just opened.'),
+      size.name + ': latest jobs placeholder is missing');
+    assert.ok(await latestEmpty.getByRole('button', { name: 'Browse job board' }).isVisible(),
+      size.name + ': empty job board navigation missing');
+    assert.ok(await latestEmpty.getByRole('button', { name: 'Post a job' }).isVisible(),
+      size.name + ': post-job action missing');
     assert.ok(await page.getByRole('button', { name: 'Menu', exact: true }).isVisible() || size.width >= 1280,
       size.name + ': menu missing');
 
@@ -63,6 +75,32 @@ try {
     assert.deepEqual(errors, [], size.name + ': uncaught client errors: ' + errors.join('; '));
     console.log('PASS ' + size.name + ': hydrated, heading/buttons visible, responsive layout, no horizontal overflow');
     await page.close();
+
+    // A second, entirely synthetic response tests live-job cards without seeding production.
+    if (size.width === 390 || size.width === 1366) {
+      const withJobs = await browser.newPage({ viewport: { width: size.width, height: size.height } });
+      const jobErrors = [];
+      withJobs.on('pageerror', (error) => jobErrors.push(String(error.message)));
+      const fixtureJobs = [
+        { id: 'homepage-smoke-job-1', title: 'Repair a leaking kitchen tap', category: 'Plumbing', locationLabel: 'Surrey', postcode: 'KT11', budgetRange: '£100–£250', urgency: 'Within a week', status: 'open', targetTraderId: null, acceptedQuoteId: null },
+        { id: 'homepage-smoke-job-2', title: 'Tiling a small bathroom', category: 'Tiling', locationLabel: 'Sussex', postcode: 'PO21', budgetRange: 'To be agreed', urgency: 'Flexible', status: 'open', targetTraderId: null, acceptedQuoteId: null },
+      ];
+      await withJobs.route('**/api/public/jobs', (route) => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(fixtureJobs),
+      }));
+      await withJobs.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 45_000 });
+      const carousel = withJobs.getByTestId('bp-home-latest-jobs-carousel');
+      await carousel.waitFor({ state: 'visible', timeout: 30_000 });
+      assert.equal(await withJobs.getByTestId('bp-home-latest-job-card').count(), 2,
+        size.name + ': recent public job cards missing');
+      assert.ok(await withJobs.getByText('Repair a leaking kitchen tap').isVisible(),
+        size.name + ': genuine-job presentation missing');
+      await withJobs.waitForTimeout(2_000);
+      assert.deepEqual(jobErrors, [], size.name + ': job carousel JavaScript error: ' + jobErrors.join('; '));
+      await withJobs.screenshot({ path: 'homepage-smoke-artifacts/' + size.name + '-recent-jobs.png', fullPage: true });
+      await withJobs.close();
+      console.log('PASS ' + size.name + ': synthetic live-job carousel renders with no client errors');
+    }
   }
 } finally {
   await browser.close();

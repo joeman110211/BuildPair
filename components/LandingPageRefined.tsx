@@ -7,6 +7,7 @@ import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { FeaturedTraderHero } from '@/components/FeaturedTraderHero';
+import { LatestJobsHero } from '@/components/LatestJobsHero';
 import { PricingCards } from '@/components/PricingCards';
 import { ProductPreview } from '@/components/ProductPreview';
 import { PublicFooter } from '@/components/PublicFooter';
@@ -84,6 +85,13 @@ export default function LandingPageRefined() {
       </View>
     </View></Reveal>
 
+    <Reveal delay={20}><View testID="bp-home-latest-jobs-section" style={[styles.band, styles.jobsBand]}>
+      <View style={styles.section}>
+        <Heading eyebrow="Latest jobs" title="See what homeowners need help with" body="Browse genuine job requests as they are posted on BuildPair." />
+        <LatestJobsHero />
+      </View>
+    </View></Reveal>
+
     <Reveal delay={40}><View style={styles.section}>
       <Heading eyebrow="Find a trade" title="What needs doing?" body="Choose a trade or describe the job in your own words." />
       <View style={[styles.searchRow, mobile && styles.searchRowMobile]}>
@@ -141,7 +149,7 @@ const styles = StyleSheet.create({
   heroMobile: { paddingHorizontal: 16, paddingVertical: 36, gap: 16 }, heroTitle: { color: colors.charcoal, fontSize: 48, lineHeight: 55, fontWeight: '900', letterSpacing: -1.6, textAlign: 'center' }, heroTitleMobile: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
   heroBody: { color: colors.charcoalSoft, fontSize: 17, lineHeight: 26, textAlign: 'center', maxWidth: 580 }, heroActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 8 },
   benefits: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 }, benefit: { color: colors.muted, fontSize: 12, fontWeight: '700' }, benefitDot: { color: colors.primary },
-  band: { width: '100%' }, whiteBand: { backgroundColor: colors.surfaceRaised }, productBand: { backgroundColor: colors.navySoft },
+  band: { width: '100%' }, whiteBand: { backgroundColor: colors.surfaceRaised }, jobsBand: { backgroundColor: colors.surfaceSoft, borderBottomWidth: 1, borderBottomColor: colors.border }, productBand: { backgroundColor: colors.navySoft },
   section: { width: '100%', maxWidth: 1140, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 36, gap: 22 }, heading: { width: '100%', maxWidth: 740, alignSelf: 'center', alignItems: 'center', gap: 8 },
   eyebrow: { color: colors.primaryDark, fontSize: 11, lineHeight: 16, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', textAlign: 'center' }, sectionTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center', letterSpacing: -0.5 }, sectionBody: { color: colors.muted, lineHeight: 23, textAlign: 'center', maxWidth: 640 },
   button: { borderRadius: radii.md, alignSelf: 'center', maxWidth: '100%' }, buttonContent: { minHeight: controlHeights.standard, paddingHorizontal: 12 }, fullButton: { width: '100%' },
