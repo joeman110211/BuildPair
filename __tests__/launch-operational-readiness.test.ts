@@ -38,6 +38,14 @@ describe('open marketplace operational readiness', () => {
     expect(health).toContain("Reconcile their access in Admin Users before enabling paid plans");
   });
 
+  it('never converts an edited existing trade profile back into an introductory trial', () => {
+    const profileRoute = source('app/api/me+api.ts');
+    expect(profileRoute).toContain('const foundingOffer = !existingProfile;');
+    expect(profileRoute).not.toContain("const foundingOffer = !existingProfile?.stripeSubscriptionId && !existingProfile?.trialEndsAt;");
+    expect(profileRoute).toContain('...values,');
+    expect(profileRoute).toContain('...(foundingOffer ? {');
+  });
+
   it('removes outdated beta and membership sales messaging from trader onboarding', () => {
     const onboarding = source('app/trader/onboarding.tsx');
     expect(onboarding).toContain('eligible tradespeople receive three months of BuildPair Pro at no charge');
