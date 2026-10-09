@@ -119,7 +119,8 @@ export function BuildPairAiHelper() {
   const audience = audienceFromPath(pathname);
   const suggestedPrompts = useMemo(() => promptsFor(pathname, audience), [pathname, audience]);
   const [open, setOpen] = useState(false);
-  const [launcherDismissed, setLauncherDismissed] = useState(false);
+  const [dismissedPath, setDismissedPath] = useState<string | null>(null);
+  const launcherDismissed = dismissedPath === pathname;
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: openingMessage(audience) }]);
@@ -137,12 +138,6 @@ export function BuildPairAiHelper() {
   useEffect(() => {
     if (open) setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
   }, [messages, open, sending]);
-
-  // A dismissal applies to the current page only; AI remains available after
-  // navigating to a different page without needing a refresh.
-  useEffect(() => {
-    setLauncherDismissed(false);
-  }, [pathname]);
 
   if (hidden) return null;
 
@@ -313,7 +308,7 @@ export function BuildPairAiHelper() {
           {compactLauncher ? (
             <Pressable
               style={styles.dismissLauncher}
-              onPress={() => setLauncherDismissed(true)}
+              onPress={() => setDismissedPath(pathname)}
               hitSlop={4}
               accessibilityRole="button"
               accessibilityLabel="Hide BuildPair AI button on this page"
