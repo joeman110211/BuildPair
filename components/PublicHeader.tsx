@@ -57,7 +57,7 @@ function DesktopNav() {
 }
 
 function MobileQuickNav() {
-  return <View style={styles.quickNavShell}>
+  return <View testID="bp-compact-quick-nav" style={styles.quickNavShell}>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickNav} contentContainerStyle={styles.quickNavContent} accessibilityLabel="BuildPair quick navigation">
       {QUICK_NAV.map((item) => <Link key={item.label} href={item.href} asChild><Button compact mode="text" textColor={colors.charcoalSoft} labelStyle={styles.quickButtonLabel} contentStyle={styles.quickButtonContent} style={styles.quickButton}>{item.label}</Button></Link>)}
     </ScrollView>
