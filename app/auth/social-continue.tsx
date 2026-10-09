@@ -67,7 +67,7 @@ export default function SocialContinueScreen() {
           await signUp.finalize({ navigate: async ({ session }) => navigateAfterAuth(session) });
           return;
         }
-        router.replace(signUpHref(mode, returnTo));
+        router.replace(signUpHref(mode ?? 'customer', returnTo));
         return;
       }
 
@@ -76,7 +76,7 @@ export default function SocialContinueScreen() {
         return;
       }
 
-      router.replace(REGISTRATION_OPEN ? signUpHref(mode, returnTo) : waitlistHref(mode, 'social-signup'));
+      router.replace(REGISTRATION_OPEN ? signUpHref(mode ?? 'customer', returnTo) : waitlistHref(mode, 'social-signup'));
     } catch (e) {
       setWorking(false);
       setError(errorMessage(e));
@@ -96,6 +96,6 @@ export default function SocialContinueScreen() {
   return <Screen title="Couldn’t finish sign in" subtitle="You can still create an account or sign in with email.">
     <HelperText type="error" visible>{error || 'Your social sign-in could not be completed. Please try again or use email.'}</HelperText>
     <Button mode="contained" onPress={() => router.replace((mode ? signInHref(mode, returnTo) : '/auth/account') as Href)}>Back to sign in</Button>
-    <Button mode="outlined" onPress={() => router.replace(REGISTRATION_OPEN ? signUpHref(mode, returnTo) : waitlistHref(mode, 'social-signup-error'))}>{REGISTRATION_OPEN ? 'Create an account' : 'Join waitlist'}</Button>
+    <Button mode="outlined" onPress={() => router.replace(REGISTRATION_OPEN ? signUpHref(mode ?? 'customer', returnTo) : waitlistHref(mode, 'social-signup-error'))}>{REGISTRATION_OPEN ? 'Create an account' : 'Join waitlist'}</Button>
   </Screen>;
 }
