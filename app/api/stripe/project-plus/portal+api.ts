@@ -13,9 +13,11 @@ export async function POST(request: Request) {
       FROM users WHERE id = ${userId} LIMIT 1
     ` as unknown as { customerId: string | null }[];
     if (!row?.customerId) throw new HttpError(409, 'No Project+ billing account exists yet');
+    const body = await request.json().catch(() => ({}));
+    const audience = body?.audience === 'trader' ? 'trader' : 'customer';
     const session = await getStripe().billingPortal.sessions.create({
       customer: row.customerId,
-      return_url: `${appUrl()}/customer/project-plus`,
+      return_url: `${appUrl()}/${audience}/project-plus`,
     });
     return Response.json({ url: session.url });
   } catch (error) {
