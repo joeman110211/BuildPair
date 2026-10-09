@@ -3,7 +3,7 @@ import path from 'node:path';
 import { clerk } from '@clerk/testing/playwright';
 import { expect, test } from '@playwright/test';
 
-const baseURL = process.env.E2E_BASE_URL || 'https://staging.buildpair.co.uk';
+const baseURL = process.env.E2E_BASE_URL || 'https://www.buildpair.co.uk';
 const stateFile = path.join(process.cwd(), 'playwright', '.e2e-users.json');
 
 async function signIn(browser, email, role) {

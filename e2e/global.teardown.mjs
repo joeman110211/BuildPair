@@ -4,7 +4,7 @@ import { createClerkClient } from '@clerk/backend';
 import { clerk, setupClerkTestingToken } from '@clerk/testing/playwright';
 import { test as teardown } from '@playwright/test';
 
-const baseURL = process.env.E2E_BASE_URL || 'https://staging.buildpair.co.uk';
+const baseURL = process.env.E2E_BASE_URL || 'https://www.buildpair.co.uk';
 const stateFile = path.join(process.cwd(), 'playwright', '.e2e-users.json');
 
 async function deleteBuildPairAccount(browser, email) {
@@ -62,10 +62,21 @@ teardown('remove disposable homeowner and tradesperson test accounts', async ({ 
     ? createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY })
     : null;
 
+  const failures = [];
   for (const email of emails) {
-    await deleteBuildPairAccount(browser, email);
+    // A broken or malicious state file must never delete an actual BuildPair customer.
+    const disposable = /^buildpair-[a-z0-9-]+\+clerk_test_[a-zA-Z0-9-]+@example\.com$/.test(email);
+    if (!disposable) {
+      failures.push(`Refused non-test cleanup address: ${email}`);
+      continue;
+    }
+    if (!await deleteBuildPairAccount(browser, email)) {
+      failures.push(`BuildPair account deletion failed for disposable fixture ${email}`);
+      continue;
+    }
     if (clerkClient) await deleteRemainingClerkUsers(clerkClient, email);
   }
 
+  if (failures.length) throw new Error(`Production fixture cleanup needs attention: ${failures.join('; ')}`);
   await fs.rm(stateFile, { force: true });
 });

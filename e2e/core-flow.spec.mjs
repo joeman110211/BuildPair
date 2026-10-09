@@ -3,7 +3,7 @@ import path from 'node:path';
 import { clerk } from '@clerk/testing/playwright';
 import { expect, test } from '@playwright/test';
 
-const baseURL = process.env.E2E_BASE_URL || 'https://staging.buildpair.co.uk';
+const baseURL = process.env.E2E_BASE_URL || 'https://www.buildpair.co.uk';
 const stateFile = path.join(process.cwd(), 'playwright', '.e2e-users.json');
 const testPostcode = 'SW1A 1AA';
 
@@ -39,7 +39,7 @@ async function api(token, pathName, options = {}) {
   return body;
 }
 
-test('Homeowner and Starter tradesperson core journey obeys the current product contract', async ({ browser }) => {
+test('Homeowner and introductory Pro tradesperson complete posting, quoting and messaging', async ({ browser }) => {
   const state = JSON.parse(await fs.readFile(stateFile, 'utf8'));
   const customer = await signInAndGetToken(browser, state.customerEmail);
   const trader = await signInAndGetToken(browser, state.traderEmail);
@@ -61,7 +61,7 @@ test('Homeowner and Starter tradesperson core journey obeys the current product 
         serviceSelections: { Tiling: ['Bathroom tiling', 'Floor tiling'] },
         tradeCategory: 'Tiling',
         subSkills: ['Bathroom tiling', 'Floor tiling'],
-        bio: 'Automated BuildPair end-to-end test tradesperson profile used only to verify the current Starter customer and trader workflow.',
+        bio: 'Automated BuildPair end-to-end test tradesperson profile used only to verify the current three-month Pro customer and trader workflow.',
         radiusMiles: 20,
         postcode: testPostcode,
         qualifications: ['Automated test profile - not a public trader'],
@@ -81,9 +81,10 @@ test('Homeowner and Starter tradesperson core journey obeys the current product 
         },
       }),
     });
-    expect(profile.subscriptionTier).toBe('free');
+    expect(profile.subscriptionTier).toBe('featured');
     expect(profile.isSubscriptionActive).toBe(false);
-    expect(profile.categoryLimit).toBe(2);
+    expect(new Date(profile.trialEndsAt).getTime()).toBeGreaterThan(Date.now());
+    expect(profile.categoryLimit).toBe(6);
 
     const unique = Date.now();
     const job = await api(customer.token, '/api/jobs', {
@@ -108,7 +109,8 @@ test('Homeowner and Starter tradesperson core journey obeys the current product 
     const traderJobs = await api(trader.token, '/api/jobs');
     expect(traderJobs.some((item) => item.id === job.id)).toBe(true);
 
-    const quoteAttempt = await rawApi(trader.token, '/api/quotes', {
+    const proposedStartAt = new Date(Date.now() + 7 * 86400000).toISOString();
+    const quote = await api(trader.token, '/api/quotes', {
       method: 'POST',
       body: JSON.stringify({
         jobId: job.id,
@@ -118,13 +120,34 @@ test('Homeowner and Starter tradesperson core journey obeys the current product 
         depositAmount: 20000,
         paymentTerms: '£200 deposit, remaining balance after the completed work is checked by the customer.',
         scope: 'Preparation, waterproofing, tiling, grouting, silicone and final clean.',
-        notes: 'Automated BuildPair Starter entitlement check.',
+        notes: 'Automated BuildPair Pro quote workflow check.',
+        durationDays: 5,
+        proposedStartAt,
       }),
     });
-    expect(quoteAttempt.response.status).toBe(402);
-    expect(String(quoteAttempt.body?.error ?? quoteAttempt.text)).toMatch(/Plus or Pro is required/i);
+    expect(quote.status).toBe('pending');
+    expect(quote.jobId).toBe(job.id);
+    expect(quote.conversationId).toBeTruthy();
 
-    const directLeadAttempt = await rawApi(customer.token, '/api/jobs', {
+    const firstMessage = await api(trader.token, `/api/conversations/${quote.conversationId}/messages`, {
+      method: 'POST', body: JSON.stringify({ body: 'BuildPair QA: quote submitted, please review the proposed tile and waterproofing scope.' }),
+    });
+    expect(firstMessage.senderId).toBe(traderUser.id);
+    const reply = await api(customer.token, `/api/conversations/${quote.conversationId}/messages`, {
+      method: 'POST', body: JSON.stringify({ body: 'BuildPair QA: thank you, I have received your quotation.' }),
+    });
+    expect(reply.senderId).toBe(customerUser.id);
+    const transcript = await api(customer.token, `/api/conversations/${quote.conversationId}/messages`);
+    expect(transcript.some((message) => message.id === firstMessage.id)).toBe(true);
+    expect(transcript.some((message) => message.id === reply.id)).toBe(true);
+
+    const buildPayAttempt = await rawApi(trader.token, '/api/quotes', {
+      method: 'POST',
+      body: JSON.stringify({ jobId: job.id, requestBuildPay: true }),
+    });
+    expect(buildPayAttempt.response.status).toBe(423);
+
+    const directLead = await api(customer.token, '/api/jobs', {
       method: 'POST',
       body: JSON.stringify({
         targetTraderId: traderUser.id,
@@ -133,14 +156,14 @@ test('Homeowner and Starter tradesperson core journey obeys the current product 
         propertyType: 'House',
         postcode: testPostcode,
         urgency: 'Flexible',
-        description: 'This direct request must be rejected while the target tradesperson remains on Starter Free.',
+        description: 'BuildPair QA: direct Pro trade request to check target-trader access and delivery.',
         aiGeneratedSpec: null,
         budgetRange: '£1,500–£5,000',
         photos: [],
       }),
     });
-    expect(directLeadAttempt.response.status).toBe(409);
-    expect(String(directLeadAttempt.body?.error ?? directLeadAttempt.text)).toMatch(/not currently accepting direct BuildPair leads/i);
+    expect(directLead.targetTraderId).toBe(traderUser.id);
+    expect(directLead.conversationId).toBeTruthy();
   } finally {
     await customer.context.close();
     await trader.context.close();

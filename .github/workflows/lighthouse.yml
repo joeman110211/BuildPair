@@ -6,7 +6,7 @@ on:
       base_url:
         description: 'Public BuildPair URL to audit'
         required: false
-        default: 'https://staging.buildpair.co.uk'
+        default: 'https://www.buildpair.co.uk'
         type: string
 
 permissions:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      LHCI_BASE_URL: ${{ inputs.base_url || 'https://staging.buildpair.co.uk' }}
+      LHCI_BASE_URL: ${{ inputs.base_url || 'https://www.buildpair.co.uk' }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5

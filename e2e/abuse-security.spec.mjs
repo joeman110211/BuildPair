@@ -3,7 +3,7 @@ import path from 'node:path';
 import { clerk } from '@clerk/testing/playwright';
 import { expect, test } from '@playwright/test';
 
-const baseURL = process.env.E2E_BASE_URL || 'https://staging.buildpair.co.uk';
+const baseURL = process.env.E2E_BASE_URL || 'https://www.buildpair.co.uk';
 const stateFile = path.join(process.cwd(), 'playwright', '.e2e-users.json');
 const postcode = 'SW1A 1AA';
 
@@ -119,9 +119,11 @@ test('a tradesperson cannot self-upgrade by smuggling subscription fields into p
   try {
     await ensureStarterProfile(trader.token);
     const profile = await api(trader.token, '/api/me/profile');
-    expect(profile.subscriptionTier).toBe('free');
+    // Server grants temporary Pro on first activation, not the smuggled paid-active flag.
+    expect(profile.subscriptionTier).toBe('featured');
     expect(profile.isSubscriptionActive).toBe(false);
-    expect(profile.categoryLimit).toBe(2);
+    expect(profile.categoryLimit).toBe(6);
+    expect(new Date(profile.trialEndsAt).getTime()).toBeGreaterThan(Date.now());
   } finally {
     await trader.context.close();
   }

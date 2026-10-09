@@ -4,7 +4,7 @@ import path from 'node:path';
 import { setupClerkTestingToken } from '@clerk/testing/playwright';
 import { expect, test } from '@playwright/test';
 
-const baseURL = process.env.E2E_BASE_URL || 'https://staging.buildpair.co.uk';
+const baseURL = process.env.E2E_BASE_URL || 'https://www.buildpair.co.uk';
 const runId = (process.env.GITHUB_RUN_ID || Date.now().toString()).replace(/[^a-zA-Z0-9-]/g, '');
 const traderEmail = `buildpair-journey-trader+clerk_test_${runId}@example.com`;
 const customerEmail = `buildpair-journey-homeowner+clerk_test_${runId}@example.com`;

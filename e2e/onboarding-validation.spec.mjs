@@ -3,7 +3,7 @@ import path from 'node:path';
 import { clerk } from '@clerk/testing/playwright';
 import { expect, test } from '@playwright/test';
 
-const baseURL = process.env.E2E_BASE_URL || 'https://staging.buildpair.co.uk';
+const baseURL = process.env.E2E_BASE_URL || 'https://www.buildpair.co.uk';
 const stateFile = path.join(process.cwd(), 'playwright', '.e2e-users.json');
 
 async function tokenFor(page) {
@@ -22,7 +22,7 @@ async function activateTrader(token) {
   if (!response.ok) throw new Error(`Could not enable trader mode: HTTP ${response.status} ${await response.text()}`);
 }
 
-test('Starter trader onboarding visibly selects two categories, keeps Continue reachable and enforces the 50-character bio minimum', async ({ page }) => {
+test('Introductory Pro onboarding permits three categories, keeps Continue reachable and enforces the 50-character bio minimum', async ({ page }) => {
   const state = JSON.parse(await fs.readFile(stateFile, 'utf8'));
   await page.goto(`${baseURL}/`, { waitUntil: 'domcontentloaded' });
   await clerk.signIn({ page, emailAddress: state.traderEmail });
@@ -43,12 +43,14 @@ test('Starter trader onboarding visibly selects two categories, keeps Continue r
   await expect(bathrooms).toBeChecked();
   await page.getByRole('checkbox', { name: 'Full bathroom refits', exact: true }).click();
 
-  await expect(page.getByText(/2 of 2 trade categories selected/)).toBeVisible();
+  await expect(page.getByText(/2 of 6 trade categories selected/)).toBeVisible();
 
   const thirdCategory = page.getByRole('checkbox', { name: 'Plumbing', exact: true });
-  await expect(thirdCategory).toBeDisabled();
-  await expect(thirdCategory).not.toBeChecked();
-  await expect(page.getByText('Plan category limit reached', { exact: true }).first()).toBeVisible();
+  await expect(thirdCategory).toBeEnabled();
+  await thirdCategory.click();
+  await expect(thirdCategory).toBeChecked();
+  await page.getByRole('checkbox', { name: 'Leaks', exact: true }).click();
+  await expect(page.getByText(/3 of 6 trade categories selected/)).toBeVisible();
 
   await page.getByLabel('Base postcode').fill('SW1A 1AA');
   const firstContinue = page.getByRole('button', { name: 'Continue' });
