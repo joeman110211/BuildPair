@@ -1,5 +1,7 @@
 # BuildPair production launch plan
 
+> Historical launch snapshot. See the [9 October live audit and remaining blockers](reports/launch-audit-2026-10-09.md).
+
 Current launch target: `https://www.buildpair.co.uk`
 
 This document is the working production gate for the public UK launch. It does not replace automated tests. A build is launchable only when the relevant web, Android, iOS, payments, infrastructure, security and operational gates below are satisfied.

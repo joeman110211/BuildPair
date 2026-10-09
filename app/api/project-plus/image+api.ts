@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 import { assertAiDailyBudget, recordAiRequest } from '@/lib/ai-audit';
 import { uploadGeneratedImage } from '@/lib/cloudinary-server';
-import { consumeProjectPlusImage, projectPlusEntitlement, projectPlusUsage } from '@/lib/project-plus';
+import { consumeProjectPlusImage, projectPlusEntitlement, projectPlusUsage, refundProjectPlusUsage } from '@/lib/project-plus';
 import { authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 
@@ -13,6 +13,8 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  let reservation: { userId: string; month: string } | undefined;
+  let saved = false;
   try {
     const userId = await authenticatedUserId(request);
     await ensureDbUser(userId);
@@ -25,6 +27,8 @@ export async function POST(request: Request) {
     const key = process.env.GEMINI_API_KEY;
     if (!key) throw new HttpError(503, 'AI room concepts are temporarily unavailable.');
     const model = process.env.GEMINI_IMAGE_MODEL?.trim() || 'gemini-2.5-flash-image';
+    const reserved = await consumeProjectPlusImage(userId, entitlement.imageLimit);
+    reservation = { userId, month: reserved.month };
     const startedAt = Date.now();
     const ai = new GoogleGenAI({ apiKey: key });
     const response = await ai.models.generateContent({
@@ -38,13 +42,19 @@ export async function POST(request: Request) {
     if (!encoded) throw new Error('Project+ did not return an image');
     const mimeType = imagePart.inlineData?.mimeType || 'image/png';
     const url = await uploadGeneratedImage(Buffer.from(encoded, 'base64'), mimeType);
-    await consumeProjectPlusImage(userId);
     const rows = await getSql()`
       INSERT INTO project_plus_designs(user_id, room_type, title, prompt, image_url)
       VALUES (${userId}, ${input.roomType}, ${input.roomType + ' concept'}, ${input.brief}, ${url})
       RETURNING id
     ` as unknown as { id: string }[];
+    saved = true;
     await recordAiRequest({ userId, endpoint: 'project-plus-room-concept', request: input, response: { imageUrl: url }, status: 'success', model, providerCalled: true, latencyMs: Date.now() - startedAt });
     return Response.json({ id: rows[0]?.id, imageUrl: url });
-  } catch (error) { return jsonError(error); }
+  } catch (error) {
+    if (reservation && !saved) {
+      try { await refundProjectPlusUsage(reservation.userId, 'image', reservation.month); }
+      catch { console.error('[project-plus] Failed to refund usage reservation'); }
+    }
+    return jsonError(error);
+  }
 }

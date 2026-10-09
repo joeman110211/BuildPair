@@ -1,4 +1,5 @@
 import { getSql } from '@/lib/sql';
+import { PAID_PLANS_OPEN, PAID_PROJECT_PLUS_OPEN } from '@/lib/launch-config';
 
 const requiredEnvironment = [
   'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY',
@@ -20,8 +21,10 @@ const optionalEnvironment = [
   'CLOUDINARY_CLOUD_NAME',
   'EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY',
   'STRIPE_SECRET_KEY',
+  'STRIPE_CORE_PRICE_ID',
   'STRIPE_BASIC_PRICE_ID',
   'STRIPE_FEATURED_PRICE_ID',
+  'STRIPE_PROJECT_PLUS_PRICE_ID',
   'STRIPE_WEBHOOK_SECRET',
   'STRIPE_CONNECT_WEBHOOK_SECRET',
 ] as const;
@@ -31,7 +34,12 @@ function configured(name: string) {
 }
 
 export async function GET() {
-  const missing = requiredEnvironment.filter((name) => !configured(name));
+  const billingEnvironment = [
+    ...((PAID_PLANS_OPEN || PAID_PROJECT_PLUS_OPEN) ? ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'] : []),
+    ...(PAID_PLANS_OPEN ? ['STRIPE_CORE_PRICE_ID', 'STRIPE_BASIC_PRICE_ID', 'STRIPE_FEATURED_PRICE_ID'] : []),
+    ...(PAID_PROJECT_PLUS_OPEN ? ['STRIPE_PROJECT_PLUS_PRICE_ID'] : []),
+  ];
+  const missing = [...requiredEnvironment, ...billingEnvironment].filter((name) => !configured(name));
   const optionalMissing = optionalEnvironment.filter((name) => !configured(name));
   const missingSchema: string[] = [];
 

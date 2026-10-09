@@ -9,6 +9,7 @@ export const MARKETPLACE_OPEN = true;
 // Independent server-side gates. No job money or subscription checkout during introductory access.
 export const BUILDPAY_OPEN = false;
 export const PAID_PLANS_OPEN = false;
+export const PAID_PROJECT_PLUS_OPEN = false;
 
 export const FOUNDING_PRO_START_ISO = LAUNCH_DATE_ISO;
 export const FOUNDING_PRO_END_ISO = '2027-01-15T00:00:00+00:00';

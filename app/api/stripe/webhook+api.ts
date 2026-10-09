@@ -3,6 +3,7 @@ import { addJobEvent, createNotification } from '@/lib/notifications';
 import { isImmediatelyReleasedStage } from '@/lib/payment-protection';
 import { getSql } from '@/lib/sql';
 import { getStripe } from '@/lib/stripe';
+import { subscriptionProduct } from '@/lib/billing-plans';
 
 export async function POST(request: Request) {
   const signature = request.headers.get('stripe-signature');
@@ -21,8 +22,8 @@ export async function POST(request: Request) {
     await handleEvent(event);
     return Response.json({ received: true });
   } catch (error) {
-    console.error('Stripe webhook failure', error);
-    return new Response('Invalid webhook', { status: 400 });
+    console.error('Stripe webhook processing failed', error instanceof Error ? error.name : 'unknown');
+    return new Response('Webhook processing failed', { status: 500 });
   }
 }
 
@@ -37,18 +38,20 @@ function effectiveTier(paidTier: PaidTier | null, complimentaryTier: PaidTier | 
 async function syncSubscriptionState(userId: string, subscription: Stripe.Subscription, tier: PaidTier) {
   const active = ['active', 'trialing'].includes(subscription.status);
   const paidTier = active ? tier : null;
-  const rows = await getSql()`SELECT complimentary_tier AS "complimentaryTier" FROM trader_profiles WHERE user_id = ${userId} LIMIT 1` as { complimentaryTier: PaidTier | null }[];
+  const rows = await getSql()`SELECT complimentary_tier AS "complimentaryTier", trial_ends_at > now() AS "introductoryAccess", stripe_subscription_id AS "subscriptionId" FROM trader_profiles WHERE user_id = ${userId} LIMIT 1` as { complimentaryTier: PaidTier | null; introductoryAccess: boolean; subscriptionId?: string | null }[];
+  // A delayed cancellation for an older contract must not revoke its replacement.
+  if (!active && rows[0]?.subscriptionId && rows[0].subscriptionId !== subscription.id) return;
   const complimentaryTier = rows[0]?.complimentaryTier ?? null;
-  const effective = effectiveTier(paidTier, complimentaryTier);
-  await getSql()`UPDATE trader_profiles SET stripe_subscription_id = ${subscription.id}, paid_subscription_tier = ${paidTier}::subscription_tier, subscription_tier = ${effective}::subscription_tier, is_subscription_active = ${effective !== 'free'}, updated_at = now() WHERE user_id = ${userId}`;
+  const effective = effectiveTier(paidTier, rows[0]?.introductoryAccess ? 'featured' : complimentaryTier);
+  await getSql()`UPDATE trader_profiles SET stripe_subscription_id = ${subscription.id}, paid_subscription_tier = ${paidTier}::subscription_tier, subscription_tier = ${effective}::subscription_tier, is_subscription_active = ${Boolean(paidTier || complimentaryTier)}, updated_at = now() WHERE user_id = ${userId}`;
 }
 
 async function clearPaidSubscription(subscriptionId: string) {
-  const rows = await getSql()`SELECT user_id AS "userId", complimentary_tier AS "complimentaryTier" FROM trader_profiles WHERE stripe_subscription_id = ${subscriptionId} LIMIT 1` as { userId: string; complimentaryTier: PaidTier | null }[];
+  const rows = await getSql()`SELECT user_id AS "userId", complimentary_tier AS "complimentaryTier", trial_ends_at > now() AS "introductoryAccess" FROM trader_profiles WHERE stripe_subscription_id = ${subscriptionId} LIMIT 1` as { userId: string; complimentaryTier: PaidTier | null; introductoryAccess: boolean }[];
   const profile = rows[0];
   if (!profile) return;
-  const effective = effectiveTier(null, profile.complimentaryTier);
-  await getSql()`UPDATE trader_profiles SET stripe_subscription_id = NULL, paid_subscription_tier = NULL, subscription_tier = ${effective}::subscription_tier, is_subscription_active = ${effective !== 'free'}, updated_at = now() WHERE user_id = ${profile.userId}`;
+  const effective = effectiveTier(null, profile.introductoryAccess ? 'featured' : profile.complimentaryTier);
+  await getSql()`UPDATE trader_profiles SET stripe_subscription_id = NULL, paid_subscription_tier = NULL, subscription_tier = ${effective}::subscription_tier, is_subscription_active = ${Boolean(profile.complimentaryTier)}, updated_at = now() WHERE user_id = ${profile.userId}`;
 }
 
 async function syncProjectPlusSubscription(userId: string, subscription: Stripe.Subscription) {
@@ -59,6 +62,7 @@ async function syncProjectPlusSubscription(userId: string, subscription: Stripe.
         project_plus_stripe_subscription_id = ${active ? subscription.id : null},
         updated_at = now()
     WHERE id = ${userId}
+      AND (${active} OR project_plus_stripe_subscription_id IS NULL OR project_plus_stripe_subscription_id = ${subscription.id})
   `;
 }
 
@@ -275,13 +279,18 @@ async function handleEvent(event: Stripe.Event) {
     return;
   }
   if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.created') {
-    const subscription = event.data.object;
+    // Stripe does not guarantee delivery order. Retrieve current state rather than
+    // allowing an old "active" event to restore a cancelled or failed subscription.
+    const subscription = await getStripe().subscriptions.retrieve(event.data.object.id);
     const userId = subscription.metadata.buildpairUserId ?? subscription.metadata.buildmateUserId;
+    const product = subscriptionProduct(subscription);
     if (subscription.metadata.buildpairProduct === 'project_plus') {
+      if (product !== 'project_plus') throw new Error('Unexpected Project+ subscription price');
       if (userId) await syncProjectPlusSubscription(userId, subscription);
       return;
     }
-    const tier = subscription.metadata.tier;
+    const tier = product;
+    if (userId && tier === null) throw new Error('Unexpected trade subscription price');
     if (userId && (tier === 'core' || tier === 'basic' || tier === 'featured')) await syncSubscriptionState(userId, subscription, tier);
     return;
   }

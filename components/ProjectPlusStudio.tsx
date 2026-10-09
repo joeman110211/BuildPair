@@ -7,6 +7,7 @@ import { AppCard } from '@/components/AppCard';
 import { LoadingScreen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { PAID_PROJECT_PLUS_OPEN } from '@/lib/launch-config';
 
 type Plan = {
   conceptSummary?: string;
@@ -27,6 +28,7 @@ type Status = {
   imagesUsed: number;
   plannerUsed: number;
   designs: Design[];
+  billingAvailable: boolean;
 };
 
 function BulletList({ title, items }: { title: string; items?: string[] }) {
@@ -66,6 +68,14 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
     } catch (e) { setError(errorMessage(e)); setBusy(''); }
   }
 
+  async function manageProjectPlus() {
+    try {
+      setBusy('checkout'); setError('');
+      const result = await apiFetch<{ url: string }>('/api/stripe/billing-portal', { method: 'POST', body: JSON.stringify({ product: 'project_plus', audience }) }, () => tokenRef.current());
+      if (Platform.OS === 'web' && typeof window !== 'undefined') window.location.assign(result.url);
+    } catch (e) { setError(errorMessage(e)); setBusy(''); }
+  }
+
   async function generatePlan() {
     try {
       setBusy('plan'); setError('');
@@ -90,7 +100,7 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
     } catch (e) { setError(errorMessage(e)); } finally { setBusy(''); }
   }
 
-  if (!status) return <LoadingScreen label="Loading BuildPair Project+…" />;
+  if (!status) return error ? <AppCard><Text style={styles.title}>Project+ could not load</Text><Text style={styles.muted}>{error}</Text><Button mode="outlined" onPress={() => void load()}>Try again</Button></AppCard> : <LoadingScreen label="Loading BuildPair Project+…" />;
   if (!status.active) return <View style={styles.wrap}>
     <AppCard style={styles.hero}>
       <Chip icon="creation-outline">BuildPair Project+</Chip>
@@ -99,11 +109,11 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
       {audience === 'customer' ? <>
         <Text variant="headlineSmall" style={styles.price}>£4.99/month</Text>
         <Text style={styles.muted}>Includes 10 AI room concepts and up to 50 planning sessions per month. Normal BuildPair homeowner marketplace and project tools remain free.</Text>
-        <Button mode="contained" icon="credit-card-outline" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void startProjectPlus()}>Get Project+</Button>
+        {Platform.OS === 'web' && PAID_PROJECT_PLUS_OPEN ? <Button mode="contained" icon="credit-card-outline" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void startProjectPlus()}>Get Project+</Button> : <Text style={styles.muted}>Project+ purchases are not available here. Existing included access remains available.</Text>}
       </> : <>
         <Text variant="headlineSmall" style={styles.price}>£4.99/month</Text>
         <Text style={styles.muted}>Add Project+ to a Starter, Core or Plus trade account for customer planning sessions and room concepts. It remains included at no extra cost with BuildPair Pro.</Text>
-        <View style={styles.actions}><Button mode="contained" icon="credit-card-outline" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void startProjectPlus()}>Add Project+</Button><Button mode="outlined" onPress={() => void Linking.openURL(Platform.OS === 'web' ? '/trader/subscription' : 'https://www.buildpair.co.uk/trader/subscription')}>Compare plans</Button></View>
+        <View style={styles.actions}>{Platform.OS === 'web' && PAID_PROJECT_PLUS_OPEN ? <Button mode="contained" icon="credit-card-outline" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void startProjectPlus()}>Add Project+</Button> : null}{Platform.OS === 'web' ? <Button mode="outlined" onPress={() => void Linking.openURL('/trader/subscription')}>Compare plans</Button> : null}</View>
       </>}
     </AppCard>
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
@@ -113,6 +123,7 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
   return <View style={styles.wrap}>
     <AppCard style={styles.hero}>
       <View style={styles.topRow}><View style={styles.flex}><Chip icon="creation-outline">{status.source === 'pro' ? 'Included with BuildPair Pro' : status.source === 'launch' ? 'Complimentary launch access' : 'Project+ active'}</Chip><Text variant="headlineSmall" style={styles.title}>Project+ planning studio</Text><Text style={styles.muted}>{audience === 'trader' ? 'Use this alongside a customer to explore a brief before turning it into a BuildPair quote.' : 'Explore the room, build a clearer brief and take better questions into the quoting stage.'}</Text></View><View style={styles.usage}><Text style={styles.usageStrong}>{status.imagesUsed}/{status.imageLimit}</Text><Text style={styles.muted}>room concepts this month</Text><Text style={styles.usageStrong}>{status.plannerUsed}/{status.plannerLimit}</Text><Text style={styles.muted}>planning sessions</Text></View></View>
+      {Platform.OS === 'web' && status.billingAvailable ? <Button mode="outlined" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void manageProjectPlus()}>Manage Project+ subscription</Button> : null}
     </AppCard>
 
     <AppCard>
@@ -120,7 +131,7 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
       <View style={styles.chips}>{['Bathroom','Kitchen','Bedroom','Living room','Home office','Garden room'].map((room) => <Chip key={room} selected={roomType === room} onPress={() => setRoomType(room)}>{room}</Chip>)}</View>
       <TextInput mode="outlined" label="What do you want to change?" value={brief} onChangeText={setBrief} multiline numberOfLines={5} placeholder="e.g. Small bathroom, keep the bath but add more storage, warmer lighting and a cleaner modern finish…" />
       <View style={styles.topRow}><TextInput style={styles.field} mode="outlined" label="Style (optional)" value={style} onChangeText={setStyle} placeholder="Warm modern, traditional, industrial…" /><TextInput style={styles.field} mode="outlined" label="Budget preference (optional)" value={budget} onChangeText={setBudget} placeholder="e.g. Keep under £12k" /></View>
-      <View style={styles.actions}><Button mode="contained" icon="clipboard-text-outline" loading={busy === 'plan'} disabled={Boolean(busy) || brief.trim().length < 10} onPress={() => void generatePlan()}>Build project plan</Button><Button mode="outlined" icon="image-outline" loading={busy === 'image'} disabled={Boolean(busy) || brief.trim().length < 10 || status.imagesUsed >= status.imageLimit} onPress={() => void generateImage()}>Generate room concept</Button></View>
+      <View style={styles.actions}><Button mode="contained" icon="clipboard-text-outline" loading={busy === 'plan'} disabled={Boolean(busy) || brief.trim().length < 10 || status.plannerUsed >= status.plannerLimit} onPress={() => void generatePlan()}>Build project plan</Button><Button mode="outlined" icon="image-outline" loading={busy === 'image'} disabled={Boolean(busy) || brief.trim().length < 10 || status.imagesUsed >= status.imageLimit} onPress={() => void generateImage()}>Generate room concept</Button></View>
       <Text style={styles.muted}>AI concepts are inspiration, not measured construction drawings. Final dimensions, products, technical details and feasibility must be checked on site.</Text>
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
     </AppCard>

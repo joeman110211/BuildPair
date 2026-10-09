@@ -65,7 +65,7 @@ function normalizedOrigin(value: string | undefined) {
   }
 }
 
-function configuredAuthorizedParties() {
+export function configuredAuthorizedParties() {
   const origins = new Set<string>();
   for (const value of [
     process.env.APP_URL,
@@ -79,6 +79,16 @@ function configuredAuthorizedParties() {
     if (origin) origins.add(origin);
   }
   return [...origins];
+}
+
+export function permitsAuthenticatedWriteOrigin(request: Request) {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) return true;
+  // Native clients authenticate with a bearer token; cookie-authenticated browser
+  // writes must originate from an approved BuildPair host to prevent CSRF.
+  if (/^Bearer\s+\S+/i.test(request.headers.get('authorization') ?? '')) return true;
+  if (!request.headers.get('cookie')?.match(/(?:^|;\s*)__session=/)) return true;
+  const origin = request.headers.get('origin');
+  return Boolean(origin && configuredAuthorizedParties().includes(origin));
 }
 
 async function pemForSessionToken(token: string, publishableKey: string) {
@@ -130,9 +140,15 @@ export async function verifyBuildPairClerkSession(token: string) {
   const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim();
   if (!secretKey) throw new Error('CLERK_SECRET_KEY is not configured');
   if (!publishableKey) throw new Error('EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY is not configured');
+  // Enforce the same instance/origin boundary on both verification paths.
+  const { payload: metadata } = tokenMetadata(token);
+  const expectedIssuer = `https://${clerkFrontendApiFromPublishableKey(publishableKey)}`;
+  if (metadata.iss!.replace(/\/$/, '') !== expectedIssuer) throw new Error('Clerk token issuer does not match the configured BuildPair instance');
+  const authorizedParties = configuredAuthorizedParties();
+  if (metadata.azp && !authorizedParties.includes(metadata.azp)) throw new Error('Clerk token authorized party is not permitted for BuildPair');
 
   try {
-    return withBuildPairUserId(await verifyToken(token, { secretKey }));
+    return withBuildPairUserId(await verifyToken(token, { secretKey, authorizedParties: metadata.azp ? authorizedParties : undefined }));
   } catch (primaryError) {
     const { pem, authorizedParties } = await pemForSessionToken(token, publishableKey);
     try {

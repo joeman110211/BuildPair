@@ -1,5 +1,7 @@
 # BuildPair production checklist
 
+> Historical launch snapshot. See the [9 October live audit and remaining blockers](reports/launch-audit-2026-10-09.md).
+
 Status reviewed: 7 September 2026.
 
 The detailed current launch gate is in `docs/PRODUCTION_LAUNCH_2026.md`. This checklist is the shorter operational view. A green build proves that code compiles and tests pass; it does not make third-party services, app stores, payments, hosting, legal obligations or real-device testing disappear.

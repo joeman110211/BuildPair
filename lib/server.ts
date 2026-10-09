@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { users } from '@/db/schema';
-import { verifyBuildPairClerkSession } from '@/lib/clerk-session';
+import { permitsAuthenticatedWriteOrigin, verifyBuildPairClerkSession } from '@/lib/clerk-session';
 import { ensureEarlyAccessInviteTable } from '@/lib/early-access-store';
 import { REGISTRATION_OPEN, TRADER_PRELAUNCH_REGISTRATION_OPEN } from '@/lib/launch-config';
 import { getSql } from '@/lib/sql';
@@ -169,6 +169,7 @@ async function recordPrelaunchTraderRegistration(userId: string, identity: Clerk
 export async function authenticatedUserId(request: Request) {
   const token = clerkSessionToken(request);
   if (!token) throw new HttpError(401, 'Authentication required');
+  if (!permitsAuthenticatedWriteOrigin(request)) throw new HttpError(403, 'This request must originate from BuildPair.');
 
   try {
     const payload = await verifyBuildPairClerkSession(token);

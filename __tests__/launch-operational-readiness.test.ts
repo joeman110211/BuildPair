@@ -19,7 +19,7 @@ describe('open marketplace operational readiness', () => {
 
   it('grants capped homeowner Project+ access while paid plans are closed', () => {
     const entitlement = source('lib/project-plus.ts');
-    expect(entitlement).toContain('MARKETPLACE_OPEN && !PAID_PLANS_OPEN && row?.customerEnabled');
+    expect(entitlement).toContain('MARKETPLACE_OPEN && !PAID_PROJECT_PLUS_OPEN && row?.customerEnabled');
     expect(entitlement).toContain('imageLimit: complimentaryOnly ? 2 : PROJECT_PLUS_IMAGE_LIMIT');
     expect(entitlement).toContain('plannerLimit: complimentaryOnly ? 10 : PROJECT_PLUS_PLANNER_LIMIT');
     const studio = source('components/ProjectPlusStudio.tsx');
