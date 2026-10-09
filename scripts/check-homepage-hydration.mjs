@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
+// Playwright is installed only in the browser-smoke workflow, not the application bundle.
+// eslint-disable-next-line import/no-unresolved
 import { chromium } from 'playwright';
 
 const baseURL = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:4010';
