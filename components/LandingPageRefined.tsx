@@ -67,7 +67,7 @@ export default function LandingPageRefined() {
     <View testID="bp-home-hero" style={[styles.hero, mobile && styles.heroMobile]}>
       <Text style={styles.eyebrow}>ONE PROJECT. BOTH SIDES CONNECTED.</Text>
       <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
-      <Text style={styles.heroBody}>Compare clear quotes. Agree the work. Keep messages, changes and payment stages in one place.</Text>
+      <Text testID="bp-home-hero-body" style={styles.heroBody}>Compare clear quotes. Agree the work. Keep messages, changes and payment stages in one place.</Text>
       <View testID="bp-home-hero-actions" style={styles.heroActions}>
         <Link href={signUpHref('customer', '/customer/new-job')} asChild><Button testID="bp-home-join-homeowner" mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Homeowner sign up</Button></Link>
         <Link href={signUpHref('trader')} asChild><Button testID="bp-home-join-trader" mode="outlined" style={styles.button} contentStyle={styles.buttonContent}>Tradesperson sign up</Button></Link>
