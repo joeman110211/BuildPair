@@ -11,4 +11,4 @@ Disallow: /quote/
 Disallow: /report
 Disallow: /delete-account
 
-Sitemap: https://www.buildpair.co.uk/sitemap.txt
+Sitemap: https://www.buildpair.co.uk/sitemap.xml
