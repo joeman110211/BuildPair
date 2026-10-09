@@ -57,7 +57,8 @@ function DesktopNav() {
 }
 
 function MobileQuickNav() {
-  return <View style={styles.quickNavShell}>
+  const { width } = useWindowDimensions();
+  return <View style={[styles.quickNavShell, width < 720 && styles.quickNavHidden]}>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickNav} contentContainerStyle={styles.quickNavContent} accessibilityLabel="BuildPair quick navigation">
       {QUICK_NAV.map((item) => <Link key={item.label} href={item.href} asChild><Button compact mode="text" textColor={colors.charcoalSoft} labelStyle={styles.quickButtonLabel} contentStyle={styles.quickButtonContent} style={styles.quickButton}>{item.label}</Button></Link>)}
     </ScrollView>
@@ -65,8 +66,7 @@ function MobileQuickNav() {
 }
 
 function CompactShell({ menu }: { menu: ReactNode }) {
-  const { width } = useWindowDimensions();
-  return <View style={styles.shell}><View style={styles.compactHeader}><HeaderBrand compact />{menu}</View>{width >= 720 ? <MobileQuickNav /> : null}</View>;
+  return <View style={styles.shell}><View style={styles.compactHeader}><HeaderBrand compact />{menu}</View><MobileQuickNav /></View>;
 }
 
 function AuthenticatedHeader() {
@@ -134,6 +134,7 @@ const styles = StyleSheet.create({
   primaryAction: { minHeight: controlHeights.standard, paddingHorizontal: spacing.sm },
   preview: { opacity: 0.62, marginLeft: spacing.xxs },
   quickNavShell: { minHeight: 48, flexShrink: 0, backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: '#F1EBE5' },
+  quickNavHidden: { display: 'none' },
   quickNav: { flexGrow: 0, flexShrink: 0, minHeight: 48 },
   quickNavContent: { minHeight: 48, minWidth: '100%', paddingHorizontal: 4, gap: 0, alignItems: 'center', justifyContent: 'space-around' },
   quickButton: { borderRadius: radii.md, flexShrink: 0 },
