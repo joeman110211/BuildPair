@@ -1,0 +1,67 @@
+name: Public Hydration Smoke
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CI: '1'
+      EXPO_NO_TELEMETRY: '1'
+      NODE_ENV: production
+      BUILDPAIR_MARKETPLACE_OPEN: 'true'
+      PORT: '4010'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22.23.1'
+          cache: npm
+      - name: Match repository npm version
+        run: npm install --global npm@11.19.0
+      - name: Install locked project dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Build production web bundle
+        run: npm run build:web
+      - name: Install disposable browser test runner
+        run: npm install --no-save --package-lock=false playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Test hydration and mobile layout in a real browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          node server.mjs > /tmp/buildpair-hydration-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 60); do
+            if curl -fsS --max-time 5 http://127.0.0.1:4010/ > /dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" != "1" ]; then
+            cat /tmp/buildpair-hydration-server.log
+            exit 1
+          fi
+          node scripts/check-homepage-hydration.mjs || {
+            cat /tmp/buildpair-hydration-server.log
+            exit 1
+          }
+      - name: Preserve responsive browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-hydration-screenshots
+          path: homepage-smoke-artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
