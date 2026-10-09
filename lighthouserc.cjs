@@ -1,4 +1,4 @@
-const baseUrl = (process.env.LHCI_BASE_URL || 'https://staging.buildpair.co.uk').replace(/\/$/, '');
+const baseUrl = (process.env.LHCI_BASE_URL || 'https://www.buildpair.co.uk').replace(/\/$/, '');
 
 module.exports = {
   ci: {
