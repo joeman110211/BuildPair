@@ -65,7 +65,7 @@ teardown('remove disposable homeowner and tradesperson test accounts', async ({ 
   const failures = [];
   for (const email of emails) {
     // A broken or malicious state file must never delete an actual BuildPair customer.
-    const disposable = /^buildpair-[a-z0-9-]+\\+clerk_test_[a-zA-Z0-9-]+@example\\.com$/.test(email);
+    const disposable = /^buildpair-[a-z0-9-]+\+clerk_test_[a-zA-Z0-9-]+@example\.com$/.test(email);
     if (!disposable) {
       failures.push(`Refused non-test cleanup address: ${email}`);
       continue;
