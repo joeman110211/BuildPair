@@ -3,7 +3,7 @@ import path from 'node:path';
 import { clerk } from '@clerk/testing/playwright';
 import { expect, test } from '@playwright/test';
 
-const baseURL = process.env.E2E_BASE_URL || 'https://staging.buildpair.co.uk';
+const baseURL = process.env.E2E_BASE_URL || 'https://www.buildpair.co.uk';
 const stateFile = path.join(process.cwd(), 'playwright', '.e2e-users.json');
 const runId = (process.env.GITHUB_RUN_ID || Date.now().toString()).replace(/[^a-zA-Z0-9-]/g, '');
 const testPostcode = 'SW1A 1AA';
