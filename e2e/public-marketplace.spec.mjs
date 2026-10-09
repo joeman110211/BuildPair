@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const baseURL = process.env.E2E_BASE_URL || 'https://staging.buildpair.co.uk';
+const baseURL = process.env.E2E_BASE_URL || 'https://www.buildpair.co.uk';
 
 async function searchAndCount(page, query) {
   await page.goto(`${baseURL}/directory`, { waitUntil: 'domcontentloaded' });
