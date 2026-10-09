@@ -8,8 +8,6 @@ import { StatusBar } from 'expo-status-bar';
 // eslint-disable-next-line import/no-unresolved
 import { AppStripeProvider } from '@/components/AppStripeProvider';
 // eslint-disable-next-line import/no-unresolved
-import { BuildPairAiHelper } from '@/components/BuildPairAiHelper';
-// eslint-disable-next-line import/no-unresolved
 import { OtaUpdateManager } from '@/components/OtaUpdateManager';
 import { PaperIcon } from '@/components/PaperIcon';
 import { PresenceHeartbeat } from '@/components/PresenceHeartbeat';
@@ -33,7 +31,6 @@ function AppShell({ trackPresence = false }: { trackPresence?: boolean }) {
           <StatusBar style="dark" />
           <OtaUpdateManager />
           <PwaInstallPrompt />
-          <BuildPairAiHelper />
           {trackPresence ? <><PresenceHeartbeat /><VisitorAnalytics /></> : null}
           <Stack screenOptions={{ headerTintColor: colors.primary, headerShadowVisible: false, contentStyle: { backgroundColor: colors.background } }}>
             <Stack.Screen name="(public)" options={{ headerShown: false }} />
