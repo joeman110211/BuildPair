@@ -138,14 +138,14 @@ describe('whole-job BuildPair tools', () => {
     expect(source('lib/project-plus.ts')).toContain("row?.subscriptionTier === 'featured'");
   });
 
-  it('shows an honest public recently-added and coming-soon roadmap', () => {
+  it('shows available BuildPair features without advertising an unfinished roadmap', () => {
     const updates = source('app/(public)/updates.tsx');
-    expect(updates).toContain('Recently added');
-    expect(updates).toContain('Coming soon');
+    expect(updates).toContain('Available now');
+    expect(updates).not.toContain('Coming soon');
+    expect(updates).not.toContain('const COMING');
     expect(updates).toContain('Trade customer book');
     expect(updates).toContain('Working calendar');
     expect(updates).toContain('Project+ trade add-on');
-    expect(updates).toContain('Dedicated project file library');
     expect(source('components/PublicHeader.tsx')).toContain("Updates");
   });
 });
