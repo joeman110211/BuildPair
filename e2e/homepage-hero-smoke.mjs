@@ -18,9 +18,13 @@ try {
     });
     const runtimeErrors = [];
     const browserConsoleErrors = [];
-    page.on('pageerror', (error) => runtimeErrors.push(error.message));
+    const failedRequests = [];
+    page.on('pageerror', (error) => runtimeErrors.push(error.stack || error.message));
     page.on('console', (entry) => {
       if (entry.type() === 'error') browserConsoleErrors.push(entry.text());
+    });
+    page.on('response', (response) => {
+      if (response.status() >= 400) failedRequests.push({ status: response.status(), url: response.url() });
     });
     try {
       const response = await page.goto(origin, { waitUntil: 'load', timeout: 30_000 });
@@ -35,7 +39,7 @@ try {
         bodyHtmlLength: document.body?.innerHTML?.length ?? 0,
         rootChildren: document.getElementById('root')?.childElementCount ?? null,
       }));
-      console.log(`DIAGNOSTIC ${width}px: ${JSON.stringify({ ...diagnostic, runtimeErrors, browserConsoleErrors })}`);
+      console.log(`DIAGNOSTIC ${width}px: ${JSON.stringify({ ...diagnostic, runtimeErrors, browserConsoleErrors, failedRequests })}`);
       const heading = page.getByText('Find local tradespeople. Keep the whole job together.', { exact: true });
       const hero = page.getByTestId('home-hero-actions');
       const home = page.getByTestId('home-hero-homeowner');
