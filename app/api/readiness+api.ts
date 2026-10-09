@@ -1,5 +1,6 @@
 import { getSql } from '@/lib/sql';
-import { PAID_PLANS_OPEN, PAID_PROJECT_PLUS_OPEN } from '@/lib/launch-config';
+import { requiredStripeEnvironment } from '@/lib/billing-readiness';
+import { BUILDPAY_OPEN, PAID_PLANS_OPEN, PAID_PROJECT_PLUS_OPEN } from '@/lib/launch-config';
 
 const requiredEnvironment = [
   'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY',
@@ -34,11 +35,7 @@ function configured(name: string) {
 }
 
 export async function GET() {
-  const billingEnvironment = [
-    ...((PAID_PLANS_OPEN || PAID_PROJECT_PLUS_OPEN) ? ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'] : []),
-    ...(PAID_PLANS_OPEN ? ['STRIPE_CORE_PRICE_ID', 'STRIPE_BASIC_PRICE_ID', 'STRIPE_FEATURED_PRICE_ID'] : []),
-    ...(PAID_PROJECT_PLUS_OPEN ? ['STRIPE_PROJECT_PLUS_PRICE_ID'] : []),
-  ];
+  const billingEnvironment = requiredStripeEnvironment({ trade: PAID_PLANS_OPEN, projectPlus: PAID_PROJECT_PLUS_OPEN, buildPay: BUILDPAY_OPEN });
   const missing = [...requiredEnvironment, ...billingEnvironment].filter((name) => !configured(name));
   const optionalMissing = optionalEnvironment.filter((name) => !configured(name));
   const missingSchema: string[] = [];

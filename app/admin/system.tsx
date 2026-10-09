@@ -116,7 +116,7 @@ export default function AdminSystemHealth() {
 
       <AppCard>
         <Text variant="titleMedium" style={styles.title}>Operational health rule</Text>
-        <Text style={styles.muted}>Database and Clerk support the live marketplace, with Gemini, Cloudinary and Resend providing active capabilities. BuildPay and paid memberships are not open yet, so Stripe setup is visible as optional until those features are enabled. Missing configuration for active capabilities must still be investigated.</Text>
+        <Text style={styles.muted}>Database and Clerk support the live marketplace, with Gemini, Cloudinary and Resend providing active capabilities. Stripe requirements follow the active trade membership, Project+ and BuildPay settings; disabled integrations remain optional. Missing configuration for active capabilities must still be investigated.</Text>
       </AppCard>
     </> : null}
   </Screen>;

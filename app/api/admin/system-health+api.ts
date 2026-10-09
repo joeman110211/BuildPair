@@ -2,7 +2,8 @@ import { GoogleGenAI } from '@google/genai';
 import { assertAiDailyBudget, recordAiRequest } from '@/lib/ai-audit';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { getSql } from '@/lib/sql';
-import { BUILDPAY_OPEN, PAID_PLANS_OPEN } from '@/lib/launch-config';
+import { requiredStripeEnvironment } from '@/lib/billing-readiness';
+import { BUILDPAY_OPEN, PAID_PLANS_OPEN, PAID_PROJECT_PLUS_OPEN } from '@/lib/launch-config';
 import { jsonError, requireAdmin } from '@/lib/server';
 
 type HealthState = 'ok' | 'degraded' | 'unconfigured';
@@ -165,26 +166,21 @@ async function resendCheck() {
 }
 
 async function stripeCheck() {
-  const envVars = [
-    'STRIPE_SECRET_KEY',
-    'EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY',
-    'STRIPE_BASIC_PRICE_ID',
-    'STRIPE_FEATURED_PRICE_ID',
-    'STRIPE_WEBHOOK_SECRET',
-    'STRIPE_CONNECT_WEBHOOK_SECRET',
-  ];
+  const required = BUILDPAY_OPEN || PAID_PLANS_OPEN || PAID_PROJECT_PLUS_OPEN;
+  const envVars = requiredStripeEnvironment({ trade: PAID_PLANS_OPEN, projectPlus: PAID_PROJECT_PLUS_OPEN, buildPay: BUILDPAY_OPEN });
+  if (!required) envVars.push('STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_CORE_PRICE_ID', 'STRIPE_BASIC_PRICE_ID', 'STRIPE_FEATURED_PRICE_ID', 'STRIPE_PROJECT_PLUS_PRICE_ID');
   const missing = envVars.filter((name) => !configured(name));
   const key = process.env.STRIPE_SECRET_KEY?.trim();
-  const required = BUILDPAY_OPEN || PAID_PLANS_OPEN;
+  const capability = BUILDPAY_OPEN ? 'BuildPay and subscription billing' : required ? 'Subscription billing' : 'Future subscription billing';
   if (missing.length || !key) {
     return {
-      ...unconfigured('Stripe', `Missing ${missing.join(', ') || 'Stripe configuration'}`, 'Future BuildPay, memberships and trader payouts', envVars),
+      ...unconfigured('Stripe', `Missing ${missing.join(', ') || 'Stripe configuration'}`, capability, envVars),
       required,
     };
   }
-  const check = await timed('Stripe', 'Future BuildPay, memberships and trader payouts', envVars, async () => {
-    await probe('https://api.stripe.com/v1/balance', { headers: { Authorization: `Bearer ${key}` } });
-    return 'Stripe API reachable and credentials verified';
+  const check = await timed('Stripe', capability, envVars, async () => {
+    await probe('https://api.stripe.com/v1/prices?limit=1', { headers: { Authorization: `Bearer ${key}` } });
+    return 'Stripe price API reachable and credentials verified';
   });
   return { ...check, required };
 }

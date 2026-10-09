@@ -13,7 +13,7 @@ The marketplace and both registrations are open. BuildPay remains disabled. The 
 - Made webhook processing failures retryable, retrieved current subscription state for delayed events and derived membership from billed prices instead of stale metadata. Preserved introductory access without making it permanent. Delayed cancellations cannot revoke replacement contracts.
 - Added Project+ billing portal access for both account modes. Signed webhooks grant entitlements; checkout redirects do not.
 - Reserved Project+ quotas atomically before AI calls, used actual entitlement limits and refunded failed unsaved attempts. Validated planner output and added status-load recovery and exhausted-plan button handling.
-- Added conditional readiness requirements for enabled billing products. Native paid-purchase links stay hidden.
+- Aligned both admin system health and public readiness with independently enabled billing products; hosted subscriptions do not require BuildPay Connect credentials. Native paid-purchase links stay hidden.
 - Verified and installed existing live Stripe price mappings in Render: Core £9.99, Plus £19.99, Pro £29.99 and Project+ £4.99 per month.
 - Configured the live Stripe portal for period-end cancellation and Core/Plus/Pro changes, with quantity changes disabled and BuildPair policy/return URLs.
 
@@ -21,7 +21,7 @@ The marketplace and both registrations are open. BuildPay remains disabled. The 
 
 | Check | Result and scope |
 | --- | --- |
-| Regression suite | 158 tests in 27 files passed |
+| Regression suite | 162 tests in 28 files passed |
 | TypeScript | Passed |
 | ESLint | No errors; existing warnings remain |
 | Production web export | Passed |
