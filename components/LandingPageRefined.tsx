@@ -67,14 +67,13 @@ export default function LandingPageRefined() {
     <View style={[styles.hero, mobile && styles.heroMobile]}>
       <Text style={styles.eyebrow}>ONE PROJECT. BOTH SIDES CONNECTED.</Text>
       <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
-      <Text style={styles.heroBody}>Compare clear quotes. Agree the work. Keep messages, changes and payment stages in one place.</Text>
-      <View style={styles.heroActions}>
-        <Link href={signUpHref('customer', '/customer/new-job')} asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Homeowner sign up</Button></Link>
-        <Link href={signUpHref('trader')} asChild><Button mode="outlined" style={styles.button} contentStyle={styles.buttonContent}>Tradesperson sign up</Button></Link>
-        <Link href="/(public)/directory" asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Browse local trades</Button></Link>
-        <Link href="/(public)/how-it-works" asChild><Button mode="text" textColor={colors.primaryDark} style={styles.button} contentStyle={styles.buttonContent}>See how it works →</Button></Link>
+      <Text style={styles.heroBody}>Compare quotes, agree the work and keep everything organised in one place.</Text>
+      <View testID="home-hero-actions" style={styles.heroCallToActions}>
+        <Link href={signUpHref('customer', '/customer/new-job')} testID="home-hero-homeowner" style={mobile ? styles.heroHomeownerActionMobile : styles.heroHomeownerAction}>Homeowner sign up</Link>
+        <Link href={signUpHref('trader')} testID="home-hero-tradesperson" style={mobile ? styles.heroTradeActionMobile : styles.heroTradeAction}>Tradesperson sign up</Link>
+        <Link href="/(public)/directory" asChild><Button mode="text" compact textColor={colors.primaryDark} style={styles.heroSecondaryAction}>Browse local trades</Button></Link>
+        <Link href="/(public)/how-it-works" asChild><Button mode="text" compact textColor={colors.primaryDark} style={styles.heroSecondaryAction}>See how it works →</Button></Link>
       </View>
-      <View style={styles.benefits}><Text style={styles.benefit}>Clear quotes</Text><Text style={styles.benefitDot}>·</Text><Text style={styles.benefit}>Local trades</Text><Text style={styles.benefitDot}>·</Text><Text style={styles.benefit}>No pay per lead</Text></View>
     </View>
 
     <Reveal><View style={[styles.band, styles.whiteBand, !hasFeaturedProfiles && styles.hidden]}>
@@ -140,7 +139,13 @@ const styles = StyleSheet.create({
   hero: { width: '100%', maxWidth: 1100, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 64, alignItems: 'center', gap: 20 },
   heroMobile: { paddingHorizontal: 16, paddingVertical: 36, gap: 16 }, heroTitle: { color: colors.charcoal, fontSize: 48, lineHeight: 55, fontWeight: '900', letterSpacing: -1.6, textAlign: 'center' }, heroTitleMobile: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
   heroBody: { color: colors.charcoalSoft, fontSize: 17, lineHeight: 26, textAlign: 'center', maxWidth: 580 }, heroActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 8 },
-  benefits: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 }, benefit: { color: colors.muted, fontSize: 12, fontWeight: '700' }, benefitDot: { color: colors.primary },
+  heroCallToActions: { width: '100%', maxWidth: 560, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', columnGap: 10, rowGap: 6 },
+  heroHomeownerAction: { width: 260, flexBasis: 260, flexShrink: 0, maxWidth: '100%', minHeight: 54, paddingHorizontal: 14, paddingVertical: 12, borderRadius: radii.md, backgroundColor: colors.primary, borderWidth: 1, borderColor: colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: '700', textAlign: 'center', color: colors.surfaceRaised },
+  heroHomeownerActionMobile: { width: '100%', flexBasis: '100%', flexShrink: 0, maxWidth: '100%', minHeight: 54, paddingHorizontal: 14, paddingVertical: 12, borderRadius: radii.md, backgroundColor: colors.primary, borderWidth: 1, borderColor: colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: '700', textAlign: 'center', color: colors.surfaceRaised },
+  heroTradeAction: { width: 260, flexBasis: 260, flexShrink: 0, maxWidth: '100%', minHeight: 54, paddingHorizontal: 14, paddingVertical: 12, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: '700', textAlign: 'center', color: colors.primaryDark },
+  heroTradeActionMobile: { width: '100%', flexBasis: '100%', flexShrink: 0, maxWidth: '100%', minHeight: 54, paddingHorizontal: 14, paddingVertical: 12, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: '700', textAlign: 'center', color: colors.primaryDark },
+
+  heroSecondaryAction: { alignSelf: 'center', maxWidth: '100%' },
   band: { width: '100%' }, whiteBand: { backgroundColor: colors.surfaceRaised }, productBand: { backgroundColor: colors.navySoft },
   section: { width: '100%', maxWidth: 1140, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 36, gap: 22 }, heading: { width: '100%', maxWidth: 740, alignSelf: 'center', alignItems: 'center', gap: 8 },
   eyebrow: { color: colors.primaryDark, fontSize: 11, lineHeight: 16, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', textAlign: 'center' }, sectionTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center', letterSpacing: -0.5 }, sectionBody: { color: colors.muted, lineHeight: 23, textAlign: 'center', maxWidth: 640 },
