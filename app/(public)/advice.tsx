@@ -12,7 +12,7 @@ import { colors, publicResponsiveMetrics, radii } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { scrollToResults } from '@/lib/scroll-to-results';
 import { adviceAudienceLabel, type AdviceAudience, type AdviceSource } from '@/lib/advice-library';
-import { ALL_ALL_ADVICE_GUIDES, allAdviceGuideBySlug, searchAllAdviceGuides } from '@/lib/advice-catalog';
+import { ALL_ADVICE_GUIDES, allAdviceGuideBySlug, searchAllAdviceGuides } from '@/lib/advice-catalog';
 
 type AudienceFilter = AdviceAudience | 'all';
 
