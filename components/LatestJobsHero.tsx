@@ -9,6 +9,7 @@ import { SkeletonBlock } from '@/components/Skeleton';
 import { colors, radii } from '@/constants/theme';
 import { signUpHref } from '@/lib/account-mode';
 import { apiFetch } from '@/lib/api';
+import { LAUNCH_DATE_ISO } from '@/lib/launch-config';
 import type { Job } from '@/types';
 
 const MAX_RECENT_JOBS = 6;
@@ -64,7 +65,8 @@ export function LatestJobsHero() {
       .then((rows) => {
         if (!mounted) return;
         const eligible = (Array.isArray(rows) ? rows : [])
-          .filter((job) => Boolean(job?.id && job?.title)
+          .filter((job) => Boolean(job?.id && job?.title && job?.createdAt)
+            && new Date(job.createdAt).getTime() >= new Date(LAUNCH_DATE_ISO).getTime()
             && !job.isPreview
             && !job.targetTraderId
             && !job.acceptedQuoteId
