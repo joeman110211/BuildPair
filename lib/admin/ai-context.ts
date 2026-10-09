@@ -8,7 +8,7 @@ PUBLIC PRODUCT
 - BuildPair is a launched UK marketplace. Homeowners and tradespeople can register now, homeowners can post jobs and compare quotes, and tradespeople can quote, message and manage work. BuildPay and paid membership checkout remain unavailable.
 - The old launch waitlist is retained as historical contact and invitation records; it is not an active registration gate. Use normal account signup and current live marketplace journeys.
 - Homeowners can describe work in plain English, search/match the right trade, browse trader profiles, post jobs, compare structured quotes, hire, message, track work, arrange direct payment and review. BuildPay is coming soon.
-- Tradespeople can build a public business profile, select trade categories/services, discover suitable jobs, quote, manage accepted work, invoices, visits, milestones, messages, invoicing, reviews and portfolio stories. Paid memberships and BuildPay checkout remain disabled during introductory access.
+- Tradespeople can build a public business profile, select trade categories/services, discover suitable jobs, quote, manage accepted work, visits, milestones, messages, invoices, reviews and portfolio stories. Paid memberships and BuildPay checkout remain disabled during introductory access.
 - Public information includes the homepage/search, trade directory and profiles, homeowner/trader product pages, pricing, advice, trust & safety, marketplace standards, payments information, building-regulations guidance, about/contact, terms and privacy.
 
 HOMEOWNER WORKFLOW
@@ -24,7 +24,7 @@ TRADESPERSON WORKFLOW
 - Sign up/sign in with Clerk -> enable Tradesperson mode -> onboarding/business profile.
 - Profile contains business/trade/service-area details, bio, qualifications/credentials, media and portfolio/story content.
 - Job board and saved searches help find work. Quote assistant helps draft scope/exclusions/payment wording while BuildPair calculates money deterministically.
-- Accepted work connects jobs, quotes, milestones, visits, messages, invoices and payments.
+- Accepted work connects jobs, quotes, visits, milestones, messages and invoices. Direct payment arrangements remain between the parties until BuildPay opens.
 - Stripe payment and subscription capabilities are gated off for customers until formally enabled. Trader analytics and business tools are available as permitted by current account access.
 
 AI FEATURES
