@@ -65,7 +65,8 @@ function MobileQuickNav() {
 }
 
 function CompactShell({ menu }: { menu: ReactNode }) {
-  return <View style={styles.shell}><View style={styles.compactHeader}><HeaderBrand compact />{menu}</View><MobileQuickNav /></View>;
+  const { width } = useWindowDimensions();
+  return <View style={styles.shell}><View style={styles.compactHeader}><HeaderBrand compact />{menu}</View>{width >= 720 ? <MobileQuickNav /> : null}</View>;
 }
 
 function AuthenticatedHeader() {
