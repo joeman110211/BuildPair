@@ -15,28 +15,28 @@ export default function DownloadPage() {
   const goBack = () => router.canGoBack() ? router.back() : router.replace('/');
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
-    <PublicSeo title="Use BuildPair on your phone or computer" description="Use BuildPair in your browser on mobile, tablet or desktop. Check availability of the Android and iOS apps." />
+    <PublicSeo title="Use BuildPair on your phone or computer" description="Use BuildPair on mobile, tablet or desktop using your browser." />
     <PrelaunchBanner />
     <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroInner}>
         <Button icon="arrow-left" mode="text" textColor={colors.primaryDark} compact style={styles.back} onPress={goBack}>Back</Button>
-        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Download BuildPair</Text>
+        <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Access BuildPair</Text>
         <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>BuildPair, wherever you work.</Text>
-        <Text variant="bodyLarge" style={styles.intro}>Use BuildPair in your browser on your phone, tablet or computer. Store availability is shown below.</Text>
+        <Text variant="bodyLarge" style={styles.intro}>BuildPair works in your browser on your phone, tablet or computer. Your account and projects stay together across devices.</Text>
       </View>
     </View>
     <View style={styles.content}>
       <View style={styles.card}>
-        <View style={styles.icon}><Icon source="google-play" size={34} color={colors.primary} /></View>
+        <View style={styles.icon}><Icon source="cellphone" size={34} color={colors.primary} /></View>
         <Text variant="headlineSmall" style={styles.cardTitle}>Android</Text>
-        <Text style={styles.body}>The Android app will be distributed through Google Play once the release build and store listing are approved.</Text>
-        <Button mode="contained" disabled>Google Play · Coming soon</Button>
+        <Text style={styles.body}>Open BuildPair in Chrome on Android. For quicker access, use Chrome’s Add to Home screen option.</Text>
+        <Button mode="contained" onPress={() => router.replace('/')}>Open BuildPair</Button>
       </View>
       <View style={styles.card}>
-        <View style={[styles.icon, { backgroundColor: colors.accentSoft }]}><Icon source="apple" size={34} color={colors.accent} /></View>
+        <View style={[styles.icon, { backgroundColor: colors.accentSoft }]}><Icon source="tablet-cellphone" size={34} color={colors.accent} /></View>
         <Text variant="headlineSmall" style={styles.cardTitle}>iPhone & iPad</Text>
-        <Text style={styles.body}>The iOS app will be linked here when the App Store release is available.</Text>
-        <Button mode="contained" buttonColor={colors.accent} disabled>App Store · Coming soon</Button>
+        <Text style={styles.body}>Open BuildPair in Safari on your iPhone or iPad. Use Share, then Add to Home Screen for a shortcut.</Text>
+        <Button mode="contained" buttonColor={colors.accent} onPress={() => router.replace('/')}>Open BuildPair</Button>
       </View>
       <View style={styles.webCard}>
         <Text variant="headlineSmall" style={styles.cardTitle}>Use BuildPair on the web</Text>
