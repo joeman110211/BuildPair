@@ -17,13 +17,25 @@ try {
       reducedMotion: 'reduce',
     });
     const runtimeErrors = [];
+    const browserConsoleErrors = [];
     page.on('pageerror', (error) => runtimeErrors.push(error.message));
+    page.on('console', (entry) => {
+      if (entry.type() === 'error') browserConsoleErrors.push(entry.text());
+    });
     try {
       const response = await page.goto(origin, { waitUntil: 'load', timeout: 30_000 });
       assert.equal(response?.status(), 200, `Homepage HTTP status at ${width}px`);
 
       // Check after hydration and delayed effects, not merely the static HTML.
       await page.waitForTimeout(4500);
+      await page.screenshot({ path: `ui-evidence/home-hero-debug-${width}.png`, fullPage: false });
+      const diagnostic = await page.evaluate(() => ({
+        title: document.title,
+        bodyText: document.body?.innerText?.slice(0, 500) ?? '',
+        bodyHtmlLength: document.body?.innerHTML?.length ?? 0,
+        rootChildren: document.getElementById('root')?.childElementCount ?? null,
+      }));
+      console.log(`DIAGNOSTIC ${width}px: ${JSON.stringify({ ...diagnostic, runtimeErrors, browserConsoleErrors })}`);
       const heading = page.getByText('Find local tradespeople. Keep the whole job together.', { exact: true });
       const hero = page.getByTestId('home-hero-actions');
       const home = page.getByTestId('home-hero-homeowner');
