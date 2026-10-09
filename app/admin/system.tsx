@@ -26,22 +26,23 @@ type SystemHealth = {
   generatedAt: string;
 };
 
-function stateLabel(state: Check['state']) {
-  if (state === 'ok') return 'Healthy';
-  if (state === 'degraded') return 'Needs attention';
+function stateLabel(check: Check) {
+  if (!check.required && check.state === 'unconfigured') return 'Not enabled';
+  if (check.state === 'ok') return 'Healthy';
+  if (check.state === 'degraded') return check.required ? 'Needs attention' : 'Optional integration issue';
   return 'Setup required';
 }
 
 function headline(status: SystemHealth['status']) {
-  if (status === 'ok') return 'Launch services responding';
-  if (status === 'attention') return 'Configuration still required';
+  if (status === 'ok') return 'Live services responding';
+  if (status === 'attention') return 'An active service needs configuration';
   return 'One or more configured services are degraded';
 }
 
 function summaryText(status: SystemHealth['status']) {
-  if (status === 'ok') return 'All required BuildPair dependencies are configured and responding.';
-  if (status === 'attention') return 'The app can run, but one or more product capabilities are still disabled because their Render environment variables are missing.';
-  return 'At least one configured dependency failed its live check and needs investigation.';
+  if (status === 'ok') return 'Required services for currently enabled features are configured and responding.';
+  if (status === 'attention') return 'One or more currently enabled features need configuration. Planned integrations are tracked separately.';
+  return 'At least one required dependency failed its live check and needs investigation.';
 }
 
 export default function AdminSystemHealth() {
@@ -70,7 +71,7 @@ export default function AdminSystemHealth() {
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, [load]);
   if (loading && !data && !error) return <LoadingScreen label="Testing BuildPair services…" />;
 
-  return <Screen title="System Health" subtitle="Live checks plus the exact configuration BuildPair still needs before launch. Healthy means the service was genuinely verified, not that somebody crossed their fingers near a dashboard.">
+  return <Screen title="System Health" subtitle="Operational checks for the launched marketplace, with optional integrations tracked separately. A healthy status reflects live checks, not assumptions.">
     <View style={styles.actions}>
       <Button mode="contained" loading={loading} disabled={loading} onPress={() => void load()}>Run checks again</Button>
       {data?.releaseSha ? <Chip>Release {data.releaseSha.slice(0, 12)}</Chip> : null}
@@ -86,7 +87,8 @@ export default function AdminSystemHealth() {
           </View>
           <View style={styles.chips}>
             <Chip>{data.summary.ok} healthy</Chip>
-            <Chip>{data.summary.requiredMissing} setup required</Chip>
+            <Chip>{data.summary.requiredMissing} required setup</Chip>
+            <Chip>{data.summary.unconfigured - data.summary.requiredMissing} optional pending</Chip>
             <Chip>{data.summary.degraded} degraded</Chip>
           </View>
         </View>
@@ -99,11 +101,11 @@ export default function AdminSystemHealth() {
               <Text variant="titleLarge" style={styles.title}>{check.name}</Text>
               <Text variant="labelMedium" style={styles.capability}>{check.capability}</Text>
             </View>
-            <Chip>{stateLabel(check.state)}</Chip>
+            <Chip>{stateLabel(check)}</Chip>
           </View>
           <Text style={styles.muted}>{check.detail}</Text>
           {check.state === 'unconfigured' ? <View style={styles.envBox}>
-            <Text variant="labelLarge" style={styles.envTitle}>Add to Render → buildpair → Environment</Text>
+            <Text variant="labelLarge" style={styles.envTitle}>Configuration: Render → buildpair → Environment</Text>
             {check.envVars.map((name) => <Text key={name} selectable style={styles.envName}>{name}</Text>)}
           </View> : null}
           <Text variant="bodySmall" style={check.state === 'ok' ? styles.latency : styles.muted}>
@@ -113,8 +115,8 @@ export default function AdminSystemHealth() {
       </View>
 
       <AppCard>
-        <Text variant="titleMedium" style={styles.title}>Launch-readiness rule</Text>
-        <Text style={styles.muted}>Database and Clerk keep the core account system alive. Gemini powers the AI assistants, Cloudinary powers user media, Resend handles transactional email, and Stripe powers paid memberships and payments. A missing integration is therefore shown as setup required rather than quietly pretending it is optional.</Text>
+        <Text variant="titleMedium" style={styles.title}>Operational health rule</Text>
+        <Text style={styles.muted}>Database and Clerk support the live marketplace, with Gemini, Cloudinary and Resend providing active capabilities. BuildPay and paid memberships are not open yet, so Stripe setup is visible as optional until those features are enabled. Missing configuration for active capabilities must still be investigated.</Text>
       </AppCard>
     </> : null}
   </Screen>;
