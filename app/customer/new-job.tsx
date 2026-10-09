@@ -242,7 +242,7 @@ export default function NewJobScreen() {
   </View>;
 
   return <Screen title={STEP_TITLES[step]} subtitle={traderName ? `Request a quote from ${traderName}` : STEP_HELP[step]} footer={footer} stickyFooter>
-    <FormStepHeader current={step + 1} total={5} hint={STEP_HELP[step]} />
+    <FormStepHeader current={step + 1} total={5} />
     {draftStatus ? <HelperText type="info" visible>{draftStatus}</HelperText> : null}
 
     {selectedProperty ? <AppCard style={styles.directInfo}>
