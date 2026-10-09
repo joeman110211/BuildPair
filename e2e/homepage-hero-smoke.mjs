@@ -53,7 +53,7 @@ try {
 
       const body = (await page.locator('body').innerText()).trim();
       assert(body.length > 200, `Homepage looks blank at ${width}px`);
-      assert(body.includes('FEATURED TRADESPEOPLE') || body.includes('Featured tradespeople'),
+      assert(body.includes('What needs doing?') && body.includes('Homeowner sign up') && body.includes('Tradesperson sign up'),
         `Homepage content disappears after hydration at ${width}px`);
       assert.deepEqual(runtimeErrors, [], `Browser runtime errors at ${width}px`);
 
