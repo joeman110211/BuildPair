@@ -37,6 +37,15 @@ describe('Public marketplace launch safety', () => {
     }
   });
 
+  it('sends live web visitors to working registration rather than the old waitlist', () => {
+    const signup = readFileSync('app/auth/sign-up.web.tsx', 'utf8');
+    const waitlist = readFileSync('app/(public)/waitlist.tsx', 'utf8');
+    expect(signup).toContain('SignUp');
+    expect(signup).toContain('forceRedirectUrl');
+    expect(signup).not.toContain("waitlistHref(mode, 'direct-signup')");
+    expect(waitlist).toContain('<Redirect href="/auth/sign-up?mode=customer" />');
+  });
+
   it('permits normal public signup without an invite link', () => {
     const signup = readFileSync('app/auth/sign-up.tsx', 'utf8');
     expect(signup).toContain('emailInput');

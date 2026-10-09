@@ -1,4 +1,4 @@
-import { Link, useLocalSearchParams } from 'expo-router';
+import { Link, Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 import { Checkbox, Chip, HelperText, SegmentedButtons, Text, TextInput } from 'react-native-paper';
@@ -323,7 +323,7 @@ export function WaitlistPageContent({ fixedAudience }: { fixedAudience?: Audienc
 }
 
 export default function WaitlistPage() {
-  return <WaitlistPageContent fixedAudience="homeowner" />;
+  return <Redirect href="/auth/sign-up?mode=customer" />;
 }
 
 const styles = StyleSheet.create({
