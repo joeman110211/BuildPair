@@ -82,8 +82,9 @@ try {
       const jobErrors = [];
       withJobs.on('pageerror', (error) => jobErrors.push(String(error.message)));
       const fixtureJobs = [
-        { id: 'homepage-smoke-job-1', title: 'Repair a leaking kitchen tap', category: 'Plumbing', locationLabel: 'Surrey', postcode: 'KT11', budgetRange: '£100–£250', urgency: 'Within a week', status: 'open', targetTraderId: null, acceptedQuoteId: null },
-        { id: 'homepage-smoke-job-2', title: 'Tiling a small bathroom', category: 'Tiling', locationLabel: 'Sussex', postcode: 'PO21', budgetRange: 'To be agreed', urgency: 'Flexible', status: 'open', targetTraderId: null, acceptedQuoteId: null },
+        { id: 'homepage-smoke-job-1', title: 'Repair a leaking kitchen tap', category: 'Plumbing', locationLabel: 'Surrey', postcode: 'KT11', budgetRange: '£100–£250', urgency: 'Within a week', status: 'open', targetTraderId: null, acceptedQuoteId: null, createdAt: '2026-10-09T08:00:00Z' },
+        { id: 'homepage-smoke-job-2', title: 'Tiling a small bathroom', category: 'Tiling', locationLabel: 'Sussex', postcode: 'PO21', budgetRange: 'To be agreed', urgency: 'Flexible', status: 'open', targetTraderId: null, acceptedQuoteId: null, createdAt: '2026-10-09T08:20:00Z' },
+        { id: 'prelaunch-test-job', title: 'test1', category: 'Tiling', locationLabel: 'Surrey', postcode: 'TW12', budgetRange: 'Unknown', urgency: 'Flexible', status: 'open', targetTraderId: null, acceptedQuoteId: null, createdAt: '2026-09-10T08:00:00Z' },
       ];
       await withJobs.route('**/api/public/jobs', (route) => route.fulfill({
         status: 200, contentType: 'application/json', body: JSON.stringify(fixtureJobs),
@@ -93,6 +94,8 @@ try {
       await carousel.waitFor({ state: 'visible', timeout: 30_000 });
       assert.equal(await withJobs.getByTestId('bp-home-latest-job-card').count(), 2,
         size.name + ': recent public job cards missing');
+      assert.equal(await withJobs.getByText('test1', { exact: true }).count(), 0,
+        size.name + ': prelaunch test job leaked onto homepage');
       assert.ok(await withJobs.getByText('Repair a leaking kitchen tap').isVisible(),
         size.name + ': genuine-job presentation missing');
       await withJobs.waitForTimeout(2_000);
