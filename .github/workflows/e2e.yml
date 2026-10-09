@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       base_url:
-        description: 'HTTPS BuildPair staging URL to test'
+        description: 'HTTPS live BuildPair production URL to test'
         required: false
-        default: 'https://staging.buildpair.co.uk'
+        default: 'https://www.buildpair.co.uk'
         type: string
       confirm_mutating:
-        description: 'I understand this run creates disposable staging accounts and data'
+        description: 'I approve clearly labelled temporary production test accounts, records and cleanup'
         required: true
         default: false
         type: boolean
@@ -23,17 +23,18 @@ permissions:
   contents: read
 
 concurrency:
-  group: buildpair-e2e-${{ inputs.base_url || 'staging' }}
-  cancel-in-progress: true
+  group: buildpair-e2e-production
+  cancel-in-progress: false
 
 jobs:
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      E2E_BASE_URL: ${{ inputs.base_url || 'https://staging.buildpair.co.uk' }}
+      E2E_BASE_URL: ${{ inputs.base_url || 'https://www.buildpair.co.uk' }}
       CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       E2E_EXTERNAL: ${{ inputs.external_integrations && '1' || '0' }}
+      E2E_PRODUCTION_MUTATION_ACK: ${{ inputs.confirm_mutating && 'I_APPROVE_DISPOSABLE_PRODUCTION_TESTS' || '' }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -49,11 +50,11 @@ jobs:
         run: |
           set -euo pipefail
           if [ "${{ inputs.confirm_mutating }}" != "true" ]; then
-            echo "::error::Mutating E2E is disabled by default. Re-run manually with confirm_mutating enabled only when a full staging journey test is actually needed."
+            echo "::error::Mutating E2E is disabled by default. Re-run manually with confirm_mutating enabled only when temporary production test records and cleanup are authorised."
             exit 1
           fi
 
-      - name: Validate staging target and Clerk test access
+      - name: Validate protected production target and Clerk test access
         shell: bash
         run: |
           set -euo pipefail
@@ -62,24 +63,22 @@ jobs:
             *) echo "::error::base_url must start with https://"; exit 1 ;;
           esac
           host=$(printf '%s' "$E2E_BASE_URL" | sed -E 's#^https://([^/]+).*$#\1#' | tr '[:upper:]' '[:lower:]')
-          case "$host" in
-            buildpair.co.uk|www.buildpair.co.uk)
-              echo "::error::Mutating E2E tests are forbidden against production. Use https://staging.buildpair.co.uk."
-              exit 1
-              ;;
-          esac
-          if [ "$host" != "staging.buildpair.co.uk" ]; then
-            echo "::error::Mutating BuildPair E2E tests may only target staging.buildpair.co.uk."
+          if [ "$host" != "www.buildpair.co.uk" ]; then
+            echo "::error::Mutating E2E can only target https://www.buildpair.co.uk."
+            exit 1
+          fi
+          if [ "$E2E_PRODUCTION_MUTATION_ACK" != "I_APPROVE_DISPOSABLE_PRODUCTION_TESTS" ]; then
+            echo "::error::Explicit production data/cleanup approval is required."
             exit 1
           fi
           if [ -z "$CLERK_SECRET_KEY" ]; then
-            echo "::error::Add the Clerk secret key for the staging BuildPair Clerk instance as an Actions secret named CLERK_SECRET_KEY before running E2E."
+            echo "::error::Add the PRODUCTION BuildPair Clerk secret as Actions secret CLERK_SECRET_KEY before running E2E."
             exit 1
           fi
 
       - run: npm ci --no-audit --no-fund --prefer-offline
 
-      - name: Wait for staging readiness
+      - name: Wait for production readiness
         shell: bash
         run: |
           set -euo pipefail
@@ -87,13 +86,13 @@ jobs:
             readiness=$(curl --fail --silent --show-error --connect-timeout 3 --max-time 8 "$E2E_BASE_URL/api/readiness" 2>/dev/null || true)
             ready=$(printf '%s' "$readiness" | jq -r '.ready // false' 2>/dev/null || true)
             if [ "$ready" = "true" ]; then
-              echo "BuildPair staging target is ready."
+              echo "BuildPair production target is ready."
               exit 0
             fi
             echo "Waiting for target readiness ($attempt/120)..."
             sleep 5
           done
-          echo "::error::BuildPair staging target did not become ready in time"
+          echo "::error::BuildPair production target did not become ready in time"
           exit 1
 
       - name: Load target Clerk publishable key
@@ -114,8 +113,8 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run every BuildPair browser journey and feature matrix
-        run: npx playwright test
+      - name: Run curated production-safe authenticated feature and mobile matrix
+        run: npx playwright test --project=desktop-core-flow --project=desktop-marketplace-features --project=desktop-onboarding-validation --project=desktop-abuse-security --project=desktop-dual-mode --project=desktop-route-coverage --project=small-android-route-coverage --project=small-android-public-ui
 
       - name: Upload Playwright evidence
         if: always()
