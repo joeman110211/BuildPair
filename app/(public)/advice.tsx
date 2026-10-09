@@ -11,7 +11,8 @@ import { SemanticHeading } from '@/components/SemanticHeading';
 import { colors, publicResponsiveMetrics, radii } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { scrollToResults } from '@/lib/scroll-to-results';
-import { ADVICE_GUIDES, adviceAudienceLabel, adviceGuideBySlug, searchAdviceGuides, type AdviceAudience, type AdviceSource } from '@/lib/advice-library';
+import { adviceAudienceLabel, type AdviceAudience, type AdviceSource } from '@/lib/advice-library';
+import { ALL_ALL_ADVICE_GUIDES, allAdviceGuideBySlug, searchAllAdviceGuides } from '@/lib/advice-catalog';
 
 type AudienceFilter = AdviceAudience | 'all';
 
@@ -33,12 +34,12 @@ export default function AdviceHub() {
   const [aiError, setAiError] = useState('');
 
   const categories = useMemo(() => {
-    const pool = audience === 'all' ? ADVICE_GUIDES : ADVICE_GUIDES.filter((guide) => guide.audience === audience);
+    const pool = audience === 'all' ? ALL_ADVICE_GUIDES : ALL_ADVICE_GUIDES.filter((guide) => guide.audience === audience);
     return Array.from(new Set(pool.map((guide) => guide.category))).sort();
   }, [audience]);
 
   const guides = useMemo(() => {
-    const matches = searchAdviceGuides(query, audience);
+    const matches = searchAllAdviceGuides(query, audience);
     return category === 'all' ? matches : matches.filter((guide) => guide.category === category);
   }, [query, audience, category]);
 
@@ -133,7 +134,7 @@ export default function AdviceHub() {
         {aiResult.guideSlugs.length ? <View style={styles.aiLinks}>
           <Text style={styles.cardLabel}>Relevant BuildPair guides</Text>
           {aiResult.guideSlugs.map((slug) => {
-            const guide = adviceGuideBySlug(slug);
+            const guide = allAdviceGuideBySlug(slug);
             if (!guide) return null;
             return <Link key={slug} href={('/(public)/advice/' + slug) as Href} asChild><Button mode="outlined">{guide.title}</Button></Link>;
           })}
