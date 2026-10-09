@@ -38,6 +38,10 @@ Public and database snapshots above were taken against the baseline deployment. 
 
 ## Open issues
 
+**Confirmed Google sign-in blocker:** The live Google button reaches an OAuth error: `Missing required parameter: client_id` (`400 invalid_request`). No successful BuildPair sign-in was obtained. The app uses Clerk's hosted web component, not a locally assembled Google OAuth URL. Production Google connection credentials in Clerk are the first configuration to inspect; this diagnosis is an inference, and the provider settings have not been inspected. An authorised operator must correct the client ID/secret and matching Google redirect configuration securely, then retest. Apple and Facebook sign-in remain unverified.
+
+Official setup: https://clerk.com/docs/guides/configure/auth-strategies/social-connections/google
+
 1. **Stripe credentials:** Render lacks `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`. An authorised operator must enter them securely in Render, never chat or Git. The existing platform webhook targets `/api/stripe/webhook`; use its signing secret. BuildPay Connect and its gate stay disabled. Hosted Checkout does not require an embedded publishable key.
 2. **Billing journeys:** Run sandbox checkout, signed webhook activation, portal upgrades/downgrades/cancellation and failed-payment recovery before enabling either paid flag. Use matching sandbox price IDs, then confirm live credentials/mappings and delivery. No live charge was made in this audit.
 3. **Dependency security:** Production npm audit reported 29 vulnerable dependency nodes (18 high, 11 moderate), in upstream braces, node-forge, uuid and decode-uri-component chains. Several lack a compatible fix; no forced Expo major upgrade or audit suppression was applied. The decoder includes a runtime path and remains material. The dependency audit gate is not green.
