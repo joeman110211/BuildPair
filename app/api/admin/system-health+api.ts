@@ -165,6 +165,44 @@ async function resendCheck() {
   });
 }
 
+async function googleReviewsCheck(): Promise<HealthCheck> {
+  const envVars = ['GOOGLE_PLACES_API_KEY'];
+  if (!configured('GOOGLE_PLACES_API_KEY')) {
+    return unconfigured('Google reviews', 'Google Places API key is missing. Business listing search and Google review connections cannot run.', 'Trade Google business review connections', envVars);
+  }
+  return {
+    name: 'Google reviews',
+    state: 'ok',
+    latencyMs: null,
+    detail: 'Google Places API key is set. A connected business listing and public review display still require end-to-end verification.',
+    required: true,
+    capability: 'Trade Google business review connections',
+    envVars,
+  };
+}
+
+async function tradeEntitlementsCheck() {
+  return timed('Trade entitlements', 'Paid, complimentary and introductory trade membership access', [], async () => {
+    // This is an audit only: never silently revoke established accounts during a health check.
+    const rows = await getSql()`
+      SELECT count(*)::int AS "unbackedCount"
+      FROM trader_profiles tp
+      JOIN users u ON u.id = tp.user_id
+      WHERE tp.is_subscription_active = true
+        AND tp.subscription_tier <> 'free'
+        AND tp.complimentary_tier IS NULL
+        AND (tp.paid_subscription_tier IS NULL OR tp.stripe_subscription_id IS NULL)
+        AND (tp.trial_ends_at IS NULL OR tp.trial_ends_at <= now())
+        AND coalesce(u.is_deleted, false) = false
+    ` as unknown as { unbackedCount: number }[];
+    const unbacked = Number(rows[0]?.unbackedCount ?? 0);
+    if (unbacked > 0) {
+      throw new Error(`${unbacked} trade membership records have no recorded active trial, paid subscription or complimentary grant. Reconcile their access in Admin Users before enabling paid plans.`);
+    }
+    return 'No active trade memberships without a recorded billing, introductory or complimentary entitlement';
+  });
+}
+
 async function stripeCheck() {
   const required = BUILDPAY_OPEN || PAID_PLANS_OPEN || PAID_PROJECT_PLUS_OPEN;
   const envVars = requiredStripeEnvironment({ trade: PAID_PLANS_OPEN, projectPlus: PAID_PROJECT_PLUS_OPEN, buildPay: BUILDPAY_OPEN });
@@ -196,6 +234,8 @@ export async function GET(request: Request) {
       cloudinaryCheck(),
       resendCheck(),
       stripeCheck(),
+      googleReviewsCheck(),
+      tradeEntitlementsCheck(),
     ]);
     const degraded = checks.filter((check) => check.required && check.state === 'degraded').length;
     const unconfiguredCount = checks.filter((check) => check.state === 'unconfigured').length;
