@@ -2,6 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { assertAiDailyBudget, recordAiRequest } from '@/lib/ai-audit';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { getSql } from '@/lib/sql';
+import { BUILDPAY_OPEN, PAID_PLANS_OPEN } from '@/lib/launch-config';
 import { jsonError, requireAdmin } from '@/lib/server';
 
 type HealthState = 'ok' | 'degraded' | 'unconfigured';
@@ -174,13 +175,18 @@ async function stripeCheck() {
   ];
   const missing = envVars.filter((name) => !configured(name));
   const key = process.env.STRIPE_SECRET_KEY?.trim();
+  const required = BUILDPAY_OPEN || PAID_PLANS_OPEN;
   if (missing.length || !key) {
-    return unconfigured('Stripe', `Missing ${missing.join(', ') || 'Stripe configuration'}`, 'Memberships, payments and trader payouts', envVars);
+    return {
+      ...unconfigured('Stripe', `Missing ${missing.join(', ') || 'Stripe configuration'}`, 'Future BuildPay, memberships and trader payouts', envVars),
+      required,
+    };
   }
-  return timed('Stripe', 'Memberships, payments and trader payouts', envVars, async () => {
+  const check = await timed('Stripe', 'Future BuildPay, memberships and trader payouts', envVars, async () => {
     await probe('https://api.stripe.com/v1/balance', { headers: { Authorization: `Bearer ${key}` } });
-    return 'Stripe API reachable and complete launch configuration is present';
+    return 'Stripe API reachable and credentials verified';
   });
+  return { ...check, required };
 }
 
 export async function GET(request: Request) {
@@ -195,7 +201,7 @@ export async function GET(request: Request) {
       resendCheck(),
       stripeCheck(),
     ]);
-    const degraded = checks.filter((check) => check.state === 'degraded').length;
+    const degraded = checks.filter((check) => check.required && check.state === 'degraded').length;
     const unconfiguredCount = checks.filter((check) => check.state === 'unconfigured').length;
     const requiredMissing = checks.filter((check) => check.required && check.state === 'unconfigured').length;
     return Response.json({
