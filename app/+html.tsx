@@ -97,6 +97,58 @@ const shellCss = `
       white-space: nowrap !important;
     }
   }
+  /* Mobile homepage: CSS only, with an unchanged hydration/component tree. */
+  @media (max-width: 719px) {
+    [data-testid="bp-compact-quick-nav"] { display: none !important; }
+    [data-testid="bp-home-hero"] {
+      padding-top: 26px !important;
+      padding-bottom: 28px !important;
+      gap: 14px !important;
+    }
+    [data-testid="bp-home-hero"] h1 {
+      font-size: clamp(26px, 7.4vw, 30px) !important;
+      line-height: 1.18 !important;
+      letter-spacing: -0.65px !important;
+    }
+    [data-testid="bp-home-hero-body"] {
+      font-size: 15px !important;
+      line-height: 22px !important;
+      max-width: 440px !important;
+    }
+    [data-testid="bp-home-hero-actions"] {
+      display: flex !important;
+      flex-direction: column !important;
+      flex-wrap: nowrap !important;
+      align-items: stretch !important;
+      width: 100% !important;
+      max-width: 440px !important;
+      gap: 8px !important;
+    }
+    [data-testid="bp-home-hero-actions"] > * {
+      flex: 0 0 auto !important;
+      min-width: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+    }
+    [data-testid="bp-home-join-homeowner"],
+    [data-testid="bp-home-join-trader"] {
+      width: 100% !important;
+      max-width: 100% !important;
+      min-height: 50px !important;
+      align-self: stretch !important;
+    }
+    [data-testid="bp-home-hero-actions"] > :nth-child(4),
+    [data-testid="bp-home-how"] {
+      display: none !important;
+    }
+    [data-testid="bp-home-browse"] {
+      align-self: center !important;
+      min-height: 44px !important;
+    }
+    [data-testid="bp-home-benefits"] { display: none !important; }
+  }
+
 `;
 
 const favicon = 'https://res.cloudinary.com/qrrcn7ma/image/upload/c_crop,h_221,w_221,x_858,y_712/c_scale,w_64/f_png/v1789145219/file_000000003d24820b9445ddc0225f908a.png';
