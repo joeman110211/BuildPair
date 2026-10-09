@@ -26,6 +26,18 @@ describe('open marketplace operational readiness', () => {
     expect(studio).toContain('Complimentary launch access');
   });
 
+  it('surfaces missing Google Places configuration and membership entitlement anomalies in admin health', () => {
+    const health = source('app/api/admin/system-health+api.ts');
+    expect(health).toContain("envVars = ['GOOGLE_PLACES_API_KEY']");
+    expect(health).toContain("unconfigured('Google reviews'");
+    expect(health).toContain('googleReviewsCheck(),');
+    expect(health).toContain('tradeEntitlementsCheck(),');
+    expect(health).toContain("tp.complimentary_tier IS NULL");
+    expect(health).toContain("tp.stripe_subscription_id IS NULL");
+    expect(health).toContain("tp.trial_ends_at <= now()");
+    expect(health).toContain("Reconcile their access in Admin Users before enabling paid plans");
+  });
+
   it('removes outdated beta and membership sales messaging from trader onboarding', () => {
     const onboarding = source('app/trader/onboarding.tsx');
     expect(onboarding).toContain('eligible tradespeople receive three months of BuildPair Pro at no charge');
