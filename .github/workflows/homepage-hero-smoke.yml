@@ -35,6 +35,13 @@ jobs:
       - name: Use repository npm
         run: npm install --global npm@11.19.0
       - run: npm ci --no-audit --no-fund
+      - name: Load public BuildPair client configuration for realistic hydration
+        shell: bash
+        run: |
+          set -euo pipefail
+          config=$(curl --fail --silent --show-error --retry 3 'https://www.buildpair.co.uk/api/client-config')
+          publishable=$(printf '%s' "$config" | node -e "let data=''; process.stdin.on('data', chunk => data+=chunk); process.stdin.on('end', () => {const key=JSON.parse(data).clerkPublishableKey; if (!key || !key.startsWith('pk_')) process.exit(1); process.stdout.write(key);});")
+          echo "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=$publishable" >> "$GITHUB_ENV"
       - name: Validate TypeScript
         run: npm run typecheck
       - name: Build production web bundle
