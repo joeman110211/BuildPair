@@ -66,7 +66,7 @@ export default function LandingPageRefined() {
     <View style={styles.localNotice}><Text style={styles.localNoticeText}>Tradespeople get 3 months of Pro free from profile activation. BuildPay is coming soon.</Text></View>
     <View style={[styles.hero, mobile && styles.heroMobile]}>
       <Text style={styles.eyebrow}>ONE PROJECT. BOTH SIDES CONNECTED.</Text>
-      <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
+      <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: Math.min(metrics.heroTitleFontSize, 30), lineHeight: Math.min(metrics.heroTitleLineHeight, 36) }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
       <Text style={styles.heroBody}>Compare clear quotes and keep your messages, changes and job details organised in one place.</Text>
       <View style={[styles.heroActions, mobile && styles.heroActionsMobile]}>
         <Link href={signUpHref('customer', '/customer/new-job')} asChild><Button mode="contained" style={[styles.button, mobile && styles.heroActionMobile]} contentStyle={styles.buttonContent}>Homeowner sign up</Button></Link>
