@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - 'components/LandingPageRefined.tsx'
-      - 'scripts/check-homepage-hero.mjs'
+      - 'e2e/homepage-hero-smoke.mjs'
       - '.github/workflows/homepage-hero-smoke.yml'
 
 permissions:
@@ -22,7 +22,6 @@ jobs:
     env:
       CI: '1'
       EXPO_NO_TELEMETRY: '1'
-      NODE_ENV: production
       PORT: '3000'
       APP_URL: http://127.0.0.1:3000
       EXPO_PUBLIC_API_URL: http://127.0.0.1:3000
@@ -48,7 +47,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node server.mjs >/tmp/buildpair-homepage-smoke.log 2>&1 &
+          NODE_ENV=production node server.mjs >/tmp/buildpair-homepage-smoke.log 2>&1 &
           for attempt in $(seq 1 60); do
             if curl --silent --fail http://127.0.0.1:3000/ >/dev/null; then exit 0; fi
             sleep 1
@@ -56,7 +55,7 @@ jobs:
           cat /tmp/buildpair-homepage-smoke.log
           exit 1
       - name: Confirm homepage survives hydration across mobile and desktop
-        run: node scripts/check-homepage-hero.mjs
+        run: node e2e/homepage-hero-smoke.mjs
       - name: Save browser evidence and server log
         if: always()
         uses: actions/upload-artifact@v4
