@@ -7,6 +7,7 @@ import { AppCard } from '@/components/AppCard';
 import { LoadingScreen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { PAID_PLANS_OPEN } from '@/lib/launch-config';
 
 type Plan = {
   conceptSummary?: string;
@@ -66,6 +67,17 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
     } catch (e) { setError(errorMessage(e)); setBusy(''); }
   }
 
+  async function manageProjectPlusBilling() {
+    try {
+      setBusy('checkout'); setError('');
+      const result = await apiFetch<{ url: string }>('/api/stripe/project-plus/portal', {
+        method: 'POST', body: JSON.stringify({ audience }),
+      }, () => tokenRef.current());
+      if (!result.url) throw new Error('BuildPair did not return a billing portal link.');
+      if (Platform.OS === 'web' && typeof window !== 'undefined') window.location.assign(result.url);
+    } catch (e) { setError(errorMessage(e)); setBusy(''); }
+  }
+
   async function generatePlan() {
     try {
       setBusy('plan'); setError('');
@@ -99,11 +111,14 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
       {audience === 'customer' ? <>
         <Text variant="headlineSmall" style={styles.price}>£4.99/month</Text>
         <Text style={styles.muted}>Includes 10 AI room concepts and up to 50 planning sessions per month. Normal BuildPair homeowner marketplace and project tools remain free.</Text>
-        <Button mode="contained" icon="credit-card-outline" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void startProjectPlus()}>Get Project+</Button>
+        {PAID_PLANS_OPEN && Platform.OS === 'web' ? <Button mode="contained" icon="credit-card-outline" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void startProjectPlus()}>Get Project+</Button> : <Text style={styles.muted}>Eligible homeowners can use their introductory Project+ allowance without making a payment.</Text>}
       </> : <>
         <Text variant="headlineSmall" style={styles.price}>£4.99/month</Text>
         <Text style={styles.muted}>Add Project+ to a Starter, Core or Plus trade account for customer planning sessions and room concepts. It remains included at no extra cost with BuildPair Pro.</Text>
-        <View style={styles.actions}><Button mode="contained" icon="credit-card-outline" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void startProjectPlus()}>Add Project+</Button><Button mode="outlined" onPress={() => void Linking.openURL(Platform.OS === 'web' ? '/trader/subscription' : 'https://www.buildpair.co.uk/trader/subscription')}>Compare plans</Button></View>
+        <View style={styles.actions}>
+          {PAID_PLANS_OPEN && Platform.OS === 'web' ? <Button mode="contained" icon="credit-card-outline" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void startProjectPlus()}>Add Project+</Button> : null}
+          <Button mode="outlined" onPress={() => void Linking.openURL(Platform.OS === 'web' ? '/trader/subscription' : 'https://www.buildpair.co.uk/trader/subscription')}>Compare plans</Button>
+        </View>
       </>}
     </AppCard>
     <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
@@ -114,6 +129,12 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
     <AppCard style={styles.hero}>
       <View style={styles.topRow}><View style={styles.flex}><Chip icon="creation-outline">{status.source === 'pro' ? 'Included with BuildPair Pro' : status.source === 'launch' ? 'Complimentary launch access' : 'Project+ active'}</Chip><Text variant="headlineSmall" style={styles.title}>Project+ planning studio</Text><Text style={styles.muted}>{audience === 'trader' ? 'Use this alongside a customer to explore a brief before turning it into a BuildPair quote.' : 'Explore the room, build a clearer brief and take better questions into the quoting stage.'}</Text></View><View style={styles.usage}><Text style={styles.usageStrong}>{status.imagesUsed}/{status.imageLimit}</Text><Text style={styles.muted}>room concepts this month</Text><Text style={styles.usageStrong}>{status.plannerUsed}/{status.plannerLimit}</Text><Text style={styles.muted}>planning sessions</Text></View></View>
     </AppCard>
+
+    {status.source === 'subscription' && Platform.OS === 'web' ? <AppCard>
+      <Text variant="titleLarge" style={styles.title}>Your Project+ membership</Text>
+      <Text style={styles.muted}>Manage your payment method, invoices or cancellation securely in Stripe.</Text>
+      <Button mode="outlined" icon="credit-card-outline" loading={busy === 'checkout'} disabled={Boolean(busy)} onPress={() => void manageProjectPlusBilling()}>Manage Project+ billing</Button>
+    </AppCard> : null}
 
     <AppCard>
       <Text variant="titleLarge" style={styles.title}>Describe the project</Text>

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MARKETPLACE_OPEN } from '@/lib/launch-config';
+import { MARKETPLACE_OPEN, PAID_PLANS_OPEN } from '@/lib/launch-config';
 import { PROJECT_PLUS_PRICE_PENCE, projectPlusEntitlement } from '@/lib/project-plus';
 import { accountModes, authenticatedUserId, ensureDbUser, HttpError, jsonError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
@@ -9,7 +9,7 @@ const requestSchema = z.object({ audience: z.enum(['customer','trader']).default
 
 export async function POST(request: Request) {
   try {
-    if (!MARKETPLACE_OPEN) throw new HttpError(423, 'Project+ subscriptions open with the homeowner marketplace on 15 October 2026.');
+    if (!MARKETPLACE_OPEN || !PAID_PLANS_OPEN) throw new HttpError(423, 'Project+ paid checkout is unavailable during complimentary launch access.');
     const userId = await authenticatedUserId(request);
     const user = await ensureDbUser(userId);
     const modes = await accountModes(userId);

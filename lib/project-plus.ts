@@ -59,10 +59,16 @@ async function consume(userId: string, field: 'image_generations' | 'planner_req
 }
 
 export async function consumeProjectPlusImage(userId: string) {
-  return consume(userId, 'image_generations', PROJECT_PLUS_IMAGE_LIMIT);
+  // Re-check the current entitlement at the atomic usage increment. The earlier
+  // API preflight is not sufficient when requests overlap or access changes.
+  const entitlement = await projectPlusEntitlement(userId);
+  if (!entitlement.active) throw new Error('Project+ access is required');
+  return consume(userId, 'image_generations', entitlement.imageLimit);
 }
 export async function consumeProjectPlusPlanner(userId: string) {
-  return consume(userId, 'planner_requests', PROJECT_PLUS_PLANNER_LIMIT);
+  const entitlement = await projectPlusEntitlement(userId);
+  if (!entitlement.active) throw new Error('Project+ access is required');
+  return consume(userId, 'planner_requests', entitlement.plannerLimit);
 }
 
 export async function projectPlusUsage(userId: string) {

@@ -22,8 +22,10 @@ export async function POST(request: Request) {
     const db = getDb();
     const [profile] = await db.select({
       stripeCustomerId: traderProfiles.stripeCustomerId,
+      stripeSubscriptionId: traderProfiles.stripeSubscriptionId,
     }).from(traderProfiles).where(eq(traderProfiles.userId, trader.id)).limit(1);
     if (!profile) throw new HttpError(409, 'Complete your profile first');
+    if (profile.stripeSubscriptionId) throw new HttpError(409, 'A trade subscription already exists. Manage or cancel it using your BuildPair billing portal before starting another.');
 
     const stripe = getStripe();
     let customerId = profile.stripeCustomerId;

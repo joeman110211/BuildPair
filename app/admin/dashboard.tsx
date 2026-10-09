@@ -8,6 +8,7 @@ import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
+import { PAID_PLANS_OPEN } from '@/lib/launch-config';
 
 type Metrics = {
   totalUsers: number;
@@ -228,7 +229,7 @@ export default function AdminDashboard() {
 
       <Text variant="titleLarge" style={styles.sectionTitle}>Invoicing & payments</Text>
       <AppCard>
-        <Text style={styles.muted}>Invoicing is available. BuildPay and paid membership checkout remain switched off; payment figures below describe stored records, not live BuildPay availability.</Text>
+        <Text style={styles.muted}>Invoicing is available. BuildPay remains unavailable to customers. {PAID_PLANS_OPEN ? 'Paid membership checkout is enabled.' : 'Paid membership checkout remains switched off.'} Payment figures below describe stored records, not evidence that BuildPay is available.</Text>
         <View style={styles.statsGrid}>
           <Stat label="Invoices" value={metrics.invoices} hint={`${metrics.overdueInvoices} overdue`} />
           <Stat label="Payments" value={metrics.payments} hint={`${metrics.paidPayments} paid`} />
