@@ -2,7 +2,7 @@
 set -u
 
 REPO_DIR="${BUILDPAIR_REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-PUBLIC_ORIGIN="${BUILDPAIR_PUBLIC_ORIGIN:-https://staging.buildpair.co.uk}"
+PUBLIC_ORIGIN="${BUILDPAIR_PUBLIC_ORIGIN:-https://www.buildpair.co.uk}"
 if [[ -n "${BUILDPAIR_ENV_FILE:-}" ]]; then
   ENV_FILE="$BUILDPAIR_ENV_FILE"
 elif [[ -f "$REPO_DIR/.env.local" ]]; then
