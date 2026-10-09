@@ -226,8 +226,9 @@ export default function AdminDashboard() {
         </View>
       </AppCard>
 
-      <Text variant="titleLarge" style={styles.sectionTitle}>Money</Text>
+      <Text variant="titleLarge" style={styles.sectionTitle}>Invoicing & payments</Text>
       <AppCard>
+        <Text style={styles.muted}>Invoicing is available. BuildPay and paid membership checkout remain switched off; payment figures below describe stored records, not live BuildPay availability.</Text>
         <View style={styles.statsGrid}>
           <Stat label="Invoices" value={metrics.invoices} hint={`${metrics.overdueInvoices} overdue`} />
           <Stat label="Payments" value={metrics.payments} hint={`${metrics.paidPayments} paid`} />
@@ -241,10 +242,10 @@ export default function AdminDashboard() {
     <View style={styles.navGrid}>
       <AppCard style={styles.navGroup}>
         <Text variant="titleMedium" style={styles.title}>Growth & usage</Text>
-        <Text style={styles.muted}>Traffic before signup, product behaviour after signup and launch demand.</Text>
+        <Text style={styles.muted}>Visitor acquisition, account conversions and marketplace usage.</Text>
         <NavButton href="/admin/visitors" label="Visitor intelligence" detail="live traffic & sources" />
         <NavButton href="/admin/insights" label="Product insights" detail="signed-in behaviour" />
-        <NavButton href="/admin/waitlist" label="Waitlist" detail="launch demand" />
+        <NavButton href="/admin/waitlist" label="Historical contacts" detail="pre-launch enquiries" />
       </AppCard>
 
       <AppCard style={styles.navGroup}>
@@ -269,7 +270,7 @@ export default function AdminDashboard() {
         <Text variant="titleMedium" style={styles.title}>Safety, payments & platform</Text>
         <Text style={styles.muted}>The queues and dependency checks that should never become mystery dead ends.</Text>
         <NavButton href="/admin/moderation" label="Moderation" detail="reports & actions" />
-        <NavButton href="/admin/payment-disputes" label="BuildPay issues" detail="payment escalations" />
+        <NavButton href="/admin/payment-disputes" label="BuildPay records" detail="not yet available" />
         <NavButton href="/admin/system" label="System health" detail="live dependency checks" />
         <NavButton href="/admin/assistant" label="Admin Assistant" detail="ask across BuildPair" />
       </AppCard>
