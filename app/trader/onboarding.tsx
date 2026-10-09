@@ -143,7 +143,7 @@ export default function TraderOnboarding() {
   const [businessName, setBusinessName] = useState('');
   const [tradeCategories, setTradeCategories] = useState<TradeCategory[]>([]);
   const [serviceSelections, setServiceSelections] = useState<ServiceSelections>({});
-  const [categoryLimit, setCategoryLimit] = useState<number>(TRADE_CATEGORIES.length);
+  const [categoryLimit, setCategoryLimit] = useState<number>(6);
   const [categoryChangeAvailableAt, setCategoryChangeAvailableAt] = useState<string | null>(null);
   const [postcode, setPostcode] = useState('');
   const [baseLocationLocked, setBaseLocationLocked] = useState(false);
@@ -492,7 +492,7 @@ export default function TraderOnboarding() {
       <AppCard>
         <Text variant="titleLarge" style={styles.title}>Confirm & publish</Text>
         <Text style={styles.muted}>This preview now follows the same layout as the live BuildPair storefront. Reviews, verified badges, membership status, sharing controls and live availability are added automatically from the platform rather than typed into the profile.</Text>
-        <Text style={styles.muted}>Starter Free lets you complete and externally share this profile and browse BuildPair jobs. Starter profiles are hidden from BuildPair search and cannot offer on jobs until you choose Plus or Pro. There is no trial during beta testing.</Text>
+        <Text style={styles.muted}>Once you publish your profile, eligible tradespeople receive three months of BuildPair Pro at no charge. You can appear in search, respond to suitable jobs, send quotes and manage customers. No payment details are needed and no subscription starts automatically.</Text>
         {!baseLocationLocked ? <Text style={styles.muted}>Your base postcode will be locked when this profile is first published. BuildPair uses it to create the approximate service-area map and local job matching without exposing your exact address.</Text> : null}
         <Pressable accessibilityRole="checkbox" accessibilityLabel="Confirm profile information is accurate" accessibilityState={{ checked: certified }} onPress={() => setCertified((value) => !value)} style={styles.check}>
           <View style={[styles.checkBox, certified && styles.checkBoxSelected]}>{certified ? <Text style={styles.checkMark}>✓</Text> : null}</View>
