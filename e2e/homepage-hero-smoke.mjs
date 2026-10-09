@@ -71,6 +71,7 @@ try {
           trade: rect('home-hero-tradesperson'),
         };
       });
+      console.log(`GEOMETRY ${width}px: ${JSON.stringify(geometry)}`);
       assert(geometry.home && geometry.trade, `CTA geometry unavailable at ${width}px`);
       assert(geometry.pageWidth <= geometry.viewportWidth + 2, `Horizontal overflow at ${width}px`);
       assert(geometry.home.height >= 44 && geometry.trade.height >= 44,
