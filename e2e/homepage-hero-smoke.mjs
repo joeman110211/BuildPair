@@ -72,6 +72,16 @@ try {
         };
       });
       console.log(`GEOMETRY ${width}px: ${JSON.stringify(geometry)}`);
+      if (width === 320) {
+        const dom = await page.evaluate(() => {
+          const element = document.querySelector('[data-testid="home-hero-homeowner"]');
+          if (!element) return null;
+          const computed = getComputedStyle(element);
+          return { markup: element.outerHTML.slice(0, 1200), parent: element.parentElement?.outerHTML.slice(0, 1800),
+            display: computed.display, width: computed.width, flexBasis: computed.flexBasis, flexShrink: computed.flexShrink };
+        });
+        console.log(`DOM 320px: ${JSON.stringify(dom)}`);
+      }
       assert(geometry.home && geometry.trade, `CTA geometry unavailable at ${width}px`);
       assert(geometry.pageWidth <= geometry.viewportWidth + 2, `Horizontal overflow at ${width}px`);
       assert(geometry.home.height >= 44 && geometry.trade.height >= 44,
