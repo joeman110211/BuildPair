@@ -99,7 +99,6 @@ const shellCss = `
   }
   /* Mobile homepage: CSS only, with an unchanged hydration/component tree. */
   @media (max-width: 719px) {
-    [data-testid="bp-compact-quick-nav"] { display: none !important; }
     [data-testid="bp-home-hero"] {
       padding-top: 26px !important;
       padding-bottom: 28px !important;
