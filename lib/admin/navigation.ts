@@ -30,12 +30,12 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     title: 'Growth & usage',
-    description: 'See who is arriving, where they came from and what they do next.',
+    description: 'Track visits, new registrations, conversion and earlier enquiries.',
     items: [
       { href: '/admin/ai-conversations', label: 'AI conversations', shortLabel: 'AI chats', description: 'Read BuildPair AI conversations, filter by visitor type and spot questions the assistant failed to answer well.' },
       { href: '/admin/visitors', label: 'Visitor intelligence', shortLabel: 'Visitors', description: 'Live anonymous visitors, new versus returning traffic, sources, landing pages and conversion journeys.' },
       { href: '/admin/insights', label: 'Product insights', shortLabel: 'Insights', description: 'Understand signed-in account behaviour, marketplace use and product-level trends.' },
-      { href: '/admin/waitlist', label: 'Launch waitlist', shortLabel: 'Waitlist', description: 'See homeowners, tradespeople, Founding Trades candidates and tester volunteers waiting for launch.' },
+      { href: '/admin/waitlist', label: 'Historical contacts', shortLabel: 'Contacts', description: 'Archived pre-launch enquiries, consent choices and invitation history. New users register directly.' },
     ],
   },
   {
@@ -65,7 +65,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     description: 'Reports and money-related cases where a human administrator may need to intervene.',
     items: [
       { href: '/admin/moderation', label: 'Moderation', shortLabel: 'Safety', description: 'Handle reports, safety concerns and moderation actions with an audit trail.' },
-      { href: '/admin/payment-disputes', label: 'BuildPay issues', shortLabel: 'BuildPay', description: 'Review paused or escalated unreleased BuildPay stages, responses, refund requests and admin notes.' },
+      { href: '/admin/payment-disputes', label: 'BuildPay records', shortLabel: 'BuildPay', description: 'Internal BuildPay case records. Protected payments are not yet available to customers.' },
     ],
   },
   {

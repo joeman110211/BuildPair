@@ -7,6 +7,7 @@ import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
 import { LoadingScreen, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
+import { BUILDPAY_OPEN } from '@/lib/launch-config';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { apiFetch, errorMessage } from '@/lib/api';
 
@@ -54,7 +55,7 @@ const ROUTES: RouteItem[] = [
   { area: 'homeowner', label: 'Claim accepted quote', path: '/customer/claim-quote', description: 'Bring an accepted outside quote into a managed BuildPair project.', mode: 'customer' },
   { area: 'homeowner', label: 'Job details', path: '/customer/jobs/:jobId', description: 'Quote, payment, project, variation and completion state for one job.', kind: 'record', mode: 'customer', adminHref: '/admin/jobs', note: 'Choose a job in Admin Jobs, then open its homeowner record.' },
   { area: 'homeowner', label: 'Compare quotes', path: '/customer/compare/:jobId', description: 'Side-by-side homeowner quote comparison.', kind: 'record', mode: 'customer', adminHref: '/admin/jobs', note: 'Requires a job with two or more quotes.' },
-  { area: 'homeowner', label: 'Project start / payment choice', path: '/customer/jobs/:jobId/start', description: 'Accepted-job setup and BuildPay/direct-payment choice.', kind: 'record', mode: 'customer', adminHref: '/admin/jobs', note: 'Requires an accepted quote.' },
+  { area: 'homeowner', label: 'Project start / payment choice', path: '/customer/jobs/:jobId/start', description: 'Accepted-job setup and available direct-payment arrangements; BuildPay stays unavailable.', kind: 'record', mode: 'customer', adminHref: '/admin/jobs', note: 'Requires an accepted quote.' },
   { area: 'homeowner', label: 'Site visit', path: '/customer/jobs/:jobId/visit', description: 'Homeowner view of an arranged site visit.', kind: 'record', mode: 'customer', adminHref: '/admin/jobs' },
   { area: 'homeowner', label: 'Handover', path: '/customer/jobs/:jobId/handover', description: 'Completed-project handover, warranty and aftercare pack.', kind: 'record', mode: 'customer', adminHref: '/admin/jobs' },
   { area: 'homeowner', label: 'Conversation', path: '/customer/messages/:conversationId', description: 'Individual homeowner/trade conversation.', kind: 'record', mode: 'customer', adminHref: '/admin/messages' },
@@ -88,7 +89,7 @@ const ROUTES: RouteItem[] = [
   { area: 'trader', label: 'Site visit', path: '/trader/visits/:visitId', description: 'Manage one scheduled site visit.', kind: 'record', mode: 'trader', adminHref: '/admin/activity' },
   { area: 'trader', label: 'Conversation', path: '/trader/messages/:conversationId', description: 'Individual tradesperson/homeowner conversation.', kind: 'record', mode: 'trader', adminHref: '/admin/messages' },
 
-  { area: 'public', label: 'Homepage', path: '/', description: 'Main BuildPair launch and product landing page.' },
+  { area: 'public', label: 'Homepage', path: '/', description: 'Main BuildPair public homepage.' },
   { area: 'public', label: 'Find a trade', path: '/directory', description: 'Public trade directory and filters.' },
   { area: 'public', label: 'Public jobs', path: '/jobs', description: 'Public job browsing surface.' },
   { area: 'public', label: 'Pricing', path: '/pricing', description: 'Trade membership pricing and plan comparison.' },
@@ -98,7 +99,7 @@ const ROUTES: RouteItem[] = [
   { area: 'public', label: 'How it works', path: '/how-it-works', description: 'Public product workflow explanation.' },
   { area: 'public', label: 'Founding trades', path: '/founding-trades', description: 'Founding-trade launch offer.' },
   { area: 'public', label: 'Updates', path: '/updates', description: 'Recently added and coming-soon product changes.' },
-  { area: 'public', label: 'Waitlist', path: '/waitlist', description: 'Launch waiting-list form.' },
+  { area: 'public', label: 'Legacy enquiry form', path: '/waitlist', description: 'Historical interest form, not the current account registration journey.' },
   { area: 'public', label: 'Advice Hub', path: '/advice', description: 'Homeowner/trade advice content.' },
   { area: 'public', label: 'About', path: '/about', description: 'BuildPair company/product introduction.' },
   { area: 'public', label: 'Trust & safety', path: '/trust-safety', description: 'Trust, moderation and safety explanation.' },
@@ -132,11 +133,11 @@ const ROUTES: RouteItem[] = [
   { area: 'admin', label: 'Google review checks', path: '/admin/google-reviews', description: 'Manual Google business matching review.' },
   { area: 'admin', label: 'Visitor intelligence', path: '/admin/visitors', description: 'Anonymous site traffic and acquisition sources.' },
   { area: 'admin', label: 'Product insights', path: '/admin/insights', description: 'Signed-in behaviour and marketplace trends.' },
-  { area: 'admin', label: 'Waitlist', path: '/admin/waitlist', description: 'Launch demand and tester volunteers.' },
+  { area: 'admin', label: 'Historical contacts', path: '/admin/waitlist', description: 'Pre-launch interest records and invitation history.' },
   { area: 'admin', label: 'Live signed-in users', path: '/admin/presence', description: 'Recent authenticated activity.' },
   { area: 'admin', label: 'AI conversations', path: '/admin/ai-conversations', description: 'BuildPair AI conversation review.' },
   { area: 'admin', label: 'Admin access', path: '/admin/access', description: 'Owner-only administrator permissions.' },
-  { area: 'admin', label: 'System health', path: '/admin/system', description: 'Live dependency and launch configuration checks.' },
+  { area: 'admin', label: 'System health', path: '/admin/system', description: 'Live dependencies and operational configuration checks.' },
 ];
 
 const STATES = [
@@ -154,6 +155,8 @@ const STATES = [
   { side: 'Trade', state: 'Payment problem', setup: 'Use an escalated or disputed unreleased stage.', href: '/admin/payment-disputes' },
   { side: 'Trade', state: 'Handover / warranty', setup: 'Use a near-complete or completed project with handover records.', href: '/admin/jobs' },
 ] as const;
+
+const CURRENT_STATES = STATES.filter((item) => BUILDPAY_OPEN || !['BuildPay stage awaiting approval', 'Funded work stage', 'Payment problem'].includes(item.state));
 
 function areaLabel(area: Area) {
   if (area === 'homeowner') return 'Homeowner';
@@ -233,7 +236,7 @@ export default function AdminQaLab() {
     <AppCard style={styles.hero}>
       <View style={styles.heroHeader}>
         <View style={styles.flex}>
-          <Text variant="headlineSmall" style={styles.title}>Keep Admin open. Launch previews beside it.</Text>
+          <Text variant="headlineSmall" style={styles.title}>Keep Admin open. Preview screens beside it.</Text>
           <Text style={styles.muted}>On web, direct screens open in a separate window using the selected viewport size. Screens that depend on a real job, message, visit, profile or quote token send you to the correct admin record first.</Text>
         </View>
         <Chip icon="shield-lock-outline">Admin only</Chip>
@@ -326,10 +329,10 @@ export default function AdminQaLab() {
 
     <Text variant="titleLarge" style={styles.sectionTitle}>Journey-state checklist</Text>
     <AppCard>
-      <Text style={styles.muted}>These are the states worth checking before launch. The QA Lab deliberately uses real BuildPair records for transactional states instead of inventing fake production data that could leak into counts, payments or notifications.</Text>
+      <Text style={styles.muted}>These live user journeys should be checked regularly after launch. The QA Lab deliberately uses real BuildPair records for transactional states instead of inventing fake production data that could leak into counts, payments or notifications.</Text>
     </AppCard>
     <View style={styles.stateGrid}>
-      {STATES.map((item) => <AppCard key={`${item.side}-${item.state}`} style={styles.stateCard}>
+      {CURRENT_STATES.map((item) => <AppCard key={`${item.side}-${item.state}`} style={styles.stateCard}>
         <View style={styles.routeTop}>
           <Text variant="titleMedium" style={styles.title}>{item.state}</Text>
           <Chip>{item.side}</Chip>

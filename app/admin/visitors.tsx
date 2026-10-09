@@ -158,7 +158,7 @@ export default function VisitorAnalyticsAdmin() {
   const pagesPerVisit = visits ? number(summary.pageViews) / visits : 0;
   const legacyViews = number(summary.legacyAggregatePageViews);
 
-  return <Screen title="Visitor Intelligence" subtitle="Pre-launch traffic, acquisition, coarse location, device mix and product-friction signals in one place.">
+  return <Screen title="Visitor Intelligence" subtitle="Live marketplace traffic, acquisition, coarse location, device mix and conversion signals in one place.">
     <AppCard style={styles.heroCard}>
       <View style={styles.headerRow}>
         <View style={styles.flex}>
