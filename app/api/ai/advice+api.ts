@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 import { assertAiDailyBudget, recordAiRequest } from '@/lib/ai-audit';
-import { ADVICE_GUIDES, isOfficialAdviceSource, searchAdviceGuides } from '@/lib/advice-library';
+import { ALL_ALL_ADVICE_GUIDES, isOfficialAdviceSource, searchAllAdviceGuides } from '@/lib/advice-catalog';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { jsonError } from '@/lib/server';
 
@@ -11,7 +11,7 @@ const inputSchema = z.object({
 });
 
 function fallback(question: string, audience: 'homeowner' | 'tradesperson' | 'all') {
-  const guides = searchAdviceGuides(question, audience).slice(0, 4);
+  const guides = searchAllAdviceGuides(question, audience).slice(0, 4);
   return {
     answer: guides.length
       ? 'I found BuildPair guidance that matches your question. Open the most relevant guide below for the checked detail and official sources.'
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const matches = searchAdviceGuides(input.question, input.audience).slice(0, 4);
+    const matches = searchAllAdviceGuides(input.question, input.audience).slice(0, 4);
     const base = fallback(input.question, input.audience);
     const key = process.env.GEMINI_API_KEY;
     const model = process.env.GEMINI_MODEL?.trim() || 'gemini-3.5-flash';
@@ -136,7 +136,7 @@ ${input.question}
       model,
       providerCalled: true,
       latencyMs: Date.now() - startedAt,
-      metadata: { matchedGuides: matches.map((guide) => guide.slug), librarySize: ADVICE_GUIDES.length },
+      metadata: { matchedGuides: matches.map((guide) => guide.slug), librarySize: ALL_ADVICE_GUIDES.length },
     });
     return Response.json(result);
   } catch (error) {
