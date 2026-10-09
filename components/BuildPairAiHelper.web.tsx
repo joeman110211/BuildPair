@@ -129,7 +129,8 @@ export function BuildPairAiHelper() {
   const compactLauncher = width < 720;
   // The account pages can have fixed submit/action bars at the bottom. Keep
   // their controls exactly where they are and dock AI up beside the heading.
-  const accountPage = pathname.startsWith('/customer') || pathname.startsWith('/trader');
+  const actionHeavyPage = ['/customer', '/trader', '/auth', '/contact', '/report', '/quote', '/delete-account', '/waitlist']
+    .some((route) => pathname === route || pathname.startsWith(`${route}/`));
   const panelWidth = Math.min(390, Math.max(1, width - 24));
   const panelHeight = Math.min(610, Math.max(1, height - 24));
 
@@ -290,7 +291,7 @@ export function BuildPairAiHelper() {
         <View style={[
           styles.launcherDock,
           compactLauncher && styles.launcherDockCompact,
-          compactLauncher && accountPage && styles.launcherDockAccount,
+          compactLauncher && actionHeavyPage && styles.launcherDockAccount,
         ]} testID="ai-helper-launcher-dock">
           {compactLauncher ? (
             <Pressable
