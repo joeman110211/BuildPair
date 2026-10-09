@@ -90,6 +90,14 @@ test('small Android public and auth surfaces fit without furniture-removal chaos
 
   await expectNoHorizontalOverflow(page, 'homepage');
 
+  // The assistant is a compact control rather than a full-width pill on phones.
+  const aiLauncher = page.getByRole('button', { name: 'Open BuildPair AI helper' });
+  await expect(aiLauncher).toBeVisible();
+  const aiBox = await aiLauncher.boundingBox();
+  expect(aiBox?.width ?? Infinity, 'AI button must be compact on mobile').toBeLessThanOrEqual(48);
+  await page.getByRole('button', { name: 'Hide BuildPair AI button on this page' }).click();
+  await expect(aiLauncher).toHaveCount(0);
+
   await page.goto('/auth/account');
   const heading = page.getByText('One login. Two ways to use BuildPair.');
   await expect(heading).toBeVisible();
@@ -171,8 +179,21 @@ test('small Android homeowner can post work and still browse the public website 
   await api(token, '/api/me', { method: 'PATCH', body: JSON.stringify({ role: 'customer' }) });
 
   await page.goto('/customer/new-job');
-  await expect(page.getByText('What do you need?', { exact: true }).first()).toBeVisible();
-  await expectActionReachable(page, page.getByRole('button', { name: 'Continue' }), 'post a job');
+  await expect(page.getByText('Trade & property', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Choose the trade and property type.', { exact: true })).toHaveCount(1);
+  const nextAction = page.getByRole('button', { name: 'Next' });
+  await expectActionReachable(page, nextAction, 'post a job');
+  // The AI launcher must never block the sticky job-posting action bar.
+  const assistant = page.getByRole('button', { name: 'Open BuildPair AI helper' });
+  await expect(assistant).toBeVisible();
+  const aiBounds = await assistant.boundingBox();
+  const nextBounds = await nextAction.boundingBox();
+  const overlap = aiBounds && nextBounds
+    && aiBounds.x < nextBounds.x + nextBounds.width
+    && aiBounds.x + aiBounds.width > nextBounds.x
+    && aiBounds.y < nextBounds.y + nextBounds.height
+    && aiBounds.y + aiBounds.height > nextBounds.y;
+  expect(Boolean(overlap), 'floating AI obstructs the sticky Next button').toBe(false);
   await expectDashboardTopMenu(page, ['Home', 'Find trades', 'Jobs', 'Messages', 'Profile']);
   await expectNoHorizontalOverflow(page, 'post a job');
 

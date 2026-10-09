@@ -119,12 +119,19 @@ export function BuildPairAiHelper() {
   const audience = audienceFromPath(pathname);
   const suggestedPrompts = useMemo(() => promptsFor(pathname, audience), [pathname, audience]);
   const [open, setOpen] = useState(false);
+  const [dismissedPath, setDismissedPath] = useState<string | null>(null);
+  const launcherDismissed = dismissedPath === pathname;
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: openingMessage(audience) }]);
   const scrollRef = useRef<ScrollView>(null);
 
   const hidden = pathname.startsWith('/admin') || pathname.startsWith('/api');
+  const compactLauncher = width < 720;
+  // The account pages can have fixed submit/action bars at the bottom. Keep
+  // their controls exactly where they are and dock AI up beside the heading.
+  const actionHeavyPage = ['/customer', '/trader', '/auth', '/contact', '/report', '/quote', '/delete-account', '/waitlist']
+    .some((route) => pathname === route || pathname.startsWith(`${route}/`));
   const panelWidth = Math.min(390, Math.max(1, width - 24));
   const panelHeight = Math.min(610, Math.max(1, height - 24));
 
@@ -275,21 +282,64 @@ export function BuildPairAiHelper() {
             <Text variant="labelSmall" style={styles.disclaimer}>AI can make mistakes. Check important job and payment details.</Text>
           </View>
         </View>
-      ) : (
-        <Pressable style={styles.launcher} hitSlop={6} onPress={openHelper} accessibilityRole="button" accessibilityLabel="Open BuildPair AI helper">
-          <View style={styles.launcherIcon}><Text style={styles.launcherSpark}>✦</Text></View>
-          <Text variant="labelLarge" style={styles.launcherText}>BuildPair AI</Text>
-        </Pressable>
+      ) : launcherDismissed ? null : (
+        <View style={[
+          styles.launcherDock,
+          compactLauncher && styles.launcherDockCompact,
+          compactLauncher && actionHeavyPage && styles.launcherDockAccount,
+        ]} testID="ai-helper-launcher-dock">
+          {compactLauncher ? (
+            <Pressable
+              style={[styles.launcher, styles.launcherCompact]}
+              hitSlop={4}
+              onPress={openHelper}
+              accessibilityRole="button"
+              accessibilityLabel="Open BuildPair AI helper"
+              accessibilityHint="Opens the BuildPair AI help panel"
+            >
+              <Text style={styles.launcherCompactSpark}>✦</Text>
+            </Pressable>
+          ) : (
+            <Pressable style={styles.launcher} hitSlop={6} onPress={openHelper} accessibilityRole="button" accessibilityLabel="Open BuildPair AI helper">
+              <View style={styles.launcherIcon}><Text style={styles.launcherSpark}>✦</Text></View>
+              <Text variant="labelLarge" style={styles.launcherText}>BuildPair AI</Text>
+            </Pressable>
+          )}
+          {compactLauncher ? (
+            <Pressable
+              style={styles.dismissLauncher}
+              onPress={() => setDismissedPath(pathname)}
+              hitSlop={4}
+              accessibilityRole="button"
+              accessibilityLabel="Hide BuildPair AI button on this page"
+            >
+              <Text style={styles.dismissLauncherText}>×</Text>
+            </Pressable>
+          ) : null}
+        </View>
       )}
     </Portal>
   );
 }
 
 const styles = StyleSheet.create({
-  launcher: {
+  launcherDock: {
     position: 'absolute',
     right: 16,
     bottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  launcherDockCompact: {
+    right: 8,
+    bottom: 14,
+  },
+  launcherDockAccount: {
+    top: 106,
+    bottom: 'auto',
+  },
+  launcher: {
     minHeight: 46,
     paddingHorizontal: 10,
     borderRadius: 21,
@@ -304,6 +354,25 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 7,
   },
+  launcherCompact: {
+    width: 44,
+    height: 44,
+    minHeight: 44,
+    paddingHorizontal: 0,
+    borderRadius: 22,
+  },
+  launcherCompactSpark: { color: '#fff', fontSize: 21, fontWeight: '900' },
+  dismissLauncher: {
+    width: 26,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D5D9DF',
+  },
+  dismissLauncherText: { color: colors.charcoal, fontSize: 20, lineHeight: 24, fontWeight: '700' },
   launcherIcon: {
     width: 23,
     height: 23,

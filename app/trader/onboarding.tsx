@@ -373,7 +373,7 @@ export default function TraderOnboarding() {
     footer={footer}
     stickyFooter
   >
-    <FormStepHeader current={step + 1} total={4} hint={STEP_HELP[step]} />
+    <FormStepHeader current={step + 1} total={4} />
 
     {loadingExisting ? <HelperText type="info">Loading your existing profile details…</HelperText> : draftStatus ? <HelperText type="info">{draftStatus}</HelperText> : null}
 

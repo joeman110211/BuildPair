@@ -6,8 +6,9 @@ import { View } from 'react-native';
 import { HelperText, Text } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { Screen } from '@/components/Screen';
-import { modeSetupHref, parseAccountMode, safeInternalReturnTo, signInHref } from '@/lib/account-mode';
+import { modeSetupHref, parseAccountMode, safeInternalReturnTo, signInHref, signUpHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
+import { REGISTRATION_OPEN } from '@/lib/launch-config';
 import { waitlistHref } from '@/lib/launch';
 
 export default function SocialContinueScreen() {
@@ -57,8 +58,25 @@ export default function SocialContinueScreen() {
         return;
       }
 
-      // SignIn -> SignUp transfer is intentionally disabled until launch.
-      router.replace(waitlistHref(mode, 'social-signup'));
+      if (REGISTRATION_OPEN && signIn.isTransferable) {
+        // Google/Facebook may identify a person with no existing account.
+        // Transfer the completed OAuth step into signup now registration is open.
+        const transferred = await signUp.create({ transfer: true });
+        if (transferred.error) throw transferred.error;
+        if (signUp.status === 'complete') {
+          await signUp.finalize({ navigate: async ({ session }) => navigateAfterAuth(session) });
+          return;
+        }
+        router.replace(signUpHref(mode ?? 'customer', returnTo));
+        return;
+      }
+
+      if (REGISTRATION_OPEN && signUp.status === 'complete') {
+        await signUp.finalize({ navigate: async ({ session }) => navigateAfterAuth(session) });
+        return;
+      }
+
+      router.replace(REGISTRATION_OPEN ? signUpHref(mode ?? 'customer', returnTo) : waitlistHref(mode, 'social-signup'));
     } catch (e) {
       setWorking(false);
       setError(errorMessage(e));
@@ -75,9 +93,9 @@ export default function SocialContinueScreen() {
 
   if (working) return <Screen title="Finishing sign in" subtitle="Checking for an existing BuildPair account…"><Text>Please wait…</Text><View nativeID="clerk-captcha" /></Screen>;
 
-  return <Screen title="Couldn’t finish sign in" subtitle="New registration is paused until launch.">
-    <HelperText type="error" visible>{error || 'This social login could not be matched to an existing BuildPair account.'}</HelperText>
+  return <Screen title="Couldn’t finish sign in" subtitle="You can still create an account or sign in with email.">
+    <HelperText type="error" visible>{error || 'Your social sign-in could not be completed. Please try again or use email.'}</HelperText>
     <Button mode="contained" onPress={() => router.replace((mode ? signInHref(mode, returnTo) : '/auth/account') as Href)}>Back to sign in</Button>
-    <Button mode="outlined" onPress={() => router.replace(waitlistHref(mode, 'social-signup-error'))}>Join launch waitlist</Button>
+    <Button mode="outlined" onPress={() => router.replace(REGISTRATION_OPEN ? signUpHref(mode ?? 'customer', returnTo) : waitlistHref(mode, 'social-signup-error'))}>{REGISTRATION_OPEN ? 'Create an account' : 'Join waitlist'}</Button>
   </Screen>;
 }
