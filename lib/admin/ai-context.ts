@@ -5,14 +5,14 @@ export const BUILDPAIR_PRODUCT_MAP = `
 BuildPair is a UK home-improvement marketplace and project workflow platform with two account modes under one login: Homeowner and Tradesperson.
 
 PUBLIC PRODUCT
-- BuildPair is currently in pre-launch. Public visitors can join the launch waiting list as a homeowner or tradesperson before normal registration opens.
-- The launch waiting list records audience, trade (for tradespeople), tester interest, consent choices, source, status and join time. Eligible waiting-list tradespeople can qualify for the Founding Trades launch reward under the published offer rules.
-- Homeowners can describe work in plain English, search/match the right trade, browse trader profiles, post jobs, compare structured quotes, hire, message, track work, pay and review.
-- Tradespeople can build a public business profile, select trade categories/services, discover suitable jobs, quote, manage accepted work, invoices, visits, milestones, messages, payments, reviews, portfolio stories and subscription features.
+- BuildPair is a launched UK marketplace. Homeowners and tradespeople can register now, homeowners can post jobs and compare quotes, and tradespeople can quote, message and manage work. BuildPay and paid membership checkout remain unavailable.
+- The old launch waitlist is retained as historical contact and invitation records; it is not an active registration gate. Use normal account signup and current live marketplace journeys.
+- Homeowners can describe work in plain English, search/match the right trade, browse trader profiles, post jobs, compare structured quotes, hire, message, track work, arrange direct payment and review. BuildPay is coming soon.
+- Tradespeople can build a public business profile, select trade categories/services, discover suitable jobs, quote, manage accepted work, invoices, visits, milestones, messages, invoicing, reviews and portfolio stories. Paid memberships and BuildPay checkout remain disabled during introductory access.
 - Public information includes the homepage/search, trade directory and profiles, homeowner/trader product pages, pricing, advice, trust & safety, marketplace standards, payments information, building-regulations guidance, about/contact, terms and privacy.
 
 HOMEOWNER WORKFLOW
-- During pre-launch, a homeowner can join the launch waiting list and optionally volunteer for real-world testing.
+- Homeowner registration and job posting are open now. Do not direct people to a pre-launch waiting list.
 - Sign up/sign in with Clerk -> enable Homeowner mode -> dashboard.
 - Find a trade with AI-assisted trade matching or browse the directory.
 - Post a job with category/property details, photos and an optional Gemini-generated job specification.
@@ -20,25 +20,25 @@ HOMEOWNER WORKFLOW
 - Use job-linked messaging, milestones/payment records, notifications, saved trades and reviews.
 
 TRADESPERSON WORKFLOW
-- During pre-launch, a tradesperson can join the launch waiting list with their trade and optional tester interest. The admin waitlist records original join order for launch/reward administration.
+- Tradesperson registration, profile setup, job discovery and quoting are open. Original waitlist records remain in the admin contact archive for historical reference.
 - Sign up/sign in with Clerk -> enable Tradesperson mode -> onboarding/business profile.
 - Profile contains business/trade/service-area details, bio, qualifications/credentials, media and portfolio/story content.
 - Job board and saved searches help find work. Quote assistant helps draft scope/exclusions/payment wording while BuildPair calculates money deterministically.
 - Accepted work connects jobs, quotes, milestones, visits, messages, invoices and payments.
-- Stripe supports subscriptions/payments and connected-account payouts. Trader analytics and subscription pages expose business/product usage.
+- Stripe payment and subscription capabilities are gated off for customers until formally enabled. Trader analytics and business tools are available as permitted by current account access.
 
 AI FEATURES
 - Trade Match: public/homeowner plain-English problem -> exact BuildPair trade categories.
 - Job Spec: homeowner answers -> structured job specification.
 - Quote Assistant: trader/job details -> professional scope/exclusions/payment wording; monetary totals are not delegated to AI.
 - Message Assistant: conversation/job context -> summary plus three reply suggestions.
-- Admin Assistant: owner/admin-only whole-product investigation with live marketplace and launch-waitlist context plus confirmation-gated administrative actions. Elevated Admin Assistant tools are never exposed to homeowner, tradesperson, public or other AI features.
+- Admin Assistant: owner/admin-only whole-product investigation with live marketplace and historical contact context plus confirmation-gated administrative actions. Elevated Admin Assistant tools are never exposed to homeowner, tradesperson, public or other AI features.
 - AI calls use the server-only GEMINI_API_KEY. Per-user/IP limits and an application-wide paid-AI daily ceiling protect usage. AI request/response audit records are available only to administrators.
 
 PLATFORM & SECURITY
 - Clerk: authentication and account identity.
 - Neon PostgreSQL: marketplace/application data, including the launch_waitlist table.
-- Stripe: subscriptions, customer payments, Connect/trader payouts and webhooks.
+- Stripe: planned paid membership and BuildPay/Connect workflows, not available for current customer checkout.
 - Cloudinary: uploaded job/profile/project media.
 - Resend: transactional email/notifications.
 - Gemini: AI assistance.
@@ -57,7 +57,7 @@ ADMIN CONSOLE
 - Messages: conversations and flagged messages.
 - Photos & media: uploaded profile/job media.
 - Moderation: reports and moderation decisions.
-- Launch waitlist: pre-launch homeowners, tradespeople, Founding Trades candidates, tester volunteers, registration status and reward status.
+- Historical contacts: legacy pre-launch interest, contact consent, invitation history and associated account/reward status. New registration is open.
 - Product insights: account and marketplace behaviour.
 - Visitor analytics: public traffic/acquisition.
 - System health: database, Clerk, Gemini, Cloudinary, Resend and Stripe.
