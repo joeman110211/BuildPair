@@ -5,15 +5,21 @@ import { createClerkClient } from '@clerk/backend';
 import { clerk, clerkSetup, setupClerkTestingToken } from '@clerk/testing/playwright';
 import { test as setup } from '@playwright/test';
 
-const baseURL = process.env.E2E_BASE_URL || 'https://staging.buildpair.co.uk';
+const baseURL = process.env.E2E_BASE_URL || 'https://www.buildpair.co.uk';
 const target = new URL(baseURL);
-if (target.hostname !== 'staging.buildpair.co.uk') {
-  throw new Error(`Mutating BuildPair E2E tests may only run against staging.buildpair.co.uk. Refusing target: ${target.hostname}`);
+if (target.origin !== 'https://www.buildpair.co.uk') {
+  throw new Error(`Production E2E tests may only run against https://www.buildpair.co.uk. Refusing target: ${target.origin}`);
+}
+if (process.env.E2E_PRODUCTION_MUTATION_ACK !== 'I_APPROVE_DISPOSABLE_PRODUCTION_TESTS') {
+  throw new Error('Production E2E must be run manually with explicit temporary-account and cleanup approval.');
+}
+if (process.env.E2E_CUSTOMER_EMAIL || process.env.E2E_TRADER_EMAIL) {
+  throw new Error('Production E2E fixture addresses are generated automatically; custom addresses cannot be used or deleted.');
 }
 
 const runId = (process.env.GITHUB_RUN_ID || Date.now().toString()).replace(/[^a-zA-Z0-9-]/g, '');
-const customerEmail = process.env.E2E_CUSTOMER_EMAIL || `buildpair-fixture-customer+clerk_test_${runId}@example.com`;
-const traderEmail = process.env.E2E_TRADER_EMAIL || `buildpair-fixture-trader+clerk_test_${runId}@example.com`;
+const customerEmail = `buildpair-fixture-customer+clerk_test_${runId}@example.com`;
+const traderEmail = `buildpair-fixture-trader+clerk_test_${runId}@example.com`;
 const stateFile = path.join(process.cwd(), 'playwright', '.e2e-users.json');
 
 async function ensureTestUser(client, email, firstName) {
@@ -36,19 +42,19 @@ async function verifyTargetAuth(page, email, role) {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Staging Clerk contract failed for ${role}. The GitHub CLERK_SECRET_KEY must belong to the same Clerk development instance used by ${baseURL}. Clerk sign-in error: ${message}`,
+      `Production Clerk contract failed for ${role}. The GitHub CLERK_SECRET_KEY must belong to the same Clerk development instance used by ${baseURL}. Clerk sign-in error: ${message}`,
     );
   }
 
   await page.waitForFunction(() => Boolean(globalThis.Clerk?.session));
   const token = await page.evaluate(() => globalThis.Clerk.session.getToken());
-  if (!token) throw new Error(`Staging Clerk contract returned no session token for ${role}`);
+  if (!token) throw new Error(`Production Clerk contract returned no session token for ${role}`);
 
   const me = await fetch(`${baseURL}/api/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!me.ok) {
-    throw new Error(`Staging auth contract GET /api/me failed for ${role}: HTTP ${me.status} ${await me.text()}`);
+    throw new Error(`Production auth contract GET /api/me failed for ${role}: HTTP ${me.status} ${await me.text()}`);
   }
 
   const activate = await fetch(`${baseURL}/api/me`, {
@@ -57,13 +63,13 @@ async function verifyTargetAuth(page, email, role) {
     body: JSON.stringify({ role }),
   });
   if (!activate.ok) {
-    throw new Error(`Staging auth contract PATCH /api/me failed for ${role}: HTTP ${activate.status} ${await activate.text()}`);
+    throw new Error(`Production auth contract PATCH /api/me failed for ${role}: HTTP ${activate.status} ${await activate.text()}`);
   }
 
   const body = await activate.json();
   const enabled = role === 'customer' ? body.customerEnabled : body.traderEnabled;
   if (enabled !== true || body.activeMode !== role) {
-    throw new Error(`Staging auth contract returned incorrect ${role} mode state from PATCH /api/me`);
+    throw new Error(`Production auth contract returned incorrect ${role} mode state from PATCH /api/me`);
   }
 
   await page.evaluate(() => globalThis.Clerk?.signOut());
@@ -71,7 +77,7 @@ async function verifyTargetAuth(page, email, role) {
 
 setup.describe.configure({ mode: 'serial' });
 
-setup('prepare Clerk testing token, disposable users and verify the staging auth contract', async ({ page }) => {
+setup('prepare Clerk testing token, disposable users and verify the production auth contract', async ({ page }) => {
   if (!process.env.CLERK_SECRET_KEY) throw new Error('CLERK_SECRET_KEY is required for authenticated E2E tests');
 
   const response = await fetch(`${baseURL}/api/client-config`);
