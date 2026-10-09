@@ -19,6 +19,13 @@ export async function POST(request: Request) {
       catch { /* Platform and Connect destinations have different signing secrets. */ }
     }
     if (!event) return new Response('Invalid webhook', { status: 400 });
+    // Never allow a test-mode Stripe event to grant production memberships (or vice versa).
+    // The current API key defines the connected Stripe account mode, not any client metadata.
+    const apiKey = process.env.STRIPE_SECRET_KEY?.trim() ?? '';
+    const expectedLive = /^(sk|rk)_live_/.test(apiKey) ? true : /^(sk|rk)_test_/.test(apiKey) ? false : null;
+    if (expectedLive !== null && event.livemode !== expectedLive) {
+      return new Response('Stripe webhook mode mismatch', { status: 400 });
+    }
     await handleEvent(event);
     return Response.json({ received: true });
   } catch (error) {
