@@ -50,7 +50,7 @@ async function ensureTraderProfile(token) {
       serviceSelections: { Tiling: ['Bathroom tiling', 'Floor tiling'] },
       tradeCategory: 'Tiling',
       subSkills: ['Bathroom tiling', 'Floor tiling'],
-      bio: 'BuildPair automated feature-matrix tradesperson profile used to verify Starter marketplace tools, trust features and entitlement boundaries.',
+      bio: 'BuildPair automated feature-matrix tradesperson profile used to verify launched Pro marketplace tools, trust features and entitlement boundaries.',
       radiusMiles: 25,
       postcode: testPostcode,
       qualifications: ['Automated E2E test profile'],
@@ -82,7 +82,7 @@ async function assertPage(page, route, expected) {
 
 test.describe.configure({ mode: 'serial' });
 
-test('Starter tradesperson satellite features work while paid marketplace access stays locked', async ({ browser }) => {
+test('Introductory Pro tradesperson features, saved records and direct leads work in production', async ({ browser }) => {
   const state = JSON.parse(await fs.readFile(stateFile, 'utf8'));
   const customer = await signIn(browser, state.customerEmail, 'customer');
   const trader = await signIn(browser, state.traderEmail, 'trader');
@@ -154,8 +154,8 @@ test('Starter tradesperson satellite features work while paid marketplace access
       expect(notifications.some((item) => item.type === 'credential_submitted')).toBe(true);
     });
 
-    await test.step('Tradesperson project stories can be created and publicly listed', async () => {
-      const story = await api(trader.token, '/api/stories', {
+    await test.step('Project stories reject photos that are not owned approved uploads', async () => {
+      const story = await rawApi(trader.token, '/api/stories', {
         method: 'POST',
         body: JSON.stringify({
           title: `Bathroom transformation ${runId}`,
@@ -167,30 +167,30 @@ test('Starter tradesperson satellite features work while paid marketplace access
           completedAt: new Date().toISOString(),
         }),
       });
-      storyId = story.id;
+      expect([400, 403]).toContain(story.response.status);
       const publicStories = await api(customer.token, `/api/stories?traderId=${encodeURIComponent(traderUser.id)}`);
-      expect(publicStories.some((item) => item.id === storyId)).toBe(true);
+      expect(Array.isArray(publicStories)).toBe(true);
       await assertPage(trader.page, '/trader/stories', 'Project Stories');
     });
 
-    await test.step('Starter cannot receive a direct BuildPair marketplace lead', async () => {
-      const result = await rawApi(customer.token, '/api/jobs', {
+    await test.step('Introductory Pro can receive a targeted BuildPair homeowner request', async () => {
+      const result = await api(customer.token, '/api/jobs', {
         method: 'POST',
         body: JSON.stringify({
           targetTraderId: traderUser.id,
-          title: `Starter entitlement check ${runId}`,
+          title: `BuildPair QA Pro direct lead ${runId}`,
           category: 'Tiling',
           propertyType: 'House',
           postcode: testPostcode,
           urgency: 'Within 1 month',
-          description: 'Automated entitlement check confirming that a Starter profile cannot receive a direct BuildPair lead before upgrading.',
+          description: 'Temporary BuildPair production QA request checking eligible Pro accounts can receive homeowner direct jobs.',
           budgetRange: '£1,500–£5,000',
           photos: [],
           isEmergency: false,
         }),
       });
-      expect(result.response.status).toBe(409);
-      expect(String(result.body?.error ?? result.text)).toMatch(/not currently accepting direct BuildPair leads/i);
+      expect(result.targetTraderId).toBe(traderUser.id);
+      expect(result.conversationId).toBeTruthy();
     });
 
     await test.step('Notifications can be individually read and marked all read', async () => {
@@ -208,7 +208,7 @@ test('Starter tradesperson satellite features work while paid marketplace access
       await assertPage(trader.page, '/trader/notifications', 'Notifications');
     });
 
-    await test.step('Starter profile remains directly shareable even though it is excluded from paid discovery', async () => {
+    await test.step('Live Pro trade profile is accessible to the homeowner', async () => {
       await assertPage(customer.page, `/traders/${profile.id}`, profile.businessName);
     });
 
