@@ -63,18 +63,16 @@ export default function LandingPageRefined() {
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.pageContent} keyboardShouldPersistTaps="handled">
     <PublicSeo title="Find local tradespeople. Keep the whole job together" description="Find local tradespeople, compare clear quotes and keep messages, changes and payment stages together. Business tools for tradespeople, with no pay-per-lead fees." />
-    <View style={styles.localNotice}><Text style={styles.localNoticeText}>BuildPair is open for homeowners and tradespeople. New tradespeople receive three months of Pro free from profile activation. BuildPay is coming soon.</Text></View>
+    <View style={styles.localNotice}><Text style={styles.localNoticeText}>Tradespeople get 3 months of Pro free from profile activation. BuildPay is coming soon.</Text></View>
     <View style={[styles.hero, mobile && styles.heroMobile]}>
       <Text style={styles.eyebrow}>ONE PROJECT. BOTH SIDES CONNECTED.</Text>
       <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
-      <Text style={styles.heroBody}>Compare clear quotes. Agree the work. Keep messages, changes and payment stages in one place.</Text>
-      <View style={styles.heroActions}>
-        <Link href={signUpHref('customer', '/customer/new-job')} asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Homeowner sign up</Button></Link>
-        <Link href={signUpHref('trader')} asChild><Button mode="outlined" style={styles.button} contentStyle={styles.buttonContent}>Tradesperson sign up</Button></Link>
-        <Link href="/(public)/directory" asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Browse local trades</Button></Link>
-        <Link href="/(public)/how-it-works" asChild><Button mode="text" textColor={colors.primaryDark} style={styles.button} contentStyle={styles.buttonContent}>See how it works →</Button></Link>
+      <Text style={styles.heroBody}>Compare clear quotes and keep your messages, changes and job details organised in one place.</Text>
+      <View style={[styles.heroActions, mobile && styles.heroActionsMobile]}>
+        <Link href={signUpHref('customer', '/customer/new-job')} asChild><Button mode="contained" style={[styles.button, mobile && styles.heroActionMobile]} contentStyle={styles.buttonContent}>Homeowner sign up</Button></Link>
+        <Link href={signUpHref('trader')} asChild><Button mode="outlined" style={[styles.button, mobile && styles.heroActionMobile]} contentStyle={styles.buttonContent}>Tradesperson sign up</Button></Link>
+        <Link href="/(public)/directory" asChild><Button mode="text" textColor={colors.primaryDark} style={[styles.button, mobile && styles.heroBrowseMobile]} contentStyle={styles.buttonContent}>Browse local trades →</Button></Link>
       </View>
-      <View style={styles.benefits}><Text style={styles.benefit}>Clear quotes</Text><Text style={styles.benefitDot}>·</Text><Text style={styles.benefit}>Local trades</Text><Text style={styles.benefitDot}>·</Text><Text style={styles.benefit}>No pay per lead</Text></View>
     </View>
 
     <Reveal><View style={[styles.band, styles.whiteBand, !hasFeaturedProfiles && styles.hidden]}>
@@ -138,9 +136,11 @@ const styles = StyleSheet.create({
   localNoticeText: { maxWidth: 1100, color: colors.charcoalSoft, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   page: { flex: 1, backgroundColor: colors.background }, pageContent: { flexGrow: 1, width: '100%', maxWidth: '100%' }, hidden: { display: 'none' },
   hero: { width: '100%', maxWidth: 1100, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 64, alignItems: 'center', gap: 20 },
-  heroMobile: { paddingHorizontal: 16, paddingVertical: 36, gap: 16 }, heroTitle: { color: colors.charcoal, fontSize: 48, lineHeight: 55, fontWeight: '900', letterSpacing: -1.6, textAlign: 'center' }, heroTitleMobile: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
-  heroBody: { color: colors.charcoalSoft, fontSize: 17, lineHeight: 26, textAlign: 'center', maxWidth: 580 }, heroActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 8 },
-  benefits: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 }, benefit: { color: colors.muted, fontSize: 12, fontWeight: '700' }, benefitDot: { color: colors.primary },
+  heroMobile: { paddingHorizontal: 16, paddingVertical: 28, gap: 14 }, heroTitle: { color: colors.charcoal, fontSize: 48, lineHeight: 55, fontWeight: '900', letterSpacing: -1.6, textAlign: 'center' }, heroTitleMobile: { fontSize: 30, lineHeight: 36, letterSpacing: -0.7 },
+  heroBody: { color: colors.charcoalSoft, fontSize: 16, lineHeight: 24, textAlign: 'center', maxWidth: 580 }, heroActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 8 },
+  heroActionsMobile: { flexDirection: 'column', alignItems: 'stretch', width: '100%', maxWidth: 440 },
+  heroActionMobile: { alignSelf: 'stretch', width: '100%' },
+  heroBrowseMobile: { alignSelf: 'center' },
   band: { width: '100%' }, whiteBand: { backgroundColor: colors.surfaceRaised }, productBand: { backgroundColor: colors.navySoft },
   section: { width: '100%', maxWidth: 1140, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 36, gap: 22 }, heading: { width: '100%', maxWidth: 740, alignSelf: 'center', alignItems: 'center', gap: 8 },
   eyebrow: { color: colors.primaryDark, fontSize: 11, lineHeight: 16, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', textAlign: 'center' }, sectionTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center', letterSpacing: -0.5 }, sectionBody: { color: colors.muted, lineHeight: 23, textAlign: 'center', maxWidth: 640 },
