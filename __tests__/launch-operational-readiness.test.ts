@@ -53,6 +53,12 @@ describe('open marketplace operational readiness', () => {
     expect(webhook.indexOf('Stripe webhook mode mismatch')).toBeLessThan(webhook.indexOf('await handleEvent(event);'));
   });
 
+  it('no longer accepts the retired staging origin as a production Clerk authorized party', () => {
+    const session = source('lib/clerk-session.ts');
+    expect(session).not.toContain("'https://staging.buildpair.co.uk'");
+    expect(session).toContain("'https://www.buildpair.co.uk'");
+  });
+
   it('removes outdated beta and membership sales messaging from trader onboarding', () => {
     const onboarding = source('app/trader/onboarding.tsx');
     expect(onboarding).toContain('eligible tradespeople receive three months of BuildPair Pro at no charge');
