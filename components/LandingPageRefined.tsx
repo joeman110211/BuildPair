@@ -112,6 +112,11 @@ export default function LandingPageRefined() {
       <Link href="/(public)/how-it-works" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>Explore the full process →</Button></Link>
     </View></View></Reveal>
 
+    <Reveal delay={100}><View testID="bp-home-advice-hub" style={styles.section}>
+      <Heading eyebrow="Advice Hub" title="Practical advice for your next project." body="Explore free guides on project costs, quotes, building rules, safety and the business side of trade work." />
+      <Link href="/(public)/advice" asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Explore Advice Hub →</Button></Link>
+    </View></Reveal>
+
     <Reveal delay={120}><View style={[styles.band, styles.productBand]}><View style={styles.section}>
       <Heading eyebrow="More than an introduction" title="The useful part starts with the job." body="Clearer projects for homeowners. Practical tools for tradespeople and their existing customers." />
       <ProductPreview />

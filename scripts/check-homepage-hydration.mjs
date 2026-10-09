@@ -40,6 +40,10 @@ try {
     assert.ok(await homeowner.isVisible(), size.name + ': homeowner button vanished');
     assert.ok(await trader.isVisible(), size.name + ': tradesperson button vanished');
     assert.ok(await page.getByTestId('bp-home-browse').isVisible(), size.name + ': browse action missing');
+    const adviceSection = page.getByTestId('bp-home-advice-hub');
+    await adviceSection.scrollIntoViewIfNeeded();
+    await adviceSection.getByText('Practical advice for your next project.').waitFor({ state: 'visible' });
+    await adviceSection.getByRole('button', { name: 'Explore Advice Hub →' }).waitFor({ state: 'visible' });
     const latestEmpty = page.getByTestId('bp-home-latest-jobs-empty');
     await latestEmpty.waitFor({ state: 'visible', timeout: 20_000 });
     assert.ok((await latestEmpty.innerText()).includes('Our job marketplace has just opened.'),
@@ -63,8 +67,13 @@ try {
       assert.ok(a.width >= size.width - 65 && b.width >= size.width - 65,
         size.name + ': signup buttons not full width (' + a.width + ', ' + b.width + ')');
       assert.ok(b.y >= a.y + a.height - 1, size.name + ': signup buttons are not stacked');
-      assert.equal(await page.getByTestId('bp-compact-quick-nav').isVisible(), false,
-        size.name + ': redundant quick nav is visible');
+      const quickNav = page.getByTestId('bp-compact-quick-nav');
+      assert.ok(await quickNav.isVisible(), size.name + ': mobile quick navigation is missing');
+      const adviceNav = quickNav.getByText('Advice Hub', { exact: true });
+      assert.ok(await adviceNav.isVisible(), size.name + ': Advice Hub missing from quick navigation');
+      const adviceBounds = await adviceNav.boundingBox();
+      assert.ok(adviceBounds && adviceBounds.x >= 0 && adviceBounds.x + adviceBounds.width <= size.width + 2,
+        size.name + ': Advice Hub is clipped or off-screen');
       assert.equal(await page.getByTestId('bp-home-how').isVisible(), false,
         size.name + ': redundant fourth CTA is visible');
       assert.equal(await page.getByTestId('bp-home-benefits').isVisible(), false,
