@@ -137,7 +137,9 @@ export async function PUT(request: Request) {
 
     // Every eligible tradesperson receives three full calendar months of Pro from profile activation.
     // Existing reservations and paid memberships are preserved.
-    const foundingOffer = !existingProfile?.stripeSubscriptionId && !existingProfile?.trialEndsAt;
+    // Only a first-time profile activation receives the launch offer. Existing Pro grants,
+    // past trials and paid memberships must never be rewritten by editing profile details.
+    const foundingOffer = !existingProfile;
     const trialEnd = new Date();
     trialEnd.setUTCMonth(trialEnd.getUTCMonth() + 3);
     const categoryLimit = existingProfile

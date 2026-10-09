@@ -71,7 +71,6 @@ export function configuredAuthorizedParties() {
     process.env.APP_URL,
     process.env.EXPO_PUBLIC_API_URL,
     process.env.BUILDPAIR_PUBLIC_ORIGIN,
-    'https://staging.buildpair.co.uk',
     'https://www.buildpair.co.uk',
     'https://buildpair.co.uk',
   ]) {

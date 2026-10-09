@@ -38,6 +38,27 @@ describe('open marketplace operational readiness', () => {
     expect(health).toContain("Reconcile their access in Admin Users before enabling paid plans");
   });
 
+  it('never converts an edited existing trade profile back into an introductory trial', () => {
+    const profileRoute = source('app/api/me+api.ts');
+    expect(profileRoute).toContain('const foundingOffer = !existingProfile;');
+    expect(profileRoute).not.toContain("const foundingOffer = !existingProfile?.stripeSubscriptionId && !existingProfile?.trialEndsAt;");
+    expect(profileRoute).toContain('...values,');
+    expect(profileRoute).toContain('...(foundingOffer ? {');
+  });
+
+  it('separates live and sandbox Stripe webhooks before any membership mutation', () => {
+    const webhook = source('app/api/stripe/webhook+api.ts');
+    expect(webhook).toContain('event.livemode !== expectedLive');
+    expect(webhook).toContain('Stripe webhook mode mismatch');
+    expect(webhook.indexOf('Stripe webhook mode mismatch')).toBeLessThan(webhook.indexOf('await handleEvent(event);'));
+  });
+
+  it('no longer accepts the retired staging origin as a production Clerk authorized party', () => {
+    const session = source('lib/clerk-session.ts');
+    expect(session).not.toContain("'https://staging.buildpair.co.uk'");
+    expect(session).toContain("'https://www.buildpair.co.uk'");
+  });
+
   it('removes outdated beta and membership sales messaging from trader onboarding', () => {
     const onboarding = source('app/trader/onboarding.tsx');
     expect(onboarding).toContain('eligible tradespeople receive three months of BuildPair Pro at no charge');
