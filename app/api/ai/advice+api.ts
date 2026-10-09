@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 import { assertAiDailyBudget, recordAiRequest } from '@/lib/ai-audit';
-import { ALL_ALL_ADVICE_GUIDES, isOfficialAdviceSource, searchAllAdviceGuides } from '@/lib/advice-catalog';
+import { ALL_ADVICE_GUIDES, isOfficialAdviceSource, searchAllAdviceGuides } from '@/lib/advice-catalog';
 import { assertRateLimit } from '@/lib/rate-limit';
 import { jsonError } from '@/lib/server';
 
