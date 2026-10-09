@@ -1,4 +1,5 @@
 import { getSql } from '@/lib/sql';
+import { MARKETPLACE_OPEN, PAID_PLANS_OPEN } from '@/lib/launch-config';
 import { hasPlanSetupAccess } from '@/lib/subscription';
 
 export const PROJECT_PLUS_PRICE_PENCE = 499;
@@ -7,7 +8,7 @@ export const PROJECT_PLUS_PLANNER_LIMIT = 50;
 
 export async function projectPlusEntitlement(userId: string) {
   const rows = await getSql()`
-    SELECT u.project_plus_active AS "projectPlusActive",
+    SELECT u.project_plus_active AS "projectPlusActive", u.customer_enabled AS "customerEnabled",
            tp.subscription_tier AS "subscriptionTier",
            tp.is_subscription_active AS "isSubscriptionActive",
            tp.trial_ends_at AS "trialEndsAt"
@@ -15,18 +16,22 @@ export async function projectPlusEntitlement(userId: string) {
     LEFT JOIN trader_profiles tp ON tp.user_id = u.id
     WHERE u.id = ${userId}
     LIMIT 1
-  ` as unknown as { projectPlusActive: boolean; subscriptionTier: 'free' | 'core' | 'basic' | 'featured' | null; isSubscriptionActive: boolean | null; trialEndsAt: string | null }[];
+  ` as unknown as { customerEnabled: boolean; projectPlusActive: boolean; subscriptionTier: 'free' | 'core' | 'basic' | 'featured' | null; isSubscriptionActive: boolean | null; trialEndsAt: string | null }[];
   const row = rows[0];
   const includedWithPro = Boolean(row?.subscriptionTier === 'featured' && hasPlanSetupAccess({
     subscriptionTier: row.subscriptionTier,
     isSubscriptionActive: row.isSubscriptionActive,
     trialEndsAt: row.trialEndsAt,
   }, 'featured'));
+  // Keep the homeowner studio usable during launch while paid checkout is deliberately closed.
+  // This is a capped introductory allowance, not an ongoing paid entitlement.
+  const homeownerLaunchAccess = Boolean(MARKETPLACE_OPEN && !PAID_PLANS_OPEN && row?.customerEnabled);
+  const complimentaryOnly = homeownerLaunchAccess && !row?.projectPlusActive && !includedWithPro;
   return {
-    active: Boolean(row?.projectPlusActive || includedWithPro),
-    source: includedWithPro ? 'pro' as const : row?.projectPlusActive ? 'subscription' as const : 'none' as const,
-    imageLimit: PROJECT_PLUS_IMAGE_LIMIT,
-    plannerLimit: PROJECT_PLUS_PLANNER_LIMIT,
+    active: Boolean(row?.projectPlusActive || includedWithPro || homeownerLaunchAccess),
+    source: includedWithPro ? 'pro' as const : row?.projectPlusActive ? 'subscription' as const : homeownerLaunchAccess ? 'launch' as const : 'none' as const,
+    imageLimit: complimentaryOnly ? 2 : PROJECT_PLUS_IMAGE_LIMIT,
+    plannerLimit: complimentaryOnly ? 10 : PROJECT_PLUS_PLANNER_LIMIT,
   };
 }
 

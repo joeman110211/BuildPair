@@ -60,6 +60,12 @@ export async function GET() {
               AND column_name = 'trial_ends_at'
           ) AS "hasTrialEndsAt",
           to_regclass('public.trader_profile_showcase') IS NOT NULL AS "hasTraderShowcase",
+          to_regclass('public.job_workspace_entries') IS NOT NULL AS "hasJobWorkspace",
+          to_regclass('public.customer_properties') IS NOT NULL AS "hasCustomerProperties",
+          to_regclass('public.customer_property_jobs') IS NOT NULL AS "hasCustomerPropertyJobs",
+          to_regclass('public.project_plus_usage') IS NOT NULL AS "hasProjectPlusUsage",
+          to_regclass('public.business_reminder_log') IS NOT NULL AS "hasBusinessReminders",
+          to_regclass('public.business_quote_options') IS NOT NULL AS "hasBusinessQuoteOptions",
           to_regprocedure('accept_job_quote(uuid,text)') IS NOT NULL AS "hasAcceptQuoteFunction",
           to_regprocedure('buildpair_delete_account(text)') IS NOT NULL AS "hasAccountDeleteFunction",
           EXISTS (
@@ -71,12 +77,22 @@ export async function GET() {
             SELECT 1
             FROM buildpair_migrations
             WHERE filename = '0020_account_deletion_completion.sql'
-          ) AS "hasLatestAccountDeletionMigration"
+          ) AS "hasLatestAccountDeletionMigration",
+          EXISTS (
+            SELECT 1 FROM buildpair_migrations WHERE filename = '0054_retention_property_attention.sql'
+          ) AS "hasLatestRetentionMigration"
       ` as unknown as {
         hasAccountModeColumns: boolean;
         hasAccountStateColumns: boolean;
         hasTrialEndsAt: boolean;
         hasTraderShowcase: boolean;
+        hasJobWorkspace: boolean;
+        hasCustomerProperties: boolean;
+        hasCustomerPropertyJobs: boolean;
+        hasProjectPlusUsage: boolean;
+        hasBusinessReminders: boolean;
+        hasBusinessQuoteOptions: boolean;
+        hasLatestRetentionMigration: boolean;
         hasAcceptQuoteFunction: boolean;
         hasAccountDeleteFunction: boolean;
         hasReviewVerificationTrigger: boolean;
@@ -87,6 +103,13 @@ export async function GET() {
       if (!schema?.hasAccountStateColumns) missingSchema.push('users.account_state');
       if (!schema?.hasTrialEndsAt) missingSchema.push('trader_profiles.trial_ends_at');
       if (!schema?.hasTraderShowcase) missingSchema.push('trader_profile_showcase');
+      if (!schema?.hasJobWorkspace) missingSchema.push('job_workspace_entries');
+      if (!schema?.hasCustomerProperties) missingSchema.push('customer_properties');
+      if (!schema?.hasCustomerPropertyJobs) missingSchema.push('customer_property_jobs');
+      if (!schema?.hasProjectPlusUsage) missingSchema.push('project_plus_usage');
+      if (!schema?.hasBusinessReminders) missingSchema.push('business_reminder_log');
+      if (!schema?.hasBusinessQuoteOptions) missingSchema.push('business_quote_options');
+      if (!schema?.hasLatestRetentionMigration) missingSchema.push('0054_retention_property_attention.sql');
       if (!schema?.hasAcceptQuoteFunction) missingSchema.push('accept_job_quote(uuid,text)');
       if (!schema?.hasAccountDeleteFunction) missingSchema.push('buildpair_delete_account(text)');
       if (!schema?.hasReviewVerificationTrigger) missingSchema.push('verify_review_before_insert');

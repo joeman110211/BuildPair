@@ -21,7 +21,7 @@ type Plan = {
 type Design = { id: string; roomType: string; title: string; prompt: string; imageUrl: string | null; plan: Plan | null; createdAt: string };
 type Status = {
   active: boolean;
-  source: 'pro' | 'subscription' | 'none';
+  source: 'pro' | 'subscription' | 'launch' | 'none';
   imageLimit: number;
   plannerLimit: number;
   imagesUsed: number;
@@ -112,7 +112,7 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
   const recentImages = status.designs.filter((item) => item.imageUrl);
   return <View style={styles.wrap}>
     <AppCard style={styles.hero}>
-      <View style={styles.topRow}><View style={styles.flex}><Chip icon="creation-outline">{status.source === 'pro' ? 'Included with BuildPair Pro' : 'Project+ active'}</Chip><Text variant="headlineSmall" style={styles.title}>Project+ planning studio</Text><Text style={styles.muted}>{audience === 'trader' ? 'Use this alongside a customer to explore a brief before turning it into a BuildPair quote.' : 'Explore the room, build a clearer brief and take better questions into the quoting stage.'}</Text></View><View style={styles.usage}><Text style={styles.usageStrong}>{status.imagesUsed}/{status.imageLimit}</Text><Text style={styles.muted}>room concepts this month</Text><Text style={styles.usageStrong}>{status.plannerUsed}/{status.plannerLimit}</Text><Text style={styles.muted}>planning sessions</Text></View></View>
+      <View style={styles.topRow}><View style={styles.flex}><Chip icon="creation-outline">{status.source === 'pro' ? 'Included with BuildPair Pro' : status.source === 'launch' ? 'Complimentary launch access' : 'Project+ active'}</Chip><Text variant="headlineSmall" style={styles.title}>Project+ planning studio</Text><Text style={styles.muted}>{audience === 'trader' ? 'Use this alongside a customer to explore a brief before turning it into a BuildPair quote.' : 'Explore the room, build a clearer brief and take better questions into the quoting stage.'}</Text></View><View style={styles.usage}><Text style={styles.usageStrong}>{status.imagesUsed}/{status.imageLimit}</Text><Text style={styles.muted}>room concepts this month</Text><Text style={styles.usageStrong}>{status.plannerUsed}/{status.plannerLimit}</Text><Text style={styles.muted}>planning sessions</Text></View></View>
     </AppCard>
 
     <AppCard>
