@@ -69,8 +69,8 @@ export default function LandingPageRefined() {
       <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
       <Text style={styles.heroBody}>Compare quotes, agree the work and keep everything organised in one place.</Text>
       <View testID="home-hero-actions" style={styles.heroCallToActions}>
-        <Link href={signUpHref('customer', '/customer/new-job')} asChild><Button testID="home-hero-homeowner" mode="contained" style={mobile ? styles.heroSignupActionMobile : styles.heroSignupAction} contentStyle={styles.heroSignupContent}>Homeowner sign up</Button></Link>
-        <Link href={signUpHref('trader')} asChild><Button testID="home-hero-tradesperson" mode="outlined" style={mobile ? styles.heroSignupActionMobile : styles.heroSignupAction} contentStyle={styles.heroSignupContent}>Tradesperson sign up</Button></Link>
+        <Link href={signUpHref('customer', '/customer/new-job')} asChild><Pressable testID="home-hero-homeowner" accessibilityRole="link" style={mobile ? styles.heroHomeownerActionMobile : styles.heroHomeownerAction}><Text style={styles.heroHomeownerLabel}>Homeowner sign up</Text></Pressable></Link>
+        <Link href={signUpHref('trader')} asChild><Pressable testID="home-hero-tradesperson" accessibilityRole="link" style={mobile ? styles.heroTradeActionMobile : styles.heroTradeAction}><Text style={styles.heroTradeLabel}>Tradesperson sign up</Text></Pressable></Link>
         <Link href="/(public)/directory" asChild><Button mode="text" compact textColor={colors.primaryDark} style={styles.heroSecondaryAction}>Browse local trades</Button></Link>
         <Link href="/(public)/how-it-works" asChild><Button mode="text" compact textColor={colors.primaryDark} style={styles.heroSecondaryAction}>See how it works →</Button></Link>
       </View>
@@ -140,9 +140,12 @@ const styles = StyleSheet.create({
   heroMobile: { paddingHorizontal: 16, paddingVertical: 36, gap: 16 }, heroTitle: { color: colors.charcoal, fontSize: 48, lineHeight: 55, fontWeight: '900', letterSpacing: -1.6, textAlign: 'center' }, heroTitleMobile: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
   heroBody: { color: colors.charcoalSoft, fontSize: 17, lineHeight: 26, textAlign: 'center', maxWidth: 580 }, heroActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 8 },
   heroCallToActions: { width: '100%', maxWidth: 560, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', columnGap: 10, rowGap: 6 },
-  heroSignupAction: { width: 260, minWidth: 0, minHeight: 54, maxWidth: '100%', alignSelf: 'center', borderRadius: radii.md },
-  heroSignupActionMobile: { width: '100%', minWidth: 0, minHeight: 54, maxWidth: '100%', alignSelf: 'stretch', borderRadius: radii.md },
-  heroSignupContent: { minHeight: 54, paddingHorizontal: 12 },
+  heroHomeownerAction: { width: 260, maxWidth: '100%', minHeight: 54, paddingHorizontal: 14, paddingVertical: 12, borderRadius: radii.md, backgroundColor: colors.primary, borderWidth: 1, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  heroHomeownerActionMobile: { width: '100%', maxWidth: '100%', minHeight: 54, paddingHorizontal: 14, paddingVertical: 12, borderRadius: radii.md, backgroundColor: colors.primary, borderWidth: 1, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  heroTradeAction: { width: 260, maxWidth: '100%', minHeight: 54, paddingHorizontal: 14, paddingVertical: 12, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  heroTradeActionMobile: { width: '100%', maxWidth: '100%', minHeight: 54, paddingHorizontal: 14, paddingVertical: 12, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  heroHomeownerLabel: { fontSize: 16, fontWeight: '700', color: colors.surfaceRaised, textAlign: 'center' },
+  heroTradeLabel: { fontSize: 16, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },
   heroSecondaryAction: { alignSelf: 'center', maxWidth: '100%' },
   band: { width: '100%' }, whiteBand: { backgroundColor: colors.surfaceRaised }, productBand: { backgroundColor: colors.navySoft },
   section: { width: '100%', maxWidth: 1140, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 36, gap: 22 }, heading: { width: '100%', maxWidth: 740, alignSelf: 'center', alignItems: 'center', gap: 8 },
