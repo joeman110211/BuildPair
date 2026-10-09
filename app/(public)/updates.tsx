@@ -36,17 +36,9 @@ const RECENT = [
   ['Property Passport care loop', 'The Home Record now surfaces upcoming warranty and aftercare dates alongside the project and tradesperson that created them, making repeat maintenance easier to act on.'],
 ] as const;
 
-const COMING = [
-  ['Automatic reminder rules', 'Reminder controls are currently manual. Planned automatic rules will let tradespeople choose when reminders are sent.'],
-  ['Two-way calendar sync', 'The private calendar subscription is live first. A later opt-in sync can let Google or Outlook availability influence BuildPair without exposing private event details.'],
-  ['Dedicated project file library', 'The handover pack and moderated evidence are live. Dedicated PDF/file storage for certificates, manuals and receipts is next once document privacy scanning is ready.'],
-  ['More business add-ons', 'Project+ is an optional trade add-on. Further add-ons may include team access, communication credits or opportunity packs, with features and pricing explained before purchase.'],
-  ['Clearly labelled promoted placement', 'Optional sponsored visibility may be tested later. If used, it will be labelled as promoted and will never be presented as verification or trust.'],
-] as const;
-
-function FeatureCard({ title, body, coming = false }: { title: string; body: string; coming?: boolean }) {
-  return <View style={[styles.card, coming && styles.comingCard]}>
-    <Chip compact icon={coming ? 'clock-outline' : 'check-circle-outline'}>{coming ? 'Coming soon' : 'Recently added'}</Chip>
+function FeatureCard({ title, body }: { title: string; body: string }) {
+  return <View style={styles.card}>
+    <Chip compact icon="check-circle-outline">Available now</Chip>
     <Text variant="titleMedium" style={styles.title}>{title}</Text>
     <Text style={styles.body}>{body}</Text>
   </View>;
@@ -56,24 +48,20 @@ export default function UpdatesPage() {
   const { width } = useWindowDimensions();
   const metrics = publicResponsiveMetrics(width);
   return <ScrollView style={styles.page} contentContainerStyle={styles.content}>
-    <PublicSeo title="Product updates" description="Explore the latest BuildPair improvements and planned features for homeowners and tradespeople." />
+    <PublicSeo title="BuildPair features" description="Explore the tools available for homeowners and tradespeople on BuildPair." />
     <PrelaunchBanner />
     <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
-      <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>BuildPair product updates</Text>
+      <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>BuildPair features</Text>
       <Text variant="displaySmall" style={[styles.heroTitle, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Built around the whole job.</Text>
-      <Text variant="bodyLarge" style={styles.heroBody}>Explore the latest improvements and see what we are working on next.</Text>
+      <Text variant="bodyLarge" style={styles.heroBody}>Explore the tools available to homeowners and tradespeople today.</Text>
       <View style={styles.actions}><Link href="/(public)/how-it-works" asChild><Button mode="contained">How BuildPair works</Button></Link><Link href="/(public)/pricing" asChild><Button mode="outlined">Trade membership</Button></Link></View>
     </View>
 
     <View style={[styles.section, metrics.phone && styles.sectionMobile]}>
-      <View style={styles.heading}><Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Recently added</Text><Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>A clearer way to manage the whole project.</Text></View>
+      <View style={styles.heading}><Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Available now</Text><Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>A clearer way to manage the whole project.</Text></View>
       <View style={styles.grid}>{RECENT.map(([title, body]) => <FeatureCard key={title} title={title} body={body} />)}</View>
     </View>
 
-    <View style={[styles.section, styles.comingSection]}>
-      <View style={styles.heading}><Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Coming soon</Text><Text variant="headlineMedium" style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>The next pieces we are building.</Text><Text style={styles.heroBody}>These improvements will arrive in stages, with clear guidance as each becomes available.</Text></View>
-      <View style={styles.grid}>{COMING.map(([title, body]) => <FeatureCard key={title} title={title} body={body} coming />)}</View>
-    </View>
     <PublicFooter />
   </ScrollView>;
 }
