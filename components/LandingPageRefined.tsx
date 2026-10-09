@@ -68,9 +68,9 @@ export default function LandingPageRefined() {
       <Text style={styles.eyebrow}>ONE PROJECT. BOTH SIDES CONNECTED.</Text>
       <SemanticHeading level={1} style={[styles.heroTitle, mobile && styles.heroTitleMobile, mobile && { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{"Find local tradespeople.\nKeep the whole job together."}</SemanticHeading>
       <Text style={styles.heroBody}>Compare quotes, agree the work and keep everything organised in one place.</Text>
-      <View testID="home-hero-actions" style={[styles.heroActions, styles.heroCallToActions]}>
-        <Link href={signUpHref('customer', '/customer/new-job')} asChild><Button testID="home-hero-homeowner" mode="contained" style={[styles.button, styles.heroSignupAction, mobile && styles.heroSignupActionMobile]} contentStyle={styles.heroSignupContent}>Homeowner sign up</Button></Link>
-        <Link href={signUpHref('trader')} asChild><Button testID="home-hero-tradesperson" mode="outlined" style={[styles.button, styles.heroSignupAction, mobile && styles.heroSignupActionMobile]} contentStyle={styles.heroSignupContent}>Tradesperson sign up</Button></Link>
+      <View testID="home-hero-actions" style={styles.heroCallToActions}>
+        <Link href={signUpHref('customer', '/customer/new-job')} asChild><Button testID="home-hero-homeowner" mode="contained" style={mobile ? styles.heroSignupActionMobile : styles.heroSignupAction} contentStyle={styles.heroSignupContent}>Homeowner sign up</Button></Link>
+        <Link href={signUpHref('trader')} asChild><Button testID="home-hero-tradesperson" mode="outlined" style={mobile ? styles.heroSignupActionMobile : styles.heroSignupAction} contentStyle={styles.heroSignupContent}>Tradesperson sign up</Button></Link>
         <Link href="/(public)/directory" asChild><Button mode="text" compact textColor={colors.primaryDark} style={styles.heroSecondaryAction}>Browse local trades</Button></Link>
         <Link href="/(public)/how-it-works" asChild><Button mode="text" compact textColor={colors.primaryDark} style={styles.heroSecondaryAction}>See how it works →</Button></Link>
       </View>
@@ -139,9 +139,9 @@ const styles = StyleSheet.create({
   hero: { width: '100%', maxWidth: 1100, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 64, alignItems: 'center', gap: 20 },
   heroMobile: { paddingHorizontal: 16, paddingVertical: 36, gap: 16 }, heroTitle: { color: colors.charcoal, fontSize: 48, lineHeight: 55, fontWeight: '900', letterSpacing: -1.6, textAlign: 'center' }, heroTitleMobile: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
   heroBody: { color: colors.charcoalSoft, fontSize: 17, lineHeight: 26, textAlign: 'center', maxWidth: 580 }, heroActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 8 },
-  heroCallToActions: { width: '100%', maxWidth: 560, columnGap: 10, rowGap: 6 },
-  heroSignupAction: { width: 260, minWidth: 0 },
-  heroSignupActionMobile: { width: '100%', alignSelf: 'stretch' },
+  heroCallToActions: { width: '100%', maxWidth: 560, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', columnGap: 10, rowGap: 6 },
+  heroSignupAction: { width: 260, minWidth: 0, maxWidth: '100%', alignSelf: 'center', borderRadius: radii.md },
+  heroSignupActionMobile: { width: '100%', minWidth: 0, maxWidth: '100%', alignSelf: 'stretch', borderRadius: radii.md },
   heroSignupContent: { minHeight: 54, paddingHorizontal: 12 },
   heroSecondaryAction: { alignSelf: 'center', maxWidth: '100%' },
   band: { width: '100%' }, whiteBand: { backgroundColor: colors.surfaceRaised }, productBand: { backgroundColor: colors.navySoft },
