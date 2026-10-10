@@ -38,7 +38,9 @@ export async function POST(request: Request) {
     if (!price.active || price.currency !== 'gbp' || price.unit_amount !== PROJECT_PLUS_PRICE_PENCE || price.recurring?.interval !== 'month' || price.recurring.interval_count !== 1) throw new HttpError(503, 'Project+ price configuration needs attention.');
     const subscriptions = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 100 });
     if (subscriptions.data.some((subscription) => subscription.metadata.buildpairUserId === userId && subscription.metadata.buildpairProduct === 'project_plus' && !['canceled', 'incomplete_expired'].includes(subscription.status))) {
-      const portal = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: `${appUrl()}${returnPath}` });
+      const configuration = process.env.STRIPE_PROJECT_PLUS_PORTAL_CONFIG_ID?.trim();
+      if (!configuration) throw new HttpError(503, 'Project+ billing management is temporarily unavailable.');
+      const portal = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: `${appUrl()}${returnPath}`, configuration });
       return Response.json({ url: portal.url });
     }
     const sessions = await stripe.checkout.sessions.list({ customer: customerId, limit: 100 });
