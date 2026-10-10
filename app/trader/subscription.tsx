@@ -124,6 +124,11 @@ export default function SubscriptionScreen() {
   }
 
   const activeTier: SubscriptionTier = profile?.subscriptionTier ?? 'free';
+  const isComplimentaryPro = profile?.complimentaryTier === 'featured';
+  const isIntroductoryPro = Boolean(
+    profile?.trialEndsAt && new Date(profile.trialEndsAt).getTime() > Date.now()
+    && !profile?.paidSubscriptionTier && !isComplimentaryPro,
+  );
   const used = profile?.monthlyQuotesUsed ?? 0;
   const limit = profile?.monthlyQuoteLimit ?? PLAN_COPY[activeTier].monthlyMarketplaceQuotes;
   const payoutsReady = payoutStatus?.ready ?? Boolean(profile?.stripePayoutsEnabled);
