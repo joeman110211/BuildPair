@@ -327,9 +327,22 @@ function sendServerError(req, res) {
   res.end(JSON.stringify({ error: 'Internal server error' }));
 }
 
+// Reject oversized request targets before the URL reaches Expo Router or
+// any transitive query-string decoder. This is a defence-in-depth limit for
+// decoding-related denial-of-service advisories, not a claim that the affected
+// dependencies themselves have been patched.
+const MAX_REQUEST_TARGET_LENGTH = 8192;
+
 const server = http.createServer(async (req, res) => {
   try {
     applySecurityHeaders(res);
+    if (!req.url || req.url.length > MAX_REQUEST_TARGET_LENGTH) {
+      res.statusCode = 414;
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.end(JSON.stringify({ error: 'Request URL too long' }));
+      return;
+    }
     if (handleAdminHostRouting(req, res)) return;
 
     const pathName = requestPathname(req);

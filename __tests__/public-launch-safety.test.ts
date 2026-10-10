@@ -47,6 +47,17 @@ describe('Public marketplace launch safety', () => {
     expect(waitlist).toContain('<Redirect href="/auth/sign-up?mode=customer" />');
   });
 
+  it('rejects oversized request URLs before Expo query decoders run', () => {
+    const server = readFileSync('server.mjs', 'utf8');
+    expect(server).toContain('MAX_REQUEST_TARGET_LENGTH = 8192');
+    expect(server).toContain('req.url.length > MAX_REQUEST_TARGET_LENGTH');
+    expect(server).toContain('res.statusCode = 414');
+    const guard = server.indexOf('req.url.length > MAX_REQUEST_TARGET_LENGTH');
+    expect(guard).toBeGreaterThan(-1);
+    expect(guard).toBeLessThan(server.indexOf('handleAdminHostRouting(req, res)', guard));
+    expect(guard).toBeLessThan(server.indexOf('await expoHandler(req, res', guard));
+  });
+
   it('permits normal public signup without an invite link', () => {
     const signup = readFileSync('app/auth/sign-up.tsx', 'utf8');
     expect(signup).toContain('emailInput');
