@@ -1,0 +1,71 @@
+name: Safe Dependency Remediation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - package.json
+      - package-lock.json
+      - .github/workflows/security-dependency-remediation.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update-lockfile:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'security/2026-10-10-dependency-remediation' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.23.1
+          cache: npm
+      - name: Match production npm and capture audit baseline
+        shell: bash
+        run: |
+          npm install --global npm@11.19.0
+          npm audit --omit=dev --json > /tmp/buildpair-audit-before.json || true
+      - name: Apply only compatible npm security updates
+        shell: bash
+        run: |
+          # Deliberately no --force, no major-version changes or blind framework downgrades.
+          npm audit fix --package-lock-only --omit=dev --no-fund || true
+          npm audit --omit=dev --json > /tmp/buildpair-audit-after.json || true
+          node --input-type=module <<'JS'
+          import { readFileSync } from 'node:fs';
+          const before = JSON.parse(readFileSync('/tmp/buildpair-audit-before.json', 'utf8'));
+          const after = JSON.parse(readFileSync('/tmp/buildpair-audit-after.json', 'utf8'));
+          const b = before.metadata?.vulnerabilities ?? {};
+          const a = after.metadata?.vulnerabilities ?? {};
+          console.log('Before:', b, 'After:', a);
+          if ((a.high ?? 0) > (b.high ?? 0) || (a.critical ?? 0) > (b.critical ?? 0)) throw new Error('No security regression allowed');
+          if (!after.metadata?.vulnerabilities) throw new Error('Security audit did not return usable results');
+          JS
+      - name: Validate installation, type safety, unit tests and static web build
+        shell: bash
+        env:
+          CI: '1'
+          EXPO_NO_TELEMETRY: '1'
+        run: |
+          npm ci --no-audit --no-fund
+          npm run lint
+          npm run typecheck
+          npm test
+          npm run build:web
+      - name: Commit generated dependency lock changes to security branch only
+        shell: bash
+        run: |
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo 'No compatible dependency updates available. Unpatched advisories require separate remediation.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Apply compatible production dependency security updates'
+          git push origin HEAD:refs/heads/security/2026-10-10-dependency-remediation
