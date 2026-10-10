@@ -35,7 +35,7 @@ describe('open marketplace operational readiness', () => {
     expect(health).toContain("tp.complimentary_tier IS NULL");
     expect(health).toContain("tp.stripe_subscription_id IS NULL");
     expect(health).toContain("tp.trial_ends_at <= now()");
-    expect(health).toContain("Reconcile their access in Admin Users before enabling paid plans");
+    expect(health).toContain("Review these legacy memberships in Admin Users and verify their grant history");
   });
 
   it('never converts an edited existing trade profile back into an introductory trial', () => {
