@@ -46,6 +46,8 @@ export async function GET(request: Request) {
       photos: traderProfiles.photos,
       selfCertified: traderProfiles.selfCertified,
       subscriptionTier: traderProfiles.subscriptionTier,
+      complimentaryTier: traderProfiles.complimentaryTier,
+      paidSubscriptionTier: traderProfiles.paidSubscriptionTier,
       isSubscriptionActive: traderProfiles.isSubscriptionActive,
       trialEndsAt: traderProfiles.trialEndsAt,
       stripeSubscriptionId: traderProfiles.stripeSubscriptionId,
