@@ -17,7 +17,7 @@ describe('open marketplace operational readiness', () => {
     expect(readiness).toContain('0054_retention_property_attention.sql');
   });
 
-  it('grants capped homeowner Project+ access while paid plans are closed', () => {
+  it('keeps introductory Project+ allowances isolated from active paid billing', () => {
     const entitlement = source('lib/project-plus.ts');
     expect(entitlement).toContain('MARKETPLACE_OPEN && !PAID_PROJECT_PLUS_OPEN && row?.customerEnabled');
     expect(entitlement).toContain('imageLimit: complimentaryOnly ? 2 : PROJECT_PLUS_IMAGE_LIMIT');
