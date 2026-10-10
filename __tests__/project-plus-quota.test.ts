@@ -14,13 +14,14 @@ vi.mock('@google/genai', () => ({ GoogleGenAI: class { models = { generateConten
 
 let images = 0;
 let plans = 0;
+let subscribed = true;
 beforeEach(() => {
-  images = 0; plans = 0; mocks.sql.mockReset(); mocks.generate.mockReset();
+  images = 0; plans = 0; subscribed = true; mocks.sql.mockReset(); mocks.generate.mockReset();
   vi.stubEnv('GEMINI_API_KEY', 'mock-key');
   mocks.generate.mockResolvedValue({ text: '{"conceptSummary":"Mock planning output"}', candidates: [{ content: { parts: [{ inlineData: { data: 'AA==', mimeType: 'image/png' } }] } }] });
   mocks.sql.mockImplementation(async (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.join('?');
-    if (query.includes('LEFT JOIN trader_profiles')) return [{ customerEnabled: true, projectPlusActive: false }];
+    if (query.includes('LEFT JOIN trader_profiles')) return [{ customerEnabled: true, projectPlusActive: subscribed }];
     if (query.includes('INSERT INTO project_plus_usage')) {
       const isImage = query.includes('RETURNING image_generations');
       const used = isImage ? images : plans;
@@ -37,17 +38,23 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 const request = () => new Request('https://buildpair.test/api/project-plus', { method: 'POST', body: JSON.stringify({ roomType: 'Bathroom', brief: 'A practical room concept' }) });
 describe('Project+ paid-provider usage boundaries', () => {
-  it('limits simultaneous complimentary image requests before calling the provider', async () => {
-    const responses = await Promise.all(Array.from({ length: 5 }, () => image(request())));
-    expect(responses.filter((response) => response.status === 200)).toHaveLength(2);
-    expect(responses.filter((response) => response.status === 429)).toHaveLength(3);
-    expect(mocks.generate).toHaveBeenCalledTimes(2);
-    expect(images).toBe(2);
-  });
-  it('uses the complimentary planner cap for simultaneous requests', async () => {
-    const responses = await Promise.all(Array.from({ length: 12 }, () => plan(request())));
+  it('limits simultaneous paid Project+ image requests before calling the provider', async () => {
+    const responses = await Promise.all(Array.from({ length: 13 }, () => image(request())));
     expect(responses.filter((response) => response.status === 200)).toHaveLength(10);
+    expect(responses.filter((response) => response.status === 429)).toHaveLength(3);
     expect(mocks.generate).toHaveBeenCalledTimes(10);
+    expect(images).toBe(10);
+  });
+  it('uses the paid Project+ planner cap for simultaneous requests', async () => {
+    const responses = await Promise.all(Array.from({ length: 52 }, () => plan(request())));
+    expect(responses.filter((response) => response.status === 200)).toHaveLength(50);
+    expect(mocks.generate).toHaveBeenCalledTimes(50);
+  });
+  it('does not grant free Project+ provider calls after subscriptions open', async () => {
+    subscribed = false;
+    expect((await image(request())).status).toBe(402);
+    expect((await plan(request())).status).toBe(402);
+    expect(mocks.generate).not.toHaveBeenCalled();
   });
   it('restores allowance after a provider failure', async () => {
     mocks.generate.mockRejectedValueOnce(new Error('Provider unavailable'));
