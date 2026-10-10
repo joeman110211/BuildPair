@@ -7,6 +7,7 @@ import { Button } from '@/components/BrandButton';
 import { PrelaunchBanner } from '@/components/PrelaunchBanner';
 import { PublicSeo } from '@/components/PublicSeo';
 import { PublicFooter } from '@/components/PublicFooter';
+import { SemanticHeading } from '@/components/SemanticHeading';
 import { Reveal } from '@/components/Reveal';
 import { colors, layout, publicResponsiveMetrics, radii, spacing } from '@/constants/theme';
 
@@ -31,7 +32,7 @@ export function PublicInfoPage({ eyebrow, title, intro, sections, updated, summa
         <Button mode="text" textColor={colors.primaryDark} compact style={styles.back} onPress={goBack}>← Back</Button>
         <View style={styles.heroCopy}>
           {eyebrow ? <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>{eyebrow}</Text> : null}
-          <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{title}</Text>
+          <SemanticHeading level={1} style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>{title}</SemanticHeading>
           <Text variant="bodyLarge" style={styles.intro}>{intro}</Text>
           {updated ? <View style={styles.updatedPill}><Text style={styles.updated}>Last updated {updated}</Text></View> : null}
         </View>
