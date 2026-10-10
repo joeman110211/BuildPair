@@ -7,6 +7,7 @@ import { Button } from '@/components/BrandButton';
 import { FormSelect } from '@/components/FormSelect';
 import { EmptyState, Screen } from '@/components/Screen';
 import { TraderCard } from '@/components/TraderCard';
+import { PublicSeo } from '@/components/PublicSeo';
 import { TRADE_CATEGORIES } from '@/constants/options';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
@@ -169,6 +170,7 @@ export default function DirectoryScreen() {
   }, [trade, trimmedQuery, localFiltered.length]);
 
   return <Screen title="Find the right trade" subtitle="Describe the job or problem in your own words. If you already know the trade you need, you can narrow the search below.">
+    <PublicSeo title="Find local tradespeople" description="Search BuildPair for local tradespeople by job, trade or service and compare suitable profiles." />
     <View style={styles.searchPanel}>
       <View style={styles.search}>
         <TextInput

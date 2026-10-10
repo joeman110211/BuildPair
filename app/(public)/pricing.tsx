@@ -7,6 +7,7 @@ import { PrelaunchBanner } from '@/components/PrelaunchBanner';
 import { PublicSeo } from '@/components/PublicSeo';
 import { PricingCards } from '@/components/PricingCards';
 import { PublicFooter } from '@/components/PublicFooter';
+import { SemanticHeading } from '@/components/SemanticHeading';
 import { colors, publicResponsiveMetrics } from '@/constants/theme';
 import { REGISTRATION_OPEN, waitlistHref } from '@/lib/launch';
 
@@ -22,7 +23,7 @@ export default function PricingPage() {
     <View style={[styles.hero, metrics.phone && styles.heroMobile]}>
       <View style={styles.heroInner}>
         <Text style={[styles.eyebrow, { fontSize: metrics.eyebrowFontSize, lineHeight: metrics.eyebrowLineHeight }]}>Tradesperson pricing</Text>
-        <Text variant="displaySmall" style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Simple plans. Clear value. No pay-per-lead charges.</Text>
+        <SemanticHeading level={1} style={[styles.title, { fontSize: metrics.heroTitleFontSize, lineHeight: metrics.heroTitleLineHeight }]}>Simple plans. Clear value. No pay-per-lead charges.</SemanticHeading>
         <Text variant="bodyLarge" style={styles.intro}>Starter gets you established. Core helps you win work. Plus helps you run more jobs. Pro helps you run the business.</Text>
         <View style={styles.heroActions}>
           <Link href={primaryHref} asChild><Button mode="contained" buttonColor="#FFFFFF" textColor={colors.primary}>{primaryLabel}</Button></Link>

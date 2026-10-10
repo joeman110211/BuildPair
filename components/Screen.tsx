@@ -4,6 +4,7 @@ import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { Text } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
+import { SemanticHeading } from '@/components/SemanticHeading';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PageSkeleton } from '@/components/Skeleton';
 import { colors, layout, publicResponsiveMetrics, radii, shadows, spacing, typography } from '@/constants/theme';
@@ -49,7 +50,7 @@ export function Screen({ children, title, subtitle, scroll = true, backHref, foo
     <View style={[styles.content, compact && styles.contentCompact, contentPadding]}>
       {showBack ? <View style={styles.backRow}><Button icon="arrow-left" mode="text" compact onPress={goBack}>Back</Button></View> : null}
       {title || subtitle ? <View style={[styles.headingBlock, compact && styles.headingBlockCompact]}>
-        {title ? <Text variant="headlineMedium" style={[styles.title, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>{title}</Text> : null}
+        {title ? <SemanticHeading level={1} style={[styles.title, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>{title}</SemanticHeading> : null}
         {subtitle ? <Text variant="bodyLarge" style={styles.subtitle}>{subtitle}</Text> : null}
       </View> : null}
       {children}

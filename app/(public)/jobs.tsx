@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
+import { PublicSeo } from '@/components/PublicSeo';
 import { EmptyState, Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
@@ -39,6 +40,7 @@ export default function PublicJobsScreen() {
   useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, []);
 
   return <Screen title="Latest job requests" subtitle="Browse open customer jobs being posted through BuildPair. Live requests appear here when they are available, with a clear status when the marketplace is quiet.">
+    <PublicSeo title="Latest local trade jobs" description="Browse live homeowner job requests on BuildPair and find suitable local work to quote." />
     {loading ? <AppCard style={styles.loadingCard}>
       <Text variant="titleLarge" style={styles.loadingTitle}>Checking current job requests…</Text>
       <Text style={styles.muted}>BuildPair is checking for live customer jobs. If there are none, this page will say so instead of sitting on a loading screen.</Text>
