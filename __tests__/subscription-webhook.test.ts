@@ -52,6 +52,13 @@ describe('Stripe webhook subscription lifecycle', () => {
     expect(values).toEqual(['featured', true, 'test-user']);
   });
 
+  it('drops Project+ entitlement when the subscription has the wrong product price', async () => {
+    mocks.retrieve.mockResolvedValue({ ...current(), metadata: { buildpairUserId: 'test-user', buildpairProduct: 'project_plus' } });
+    expect((await POST(request())).status).toBe(200);
+    const revoked = mocks.sql.mock.calls.some(([parts]) => parts.join('').includes('UPDATE users') && parts.join('').includes('project_plus_active = false'));
+    expect(revoked).toBe(true);
+  });
+
   it('requests Stripe retry after a database failure', async () => {
     mocks.sql.mockRejectedValueOnce(new Error('Database unavailable'));
     expect((await POST(request())).status).toBe(500);
