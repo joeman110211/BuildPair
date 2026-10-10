@@ -162,7 +162,8 @@ export default function SubscriptionScreen() {
       <Text style={styles.muted}>Plan purchases and plan changes are not offered inside this mobile app. If your BuildPair account already has Core, Plus or Pro, the same entitlement and allowance are available here automatically.</Text>
     </AppCard> : null}
 
-    {!PAID_PLANS_OPEN ? <AppCard><Text variant="titleLarge" style={styles.title}>Your introductory membership</Text><Text style={styles.muted}>Eligible tradespeople receive three months of BuildPair Pro from profile activation at no charge. No card details are needed and no subscription starts automatically. Paid subscriptions will be available later.</Text></AppCard> : null}
+    {isComplimentaryPro ? <AppCard><Text variant="titleLarge" style={styles.title}>Your complimentary BuildPair Pro</Text><Text style={styles.muted}>BuildPair has granted you Pro access without a subscription charge. It remains until BuildPair manually revokes it; editing your profile does not remove it.</Text></AppCard> : null}
+    {isIntroductoryPro ? <AppCard><Text variant="titleLarge" style={styles.title}>Your included three-month Pro access</Text><Text style={styles.muted}>Pro is included until {new Date(profile!.trialEndsAt!).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}. No payment details are required and no paid subscription starts automatically. If you buy another plan now, Stripe begins billing immediately.</Text></AppCard> : null}
     <View style={styles.grid}>{(Object.entries(PLAN_COPY) as [SubscriptionTier, (typeof PLAN_COPY)[SubscriptionTier]][]).map(([key, tier]) => {
       const isCurrent = key === activeTier;
       return <View key={key} style={styles.plan}>
