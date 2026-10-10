@@ -46,6 +46,17 @@ describe('open marketplace operational readiness', () => {
     expect(profileRoute).toContain('...(foundingOffer ? {');
   });
 
+  it('protects complimentary Pro from accidental paid checkout and isolates Project+ billing', () => {
+    const checkout = source('lib/billing-checkout.ts');
+    expect(checkout).toContain("profile.complimentaryTier === 'featured'");
+    const portal = source('app/api/stripe/billing-portal+api.ts');
+    expect(portal).toContain('STRIPE_PROJECT_PLUS_PORTAL_CONFIG_ID');
+    const projectPlus = source('app/api/stripe/project-plus/start+api.ts');
+    expect(projectPlus).toContain('STRIPE_PROJECT_PLUS_PORTAL_CONFIG_ID');
+    const planScreen = source('app/trader/subscription.tsx');
+    expect(planScreen).toContain('disabled={isCurrent || isComplimentaryPro}');
+  });
+
   it('separates live and sandbox Stripe webhooks before any membership mutation', () => {
     const webhook = source('app/api/stripe/webhook+api.ts');
     expect(webhook).toContain('event.livemode !== expectedLive');
