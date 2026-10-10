@@ -16,7 +16,7 @@ const SEO_BATCH_AS_ADVICE: AdviceGuide[] = [...SEO_ADVICE_BATCH, ...SEO_ADVICE_B
   summary: guide.summary,
   description: guide.summary,
   appliesTo: guide.appliesTo,
-  reviewedAt: '2026-10-04',
+  reviewedAt: SEO_ADVICE_BATCH_THREE.includes(guide as never) ? '2026-10-10' : '2026-10-04',
   keywords: [guide.title, guide.category, ...guide.keyPoints],
   keyPoints: guide.keyPoints,
   sections: guide.sections,
