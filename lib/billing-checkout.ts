@@ -22,7 +22,7 @@ export async function tradeCheckout(trader: { id: string; email?: string | null;
     await db.update(traderProfiles).set({ stripeCustomerId: customerId }).where(eq(traderProfiles.userId, trader.id));
   }
   const subscriptions = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 100 });
-  if (subscriptions.data.some((subscription) => subscription.metadata.buildpairUserId === trader.id && subscription.metadata.buildpairProduct !== 'project_plus' && !['canceled', 'incomplete_expired'].includes(subscription.status))) {
+  if (subscriptions.data.some((subscription) => subscription.metadata.buildpairUserId === trader.id && subscription.metadata.buildpairProduct !== 'project_plus' && !['canceled', 'incomplete', 'incomplete_expired'].includes(subscription.status))) {
     const portal = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: `${appUrl()}/trader/subscription` });
     return portal.url;
   }
