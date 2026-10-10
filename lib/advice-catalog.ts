@@ -8,7 +8,7 @@ import {
 import { SEO_ADVICE_BATCH } from '@/lib/seo-advice-batch';
 import { SEO_ADVICE_BATCH_THREE } from '@/lib/seo-advice-batch-three';
 
-const SEO_BATCH_AS_ADVICE: AdviceGuide[] = SEO_ADVICE_BATCH.map((guide) => ({
+const SEO_BATCH_AS_ADVICE: AdviceGuide[] = [...SEO_ADVICE_BATCH, ...SEO_ADVICE_BATCH_THREE].map((guide) => ({
   slug: guide.slug,
   audience: 'homeowner',
   category: guide.category,
