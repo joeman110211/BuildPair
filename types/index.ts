@@ -93,8 +93,12 @@ export interface TraderProfile {
   foundingTrade?: boolean;
   createdAt?: string;
   subscriptionTier: SubscriptionTier;
+  complimentaryTier?: SubscriptionTier | null;
+  paidSubscriptionTier?: SubscriptionTier | null;
   isSubscriptionActive: boolean;
   trialEndsAt?: string | null;
+  stripeSubscriptionId?: string | null;
+  stripeCustomerId?: string | null;
   averageRating: number;
   reviewCount: number;
   stripeAccountId?: string | null;
