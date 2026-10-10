@@ -148,7 +148,7 @@ export default function SubscriptionScreen() {
           <Text variant="titleLarge" style={styles.title}>Membership: {PLAN_COPY[activeTier].name}</Text>
           <Text style={styles.muted}>Membership controls search visibility, marketplace offers and paid-plan features. It does not mean your Stripe payout account is ready.</Text>
         </View>
-        <Chip icon={activeTier === 'free' ? 'account-outline' : activeTier === 'core' ? 'briefcase-outline' : activeTier === 'basic' ? 'check-decagram-outline' : 'star-circle-outline'}>{isWeb ? PLAN_COPY[activeTier].price : PLAN_COPY[activeTier].shortName}</Chip>
+        <Chip icon={activeTier === 'free' ? 'account-outline' : activeTier === 'core' ? 'briefcase-outline' : activeTier === 'basic' ? 'check-decagram-outline' : 'star-circle-outline'}>{isComplimentaryPro ? 'Complimentary Pro' : isIntroductoryPro ? 'Included Pro trial' : isWeb ? PLAN_COPY[activeTier].price : PLAN_COPY[activeTier].shortName}</Chip>
       </View>
       {limit > 0 ? <View style={styles.usage}>
         <View style={styles.currentRow}><Text variant="labelLarge">Marketplace offers</Text><Text variant="labelLarge">{used} / {limit}</Text></View>
