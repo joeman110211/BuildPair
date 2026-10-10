@@ -121,7 +121,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
     </View>)}
   </View>;
   return <View style={styles.wrap}>
-    {!PAID_PLANS_OPEN ? <Text style={styles.note}>Introductory offer: three months of BuildPair Pro free from activating your trade profile. No card details or automatic paid subscription. The prices below are for future optional plans.</Text> : null}
+    <Text style={styles.note}>New tradespeople receive three months of BuildPair Pro at no charge from profile activation. No card is needed and no paid subscription starts automatically. The monthly plans below are available to purchase separately.</Text>
     <View style={styles.grid}>
       {plans.map((plan) => {
         const featured = plan.tone === 'plus';
