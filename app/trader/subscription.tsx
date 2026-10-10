@@ -126,7 +126,7 @@ export default function SubscriptionScreen() {
   const activeTier: SubscriptionTier = profile?.subscriptionTier ?? 'free';
   const isComplimentaryPro = profile?.complimentaryTier === 'featured';
   const isIntroductoryPro = Boolean(
-    profile?.trialEndsAt && new Date(profile.trialEndsAt).getTime() > Date.now()
+    profile?.trialEndsAt && profile.isSubscriptionActive
     && !profile?.paidSubscriptionTier && !isComplimentaryPro,
   );
   const used = profile?.monthlyQuotesUsed ?? 0;
