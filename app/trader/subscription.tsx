@@ -180,7 +180,7 @@ export default function SubscriptionScreen() {
           {tier.detail.map((feature) => <Text key={feature} style={styles.feature}>✓ {feature}</Text>)}
           {isWeb && key !== 'free' && PAID_PLANS_OPEN ? <Button
             mode={isCurrent ? 'outlined' : 'contained'}
-            disabled={isCurrent}
+            disabled={isCurrent || isComplimentaryPro}
             onPress={() => openEndpoint('/api/stripe/subscription', { tier: key })}
           >{isCurrent ? 'Current plan' : `Choose ${tier.shortName}`}</Button> : null}
         </AppCard>
