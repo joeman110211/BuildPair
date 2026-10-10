@@ -17,7 +17,7 @@ describe('open marketplace operational readiness', () => {
     expect(readiness).toContain('0054_retention_property_attention.sql');
   });
 
-  it('grants capped homeowner Project+ access while paid plans are closed', () => {
+  it('keeps introductory Project+ allowances isolated from active paid billing', () => {
     const entitlement = source('lib/project-plus.ts');
     expect(entitlement).toContain('MARKETPLACE_OPEN && !PAID_PROJECT_PLUS_OPEN && row?.customerEnabled');
     expect(entitlement).toContain('imageLimit: complimentaryOnly ? 2 : PROJECT_PLUS_IMAGE_LIMIT');
@@ -35,7 +35,7 @@ describe('open marketplace operational readiness', () => {
     expect(health).toContain("tp.complimentary_tier IS NULL");
     expect(health).toContain("tp.stripe_subscription_id IS NULL");
     expect(health).toContain("tp.trial_ends_at <= now()");
-    expect(health).toContain("Reconcile their access in Admin Users before enabling paid plans");
+    expect(health).toContain("Review these legacy memberships in Admin Users and verify their grant history");
   });
 
   it('never converts an edited existing trade profile back into an introductory trial', () => {
@@ -44,6 +44,17 @@ describe('open marketplace operational readiness', () => {
     expect(profileRoute).not.toContain("const foundingOffer = !existingProfile?.stripeSubscriptionId && !existingProfile?.trialEndsAt;");
     expect(profileRoute).toContain('...values,');
     expect(profileRoute).toContain('...(foundingOffer ? {');
+  });
+
+  it('protects complimentary Pro from accidental paid checkout and isolates Project+ billing', () => {
+    const checkout = source('lib/billing-checkout.ts');
+    expect(checkout).toContain("profile.complimentaryTier === 'featured'");
+    const portal = source('app/api/stripe/billing-portal+api.ts');
+    expect(portal).toContain('STRIPE_PROJECT_PLUS_PORTAL_CONFIG_ID');
+    const projectPlus = source('app/api/stripe/project-plus/start+api.ts');
+    expect(projectPlus).toContain('STRIPE_PROJECT_PLUS_PORTAL_CONFIG_ID');
+    const planScreen = source('app/trader/subscription.tsx');
+    expect(planScreen).toContain('disabled={isCurrent || isComplimentaryPro}');
   });
 
   it('separates live and sandbox Stripe webhooks before any membership mutation', () => {

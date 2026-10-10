@@ -197,7 +197,7 @@ async function tradeEntitlementsCheck() {
     ` as unknown as { unbackedCount: number }[];
     const unbacked = Number(rows[0]?.unbackedCount ?? 0);
     if (unbacked > 0) {
-      throw new Error(`${unbacked} trade membership records have no recorded active trial, paid subscription or complimentary grant. Reconcile their access in Admin Users before enabling paid plans.`);
+      throw new Error(`${unbacked} trade membership records have no recorded active trial, paid subscription or complimentary grant. Review these legacy memberships in Admin Users and verify their grant history.`);
     }
     return 'No active trade memberships without a recorded billing, introductory or complimentary entitlement';
   });

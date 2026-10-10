@@ -6,10 +6,10 @@ export const REGISTRATION_OPEN = true;
 export const TRADER_PRELAUNCH_REGISTRATION_OPEN = true;
 export const HOMEOWNER_REGISTRATION_OPEN = true;
 export const MARKETPLACE_OPEN = true;
-// Independent server-side gates. No job money or subscription checkout during introductory access.
+// Live memberships and Project+ use Stripe Checkout. BuildPay money movement remains off.
 export const BUILDPAY_OPEN = false;
-export const PAID_PLANS_OPEN = false;
-export const PAID_PROJECT_PLUS_OPEN = false;
+export const PAID_PLANS_OPEN = true;
+export const PAID_PROJECT_PLUS_OPEN = true;
 
 export const FOUNDING_PRO_START_ISO = LAUNCH_DATE_ISO;
 export const FOUNDING_PRO_END_ISO = '2027-01-15T00:00:00+00:00';

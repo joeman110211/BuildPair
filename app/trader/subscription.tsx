@@ -124,6 +124,11 @@ export default function SubscriptionScreen() {
   }
 
   const activeTier: SubscriptionTier = profile?.subscriptionTier ?? 'free';
+  const isComplimentaryPro = profile?.complimentaryTier === 'featured';
+  const isIntroductoryPro = Boolean(
+    profile?.trialEndsAt && profile.isSubscriptionActive
+    && !profile?.paidSubscriptionTier && !isComplimentaryPro,
+  );
   const used = profile?.monthlyQuotesUsed ?? 0;
   const limit = profile?.monthlyQuoteLimit ?? PLAN_COPY[activeTier].monthlyMarketplaceQuotes;
   const payoutsReady = payoutStatus?.ready ?? Boolean(profile?.stripePayoutsEnabled);
@@ -143,7 +148,7 @@ export default function SubscriptionScreen() {
           <Text variant="titleLarge" style={styles.title}>Membership: {PLAN_COPY[activeTier].name}</Text>
           <Text style={styles.muted}>Membership controls search visibility, marketplace offers and paid-plan features. It does not mean your Stripe payout account is ready.</Text>
         </View>
-        <Chip icon={activeTier === 'free' ? 'account-outline' : activeTier === 'core' ? 'briefcase-outline' : activeTier === 'basic' ? 'check-decagram-outline' : 'star-circle-outline'}>{isWeb ? PLAN_COPY[activeTier].price : PLAN_COPY[activeTier].shortName}</Chip>
+        <Chip icon={activeTier === 'free' ? 'account-outline' : activeTier === 'core' ? 'briefcase-outline' : activeTier === 'basic' ? 'check-decagram-outline' : 'star-circle-outline'}>{isComplimentaryPro ? 'Complimentary Pro' : isIntroductoryPro ? 'Included Pro trial' : isWeb ? PLAN_COPY[activeTier].price : PLAN_COPY[activeTier].shortName}</Chip>
       </View>
       {limit > 0 ? <View style={styles.usage}>
         <View style={styles.currentRow}><Text variant="labelLarge">Marketplace offers</Text><Text variant="labelLarge">{used} / {limit}</Text></View>
@@ -157,9 +162,11 @@ export default function SubscriptionScreen() {
       <Text style={styles.muted}>Plan purchases and plan changes are not offered inside this mobile app. If your BuildPair account already has Core, Plus or Pro, the same entitlement and allowance are available here automatically.</Text>
     </AppCard> : null}
 
-    {!PAID_PLANS_OPEN ? <AppCard><Text variant="titleLarge" style={styles.title}>Your introductory membership</Text><Text style={styles.muted}>Eligible tradespeople receive three months of BuildPair Pro from profile activation at no charge. No card details are needed and no subscription starts automatically. Paid subscriptions will be available later.</Text></AppCard> : null}
+    {isComplimentaryPro ? <AppCard><Text variant="titleLarge" style={styles.title}>Your complimentary BuildPair Pro</Text><Text style={styles.muted}>BuildPair has granted you Pro access without a subscription charge. It remains until BuildPair manually revokes it; editing your profile does not remove it.</Text></AppCard> : null}
+    {isIntroductoryPro ? <AppCard><Text variant="titleLarge" style={styles.title}>Your included three-month Pro access</Text><Text style={styles.muted}>Pro is included until {new Date(profile!.trialEndsAt!).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}. No payment details are required and no paid subscription starts automatically. If you buy another plan now, Stripe begins billing immediately.</Text></AppCard> : null}
     <View style={styles.grid}>{(Object.entries(PLAN_COPY) as [SubscriptionTier, (typeof PLAN_COPY)[SubscriptionTier]][]).map(([key, tier]) => {
-      const isCurrent = key === activeTier;
+      // An expired introductory tier is no longer current: it must be purchasable.
+      const isCurrent = key === activeTier && Boolean(profile?.isSubscriptionActive);
       return <View key={key} style={styles.plan}>
         <AppCard style={isCurrent ? styles.currentPlan : undefined}>
           <View style={styles.planHeader}>
@@ -173,7 +180,7 @@ export default function SubscriptionScreen() {
           {tier.detail.map((feature) => <Text key={feature} style={styles.feature}>✓ {feature}</Text>)}
           {isWeb && key !== 'free' && PAID_PLANS_OPEN ? <Button
             mode={isCurrent ? 'outlined' : 'contained'}
-            disabled={isCurrent}
+            disabled={isCurrent || isComplimentaryPro}
             onPress={() => openEndpoint('/api/stripe/subscription', { tier: key })}
           >{isCurrent ? 'Current plan' : `Choose ${tier.shortName}`}</Button> : null}
         </AppCard>
@@ -227,7 +234,7 @@ export default function SubscriptionScreen() {
         </View>
       )}
     </AppCard> : null}
-    {isWeb ? <Button mode="outlined" onPress={() => openEndpoint('/api/stripe/billing-portal')}>Manage or cancel subscription</Button> : null}
+    {isWeb && profile?.stripeCustomerId ? <Button mode="outlined" onPress={() => openEndpoint('/api/stripe/billing-portal')}>Manage or cancel subscription</Button> : null}
     {error ? <Text style={styles.error}>{error}</Text> : null}
   </Screen>;
 }

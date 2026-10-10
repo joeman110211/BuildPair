@@ -13,7 +13,13 @@ export async function POST(request: Request) {
     const customerId = product === 'trade' ? rows[0]?.tradeCustomerId : rows[0]?.projectPlusCustomerId;
     if (!customerId) throw new HttpError(409, 'No billing account exists yet');
     const returnPath = product === 'trade' ? '/trader/subscription' : `/${audience}/project-plus`;
-    const session = await getStripe().billingPortal.sessions.create({ customer: customerId, return_url: `${appUrl()}${returnPath}` });
+    const projectPlusConfiguration = process.env.STRIPE_PROJECT_PLUS_PORTAL_CONFIG_ID?.trim();
+    if (product === 'project_plus' && !projectPlusConfiguration) throw new HttpError(503, 'Project+ billing management is temporarily unavailable.');
+    const session = await getStripe().billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${appUrl()}${returnPath}`,
+      ...(product === 'project_plus' ? { configuration: projectPlusConfiguration } : {}),
+    });
     return Response.json({ url: session.url });
   } catch (error) { return jsonError(error); }
 }

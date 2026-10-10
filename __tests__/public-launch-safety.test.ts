@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { BUILDPAY_OPEN, HOMEOWNER_REGISTRATION_OPEN, MARKETPLACE_OPEN, PAID_PLANS_OPEN, REGISTRATION_OPEN } from '@/lib/launch-config';
+import { BUILDPAY_OPEN, HOMEOWNER_REGISTRATION_OPEN, MARKETPLACE_OPEN, PAID_PLANS_OPEN, PAID_PROJECT_PLUS_OPEN, REGISTRATION_OPEN } from '@/lib/launch-config';
 
 describe('Public marketplace launch safety', () => {
   it('enables both account types and ordinary jobs', () => {
@@ -9,9 +9,10 @@ describe('Public marketplace launch safety', () => {
     expect(MARKETPLACE_OPEN).toBe(true);
   });
 
-  it('keeps BuildPay and new paid subscriptions unavailable', () => {
+  it('opens live trade and Project+ subscriptions while keeping BuildPay unavailable', () => {
     expect(BUILDPAY_OPEN).toBe(false);
-    expect(PAID_PLANS_OPEN).toBe(false);
+    expect(PAID_PLANS_OPEN).toBe(true);
+    expect(PAID_PROJECT_PLUS_OPEN).toBe(true);
   });
 
   it('blocks BuildPay at the server boundary while leaving normal jobs allowed', () => {

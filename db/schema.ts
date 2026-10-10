@@ -60,6 +60,8 @@ export const traderProfiles = pgTable(
     photos: text('photos').array().notNull().default(sql`ARRAY[]::text[]`),
     selfCertified: boolean('self_certified').notNull().default(false),
     subscriptionTier: subscriptionTierEnum('subscription_tier').notNull().default('free'),
+    paidSubscriptionTier: subscriptionTierEnum('paid_subscription_tier'),
+    complimentaryTier: subscriptionTierEnum('complimentary_tier'),
     isSubscriptionActive: boolean('is_subscription_active').notNull().default(false),
     // Retained for future launch-time trial support, but current beta logic ignores it.
     trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),

@@ -292,12 +292,20 @@ async function handleEvent(event: Stripe.Event) {
     const userId = subscription.metadata.buildpairUserId ?? subscription.metadata.buildmateUserId;
     const product = subscriptionProduct(subscription);
     if (subscription.metadata.buildpairProduct === 'project_plus') {
-      if (product !== 'project_plus') throw new Error('Unexpected Project+ subscription price');
+      if (product !== 'project_plus') {
+        // Reject unintended portal price migrations without leaving an old paid entitlement active.
+        await clearProjectPlusSubscription(subscription.id);
+        return;
+      }
       if (userId) await syncProjectPlusSubscription(userId, subscription);
       return;
     }
     const tier = product;
-    if (userId && tier === null) throw new Error('Unexpected trade subscription price');
+    if (userId && tier !== 'core' && tier !== 'basic' && tier !== 'featured') {
+      // An invalid/foreign price must never retain an earlier trade entitlement.
+      await clearPaidSubscription(subscription.id);
+      return;
+    }
     if (userId && (tier === 'core' || tier === 'basic' || tier === 'featured')) await syncSubscriptionState(userId, subscription, tier);
     return;
   }
