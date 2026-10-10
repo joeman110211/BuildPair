@@ -6,6 +6,7 @@ import {
   isOfficialAdviceSource,
 } from '@/lib/advice-library';
 import { SEO_ADVICE_BATCH } from '@/lib/seo-advice-batch';
+import { SEO_ADVICE_BATCH_THREE } from '@/lib/seo-advice-batch-three';
 
 const SEO_BATCH_AS_ADVICE: AdviceGuide[] = SEO_ADVICE_BATCH.map((guide) => ({
   slug: guide.slug,
