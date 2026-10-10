@@ -9,9 +9,10 @@ describe('Public marketplace launch safety', () => {
     expect(MARKETPLACE_OPEN).toBe(true);
   });
 
-  it('keeps BuildPay and new paid subscriptions unavailable', () => {
+  it('opens live trade and Project+ subscriptions while keeping BuildPay unavailable', () => {
     expect(BUILDPAY_OPEN).toBe(false);
-    expect(PAID_PLANS_OPEN).toBe(false);
+    expect(PAID_PLANS_OPEN).toBe(true);
+    expect(PAID_PROJECT_PLUS_OPEN).toBe(true);
   });
 
   it('blocks BuildPay at the server boundary while leaving normal jobs allowed', () => {
