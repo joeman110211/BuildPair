@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { BUILDPAY_OPEN, HOMEOWNER_REGISTRATION_OPEN, MARKETPLACE_OPEN, PAID_PLANS_OPEN, REGISTRATION_OPEN } from '@/lib/launch-config';
+import { BUILDPAY_OPEN, HOMEOWNER_REGISTRATION_OPEN, MARKETPLACE_OPEN, PAID_PLANS_OPEN, PAID_PROJECT_PLUS_OPEN, REGISTRATION_OPEN } from '@/lib/launch-config';
 
 describe('Public marketplace launch safety', () => {
   it('enables both account types and ordinary jobs', () => {
