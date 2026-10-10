@@ -9,7 +9,7 @@ describe('independent Stripe product readiness', () => {
     expect(requiredStripeEnvironment({ trade: true, projectPlus: false, buildPay: false })).toEqual(['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_CORE_PRICE_ID', 'STRIPE_BASIC_PRICE_ID', 'STRIPE_FEATURED_PRICE_ID']);
   });
   it('requires Project+ credentials independently of trade memberships', () => {
-    expect(requiredStripeEnvironment({ trade: false, projectPlus: true, buildPay: false })).toEqual(['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_PROJECT_PLUS_PRICE_ID']);
+    expect(requiredStripeEnvironment({ trade: false, projectPlus: true, buildPay: false })).toEqual(['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_PROJECT_PLUS_PRICE_ID', 'STRIPE_PROJECT_PLUS_PORTAL_CONFIG_ID']);
   });
   it('requires connected-account and embedded checkout configuration for BuildPay', () => {
     expect(requiredStripeEnvironment({ trade: false, projectPlus: false, buildPay: true })).toEqual(['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY', 'STRIPE_CONNECT_WEBHOOK_SECRET']);
