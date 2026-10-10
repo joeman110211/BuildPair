@@ -57,6 +57,10 @@ jobs:
           npm run typecheck
           npm test
           npm run build:web
+          # This is an Expo iOS/Android project, so do not accept an upgrade that
+          # works on web but breaks native config or CommonJS-only Xcode tooling.
+          node -e "const requireXcode = require('node:module').createRequire(require.resolve('xcode')); const uuid = requireXcode('uuid'); if (typeof uuid.v4 !== 'function') throw new Error('Patched xcode UUID integration is incompatible')"
+          npx expo config --type introspect --json > /tmp/buildpair-native-config.json
       - name: Commit generated dependency lock changes to security branch only
         shell: bash
         run: |
