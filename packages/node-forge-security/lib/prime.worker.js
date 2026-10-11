@@ -19,6 +19,9 @@ var BIG_TWO = new BigInteger(null);
 BIG_TWO.fromInt(2);
 
 self.addEventListener('message', function(e) {
+  // Dedicated workers normally deliver an empty origin; reject any explicit
+  // cross-origin value supplied by alternate message transports.
+  if(e.origin && e.origin !== self.location.origin) return;
   var result = findPrime(e.data);
   self.postMessage(result);
 });
