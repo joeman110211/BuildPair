@@ -39,6 +39,10 @@ jobs:
           npm run typecheck
           npm test
           npm run build:web
+      - name: Bundle Android and iOS JavaScript for native resolver compatibility
+        run: |
+          npx expo export --platform android --output-dir dist-android-compat
+          npx expo export --platform ios --output-dir dist-ios-compat
       - name: Verify audited decoder no longer appears as vulnerable
         shell: bash
         run: |
