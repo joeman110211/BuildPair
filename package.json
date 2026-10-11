@@ -56,7 +56,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@types/node": "^24.10.0",
+    "@types/node": "^26.6.4",
     "@types/pg": "^8.15.6",
     "@types/react": "~19.2.4",
     "decode-uri-component": "file:packages/decode-uri-component-bridge",
