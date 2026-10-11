@@ -1,6 +1,9 @@
 name: BuildPair Smoke Test
 
 on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/smoke-test.yml']
   # Read-only production checks twice daily (UTC). No test users or records are created.
   schedule:
     - cron: '17 6,18 * * *'
