@@ -95,16 +95,62 @@ pem.encode = function(msg, options) {
 pem.decode = function(str) {
   var rval = [];
 
-  // split string into PEM messages (be lenient w/EOF on BEGIN line)
-  var rMessage = /\s*-----BEGIN ([A-Z0-9- ]+)-----\r?\n?([\x21-\x7e\s]+?(?:\r?\n\r?\n))?([:A-Za-z0-9+\/=\s]+?)-----END \1-----/g;
-  var rHeader = /([\x21-\x7e]+):\s*([\x21-\x7e\s^:]+)/;
+  // Split PEM boundaries with bounded, linear scanning rather than a nested
+  // global regular expression. The original regex could backtrack catastrophically
+  // on attacker-controlled whitespace, malformed headers and BEGIN markers.
   var rCRLF = /\r?\n/;
+  var cursor = 0;
   var match;
   while(true) {
-    match = rMessage.exec(str);
-    if(!match) {
+    var begin = str.indexOf('-----BEGIN ', cursor);
+    if(begin === -1) {
       break;
     }
+    var typeStart = begin + 11;
+    var typeEnd = str.indexOf('-----', typeStart);
+    if(typeEnd === -1) {
+      break;
+    }
+    var pemType = str.slice(typeStart, typeEnd);
+    cursor = typeEnd + 5;
+    if(pemType.length === 0 || pemType.length > 64 ||
+      !/^[A-Z0-9 -]+$/.test(pemType)) {
+      continue;
+    }
+    var contentStart = cursor;
+    if(str[contentStart] === '\r') ++contentStart;
+    if(str[contentStart] === '\n') ++contentStart;
+    var endMarker = '-----END ' + pemType + '-----';
+    var endIndex = str.indexOf(endMarker, contentStart);
+    if(endIndex === -1) {
+      cursor = contentStart;
+      continue;
+    }
+    var envelope = str.slice(contentStart, endIndex);
+    cursor = endIndex + endMarker.length;
+
+    var headerText = null;
+    var bodyText = envelope;
+    if(envelope.startsWith('Proc-Type:')) {
+      var crlfSeparator = envelope.indexOf('\r\n\r\n');
+      var lfSeparator = envelope.indexOf('\n\n');
+      var separator = crlfSeparator;
+      var separatorLength = 4;
+      if(separator === -1 || (lfSeparator !== -1 && lfSeparator < separator)) {
+        separator = lfSeparator;
+        separatorLength = 2;
+      }
+      if(separator === -1) {
+        continue;
+      }
+      headerText = envelope.slice(0, separator);
+      bodyText = envelope.slice(separator + separatorLength);
+    }
+    bodyText = bodyText.trim();
+    if(bodyText.length === 0 || !/^[A-Za-z0-9+/=:\s]+$/.test(bodyText)) {
+      continue;
+    }
+    match = [null, pemType, headerText, bodyText];
 
     // accept "NEW CERTIFICATE REQUEST" as "CERTIFICATE REQUEST"
     // https://datatracker.ietf.org/doc/html/rfc7468#section-7
@@ -146,7 +192,9 @@ pem.decode = function(str) {
       }
 
       // parse header
-      match = line.match(rHeader);
+      var colonIndex = line.indexOf(':');
+      match = colonIndex > 0 ?
+        [null, line.slice(0, colonIndex), line.slice(colonIndex + 1)] : null;
       if(match) {
         var header = {name: match[1], values: []};
         var values = match[2].split(',');
