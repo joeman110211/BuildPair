@@ -36,8 +36,8 @@ jobs:
           npm run verify:security-patches
       - name: Copy proven patched sources into local forks, preserving upstream licenses
         run: node scripts/vendor-security-forks.cjs
-      - name: Generate npm lockfile from the actual local fork manifests
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Preserve all existing locked versions while linking the two patched forks
+        run: node scripts/pin-vendored-lockfile.cjs
       - name: Verify clean fork installation without install-time patch mutation
         run: |
           npm ci --no-audit --no-fund
