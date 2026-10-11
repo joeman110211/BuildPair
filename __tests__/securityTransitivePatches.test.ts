@@ -71,7 +71,7 @@ describe('Security patches for vulnerable transitive dependencies', () => {
 
   it('keeps valid SHA256 RSA signatures working', () => {
     const { publicKey, privateKey } = generateKeyPairSync('rsa', {
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicKeyEncoding: { format: 'pem', type: 'spki' },
       privateKeyEncoding: { format: 'pem', type: 'pkcs8' },
     });
