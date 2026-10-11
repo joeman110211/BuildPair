@@ -21,8 +21,7 @@
     "build:web": "expo export --platform web",
     "serve:production": "node --env-file-if-exists=.env server.mjs",
     "serve:production:with-migrations": "npm run db:migrate && npm run serve:production",
-    "postinstall": "node scripts/patch-security-dependencies.cjs",
-    "verify:security-patches": "node scripts/patch-security-dependencies.cjs --verify"
+    "verify:security-patches": "node scripts/verify-vendored-security.cjs"
   },
   "dependencies": {
     "@clerk/backend": "^2.0.0",
@@ -32,6 +31,7 @@
     "@stripe/connect-js": "^3.4.6",
     "@stripe/react-connect-js": "^3.4.4",
     "@stripe/stripe-react-native": "0.64.0",
+    "braces": "file:packages/braces-security",
     "drizzle-orm": "^0.45.3",
     "expo": "~57.0.19",
     "expo-auth-session": "~57.0.11",
@@ -46,6 +46,7 @@
     "expo-status-bar": "~57.0.1",
     "expo-updates": "~57.0.21",
     "expo-web-browser": "~57.0.2",
+    "node-forge": "file:packages/node-forge-security",
     "pg": "^8.23.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -72,6 +73,8 @@
     "decode-uri-component": "$decode-uri-component",
     "xcode": {
       "uuid": "^11.1.1"
-    }
+    },
+    "braces": "$braces",
+    "node-forge": "$node-forge"
   }
 }
