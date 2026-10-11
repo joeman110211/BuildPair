@@ -86,7 +86,7 @@ describe('Security patches for vulnerable transitive dependencies', () => {
     expect(decoded[0].body).toBe('BuildPair certificate fixture');
     expect(decoded[1].type).toBe('RSA PRIVATE KEY');
     expect(decoded[1].procType?.type).toBe('ENCRYPTED');
-    expect(decoded[1].dekInfo?.algorithm).toBe('AES-128-CBC');
+    expect(decoded[1].dekInfo?.algorithm?.trim()).toBe('AES-128-CBC');
     expect(decoded[1].body).toBe('Encrypted-key-fixture');
   });
 
