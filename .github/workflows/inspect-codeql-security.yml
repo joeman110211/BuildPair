@@ -1,0 +1,23 @@
+name: Inspect CodeQL findings on vendored dependencies
+
+on:
+  push:
+    branches:
+      - security/patch-high-root-vulns-20261011
+    paths:
+      - .github/workflows/inspect-codeql-security.yml
+
+permissions:
+  contents: read
+  checks: read
+
+jobs:
+  review-codeql-annotations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List exact CodeQL findings for review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/joeman110211/BuildPair/check-runs/114448730556/annotations --paginate \
+            --jq '.[] | {file: .path, line: .start_line, level: .annotation_level, title: .title, message: .message}'
