@@ -58,6 +58,18 @@ describe('Public marketplace launch safety', () => {
     expect(guard).toBeLessThan(server.indexOf('await expoHandler(req, res', guard));
   });
 
+  it('rejects malformed encoded URLs before unpatched transitive decoders run', () => {
+    const server = readFileSync('server.mjs', 'utf8');
+    expect(server).toContain('/%(?![0-9A-Fa-f]{2})/.test(req.url)');
+    expect(server).toContain("Malformed request URL");
+    const invalidEncodingGuard = server.indexOf('/%(?![0-9A-Fa-f]{2})/.test(req.url)');
+    expect(invalidEncodingGuard).toBeGreaterThan(server.indexOf('req.url.length > MAX_REQUEST_TARGET_LENGTH'));
+    expect(invalidEncodingGuard).toBeLessThan(server.indexOf('handleAdminHostRouting(req, res)', invalidEncodingGuard));
+    expect(invalidEncodingGuard).toBeLessThan(server.indexOf('await expoHandler(req, res', invalidEncodingGuard));
+    expect(/%(?![0-9A-Fa-f]{2})/.test('/search?trade=tiling%ZZ')).toBe(true);
+    expect(/%(?![0-9A-Fa-f]{2})/.test('/search?trade=tiling%25')).toBe(false);
+  });
+
   it('permits normal public signup without an invite link', () => {
     const signup = readFileSync('app/auth/sign-up.tsx', 'utf8');
     expect(signup).toContain('emailInput');

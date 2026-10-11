@@ -343,6 +343,15 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({ error: 'Request URL too long' }));
       return;
     }
+    // Reject malformed percent encodings before Expo Router or query-string can decode
+    // them. This contains one unpatched query decoder DoS path, not a package fix.
+    if (/%(?![0-9A-Fa-f]{2})/.test(req.url)) {
+      res.statusCode = 400;
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.end(JSON.stringify({ error: 'Malformed request URL' }));
+      return;
+    }
     if (handleAdminHostRouting(req, res)) return;
 
     const pathName = requestPathname(req);
