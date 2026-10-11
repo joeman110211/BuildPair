@@ -69,6 +69,32 @@ describe('Security patches for vulnerable transitive dependencies', () => {
     expect(() => key.verify(digestBytes, fixture)).toThrow(/valid RSASSA-PKCS1-v1_5 DigestInfo/);
   });
 
+  it('parses ordinary and encrypted PEM blocks after linear parser backport', () => {
+    const ordinary = forge.pem.encode({
+      type: 'CERTIFICATE',
+      body: 'BuildPair certificate fixture',
+    });
+    const encrypted = forge.pem.encode({
+      type: 'RSA PRIVATE KEY',
+      procType: { version: '4', type: 'ENCRYPTED' },
+      dekInfo: { algorithm: 'AES-128-CBC', parameters: '00112233445566778899AABBCCDDEEFF' },
+      body: 'Encrypted-key-fixture',
+    });
+    const decoded = forge.pem.decode(ordinary + encrypted);
+    expect(decoded).toHaveLength(2);
+    expect(decoded[0].type).toBe('CERTIFICATE');
+    expect(decoded[0].body).toBe('BuildPair certificate fixture');
+    expect(decoded[1].type).toBe('RSA PRIVATE KEY');
+    expect(decoded[1].procType?.type).toBe('ENCRYPTED');
+    expect(decoded[1].dekInfo?.algorithm).toBe('AES-128-CBC');
+    expect(decoded[1].body).toBe('Encrypted-key-fixture');
+  });
+
+  it('rejects malformed repeated PEM markers promptly', () => {
+    const malformed = '-----BEGIN '.repeat(2000) + '!'.repeat(20000);
+    expect(() => forge.pem.decode(malformed)).toThrow(/Invalid PEM formatted message/);
+  });
+
   it('keeps valid SHA256 RSA signatures working', () => {
     const { publicKey, privateKey } = generateKeyPairSync('rsa', {
       modulusLength: 2048,
