@@ -50,6 +50,10 @@ for (const entry of packages) {
   pkg.name = entry.forkName;
   pkg.version = entry.forkVersion;
   pkg.private = true;
+  // Local file: forks are linked packages; npm otherwise tries to install
+  // each publisher's test/build devDependencies as project dependencies.
+  delete pkg.devDependencies;
+  delete pkg.scripts;
   pkg.description = (pkg.description || entry.origin) + ' (BuildPair patched security fork)';
   // Forbid npm from replacing the reviewed local fork with the registry package.
   save(manifestPath, JSON.stringify(pkg, null, 2) + '\n');
