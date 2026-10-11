@@ -6,6 +6,8 @@ on:
       - security/patch-high-root-vulns-20261011
     paths:
       - .github/workflows/prepare-security-forks.yml
+      - scripts/vendor-security-forks.cjs
+      - scripts/pin-vendored-lockfile.cjs
 
 permissions:
   contents: write
