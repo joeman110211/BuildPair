@@ -65,6 +65,32 @@ jobs:
           curl --fail --show-error --silent --retry 4 --retry-delay 2 "$BASE_URL/auth/sign-in" >/dev/null
           curl --fail --show-error --silent --retry 4 --retry-delay 2 "$BASE_URL/auth/sign-up" >/dev/null
 
+      - name: Verify search indexing and live billing gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          for path in / /pricing; do
+            headers=$(mktemp)
+            body=$(mktemp)
+            curl --fail --silent --show-error --retry 3 --retry-delay 2 -D "$headers" -o "$body" "$BASE_URL$path"
+            if grep -Eiq '^x-robots-tag:.*noindex' "$headers"; then
+              echo "::error::Public page $path sends X-Robots-Tag: noindex"
+              exit 1
+            fi
+            if grep -Eiq '<meta[^>]+name=["\x27]robots["\x27][^>]+content=["\x27][^>]*noindex' "$body"; then
+              echo "::error::Public page $path contains a noindex meta tag"
+              exit 1
+            fi
+          done
+          curl --fail --silent --show-error "$BASE_URL/robots.txt" | grep -Fq 'Allow: /'
+          curl --fail --silent --show-error "$BASE_URL/sitemap.xml" | grep -Fq 'sitemap-pages.xml'
+          # A signed-out request must be challenged by authentication, not by the old launch gate.
+          billing_status=$(curl --silent --show-error -o /dev/null -w '%{http_code}' "$BASE_URL/api/stripe/subscription/start?tier=core")
+          if [ "$billing_status" != "401" ]; then
+            echo "::error::Live subscription gate returned HTTP $billing_status instead of 401"
+            exit 1
+          fi
+
       - name: Verify integration readiness
         shell: bash
         run: |
