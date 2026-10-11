@@ -77,7 +77,7 @@ jobs:
               echo "::error::Public page $path sends X-Robots-Tag: noindex"
               exit 1
             fi
-            if grep -Eiq '<meta[^>]+name=["\x27]robots["\x27][^>]+content=["\x27][^>]*noindex' "$body"; then
+            if grep -Eiq '<meta[^>]+name="robots"[^>]+content="[^"]*noindex' "$body"; then
               echo "::error::Public page $path contains a noindex meta tag"
               exit 1
             fi
