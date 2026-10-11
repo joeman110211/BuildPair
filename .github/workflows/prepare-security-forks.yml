@@ -46,7 +46,7 @@ jobs:
         shell: bash
         run: |
           npm audit --omit=dev --json > dependency-security-audit.json || true
-          node -e "const a=require('./dependency-security-audit.json');const v=a.metadata?.vulnerabilities;console.log('Remaining advisory counts:',v);if(!v||v.critical||v.high||v.moderate) process.exit(1)"
+          node -e "const a=require('./dependency-security-audit.json');const v=a.metadata?.vulnerabilities;console.log('Remaining advisory counts:',v);console.log('Actual affected packages:',Object.entries(a.vulnerabilities||{}).map(([name,p])=>({name,severity:p.severity,fixAvailable:p.fixAvailable})));if(!v||v.critical||v.high||v.moderate) process.exit(1)"
           rm dependency-security-audit.json
       - name: Build and test production-equivalent web code
         run: |
