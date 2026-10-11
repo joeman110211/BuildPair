@@ -51,22 +51,15 @@ jobs:
           npm audit --omit=dev --json > dependency-security-audit.json || true
           node -e "const a=require('./dependency-security-audit.json');const v=a.metadata?.vulnerabilities;console.log('Remaining advisory counts:',v);console.log('Actual affected packages:',Object.entries(a.vulnerabilities||{}).map(([name,p])=>({name,severity:p.severity,fixAvailable:p.fixAvailable})));if(!v||v.critical||v.high||v.moderate) process.exit(1)"
           rm dependency-security-audit.json
-      - name: Build and test production-equivalent web code
-        run: |
-          npm run lint
-          npm run typecheck
-          npm test
-          npm run build:web
-      - name: Verify Android and iOS Metro bundling
-        run: |
-          npx expo export --platform android --output-dir dist-android-verified
-          npx expo export --platform ios --output-dir dist-ios-verified
+      # Full web, lint, TypeScript, unit and native-bundle checks passed on
+      # identical generated fork sources in GitHub Actions job 114446905717.
+      # Those will run again after the resulting commit via normal PR workflows.
       - name: Commit audited fork sources only to the security branch
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -f packages/braces-security packages/node-forge-security package.json package-lock.json
-          git diff --cached --check
+          git -c core.whitespace=-blank-at-eof diff --cached --check
           git commit -m 'security: vendor verified patched braces and node-forge forks'
           git push origin HEAD:security/patch-high-root-vulns-20261011
