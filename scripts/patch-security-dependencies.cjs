@@ -5,7 +5,7 @@
 const { readFileSync, writeFileSync } = require('node:fs');
 const { resolve } = require('node:path');
 
-const root = resolve(__dirname, '..');
+const root = resolve(process.cwd());
 const verifyOnly = process.argv.includes('--verify');
 
 function version(name, required) {
