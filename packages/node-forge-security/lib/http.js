@@ -654,6 +654,11 @@ http.createClient = function(options) {
    *   created: creation time, in UTC seconds, of the cookie.
    */
   client.setCookie = function(cookie) {
+    // Never interpret untrusted cookie names and paths as object prototypes.
+    if(['__proto__', 'prototype', 'constructor'].indexOf(cookie.name) !== -1 ||
+      ['__proto__', 'prototype', 'constructor'].indexOf(cookie.path) !== -1) {
+      throw new Error('Forbidden cookie name or path');
+    }
     var rval;
     if(typeof(cookie.name) !== 'undefined') {
       if(cookie.value === null || typeof(cookie.value) === 'undefined' ||
@@ -693,7 +698,9 @@ http.createClient = function(options) {
         if(!(cookie.name in client.cookies)) {
           client.cookies[cookie.name] = {};
         }
-        client.cookies[cookie.name][cookie.path] = cookie;
+        Object.defineProperty(client.cookies[cookie.name], cookie.path, {
+          value: cookie, writable: true, enumerable: true, configurable: true
+        });
         rval = true;
 
         // save cookies
@@ -798,7 +805,7 @@ http.createClient = function(options) {
  * @return the trimmed string.
  */
 var _trimString = function(str) {
-  return str.replace(/^\s*/, '').replace(/\s*$/, '');
+  return str.trim();
 };
 
 /**
