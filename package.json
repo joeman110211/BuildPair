@@ -25,7 +25,7 @@
   "dependencies": {
     "@clerk/backend": "^2.0.0",
     "@clerk/expo": "^4.6.4",
-    "@google/genai": "^1.32.0",
+    "@google/genai": "^2.28.0",
     "@neondatabase/serverless": "^1.0.2",
     "@stripe/connect-js": "^3.4.6",
     "@stripe/react-connect-js": "^3.4.4",
