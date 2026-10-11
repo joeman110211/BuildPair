@@ -8,6 +8,7 @@ on:
       - .github/workflows/prepare-security-forks.yml
       - scripts/vendor-security-forks.cjs
       - scripts/pin-vendored-lockfile.cjs
+      - eslint.config.js
 
 permissions:
   contents: write
