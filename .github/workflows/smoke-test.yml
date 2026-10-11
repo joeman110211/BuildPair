@@ -1,18 +1,22 @@
 name: BuildPair Smoke Test
 
 on:
+  # Read-only production checks twice daily (UTC). No test users or records are created.
+  schedule:
+    - cron: '17 6,18 * * *'
   workflow_dispatch:
     inputs:
       base_url:
-        description: 'HTTPS base URL to test, e.g. a current trycloudflare.com URL or the future production domain'
-        required: true
+        description: 'HTTPS website URL (defaults to BuildPair production)'
+        required: false
+        default: 'https://www.buildpair.co.uk'
         type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: buildpair-smoke-${{ inputs.base_url }}
+  group: buildpair-smoke-${{ inputs.base_url || 'https://www.buildpair.co.uk' }}
   cancel-in-progress: true
 
 jobs:
@@ -20,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      BASE_URL: ${{ inputs.base_url }}
+      BASE_URL: ${{ inputs.base_url || 'https://www.buildpair.co.uk' }}
     steps:
       - name: Validate target
         shell: bash
