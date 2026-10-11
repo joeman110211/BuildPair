@@ -20,7 +20,9 @@
     "db:studio": "drizzle-kit studio",
     "build:web": "expo export --platform web",
     "serve:production": "node --env-file-if-exists=.env server.mjs",
-    "serve:production:with-migrations": "npm run db:migrate && npm run serve:production"
+    "serve:production:with-migrations": "npm run db:migrate && npm run serve:production",
+    "postinstall": "node scripts/patch-security-dependencies.cjs",
+    "verify:security-patches": "node scripts/patch-security-dependencies.cjs --verify"
   },
   "dependencies": {
     "@clerk/backend": "^2.0.0",
