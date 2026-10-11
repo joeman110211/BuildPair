@@ -36,6 +36,39 @@ describe('Security patches for vulnerable transitive dependencies', () => {
     expect(rsa).toContain("obj.value[0].value.length !== (('parameters' in capture) ? 2 : 1)");
   });
 
+  it('rejects extra ASN.1 children within the nested signature algorithm sequence', () => {
+    // Construct a DigestInfo with the expected outer shape but an illicit
+    // additional child in AlgorithmIdentifier. The original 1.4.0 accepts it.
+    const asn1 = forge.asn1;
+    const uni = asn1.Class.UNIVERSAL;
+    const seq = asn1.Type.SEQUENCE;
+    const octet = asn1.Type.OCTETSTRING;
+    const digest = forge.md.sha256.create();
+    digest.update('Backport verification', 'utf8');
+    const digestBytes = digest.digest().getBytes();
+    const info = asn1.create(uni, seq, true, [
+      asn1.create(uni, seq, true, [
+        asn1.create(uni, asn1.Type.OID, false, asn1.oidToDer(forge.oids.sha256).getBytes()),
+        asn1.create(uni, asn1.Type.NULL, false, ''),
+        asn1.create(uni, octet, false, 'unexpected'),
+      ]),
+      asn1.create(uni, octet, false, digestBytes),
+    ]);
+    const der = asn1.toDer(info).getBytes();
+    const modulusBytes = 128;
+    const paddingBytes = modulusBytes - der.length - 3;
+    expect(paddingBytes).toBeGreaterThanOrEqual(8);
+    // e = 1 makes the crafted decrypted fixture deterministic; no private
+    // key is needed because we are testing the strict ASN.1 verification path.
+    const fixture = '\x00\x01' + '\xff'.repeat(paddingBytes) + '\x00' + der;
+    const BigInteger = require('node-forge/lib/jsbn').BigInteger;
+    const key = forge.pki.rsa.setPublicKey(
+      new BigInteger('f'.repeat(modulusBytes * 2), 16),
+      new BigInteger('1', 10),
+    );
+    expect(() => key.verify(digestBytes, fixture)).toThrow(/valid RSASSA-PKCS1-v1_5 DigestInfo/);
+  });
+
   it('keeps valid SHA256 RSA signatures working', () => {
     const { publicKey, privateKey } = generateKeyPairSync('rsa', {
       modulusLength: 1024,
