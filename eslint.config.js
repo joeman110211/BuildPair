@@ -8,6 +8,9 @@ module.exports = defineConfig([
       'dist/**',
       '.expo/**',
       'node_modules/**',
+      // Reviewed vendor forks retain upstream code style; lint BuildPair-owned code only.
+      'packages/braces-security/**',
+      'packages/node-forge-security/**',
       // Playwright/Clerk E2E dependencies are installed only inside the E2E workflow.
       'e2e/**',
       'playwright.config.mjs',
