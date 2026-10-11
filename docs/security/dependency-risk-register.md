@@ -4,8 +4,8 @@ Last reviewed: **11 October 2026**. Baseline: current `main`, `package-lock.json
 
 ## Verified status
 
-- **18 high, 3 moderate, 0 critical** npm package entries. This is **21 package entries, not 21 independent root causes or confirmed exploits**. The earlier 11 moderate entries were reduced to 3 by compatible updates.
-- **Not resolved:** The lockfile still contains upstream vulnerabilities. The Quality dependency-audit step must **continue to fail**, rather than hiding these findings or falsely indicating a complete remediation.
+- **18 high, 0 moderate, 0 critical** npm package entries on the verified dependency remediation branch, now merged to `main` in PR #173. This is **18 affected package entries, not 18 independent root causes or confirmed exploits**. The earlier 11 moderate entries fell to 3 through compatible updates and then to 0 through the patched URI decoder bridge.
+- **Not fully resolved:** The lockfile still contains 18 upstream high-severity vulnerability entries. The Quality dependency-audit step must **continue to fail**, rather than hiding these findings or falsely indicating a complete remediation.
 - The production website, Android/iOS native app and Stripe subscriptions share a package manifest. Changes to Expo, React Native, Clerk or Stripe Native require coordinated web/native compatibility tests.
 - No automatic merges, no `npm audit fix --force`, and no blanket security suppression. The Dependabot configuration proposes updates as soon as upstream packages are available.
 
@@ -15,7 +15,11 @@ Last reviewed: **11 October 2026**. Baseline: current `main`, `package-lock.json
 | --- | --- | --- | --- |
 | `braces@3.0.3`, GHSA-vfj7-8cjw-p6xm (high) | `micromatch` / Metro and other toolchain consumers | **None published** as of review | Recursive pattern parsing may overflow with crafted patterns. Metro uses patterns during builds; do not assume arbitrary public customer input reaches this code. Retain request routing bounds; update once upstream patches; check any runtime glob inputs before allowing untrusted patterns. |
 | `node-forge@1.4.0`, GHSA-86w9-cpqp-85rv (high) | Expo CLI / code-signing tooling | **None published** as of review | Signature-validation flaw. Confirm use is restricted to trusted developer/build artifacts; do not process user-provided certificates or signatures through this library. Upgrade Expo tooling when a fix exists and native builds pass. |
-| `decode-uri-component@0.2.2`, GHSA-vcc3-ghjq-m6fr (moderate) | `expo-router` -> `query-string@7.1.3` | 0.5.0 is published, but an **ESM-only** release is incompatible with the CommonJS consumer as a blind override | URL-decoding denial-of-service advisory. The production Node server rejects request targets longer than 8,192 bytes **and malformed percent escapes** before Expo routing; these are partial containment measures, not a patch for the dependency. Follow Expo Router / query-string upstream; only replace after runtime URL/deep-link tests. |
+
+## Resolved URI decoder advisory
+
+- `decode-uri-component` GHSA-vcc3-ghjq-m6fr (moderate): patched upstream `0.5.0` is installed under npm alias `patched-uri-decoder` and exposed through the project-local CommonJS bridge required by `query-string@7`. PR #173 was merged following 175 passing tests, web export, Android/iOS JavaScript exports, lint, TypeScript, CodeQL and browser smoke. The branch's npm audit confirmed **0 moderate**. The request-target size and encoding guards remain as defence in depth.
+- Keep the bridge until Expo Router's upstream dependency provides an equivalent compatible fixed version. Monitor real-device deep links and production URL routing after deployment. An Android/iOS JavaScript export validates bundling but is not a physical-device functional test.
 
 Most of the other 18 high package entries are **affected dependants** of the vulnerable packages, including `@clerk/expo`, `@stripe/stripe-react-native`, `expo`, `expo-updates`, `react-native`, `metro`, `@expo/metro`, and associated CLI tooling. **An affected-package name does not establish a direct vulnerability in Clerk authentication or Stripe's payment API**. The dependency edges and actual call sites still require evaluation.
 
