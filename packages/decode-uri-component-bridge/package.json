@@ -1,0 +1,11 @@
+{
+  "name": "@buildpair/decode-uri-component-bridge",
+  "version": "0.5.0",
+  "private": true,
+  "description": "CommonJS bridge for patched decode-uri-component used by Expo Router 57",
+  "main": "index.cjs",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "patched-uri-decoder": "npm:decode-uri-component@0.5.0"
+  }
+}

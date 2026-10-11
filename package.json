@@ -59,6 +59,7 @@
     "@types/node": "^24.10.0",
     "@types/pg": "^8.15.6",
     "@types/react": "~19.2.4",
+    "decode-uri-component": "file:packages/decode-uri-component-bridge",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9.39.0",
     "eslint-config-expo": "~57.0.2",
@@ -66,6 +67,7 @@
     "vitest": "^4.0.9"
   },
   "overrides": {
+    "decode-uri-component": "$decode-uri-component",
     "xcode": {
       "uuid": "^11.1.1"
     }
