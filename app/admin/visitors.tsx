@@ -42,6 +42,7 @@ type VisitorData = {
   topClicks: CountRow[];
   acquisition: CountRow[];
   sourceChannels: CountRow[];
+  signupCampaigns: CountRow[];
   devices: CountRow[];
   locations: CountRow[];
   forms: CountRow[];
@@ -206,6 +207,11 @@ export default function VisitorAnalyticsAdmin() {
     </AppCard>
 
     <View style={styles.twoColumn}>
+      <AppCard style={styles.columnCard}>
+        <Text variant="titleLarge" style={styles.title}>Sign-ups by campaign</Text>
+        <Text style={styles.muted}>Completed registrations detected in visitors’ browsers, grouped by source and audience. The account total above comes from BuildPair records and may differ when tracking is disabled.</Text>
+        <RankedRows rows={data?.signupCampaigns ?? []} render={(row, index) => <View style={styles.row}><Text style={styles.rank}>{index + 1}</Text><View style={styles.flex}><Text style={styles.rowTitle}>{text(row.campaign, 'Direct / unknown')}</Text><Text style={styles.muted}>{text(row.source, 'Direct / unknown')} · {text(row.audience)} · {compact(row.signups)} sign-ups</Text></View></View>} />
+      </AppCard>
       <AppCard style={styles.columnCard}>
         <Text variant="titleLarge" style={styles.title}>Where visitors came from</Text>
         <Text style={styles.muted}>UTM campaign data wins when present; otherwise BuildPair uses the referring site. Use UTM links in TikTok, Facebook, email and paid campaigns so the source is unambiguous.</Text>

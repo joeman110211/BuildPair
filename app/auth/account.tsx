@@ -22,7 +22,7 @@ export default function AccountEntryScreen() {
       <BuildPairLogo tagline />
       <Chip icon="rocket-launch-outline">{SITE_LANGUAGE.launchingSoon}</Chip>
       <Text variant="headlineSmall" style={styles.heading}>Choose how you want to join BuildPair.</Text>
-      <Text style={styles.subheading}>Homeowners can post jobs and compare quotes. Tradespeople get three months of BuildPair Pro free from signup. BuildPay is coming soon.</Text>
+      <Text style={styles.subheading}>Homeowners can post jobs and compare quotes. Tradespeople get three months of BuildPair Pro free from profile activation. BuildPay is coming soon.</Text>
     </View>
 
     <View style={styles.cards}>

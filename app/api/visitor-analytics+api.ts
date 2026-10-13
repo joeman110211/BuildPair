@@ -242,6 +242,7 @@ export async function POST(request: Request) {
     const dimensions = {
       path: safe(payload.path, 500),
       target: safe(payload.target, 200),
+      audience: payload.target === 'signup_success' ? safe(payload.details.audience, 20) : '',
       targetPath: safe(payload.targetPath, 500),
       referrerHost: safe(payload.acquisition.referrerHost, 200),
       utmSource: safe(payload.acquisition.utmSource, 150),

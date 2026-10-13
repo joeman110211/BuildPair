@@ -61,6 +61,7 @@ export async function GET(request: Request) {
       forms,
       recentSessions,
       signupRows,
+      signupCampaignRows,
     ] = await Promise.all([
       sql`
         SELECT
@@ -248,6 +249,18 @@ export async function GET(request: Request) {
         WHERE created_at >= now() - (${days}::int * interval '1 day')
           AND coalesce(is_deleted, false) = false
       `,
+      sql`
+        SELECT coalesce(nullif(dimensions->>'utmCampaign', ''), 'Direct / unknown') AS campaign,
+          coalesce(nullif(dimensions->>'utmSource', ''), 'Direct / unknown') AS source,
+          coalesce(nullif(dimensions->>'audience', ''), 'unknown') AS audience,
+          sum(event_count)::bigint AS signups
+        FROM visitor_analytics_hourly
+        WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND event_type = 'form_submit'
+          AND dimensions->>'target' = 'signup_success'
+        GROUP BY 1, 2, 3
+        ORDER BY signups DESC
+      `,
     ]);
 
     const summary = summaryRows[0] ?? {};
@@ -293,6 +306,7 @@ export async function GET(request: Request) {
       topClicks,
       acquisition: acquisitionRows,
       sourceChannels,
+      signupCampaigns: signupCampaignRows,
       devices,
       locations,
       forms,
@@ -308,6 +322,7 @@ export async function GET(request: Request) {
         topClicks: [],
         acquisition: [],
         sourceChannels: [],
+        signupCampaigns: [],
         devices: [],
         locations: [],
         forms: [],
