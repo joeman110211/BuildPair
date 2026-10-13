@@ -1,7 +1,7 @@
 import { useClerk, useSignIn } from '@clerk/expo';
 import { SignIn } from '@clerk/expo/web';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { HelperText, Text, TextInput } from 'react-native-paper';
@@ -203,12 +203,20 @@ function AdminSignInForm() {
 }
 
 export default function SignInWebScreen() {
+  // Account mode and admin query parameters are browser-only in static web exports.
+  // Keep SSR and the first browser render the same before mounting Clerk.
+  const [clientReady, setClientReady] = useState(false);
+  useEffect(() => { setClientReady(true); }, []);
   const params = useLocalSearchParams<{ mode?: string | string[]; admin?: string | string[]; returnTo?: string | string[] }>();
   const admin = firstParam(params.admin) === '1';
   const mode = parseAccountMode(params.mode);
   const returnTo = safeInternalReturnTo(params.returnTo);
   const redirectUrl = String(modeSetupHref(mode, returnTo));
   const createUrl = mode ? String(signUpHref(mode, returnTo)) : '/auth/account';
+  if (!clientReady) {
+    return <Screen title="Sign in to BuildPair" subtitle="Preparing secure sign in…" />;
+  }
+
   const title = admin
     ? 'BuildPair administrator sign in'
     : mode === 'trader'

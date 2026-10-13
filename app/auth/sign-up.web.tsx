@@ -1,5 +1,6 @@
 import { SignUp } from '@clerk/expo/web';
 import { type Href, Redirect, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Screen } from '@/components/Screen';
 import { modeSetupHref, parseAccountMode, safeInternalReturnTo, signInHref } from '@/lib/account-mode';
 import { clerkWebAppearance } from '@/lib/clerk-web';
@@ -10,6 +11,15 @@ export default function SignUpWebEntry() {
   const invite = firstParam(params.invite)?.trim();
   const mode = parseAccountMode(params.mode) ?? 'customer';
   const returnTo = safeInternalReturnTo(params.returnTo);
+  // Expo's static web export cannot know ?mode during server rendering.
+  // Defer role-specific markup and Clerk until after hydration, so the server
+  // and first browser render are identical for homeowner and trade links.
+  const [clientReady, setClientReady] = useState(false);
+  useEffect(() => { setClientReady(true); }, []);
+
+  if (!clientReady) {
+    return <Screen title="Join BuildPair" subtitle="Preparing secure registration…" />;
+  }
 
   if (invite) {
     return <Redirect href={`/auth/early-access?invite=${encodeURIComponent(invite)}` as Href} />;
