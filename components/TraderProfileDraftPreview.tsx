@@ -73,8 +73,7 @@ export function TraderProfileDraftPreview({
             <Text variant="headlineSmall" style={styles.businessName}>{displayName}</Text>
             <Text style={styles.locationLine}>{baseLabel}{tradeCategories.length ? ` · ${tradeCategories.join(' · ')}` : ''}</Text>
             <View style={styles.ratingLine}>
-              <Text style={styles.stars}>★★★★★</Text>
-              <Text style={styles.ratingText}>0.0 (0 reviews)</Text>
+              <Text style={styles.ratingText}>No reviews yet</Text>
             </View>
             <View style={styles.trustRow}>
               <Chip compact icon="map-marker-radius">{radiusMiles} mile radius</Chip>

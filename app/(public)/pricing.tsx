@@ -64,7 +64,7 @@ export default function PricingPage() {
 
       <View style={styles.notice}>
         <Text variant="titleMedium" style={styles.noticeTitle}>Plan billing</Text>
-        <Text style={styles.noticeText}>Every eligible tradesperson joining now receives three months of BuildPair Pro free from profile activation, without entering payment details or agreeing to a paid subscription. Published monthly prices are for future optional subscriptions. No charge will start automatically at the end of the offer.</Text>
+        <Text style={styles.noticeText}>Every eligible tradesperson joining now receives three months of BuildPair Pro free from profile activation, without entering payment details or agreeing to a paid subscription. The monthly memberships above are optional. No charge will start automatically at the end of the offer.</Text>
       </View>
     </View>
     <PublicFooter />

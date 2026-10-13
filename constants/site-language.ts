@@ -25,8 +25,8 @@ export const SITE_LANGUAGE = {
 
 export const LAUNCH_OFFER = {
   badge: '3 months Pro free',
-  short: 'Tradespeople get 3 months of BuildPair Pro free from signup. No payment details required.',
-  trade: 'Create your tradesperson profile and use BuildPair Pro free for three months from signup. No automatic subscription or payment details required.',
+  short: 'Tradespeople get 3 months of BuildPair Pro free from profile activation. No payment details required.',
+  trade: 'Create your tradesperson profile and use BuildPair Pro free for three months from profile activation. No automatic subscription or payment details required.',
   homeowner: 'Create a homeowner account, post work, compare quotes and manage your job.',
 } as const;
 

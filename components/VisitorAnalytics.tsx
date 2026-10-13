@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/expo';
+import { useAuth, useUser } from '@clerk/expo';
 import { usePathname } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
@@ -16,6 +16,7 @@ const LEGACY_CHOICE_KEY = 'buildpair_analytics_choice_v1';
 const VISITOR_KEY = 'buildpair_analytics_visitor_v1';
 const SESSION_KEY = 'buildpair_analytics_session_v1';
 const SIGNUP_INTENT_KEY = 'buildpair_analytics_signup_intent_v1';
+const SIGNUP_ACQUISITION_KEY = 'buildpair_analytics_signup_acquisition_v1';
 export const INTERNAL_ANALYTICS_EXCLUSION_KEY = 'buildpair_internal_analytics_excluded_v1';
 const VISITOR_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 const HEARTBEAT_MS = 45_000;
@@ -114,7 +115,6 @@ function discardDetailedIdentity(requestDeletion = true) {
   try {
     window.localStorage.removeItem(VISITOR_KEY);
     window.sessionStorage.removeItem(SESSION_KEY);
-    window.sessionStorage.removeItem(SIGNUP_INTENT_KEY);
   } catch { /* browser storage may be unavailable */ }
 }
 
@@ -225,6 +225,7 @@ export function trackPublicWaitlistSuccess(audience: 'homeowner' | 'trader', sou
 
 export function VisitorAnalytics() {
   const { isSignedIn } = useAuth();
+  const { user: clerkUser, isLoaded: userLoaded } = useUser();
   const pathname = usePathname();
   const previousPath = useRef<string | null>(null);
   const pageStartedAt = useRef(0);
@@ -267,7 +268,22 @@ export function VisitorAnalytics() {
     previousPath.current = pathname;
     pageStartedAt.current = now;
     if (pathname.includes('sign-up')) {
-      try { window.sessionStorage.setItem(SIGNUP_INTENT_KEY, '1'); } catch { /* best effort */ }
+      try {
+        if (!window.sessionStorage.getItem(SIGNUP_INTENT_KEY)) {
+          window.sessionStorage.setItem(SIGNUP_INTENT_KEY, String(Date.now()));
+        }
+        const acquisition = acquisitionInfo();
+        window.sessionStorage.setItem(SIGNUP_ACQUISITION_KEY, JSON.stringify({
+          acquisition,
+          audience: new URLSearchParams(window.location.search).get('mode') === 'trader' ? 'trader' : 'homeowner',
+        }));
+      } catch { /* best effort */ }
+    } else if (pathname.includes('sign-in')) {
+      // Moving from registration to sign-in must not count as a new account.
+      try {
+        window.sessionStorage.removeItem(SIGNUP_INTENT_KEY);
+        window.sessionStorage.removeItem(SIGNUP_ACQUISITION_KEY);
+      } catch { /* best effort */ }
     }
     if (!visitStarted.current) {
       visitStarted.current = true;
@@ -357,18 +373,38 @@ export function VisitorAnalytics() {
   }, [isSignedIn, sendEvent]);
 
   useEffect(() => {
-    if (!onWeb() || !isSignedIn || conversionSent.current) return;
-    const identity = existingIdentity();
-    if (!identity) return;
+    if (!onWeb() || !isSignedIn || !userLoaded || !clerkUser || conversionSent.current) return;
     conversionSent.current = true;
-    let conversionType: 'signup' | 'signin' = 'signin';
-    try { if (window.sessionStorage.getItem(SIGNUP_INTENT_KEY) === '1') conversionType = 'signup'; } catch { /* best effort */ }
-    post({ action: 'convert', sessionId: identity.sessionId, conversionType });
+    const mode = trackingMode();
+    let signupStartedAt = 0;
+    let signupAcquisition: { acquisition: ReturnType<typeof acquisitionInfo>; audience: string } | null = null;
+    try {
+      signupStartedAt = Number(window.sessionStorage.getItem(SIGNUP_INTENT_KEY));
+      const stored = window.sessionStorage.getItem(SIGNUP_ACQUISITION_KEY);
+      if (stored) signupAcquisition = JSON.parse(stored);
+    } catch { /* best effort */ }
+    const userCreatedAt = clerkUser.createdAt ? new Date(clerkUser.createdAt).getTime() : NaN;
+    const newSignup = signupStartedAt > Date.now() - 24 * 60 * 60_000 && Number.isFinite(userCreatedAt)
+      && userCreatedAt >= signupStartedAt - 5 * 60_000 && userCreatedAt <= Date.now() + 60_000;
+    if (mode !== 'off') {
+      const identity = existingIdentity();
+      if (identity) post({ action: 'convert', sessionId: identity.sessionId, conversionType: newSignup ? 'signup' : 'signin' });
+      if (newSignup) {
+        // Count successful sign-ups by campaign without storing an identity or email.
+        post({
+          action: 'event', mode: 'aggregate', eventType: 'form_submit',
+          path: window.location.pathname, target: 'signup_success',
+          device: deviceInfo(), acquisition: signupAcquisition?.acquisition ?? acquisitionInfo(),
+          details: { audience: signupAcquisition?.audience ?? 'unknown' },
+        });
+      }
+    }
     try {
       window.sessionStorage.removeItem(SESSION_KEY);
       window.sessionStorage.removeItem(SIGNUP_INTENT_KEY);
+      window.sessionStorage.removeItem(SIGNUP_ACQUISITION_KEY);
     } catch { /* best effort */ }
-  }, [isSignedIn]);
+  }, [isSignedIn, userLoaded, clerkUser]);
 
   return null;
 }

@@ -8,6 +8,7 @@ const CHOICE_KEY = 'buildpair_analytics_choice_v1';
 const VISITOR_KEY = 'buildpair_analytics_visitor_v1';
 const SESSION_KEY = 'buildpair_analytics_session_v1';
 const SIGNUP_INTENT_KEY = 'buildpair_analytics_signup_intent_v1';
+const SIGNUP_ACQUISITION_KEY = 'buildpair_analytics_signup_acquisition_v1';
 
 type AnalyticsChoice = 'basic' | 'detailed' | 'off';
 
@@ -44,6 +45,7 @@ function removeDetailedIdentity(requestDeletion = true) {
     window.localStorage.removeItem(VISITOR_KEY);
     window.sessionStorage.removeItem(SESSION_KEY);
     window.sessionStorage.removeItem(SIGNUP_INTENT_KEY);
+    window.sessionStorage.removeItem(SIGNUP_ACQUISITION_KEY);
   } catch { /* browser storage may be unavailable */ }
 }
 
@@ -62,7 +64,7 @@ export default function CookiesPage() {
   const controls = Platform.OS === 'web'
     ? <View style={{ gap: 10 }}>
         <Text>Your current BuildPair analytics setting: <Text style={{ fontWeight: '900' }}>{choice === 'basic' ? 'Basic aggregate' : choice === 'detailed' ? 'Detailed journey analytics' : 'Off'}</Text>.</Text>
-        <Text>Basic aggregate analytics is the default. It does not create a persistent visitor ID or retain an individual browsing journey. Detailed analytics creates a random anonymous browser identifier only after you choose it.</Text>
+        <Text>Basic aggregate analytics is the default. It does not create a persistent visitor ID or retain an individual browsing journey. If you start registration from a campaign link, BuildPair may keep its campaign source in this browser tab until sign-up finishes and count the completed sign-up without your name or email. Detailed analytics creates a random anonymous browser identifier only after you choose it.</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           <Button mode={choice === 'basic' ? 'contained' : 'outlined'} onPress={() => saveChoice('basic')}>Use basic analytics</Button>
           <Button mode={choice === 'detailed' ? 'contained' : 'outlined'} onPress={() => saveChoice('detailed')}>Allow detailed analytics</Button>

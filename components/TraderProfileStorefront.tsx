@@ -216,8 +216,7 @@ export default function TraderProfileStorefront() {
             </View>
             <Text style={styles.locationLine}>{profile.locationLabel || 'UK'}{identityCategories.length ? ` · ${identityCategories.join(' · ')}` : ''}{hiddenCategoryCount ? ` · +${hiddenCategoryCount} more` : ''}</Text>
             <View style={styles.ratingLine}>
-              <Text style={styles.stars}>★★★★★</Text>
-              <Text style={styles.ratingText}>{profile.averageRating.toFixed(1)} ({profile.reviewCount} review{profile.reviewCount === 1 ? '' : 's'})</Text>
+              {profile.reviewCount > 0 ? <><Text style={styles.stars}>★★★★★</Text><Text style={styles.ratingText}>{profile.averageRating.toFixed(1)} ({profile.reviewCount} review{profile.reviewCount === 1 ? '' : 's'})</Text></> : <Text style={styles.ratingText}>No reviews yet</Text>}
             </View>
             <Text style={styles.trustLine}>{trustItems}</Text>
           </View>
@@ -296,10 +295,10 @@ export default function TraderProfileStorefront() {
           </View>
         </SectionCard> : null}
 
-        {showReviews && paidProfile ? <SectionCard title="Reviews" action={<Text style={styles.linkText}>{profile.reviewCount} verified</Text>}>
-          <View style={styles.reviewSummary}>
+        {showReviews && paidProfile ? <SectionCard title="Reviews" action={<Text style={styles.linkText}>{profile.reviewCount ? `${profile.reviewCount} verified` : 'No reviews yet'}</Text>}>
+          {profile.reviewCount > 0 ? <View style={styles.reviewSummary}>
             <View><Text style={styles.bigRating}>{profile.averageRating.toFixed(1)}</Text><Text style={styles.stars}>★★★★★</Text><Text style={styles.muted}>{profile.reviewCount} verified review{profile.reviewCount === 1 ? '' : 's'}</Text></View>
-          </View>
+          </View> : null}
           {profile.reviews.length ? profile.reviews.slice(0, 3).map((review) => <View key={review.id} style={styles.reviewItem}>
             <View style={styles.reviewAvatar}><Text style={styles.reviewAvatarText}>✓</Text></View>
             <View style={styles.flex}>

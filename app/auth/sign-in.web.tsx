@@ -1,13 +1,14 @@
 import { useClerk, useSignIn } from '@clerk/expo';
 import { SignIn } from '@clerk/expo/web';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { HelperText, Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { colors } from '@/constants/theme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useClientReady } from '@/hooks/useResponsiveDimensions';
 import { modeSetupHref, parseAccountMode, safeInternalReturnTo, signUpHref } from '@/lib/account-mode';
 import { errorMessage } from '@/lib/api';
 import { clerkWebAppearance } from '@/lib/clerk-web';
@@ -205,8 +206,7 @@ function AdminSignInForm() {
 export default function SignInWebScreen() {
   // Account mode and admin query parameters are browser-only in static web exports.
   // Keep SSR and the first browser render the same before mounting Clerk.
-  const [clientReady, setClientReady] = useState(false);
-  useEffect(() => { setClientReady(true); }, []);
+  const clientReady = useClientReady();
   const params = useLocalSearchParams<{ mode?: string | string[]; admin?: string | string[]; returnTo?: string | string[] }>();
   const admin = firstParam(params.admin) === '1';
   const mode = parseAccountMode(params.mode);

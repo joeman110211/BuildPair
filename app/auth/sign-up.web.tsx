@@ -1,7 +1,7 @@
 import { SignUp } from '@clerk/expo/web';
 import { type Href, Redirect, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
 import { Screen } from '@/components/Screen';
+import { useClientReady } from '@/hooks/useResponsiveDimensions';
 import { modeSetupHref, parseAccountMode, safeInternalReturnTo, signInHref } from '@/lib/account-mode';
 import { clerkWebAppearance } from '@/lib/clerk-web';
 import { firstParam } from '@/lib/search-params';
@@ -14,8 +14,7 @@ export default function SignUpWebEntry() {
   // Expo's static web export cannot know ?mode during server rendering.
   // Defer role-specific markup and Clerk until after hydration, so the server
   // and first browser render are identical for homeowner and trade links.
-  const [clientReady, setClientReady] = useState(false);
-  useEffect(() => { setClientReady(true); }, []);
+  const clientReady = useClientReady();
 
   if (!clientReady) {
     return <Screen title="Join BuildPair" subtitle="Preparing secure registration…" />;
