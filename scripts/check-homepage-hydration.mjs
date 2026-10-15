@@ -44,6 +44,27 @@ try {
     await adviceSection.scrollIntoViewIfNeeded();
     await adviceSection.getByText('Practical advice for your next project.').waitFor({ state: 'visible' });
     await adviceSection.getByRole('button', { name: 'Explore Advice Hub →' }).waitFor({ state: 'visible' });
+    // A new static marketing block must survive hydration and remain clickable.
+    // This protects against the October 2026 homepage white-screen regression.
+    const projectPlus = page.getByTestId('bp-home-project-plus-section');
+    await projectPlus.scrollIntoViewIfNeeded();
+    await projectPlus.getByRole('heading', { name: 'Imagine it. Plan it. Bring it to life.' }).waitFor({ state: 'visible' });
+    assert.ok(await projectPlus.getByText('£4.99/month for homeowners').isVisible(),
+      size.name + ': Project+ homeowner price missing');
+    assert.ok(await projectPlus.getByText(/included at no extra cost with BuildPair Pro/i).isVisible(),
+      size.name + ': Project+ Pro entitlement missing');
+    assert.equal(await projectPlus.locator('img').count(), 2,
+      size.name + ': Project+ inspiration images missing');
+    const projectSignupLink = projectPlus.locator('a[href*="returnTo="]');
+    assert.equal(await projectSignupLink.count(), 1, size.name + ': Project+ signup link missing');
+    const projectHref = await projectSignupLink.getAttribute('href');
+    assert.ok(projectHref?.includes('mode=customer') && decodeURIComponent(projectHref).includes('/customer/project-plus'),
+      size.name + ': Project+ signup points to the wrong journey: ' + projectHref);
+    await page.waitForTimeout(2_000);
+    assert.ok(await heading.isVisible(), size.name + ': homepage vanished after Project+ hydration');
+    assert.ok(await projectPlus.getByRole('heading', { name: 'Imagine it. Plan it. Bring it to life.' }).isVisible(),
+      size.name + ': Project+ vanished after hydration');
+
     const latestEmpty = page.getByTestId('bp-home-latest-jobs-empty');
     await latestEmpty.waitFor({ state: 'visible', timeout: 20_000 });
     assert.ok((await latestEmpty.innerText()).includes('Our job marketplace has just opened.'),
