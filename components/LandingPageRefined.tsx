@@ -1,8 +1,8 @@
 import type { Href } from 'expo-router';
 import { Link, useRouter } from 'expo-router';
 import { createElement, useState } from 'react';
-import type { ImageStyle, StyleProp, TextStyle } from 'react-native';
-import { Image, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
@@ -46,28 +46,6 @@ function Heading({ eyebrow, title, body }: { eyebrow?: string; title: string; bo
     <SemanticHeading level={2} style={[styles.sectionTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>{title}</SemanticHeading>
     {body ? <Text style={styles.sectionBody}>{body}</Text> : null}
   </View>;
-}
-
-
-const PROJECT_PLUS_INSPIRATION = [
-  { caption: 'Before', alt: 'Bathroom before renovation, for illustration only', uri: 'https://images.pexels.com/photos/19980228/pexels-photo-19980228.jpeg?auto=compress&cs=tinysrgb&w=960' },
-  { caption: 'Design inspiration', alt: 'Modern bathroom design inspiration, for illustration only', uri: 'https://images.pexels.com/photos/31238728/pexels-photo-31238728.jpeg?auto=compress&cs=tinysrgb&w=960' },
-] as const;
-
-// On the web use a normal, lazy-loaded image. It has identical server/client markup
-// and does not depend on React Native Web Image hydration.
-function ProjectPlusImage({ uri, alt }: { uri: string; alt: string }) {
-  const imageStyle: StyleProp<ImageStyle> = styles.projectPlusImage;
-  if (Platform.OS === 'web') {
-    return createElement('img', {
-      src: uri,
-      alt,
-      loading: 'lazy',
-      decoding: 'async',
-      style: { ...StyleSheet.flatten(imageStyle), display: 'block', objectFit: 'cover' },
-    });
-  }
-  return <Image source={{ uri }} accessibilityLabel={alt} resizeMode="cover" style={imageStyle} />;
 }
 
 export default function LandingPageRefined() {
@@ -134,39 +112,6 @@ export default function LandingPageRefined() {
       <Link href="/(public)/how-it-works" asChild><Button mode="text" style={styles.button} contentStyle={styles.buttonContent}>Explore the full process →</Button></Link>
     </View></View></Reveal>
 
-
-    {/* Static homepage block: do not wrap in Reveal or add client-only state.
-        The last release caused a browser white screen despite a successful server build. */}
-    <View testID="bp-home-project-plus-section" style={[styles.band, styles.projectPlusBand]}>
-      <View style={styles.section}>
-        <View style={[styles.projectPlusCard, mobile && styles.projectPlusCardMobile]}>
-          <View style={styles.projectPlusLabelRow}>
-            <Text style={styles.projectPlusSparkle}>✦</Text>
-            <Text style={styles.projectPlusEyebrow}>BUILDPAIR PROJECT+</Text>
-          </View>
-          <SemanticHeading level={2} style={[styles.projectPlusTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>Imagine it. Plan it. Bring it to life.</SemanticHeading>
-          <Text style={styles.projectPlusBody}>Your renovation starts with an idea. Explore AI room designs, plan your project and find the right tradespeople to make it happen.</Text>
-          <View style={styles.projectPlusImageGrid}>
-            {PROJECT_PLUS_INSPIRATION.map((item) => (
-              <View key={item.caption} style={styles.projectPlusImageItem}>
-                <ProjectPlusImage uri={item.uri} alt={item.alt} />
-                <Text style={styles.projectPlusImageCaption}>{item.caption}</Text>
-              </View>
-            ))}
-          </View>
-          <Text style={styles.projectPlusDisclaimer}>Illustrative examples, not an actual Project+ result or a before-and-after of the same room.</Text>
-          <View style={styles.projectPlusPlan}>
-            <Text style={styles.projectPlusPrice}>£4.99/month for homeowners</Text>
-            <Text style={styles.projectPlusPro}>Also included at no extra cost with BuildPair Pro for tradespeople.</Text>
-          </View>
-          <Link href={signUpHref('customer', '/customer/project-plus')} asChild>
-            <Button testID="bp-home-project-plus-signup" mode="contained" style={[styles.button, mobile && styles.fullButton]} contentStyle={styles.buttonContent}>Sign up to explore Project+ →</Button>
-          </Link>
-          <Text style={styles.projectPlusDisclaimer}>Standard homeowner marketplace and project tools remain free.</Text>
-        </View>
-      </View>
-    </View>
-
     <Reveal delay={100}><View testID="bp-home-advice-hub" style={styles.section}>
       <Heading eyebrow="Advice Hub" title="Practical advice for your next project." body="Explore free guides on project costs, quotes, building rules, safety and the business side of trade work." />
       <Link href="/(public)/advice" asChild><Button mode="contained" style={styles.button} contentStyle={styles.buttonContent}>Explore Advice Hub →</Button></Link>
@@ -217,22 +162,5 @@ const styles = StyleSheet.create({
   tradeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, tradeCard: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 150, minWidth: 0, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, backgroundColor: colors.surfaceRaised, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 52 }, tradeName: { flex: 1, color: colors.charcoal, fontSize: 14, fontWeight: '700' }, tradeArrow: { color: colors.primary, fontSize: 18 }, pressed: { opacity: 0.8 },
   stepGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 20 }, step: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 280, minWidth: 0, gap: 8, padding: 12 }, stepNumber: { color: colors.primary, fontSize: 26, fontWeight: '900' }, cardTitle: { color: colors.charcoal, fontSize: 20, lineHeight: 26, fontWeight: '800' }, cardText: { color: colors.charcoalSoft, lineHeight: 23 },
   choiceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 }, choice: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 360, minWidth: 0, borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, padding: 22, gap: 12 }, paymentChoice: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' }, smallText: { color: colors.muted, fontSize: 12, lineHeight: 18 }, trustStrip: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 22, gap: 8 }, trustTitle: { color: colors.charcoal, fontSize: 17, fontWeight: '800' },
-
-  projectPlusBand: { backgroundColor: colors.surfaceSoft },
-  projectPlusCard: { maxWidth: 900, width: '100%', alignSelf: 'center', backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: radii.xl, padding: 28, gap: 14 },
-  projectPlusCardMobile: { padding: 18, gap: 12 },
-  projectPlusLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  projectPlusSparkle: { color: colors.primary, fontSize: 24, lineHeight: 28 },
-  projectPlusEyebrow: { color: colors.primaryDark, fontSize: 12, lineHeight: 18, fontWeight: '900', letterSpacing: 0.8 },
-  projectPlusTitle: { color: colors.charcoal, fontWeight: '900', letterSpacing: -0.5 },
-  projectPlusBody: { color: colors.charcoalSoft, lineHeight: 23, maxWidth: 660 },
-  projectPlusImageGrid: { flexDirection: 'row', gap: 12 },
-  projectPlusImageItem: { flex: 1, minWidth: 0, gap: 6 },
-  projectPlusImage: { width: '100%', aspectRatio: 1.5, borderRadius: radii.md, backgroundColor: colors.surfaceStrong },
-  projectPlusImageCaption: { color: colors.charcoalSoft, fontSize: 13, lineHeight: 19, fontWeight: '700' },
-  projectPlusDisclaimer: { color: colors.muted, fontSize: 12, lineHeight: 18 },
-  projectPlusPlan: { gap: 5 },
-  projectPlusPrice: { color: colors.charcoal, fontSize: 16, lineHeight: 23, fontWeight: '800' },
-  projectPlusPro: { color: colors.muted, fontSize: 13, lineHeight: 20 },
   faqList: { gap: 8, width: '100%', maxWidth: 820, alignSelf: 'center' }, faqCard: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 16, gap: 12 }, faqRow: { flexDirection: 'row', gap: 12, justifyContent: 'space-between', alignItems: 'center' }, faqQuestion: { flex: 1, color: colors.charcoal, fontSize: 16, lineHeight: 23, fontWeight: '700' }, faqToggle: { color: colors.primary, fontSize: 22 },
 });
