@@ -39,6 +39,7 @@ const clearLegacyWebAppCache = `
 
 const shellCss = `
   html, body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #F7F4F0;
     overscroll-behavior-y: none;
     -webkit-text-size-adjust: 100%;
@@ -54,6 +55,8 @@ const shellCss = `
     overflow-wrap: break-word;
     overflow-wrap: anywhere;
   }
+  h1, h2, h3, h4, h5, h6 { font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  input, textarea, button, select { font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   input, textarea { font-size: 16px; }
   :focus-visible { outline: 2px solid #963B00; outline-offset: 3px; }
   @media (prefers-reduced-motion: reduce) {
@@ -165,6 +168,9 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="BuildPair" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="icon" href={favicon} type="image/png" />
         <link rel="apple-touch-icon" href={appleTouchIcon} />
