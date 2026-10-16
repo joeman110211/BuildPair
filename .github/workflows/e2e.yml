@@ -37,7 +37,7 @@ jobs:
       E2E_PRODUCTION_MUTATION_ACK: ${{ inputs.confirm_mutating && 'I_APPROVE_DISPOSABLE_PRODUCTION_TESTS' || '' }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22.23.1
           cache: npm

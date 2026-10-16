@@ -86,7 +86,7 @@ jobs:
             echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         if: steps.ota-config.outputs.configured == 'true' && steps.ota-safe.outputs.publish == 'true'
         with:
           node-version: 22.23.1
