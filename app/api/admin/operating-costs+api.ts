@@ -115,7 +115,7 @@ export async function POST(request: Request) {
     const currency = input.currency;
     if (currency !== 'GBP' && currency !== 'USD') throw new HttpError(400, 'Choose GBP or USD.');
     const billingPeriod = input.billingPeriod;
-    if (!['monthly', 'annual', 'usage', 'one-off'].includes(String(billingPeriod))) throw new HttpError(400, 'Invalid billing period.');
+    if (billingPeriod !== 'monthly' && billingPeriod !== 'annual' && billingPeriod !== 'usage' && billingPeriod !== 'one-off') throw new HttpError(400, 'Invalid billing period.');
     const amount = validMinor(input.amountMinor);
     const budget = validMinor(input.monthlyBudgetMinor);
     const date = input.invoiceDate;
