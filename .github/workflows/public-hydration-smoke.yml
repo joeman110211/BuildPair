@@ -59,7 +59,7 @@ jobs:
           }
       - name: Preserve responsive browser screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: public-hydration-screenshots
           path: homepage-smoke-artifacts/
