@@ -30,4 +30,4 @@ jobs:
           name: BuildPair-source-${{ github.sha }}
           path: ${{ env.BACKUP_FILE }}
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 14
