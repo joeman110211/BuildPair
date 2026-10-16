@@ -36,6 +36,7 @@ type Session = {
 type VisitorData = {
   storageReady: boolean;
   days?: number;
+  trafficMode?: 'filtered' | 'all';
   summary: Record<string, unknown>;
   topPages: CountRow[];
   topLandingPages: CountRow[];
@@ -98,6 +99,7 @@ function RankedRows({ rows, render }: { rows: CountRow[]; render: (row: CountRow
 export default function VisitorAnalyticsAdmin() {
   const { getToken } = useAuth();
   const [days, setDays] = useState('7');
+  const [trafficMode, setTrafficMode] = useState<'filtered' | 'all'>('filtered');
   const [data, setData] = useState<VisitorData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -108,22 +110,23 @@ export default function VisitorAnalyticsAdmin() {
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
-    try { setBrowserExcluded(window.localStorage.getItem(INTERNAL_EXCLUSION_KEY) === '1'); } catch { /* browser storage unavailable */ }
+    // The owner's admin browser is internal traffic, not another potential customer.
+    try { window.localStorage.setItem(INTERNAL_EXCLUSION_KEY, '1'); setBrowserExcluded(true); } catch { /* browser storage unavailable */ }
   }, []);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
-    void apiFetch<VisitorData>(`/api/admin/visitors?days=${days}`, {}, getToken)
+    void apiFetch<VisitorData>(`/api/admin/visitors?days=${days}&traffic=${trafficMode}`, {}, getToken)
       .then((result) => { if (active) { setData(result); setError(''); setLoading(false); } })
       .catch((cause) => { if (active) { setError(errorMessage(cause)); setLoading(false); } });
     return () => { active = false; };
-  }, [days, getToken]);
+  }, [days, trafficMode, getToken]);
 
   const refresh = () => {
     setLoading(true);
     setError('');
-    void apiFetch<VisitorData>(`/api/admin/visitors?days=${days}`, {}, getToken)
+    void apiFetch<VisitorData>(`/api/admin/visitors?days=${days}&traffic=${trafficMode}`, {}, getToken)
       .then((result) => { setData(result); setLoading(false); })
       .catch((cause) => { setError(errorMessage(cause)); setLoading(false); });
   };
@@ -177,20 +180,31 @@ export default function VisitorAnalyticsAdmin() {
         { value: '30', label: '30 days' },
         { value: '90', label: '90 days' },
       ]} />
+      <View style={{ gap: 8 }}>
+        <Text variant="titleSmall" style={styles.title}>Traffic quality</Text>
+        <SegmentedButtons value={trafficMode} onValueChange={(value) => setTrafficMode(value === 'all' ? 'all' : 'filtered')} buttons={[
+          { value: 'filtered', label: 'Filtered' },
+          { value: 'all', label: 'All activity' },
+        ]} />
+        <Text style={styles.muted}>{trafficMode === 'filtered' ? 'Suspected automated and QA-style visits are excluded from the figures below. These are estimates, not verified unique people.' : 'Unfiltered totals include automated checks and test visits. Do not interpret these as customers.'}</Text>
+      </View>
       <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>
       {data && !data.storageReady ? <HelperText type="info" visible>Visitor analytics storage is not available in production yet.</HelperText> : null}
       {legacyViews > 0 ? <View style={styles.legacyNote}>
         <Text variant="labelLarge" style={styles.title}>Historical page-view note</Text>
-        <Text style={styles.muted}>{compact(legacyViews)} older page views were collected before anonymous visitor IDs were enabled. Those views are preserved, but they cannot honestly be split into unique, new or returning people after the fact. Unique tracking starts {when(summary.uniqueTrackingSince as string | null)}.</Text>
+        <Text style={styles.muted}>{compact(legacyViews)} older page views were collected before anonymous visitor IDs were enabled. Those views are preserved (including older testing activity) and cannot honestly be split into unique, new or returning people after the fact. Unique tracking starts {when(summary.uniqueTrackingSince as string | null)}.</Text>
       </View> : null}
     </AppCard>
 
     <View style={styles.metrics}>
-      <Metric label="Visits" value={compact(summary.sessions)} hint="Aggregate visit starts. Refreshing starts a new visit; no persistent visitor ID is needed." />
+      <Metric label={trafficMode === 'filtered' ? 'Filtered visits' : 'All visit starts'} value={compact(summary.sessions)} hint="Event-based visit starts, not unique people. Refreshing can create another visit." />
+      <Metric label="Suspected test / automation" value={compact(summary.suspectedAutomationVisits)} hint="Likely automated browser activity removed from the filtered view. Includes some historical uncertainty." />
+      <Metric label="All recorded visits" value={compact(summary.unfilteredVisits)} hint="Unfiltered aggregate visit starts for comparison and auditing." />
+      <Metric label="UK filtered visits" value={compact(summary.filteredUkVisits)} hint="UK-location visit starts after excluding suspected automated browsers. Location estimates are imperfect." />
       <Metric label="Page views" value={compact(summary.pageViews)} hint="Page loads and route changes across the selected period." />
       <Metric label="Pages / visit" value={decimal(pagesPerVisit)} hint="Aggregate page views divided by aggregate visits." />
       <Metric label="Meaningful clicks" value={compact(summary.clicks)} hint="Buttons and links used, without recording typed field contents." />
-      <Metric label="Accounts created" value={compact(summary.signups)} hint="BuildPair accounts created in the selected period." />
+      <Metric label="Non-demo accounts created" value={compact(summary.signups)} hint="Database registrations excluding seeded demo records; some may still be owner or QA accounts." />
       <Metric label="Detailed opt-in browsers" value={compact(summary.detailedUniqueVisitors)} hint="Only browsers that explicitly allowed detailed journey analytics." />
       <Metric live label="Detailed live now" value={compact(summary.detailedActiveNow)} hint="Opted-in detailed visitors active in roughly the last 2 minutes." />
       <Metric label="Detailed conversion" value={`${conversionRate.toFixed(1)}%`} hint={`${compact(summary.detailedConvertedSessions)} of ${compact(summary.detailedSessions)} opted-in detailed visits converted.`} />

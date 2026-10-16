@@ -37,7 +37,14 @@ function legacyChoice(): 'basic' | 'detailed' | 'off' | null {
 
 function trackingMode(): TrackingMode {
   if (!onWeb()) return 'off';
+  // Automated browser checks are diagnostics, not customers. Do not record them as visits.
+  const automatedNavigator = navigator as Navigator & { webdriver?: boolean };
+  if (automatedNavigator.webdriver || /HeadlessChrome|Playwright|Puppeteer/i.test(navigator.userAgent || '')) return 'off';
   try {
+    if (new URLSearchParams(window.location.search).get('bp_test') === '1') {
+      window.sessionStorage.setItem('buildpair_qa_visit_v1', '1');
+    }
+    if (window.sessionStorage.getItem('buildpair_qa_visit_v1') === '1') return 'off';
     if (window.localStorage.getItem(INTERNAL_ANALYTICS_EXCLUSION_KEY) === '1') return 'off';
   } catch { /* storage may be unavailable */ }
 
