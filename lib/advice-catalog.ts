@@ -7,6 +7,7 @@ import {
 } from '@/lib/advice-library';
 import { SEO_ADVICE_BATCH } from '@/lib/seo-advice-batch';
 import { ADVICE_EXPANSION } from '@/lib/advice-expansion';
+import { ADVICE_2026_OCTOBER_BATCH } from '@/lib/advice-october-batch';
 
 const SEO_BATCH_AS_ADVICE: AdviceGuide[] = SEO_ADVICE_BATCH.map((guide) => ({
   slug: guide.slug,
@@ -24,7 +25,7 @@ const SEO_BATCH_AS_ADVICE: AdviceGuide[] = SEO_ADVICE_BATCH.map((guide) => ({
   relatedSlugs: guide.related,
 }));
 
-export const ALL_ADVICE_GUIDES: AdviceGuide[] = [...ADVICE_GUIDES, ...SEO_BATCH_AS_ADVICE, ...ADVICE_EXPANSION];
+export const ALL_ADVICE_GUIDES: AdviceGuide[] = [...ADVICE_GUIDES, ...SEO_BATCH_AS_ADVICE, ...ADVICE_EXPANSION, ...ADVICE_2026_OCTOBER_BATCH];
 
 export function allAdviceGuideBySlug(slug: string) {
   return ALL_ADVICE_GUIDES.find((guide) => guide.slug === slug);
