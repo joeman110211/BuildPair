@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { HelperText, Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
@@ -184,6 +184,47 @@ export default function TraderOnboarding() {
 
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
 
+  // Record only the journey stage and error category; never send names, addresses or form values.
+  const trackOnboarding = useCallback((eventType: 'flow_started' | 'flow_progress' | 'flow_completed', stage: string, reason?: string) => {
+    void apiFetch('/api/product-events', {
+      method: 'POST',
+      body: JSON.stringify({
+        eventType,
+        flow: 'trader_onboarding',
+        step: stage,
+        path: '/trader/onboarding',
+        details: reason ? { reason } : {},
+      }),
+    }, () => getTokenRef.current()).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    let navigationType = 'unknown';
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const navigation = window.performance?.getEntriesByType('navigation')?.[0] as PerformanceNavigationTiming | undefined;
+      navigationType = navigation?.type ?? 'unknown';
+    }
+    trackOnboarding('flow_started', 'step_1', navigationType === 'reload' ? 'browser_reload' : 'page_entry');
+  }, [draftReady, trackOnboarding]);
+
+  useEffect(() => {
+    if (!draftReady || step === 0) return;
+    trackOnboarding('flow_progress', `step_${step + 1}`);
+  }, [draftReady, step, trackOnboarding]);
+
+  useEffect(() => {
+    if (!draftReady || Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const onError = () => trackOnboarding('flow_progress', `step_${step + 1}`, 'browser_error');
+    const onUnhandled = () => trackOnboarding('flow_progress', `step_${step + 1}`, 'unhandled_rejection');
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onUnhandled);
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onUnhandled);
+    };
+  }, [draftReady, step, trackOnboarding]);
+
   const applyDraft = useCallback((draft: OnboardingDraft) => {
     setStep(Math.max(0, Math.min(3, draft.step ?? 0)));
     setBusinessName(draft.businessName ?? '');
@@ -251,12 +292,15 @@ export default function TraderOnboarding() {
           applyDraft(draft);
           setDraftStatus('Draft restored ✓');
         }
-      } else setError(errorMessage(e));
+      } else {
+        setError(errorMessage(e));
+        trackOnboarding('flow_progress', 'loading_profile', 'profile_load_failed');
+      }
     } finally {
       setLoadingExisting(false);
       setDraftReady(true);
     }
-  }, [applyDraft]);
+  }, [applyDraft, trackOnboarding]);
 
   useEffect(() => { void loadExisting(); }, [loadExisting]);
 
@@ -351,9 +395,11 @@ export default function TraderOnboarding() {
         }),
       }, getToken);
       await clearDraft(DRAFT_KEY);
+      trackOnboarding('flow_completed', 'published');
       router.replace(existingProfile ? '/trader/dashboard' : '/trader/google-reviews?onboarding=1');
     } catch (e) {
       setError(errorMessage(e));
+      trackOnboarding('flow_progress', 'publish', 'profile_publish_failed');
     } finally {
       setBusy(false);
     }
