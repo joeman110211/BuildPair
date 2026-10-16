@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/expo';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Chip, Text } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
@@ -67,7 +67,11 @@ function recordLabel(type: HomeRecordItem['entryType']) {
 }
 
 export default function HomeRecordScreen() {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
+  // Clerk can refresh the getToken function reference while the page is open.
+  // Keep the latest token getter without triggering another data fetch/render cycle.
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
   const router = useRouter();
   const [projects, setProjects] = useState<HomeProject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,19 +81,19 @@ export default function HomeRecordScreen() {
     try {
       setLoading(true);
       setError('');
-      const result = await apiFetch<HomeRecordResponse>('/api/home-record', {}, getToken);
+      const result = await apiFetch<HomeRecordResponse>('/api/home-record', {}, () => getTokenRef.current());
       setProjects(result.projects);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => void load(), 0);
-    return () => clearTimeout(timer);
-  }, [load]);
+    if (!isLoaded || !isSignedIn) return;
+    void load();
+  }, [isLoaded, isSignedIn, load]);
 
   const properties = useMemo<PropertyGroup[]>(() => {
     const grouped = new Map<string, PropertyGroup>();
