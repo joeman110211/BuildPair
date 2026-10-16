@@ -16,7 +16,7 @@ import { Reveal } from '@/components/Reveal';
 import { TRADE_CATEGORIES } from '@/constants/options';
 import { signUpHref } from '@/lib/account-mode';
 import { BUILDPAY_OPEN } from '@/lib/launch-config';
-import { colors, controlHeights, publicResponsiveMetrics, radii } from '@/constants/theme';
+import { colors, controlHeights, layout, publicResponsiveMetrics, radii } from '@/constants/theme';
 
 const POPULAR_TRADES = ['Tiling', 'Plumbing', 'Electrical', 'Building & Extensions', 'Roofing & Roofline', 'Painting & Decorating', 'Kitchens', 'Bathrooms'] as const;
 const FAQS = [
@@ -31,7 +31,7 @@ function SemanticHeading({ level, style, children }: { level: 1 | 2 | 3; style: 
     const flattened = StyleSheet.flatten(style) ?? {};
     const lineHeight = typeof flattened.lineHeight === 'number' ? `${flattened.lineHeight}px` : flattened.lineHeight;
     return createElement(`h${level}`, {
-      style: { margin: 0, whiteSpace: 'pre-line', ...flattened, lineHeight },
+      style: { margin: 0, whiteSpace: 'pre-line', fontFamily: 'Inter, system-ui, sans-serif', ...flattened, lineHeight },
     }, children);
   }
 
@@ -135,33 +135,38 @@ export default function LandingPageRefined() {
     </View></View></Reveal>
 
 
-    {/* Link asChild must receive a flat style object: Slot merges array indexes into invalid CSS properties. */}
+    {/* Preserve this exact homepage section position. Flatten the Link child style to avoid
+        Expo Router's Slot spreading array indices into invalid browser CSS. */}
     <View testID="bp-home-project-plus-section" style={[styles.band, styles.projectPlusBand]}>
       <View style={styles.section}>
-        <View style={[styles.projectPlusCard, mobile && styles.projectPlusCardMobile]}>
-          <View style={styles.projectPlusLabelRow}>
-            <Text style={styles.projectPlusSparkle}>✦</Text>
-            <Text style={styles.projectPlusEyebrow}>BUILDPAIR PROJECT+</Text>
+        <View style={[styles.projectPlusLayout, mobile && styles.projectPlusLayoutMobile]}>
+          <View testID="bp-home-project-plus-content" style={styles.projectPlusCopy}>
+            <View style={styles.projectPlusLabelRow}>
+              <Text style={styles.projectPlusSparkle}>✦</Text>
+              <Text style={styles.projectPlusEyebrow}>BUILDPAIR PROJECT+</Text>
+            </View>
+            <SemanticHeading level={2} style={[styles.projectPlusTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>Imagine it. Plan it. Bring it to life.</SemanticHeading>
+            <Text style={styles.projectPlusBody}>Your renovation starts with an idea. Explore AI room designs, plan your project and find the right tradespeople to make it happen.</Text>
+            <View style={styles.projectPlusPlan}>
+              <Text style={styles.projectPlusPrice}>£4.99/month for homeowners</Text>
+              <Text style={styles.projectPlusPro}>Also included at no extra cost with BuildPair Pro for tradespeople.</Text>
+            </View>
+            <Link href={signUpHref('customer', '/customer/project-plus')} asChild>
+              <Button testID="bp-home-project-plus-signup" mode="contained" style={StyleSheet.flatten([styles.button, mobile && styles.fullButton])} contentStyle={styles.buttonContent}>Sign up to explore Project+ →</Button>
+            </Link>
+            <Text style={styles.projectPlusDisclaimer}>Standard homeowner marketplace and project tools remain free.</Text>
           </View>
-          <SemanticHeading level={2} style={[styles.projectPlusTitle, { fontSize: metrics.sectionTitleFontSize, lineHeight: metrics.sectionTitleLineHeight }]}>Imagine it. Plan it. Bring it to life.</SemanticHeading>
-          <Text style={styles.projectPlusBody}>Your renovation starts with an idea. Explore AI room designs, plan your project and find the right tradespeople to make it happen.</Text>
-          <View style={styles.projectPlusImageGrid}>
-            {PROJECT_PLUS_INSPIRATION.map((item) => (
-              <View key={item.caption} style={styles.projectPlusImageItem}>
-                <ProjectPlusImage uri={item.uri} alt={item.alt} />
-                <Text style={styles.projectPlusImageCaption}>{item.caption}</Text>
-              </View>
-            ))}
+          <View testID="bp-home-project-plus-images" style={styles.projectPlusMedia}>
+            <View style={styles.projectPlusImageGrid}>
+              {PROJECT_PLUS_INSPIRATION.map((item) => (
+                <View key={item.caption} style={styles.projectPlusImageItem}>
+                  <ProjectPlusImage uri={item.uri} alt={item.alt} />
+                  <Text style={styles.projectPlusImageCaption}>{item.caption}</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={styles.projectPlusDisclaimer}>Illustrative examples, not an actual Project+ result or a before-and-after of the same room.</Text>
           </View>
-          <Text style={styles.projectPlusDisclaimer}>Illustrative examples, not an actual Project+ result or a before-and-after of the same room.</Text>
-          <View style={styles.projectPlusPlan}>
-            <Text style={styles.projectPlusPrice}>£4.99/month for homeowners</Text>
-            <Text style={styles.projectPlusPro}>Also included at no extra cost with BuildPair Pro for tradespeople.</Text>
-          </View>
-          <Link href={signUpHref('customer', '/customer/project-plus')} asChild>
-            <Button testID="bp-home-project-plus-signup" mode="contained" style={StyleSheet.flatten([styles.button, mobile && styles.fullButton])} contentStyle={styles.buttonContent}>Sign up to explore Project+ →</Button>
-          </Link>
-          <Text style={styles.projectPlusDisclaimer}>Standard homeowner marketplace and project tools remain free.</Text>
         </View>
       </View>
     </View>
@@ -205,32 +210,34 @@ const styles = StyleSheet.create({
   localNoticeText: { maxWidth: 1100, color: colors.charcoalSoft, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   page: { flex: 1, backgroundColor: colors.background }, pageContent: { flexGrow: 1, width: '100%', maxWidth: '100%' }, hidden: { display: 'none' },
   hero: { width: '100%', maxWidth: 1100, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 64, alignItems: 'center', gap: 20 },
-  heroMobile: { paddingHorizontal: 16, paddingVertical: 36, gap: 16 }, heroTitle: { color: colors.charcoal, fontSize: 48, lineHeight: 55, fontWeight: '900', letterSpacing: -1.6, textAlign: 'center' }, heroTitleMobile: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
+  heroMobile: { paddingHorizontal: 16, paddingVertical: 36, gap: 16 }, heroTitle: { color: colors.charcoal, fontSize: 48, lineHeight: 55, fontWeight: '800', letterSpacing: -1.4, textAlign: 'center' }, heroTitleMobile: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
   heroBody: { color: colors.charcoalSoft, fontSize: 17, lineHeight: 26, textAlign: 'center', maxWidth: 580 }, heroActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 8 },
   benefits: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 }, benefit: { color: colors.muted, fontSize: 12, fontWeight: '700' }, benefitDot: { color: colors.primary },
   band: { width: '100%' }, whiteBand: { backgroundColor: colors.surfaceRaised }, jobsBand: { backgroundColor: colors.surfaceSoft, borderBottomWidth: 1, borderBottomColor: colors.border }, productBand: { backgroundColor: colors.navySoft },
-  section: { width: '100%', maxWidth: 1140, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 36, gap: 22 }, heading: { width: '100%', maxWidth: 740, alignSelf: 'center', alignItems: 'center', gap: 8 },
-  eyebrow: { color: colors.primaryDark, fontSize: 11, lineHeight: 16, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', textAlign: 'center' }, sectionTitle: { color: colors.charcoal, fontWeight: '900', textAlign: 'center', letterSpacing: -0.5 }, sectionBody: { color: colors.muted, lineHeight: 23, textAlign: 'center', maxWidth: 640 },
+  section: { width: '100%', maxWidth: layout.pageMaxWidth, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 36, gap: 22 }, heading: { width: '100%', maxWidth: 740, alignSelf: 'center', alignItems: 'center', gap: 8 },
+  eyebrow: { color: colors.primaryDark, fontSize: 11, lineHeight: 16, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', textAlign: 'center' }, sectionTitle: { color: colors.charcoal, fontWeight: '800', textAlign: 'center', letterSpacing: -0.5 }, sectionBody: { color: colors.muted, lineHeight: 23, textAlign: 'center', maxWidth: 640 },
   button: { borderRadius: radii.md, alignSelf: 'center', maxWidth: '100%' }, buttonContent: { minHeight: controlHeights.standard, paddingHorizontal: 12 }, fullButton: { width: '100%' },
   searchRow: { width: '100%', maxWidth: 760, alignSelf: 'center', flexDirection: 'row', gap: 10, alignItems: 'center' }, searchRowMobile: { flexDirection: 'column', alignItems: 'stretch' }, searchInput: { flex: 1, width: '100%', minWidth: 0, backgroundColor: colors.surfaceRaised }, inputOutline: { borderRadius: radii.md },
   tradeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, tradeCard: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 150, minWidth: 0, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, backgroundColor: colors.surfaceRaised, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 52 }, tradeName: { flex: 1, color: colors.charcoal, fontSize: 14, fontWeight: '700' }, tradeArrow: { color: colors.primary, fontSize: 18 }, pressed: { opacity: 0.8 },
   stepGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 20 }, step: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 280, minWidth: 0, gap: 8, padding: 12 }, stepNumber: { color: colors.primary, fontSize: 26, fontWeight: '900' }, cardTitle: { color: colors.charcoal, fontSize: 20, lineHeight: 26, fontWeight: '800' }, cardText: { color: colors.charcoalSoft, lineHeight: 23 },
   choiceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 }, choice: { flexShrink: 1, maxWidth: '100%', flexGrow: 1, flexBasis: 360, minWidth: 0, borderRadius: radii.xl, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, padding: 22, gap: 12 }, paymentChoice: { backgroundColor: colors.accentSoft, borderColor: '#CDE2DE' }, smallText: { color: colors.muted, fontSize: 12, lineHeight: 18 }, trustStrip: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 22, gap: 8 }, trustTitle: { color: colors.charcoal, fontSize: 17, fontWeight: '800' },
 
-  projectPlusBand: { backgroundColor: colors.surfaceSoft },
-  projectPlusCard: { maxWidth: 900, width: '100%', alignSelf: 'center', backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: radii.xl, padding: 28, gap: 14 },
-  projectPlusCardMobile: { padding: 18, gap: 12 },
+  projectPlusBand: { backgroundColor: colors.surfaceSoft, borderTopWidth: 1, borderTopColor: colors.border, borderBottomWidth: 1, borderBottomColor: colors.border },
+  projectPlusLayout: { width: '100%', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'space-between', gap: 32 },
+  projectPlusLayoutMobile: { flexDirection: 'column', alignItems: 'stretch', gap: 20 },
+  projectPlusCopy: { flex: 1, minWidth: 0, gap: 14, alignItems: 'flex-start' },
+  projectPlusMedia: { flex: 1, minWidth: 0, gap: 8 },
   projectPlusLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   projectPlusSparkle: { color: colors.primary, fontSize: 24, lineHeight: 28 },
-  projectPlusEyebrow: { color: colors.primaryDark, fontSize: 12, lineHeight: 18, fontWeight: '900', letterSpacing: 0.8 },
-  projectPlusTitle: { color: colors.charcoal, fontWeight: '900', letterSpacing: -0.5 },
-  projectPlusBody: { color: colors.charcoalSoft, lineHeight: 23, maxWidth: 660 },
+  projectPlusEyebrow: { color: colors.primaryDark, fontSize: 11, lineHeight: 16, fontWeight: '800', letterSpacing: 1 },
+  projectPlusTitle: { color: colors.charcoal, fontWeight: '800', letterSpacing: -0.5 },
+  projectPlusBody: { color: colors.charcoalSoft, lineHeight: 23, maxWidth: 540 },
   projectPlusImageGrid: { flexDirection: 'row', gap: 12 },
   projectPlusImageItem: { flex: 1, minWidth: 0, gap: 6 },
-  projectPlusImage: { width: '100%', aspectRatio: 1.5, borderRadius: radii.md, backgroundColor: colors.surfaceStrong },
+  projectPlusImage: { width: '100%', aspectRatio: 1.25, borderRadius: radii.md, backgroundColor: colors.surfaceStrong },
   projectPlusImageCaption: { color: colors.charcoalSoft, fontSize: 13, lineHeight: 19, fontWeight: '700' },
   projectPlusDisclaimer: { color: colors.muted, fontSize: 12, lineHeight: 18 },
-  projectPlusPlan: { gap: 5 },
+  projectPlusPlan: { gap: 5, borderLeftWidth: 3, borderLeftColor: colors.primary, paddingLeft: 12, marginTop: 4 },
   projectPlusPrice: { color: colors.charcoal, fontSize: 16, lineHeight: 23, fontWeight: '800' },
   projectPlusPro: { color: colors.muted, fontSize: 13, lineHeight: 20 },
   faqList: { gap: 8, width: '100%', maxWidth: 820, alignSelf: 'center' }, faqCard: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 16, gap: 12 }, faqRow: { flexDirection: 'row', gap: 12, justifyContent: 'space-between', alignItems: 'center' }, faqQuestion: { flex: 1, color: colors.charcoal, fontSize: 16, lineHeight: 23, fontWeight: '700' }, faqToggle: { color: colors.primary, fontSize: 22 },

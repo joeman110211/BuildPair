@@ -63,6 +63,28 @@ try {
     const projectHref = await projectSignupLink.getAttribute('href');
     assert.ok(projectHref?.includes('mode=customer') && decodeURIComponent(projectHref).includes('/customer/project-plus'),
       size.name + ': Project+ signup points to the wrong journey: ' + projectHref);
+    // Homepage order is deliberate: Project+ follows How BuildPair works and precedes Advice Hub.
+    const homeSectionOrder = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return [
+        text.indexOf('From first search to finished job.'),
+        text.indexOf('Imagine it. Plan it. Bring it to life.'),
+        text.indexOf('Practical advice for your next project.'),
+      ];
+    });
+    assert.ok(homeSectionOrder.every((index) => index >= 0) &&
+      homeSectionOrder[0] < homeSectionOrder[1] && homeSectionOrder[1] < homeSectionOrder[2],
+      size.name + ': Project+ homepage section moved from its approved position');
+    const projectCopy = await projectPlus.getByTestId('bp-home-project-plus-content').boundingBox();
+    const projectImages = await projectPlus.getByTestId('bp-home-project-plus-images').boundingBox();
+    assert.ok(projectCopy && projectImages, size.name + ': Project+ layout is missing');
+    if (size.width < 720) {
+      assert.ok(projectImages.y >= projectCopy.y + projectCopy.height - 2, size.name + ': Project+ must stack on mobile');
+    } else {
+      assert.ok(projectImages.x >= projectCopy.x + projectCopy.width - 2, size.name + ': Project+ should use the homepage two-column layout');
+    }
+    const headingFont = await heading.evaluate((el) => getComputedStyle(el).fontFamily);
+    assert.ok(headingFont.toLowerCase().includes('inter'), size.name + ': hero is not using shared Inter typography');
     await page.waitForTimeout(2_000);
     assert.ok(await heading.isVisible(), size.name + ': homepage vanished after Project+ hydration');
     assert.ok(await projectPlus.getByRole('heading', { name: 'Imagine it. Plan it. Bring it to life.' }).isVisible(),

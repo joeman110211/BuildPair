@@ -1,8 +1,10 @@
-import { MD3LightTheme } from 'react-native-paper';
+import { MD3LightTheme, configureFonts } from 'react-native-paper';
+import { Platform } from 'react-native';
 
 export const colors = {
   primary: '#D35400',
   primaryDark: '#963B00',
+  action: '#BE4700',
   primarySoft: '#FFF0E5',
   secondary: '#F2A65A',
   secondarySoft: '#FFF6E8',
@@ -49,9 +51,9 @@ export const spacing = {
 
 export const radii = {
   sm: 10,
-  md: 14,
-  lg: 18,
-  xl: 22,
+  md: 12,
+  lg: 16,
+  xl: 16,
   pill: 999,
 } as const;
 
@@ -62,8 +64,8 @@ export const layout = {
 } as const;
 
 export const controlHeights = {
-  standard: 46,
-  prominent: 50,
+  standard: 48,
+  prominent: 52,
 } as const;
 
 export const shadows = {
@@ -76,8 +78,8 @@ export const shadows = {
   },
   raised: {
     shadowColor: colors.charcoal,
-    shadowOpacity: 0.055,
-    shadowRadius: 16,
+    shadowOpacity: 0.045,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
     elevation: 2,
   },
@@ -121,9 +123,12 @@ export function publicResponsiveMetrics(width: number) {
 export const paperTheme = {
   ...MD3LightTheme,
   roundness: radii.md,
+  // Paper supplies the typography on public, account and admin screens alike.
+  // Keep native font defaults until Inter is bundled for the mobile apps.
+  fonts: Platform.OS === 'web' ? configureFonts({ config: { fontFamily: 'Inter, system-ui, sans-serif' } }) : MD3LightTheme.fonts,
   colors: {
     ...MD3LightTheme.colors,
-    primary: colors.primary,
+    primary: colors.action,
     onPrimary: '#FFFFFF',
     primaryContainer: colors.primarySoft,
     onPrimaryContainer: colors.primaryDark,
