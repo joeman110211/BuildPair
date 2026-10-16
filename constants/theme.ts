@@ -125,7 +125,7 @@ export const paperTheme = {
   roundness: radii.md,
   // Paper supplies the typography on public, account and admin screens alike.
   // Keep native font defaults until Inter is bundled for the mobile apps.
-  fonts: Platform.OS === 'web' ? configureFonts({ config: { fontFamily: 'Inter' } }) : MD3LightTheme.fonts,
+  fonts: Platform.OS === 'web' ? configureFonts({ config: { fontFamily: 'Inter, system-ui, sans-serif' } }) : MD3LightTheme.fonts,
   colors: {
     ...MD3LightTheme.colors,
     primary: colors.action,
