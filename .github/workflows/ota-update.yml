@@ -27,7 +27,7 @@ jobs:
       EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME: qrrcn7ma
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           fetch-depth: 2
