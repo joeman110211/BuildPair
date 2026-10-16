@@ -73,6 +73,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     description: 'Check the services BuildPair depends on before assuming an app screen is broken.',
     items: [
       { href: '/admin/system', label: 'System health', shortLabel: 'System', description: 'Check database, authentication, AI, media, email and payment integrations.' },
+      { href: '/admin/operating-costs', label: 'Operating costs', shortLabel: 'Costs', description: 'Review live usage signals, record supplier invoices and set spending targets.' },
     ],
   },
 ];

@@ -20,6 +20,7 @@ export default function AdminLayout() {
             <Stack.Screen name="insights" />
             <Stack.Screen name="visitors" />
             <Stack.Screen name="system" />
+            <Stack.Screen name="operating-costs" />
             <Stack.Screen name="presence" />
             <Stack.Screen name="jobs" />
             <Stack.Screen name="profiles" />

@@ -272,6 +272,7 @@ export default function AdminDashboard() {
         <NavButton href="/admin/moderation" label="Moderation" detail="reports & actions" />
         <NavButton href="/admin/payment-disputes" label="BuildPay records" detail="not yet available" />
         <NavButton href="/admin/system" label="System health" detail="live dependency checks" />
+        <NavButton href="/admin/operating-costs" label="Operating costs" detail="invoices & spending budgets" />
         <NavButton href="/admin/assistant" label="Admin Assistant" detail="ask across BuildPair" />
       </AppCard>
     </View>

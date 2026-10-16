@@ -64,4 +64,4 @@ jobs:
           name: public-hydration-screenshots
           path: homepage-smoke-artifacts/
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 3

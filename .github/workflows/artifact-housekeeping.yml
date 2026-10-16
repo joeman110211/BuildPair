@@ -1,0 +1,62 @@
+name: Clear old BuildPair build artefacts
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 3 * * 0'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/artifact-housekeeping.yml'
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: buildpair-artifact-housekeeping
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Keep current Android builds and recent diagnostics
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo, { owner, repo, per_page: 100 });
+            const ordered = artifacts.filter(a => !a.expired).sort((a,b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+            const newestAndroid = new Set();
+            const now = Date.now();
+            let removed = 0;
+            let savedBytes = 0;
+
+            for (const artifact of ordered) {
+              const isAndroid = /buildpair-(admin-)?android-(production-)?apk/i.test(artifact.name);
+              // Never delete the newest downloadable APK of either app.
+              const type = artifact.name.includes('admin') ? 'admin' : 'customer';
+              if (isAndroid && !newestAndroid.has(type)) {
+                newestAndroid.add(type);
+                continue;
+              }
+
+              const ageDays = (now - Date.parse(artifact.created_at)) / 86400000;
+              const retentionDays = isAndroid ? 14 : /source/i.test(artifact.name) ? 14 : /e2e/i.test(artifact.name) ? 7 : 3;
+              if (ageDays < retentionDays) continue;
+
+              try {
+                await github.rest.actions.deleteArtifact({ owner, repo, artifact_id: artifact.id });
+                removed++;
+                savedBytes += artifact.size_in_bytes || 0;
+                core.info('Deleted expired evidence: ' + artifact.name + ' (' + Math.round(ageDays) + ' days old)');
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+            }
+            await core.summary
+              .addHeading('BuildPair Actions storage cleanup')
+              .addRaw('Removed ' + removed + ' old artefacts, approximately ' + (savedBytes / 1048576).toFixed(1) + ' MiB. Latest Android APKs retained.')
+              .write();
