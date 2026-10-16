@@ -34,4 +34,4 @@ jobs:
           name: buildpair-lighthouse-${{ github.run_id }}
           path: .lighthouseci
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
