@@ -34,6 +34,8 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const requestedDays = Number(url.searchParams.get('days') || 7);
     const days = [1, 7, 30, 90].includes(requestedDays) ? requestedDays : 7;
+    const trafficMode = url.searchParams.get('traffic') === 'all' ? 'all' : 'filtered';
+    const filterTraffic = trafficMode === 'filtered';
     const sessionId = url.searchParams.get('sessionId');
     const sql = getSql();
 
@@ -62,6 +64,7 @@ export async function GET(request: Request) {
       recentSessions,
       signupRows,
       signupCampaignRows,
+      trafficQualityRows,
     ] = await Promise.all([
       sql`
         SELECT
@@ -77,6 +80,23 @@ export async function GET(request: Request) {
           coalesce(sum(event_count) FILTER (WHERE event_type = 'page_time'), 0)::bigint AS "pageTimeSamples"
         FROM visitor_analytics_hourly
         WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
+              OR (
+                dimensions->>'platform' = 'Linux x86_64'
+                AND dimensions->>'browser' = 'Chrome'
+                AND (
+                  (dimensions->>'screen' = '1900x1100'
+                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                  OR (dimensions->>'countryCode' = 'US'
+                    AND dimensions->>'timezone' = 'America/New_York'
+                    AND dimensions->>'language' = 'en-US'
+                    AND dimensions->>'connection' IN ('3g','4g'))
+                )
+              )
+              OR (dimensions->>'deviceType' = 'tablet'
+                AND dimensions->>'touch' = 'false'
+                AND dimensions->>'countryCode' = 'US'
+                AND dimensions->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))), false))
       `,
       sql`
         WITH cutoff AS (
@@ -99,6 +119,23 @@ export async function GET(request: Request) {
           LEFT JOIN page_counts p ON p.session_id = s.id
           CROSS JOIN cutoff c
           WHERE s.started_at >= c.since
+            AND (${!filterTraffic} OR s.converted OR NOT coalesce((coalesce(s.device->>'automationHint', '') = 'true'
+            OR (
+              s.device->>'platform' = 'Linux x86_64'
+              AND s.device->>'browser' = 'Chrome'
+              AND (
+                (s.device->>'screen' = '1900x1100'
+                  AND coalesce(s.device->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                OR (coalesce(s.geo->>'countryCode',s.geo->>'country') = 'US'
+                  AND s.device->>'timezone' = 'America/New_York'
+                  AND s.device->>'language' = 'en-US'
+                  AND s.device->>'connection' IN ('3g','4g'))
+              )
+            )
+            OR (s.device->>'deviceType' = 'tablet'
+              AND s.device->>'touch' = 'false'
+              AND coalesce(s.geo->>'countryCode',s.geo->>'country') = 'US'
+              AND s.device->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))), false))
         )
         SELECT
           count(*)::int AS sessions,
@@ -135,6 +172,23 @@ export async function GET(request: Request) {
           coalesce(sum(total_value) FILTER (WHERE event_type = 'page_time') / nullif(sum(event_count) FILTER (WHERE event_type = 'page_time'), 0), 0)::double precision AS "avgSeconds"
         FROM visitor_analytics_hourly
         WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
+              OR (
+                dimensions->>'platform' = 'Linux x86_64'
+                AND dimensions->>'browser' = 'Chrome'
+                AND (
+                  (dimensions->>'screen' = '1900x1100'
+                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                  OR (dimensions->>'countryCode' = 'US'
+                    AND dimensions->>'timezone' = 'America/New_York'
+                    AND dimensions->>'language' = 'en-US'
+                    AND dimensions->>'connection' IN ('3g','4g'))
+                )
+              )
+              OR (dimensions->>'deviceType' = 'tablet'
+                AND dimensions->>'touch' = 'false'
+                AND dimensions->>'countryCode' = 'US'
+                AND dimensions->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))), false))
           AND coalesce(dimensions->>'path', '') <> ''
         GROUP BY dimensions->>'path'
         ORDER BY views DESC, "avgSeconds" DESC
@@ -144,6 +198,23 @@ export async function GET(request: Request) {
         SELECT dimensions->>'path' AS path, sum(event_count)::bigint AS sessions
         FROM visitor_analytics_hourly
         WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
+              OR (
+                dimensions->>'platform' = 'Linux x86_64'
+                AND dimensions->>'browser' = 'Chrome'
+                AND (
+                  (dimensions->>'screen' = '1900x1100'
+                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                  OR (dimensions->>'countryCode' = 'US'
+                    AND dimensions->>'timezone' = 'America/New_York'
+                    AND dimensions->>'language' = 'en-US'
+                    AND dimensions->>'connection' IN ('3g','4g'))
+                )
+              )
+              OR (dimensions->>'deviceType' = 'tablet'
+                AND dimensions->>'touch' = 'false'
+                AND dimensions->>'countryCode' = 'US'
+                AND dimensions->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))), false))
           AND event_type = 'visit_start'
           AND coalesce(dimensions->>'path', '') <> ''
         GROUP BY dimensions->>'path'
@@ -157,6 +228,23 @@ export async function GET(request: Request) {
           sum(event_count)::bigint AS clicks
         FROM visitor_analytics_hourly
         WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
+              OR (
+                dimensions->>'platform' = 'Linux x86_64'
+                AND dimensions->>'browser' = 'Chrome'
+                AND (
+                  (dimensions->>'screen' = '1900x1100'
+                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                  OR (dimensions->>'countryCode' = 'US'
+                    AND dimensions->>'timezone' = 'America/New_York'
+                    AND dimensions->>'language' = 'en-US'
+                    AND dimensions->>'connection' IN ('3g','4g'))
+                )
+              )
+              OR (dimensions->>'deviceType' = 'tablet'
+                AND dimensions->>'touch' = 'false'
+                AND dimensions->>'countryCode' = 'US'
+                AND dimensions->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))), false))
           AND event_type = 'click'
           AND coalesce(dimensions->>'target', '') <> ''
         GROUP BY dimensions->>'target', dimensions->>'targetPath'
@@ -172,6 +260,23 @@ export async function GET(request: Request) {
           sum(event_count)::bigint AS sessions
         FROM visitor_analytics_hourly
         WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
+              OR (
+                dimensions->>'platform' = 'Linux x86_64'
+                AND dimensions->>'browser' = 'Chrome'
+                AND (
+                  (dimensions->>'screen' = '1900x1100'
+                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                  OR (dimensions->>'countryCode' = 'US'
+                    AND dimensions->>'timezone' = 'America/New_York'
+                    AND dimensions->>'language' = 'en-US'
+                    AND dimensions->>'connection' IN ('3g','4g'))
+                )
+              )
+              OR (dimensions->>'deviceType' = 'tablet'
+                AND dimensions->>'touch' = 'false'
+                AND dimensions->>'countryCode' = 'US'
+                AND dimensions->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))), false))
           AND event_type = 'visit_start'
         GROUP BY 1, 2, 3, 4
         ORDER BY sessions DESC
@@ -185,6 +290,23 @@ export async function GET(request: Request) {
           sum(event_count)::bigint AS sessions
         FROM visitor_analytics_hourly
         WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
+              OR (
+                dimensions->>'platform' = 'Linux x86_64'
+                AND dimensions->>'browser' = 'Chrome'
+                AND (
+                  (dimensions->>'screen' = '1900x1100'
+                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                  OR (dimensions->>'countryCode' = 'US'
+                    AND dimensions->>'timezone' = 'America/New_York'
+                    AND dimensions->>'language' = 'en-US'
+                    AND dimensions->>'connection' IN ('3g','4g'))
+                )
+              )
+              OR (dimensions->>'deviceType' = 'tablet'
+                AND dimensions->>'touch' = 'false'
+                AND dimensions->>'countryCode' = 'US'
+                AND dimensions->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))), false))
           AND event_type = 'visit_start'
         GROUP BY 1, 2, 3
         ORDER BY sessions DESC
@@ -199,6 +321,23 @@ export async function GET(request: Request) {
           sum(event_count)::bigint AS sessions
         FROM visitor_analytics_hourly
         WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
+              OR (
+                dimensions->>'platform' = 'Linux x86_64'
+                AND dimensions->>'browser' = 'Chrome'
+                AND (
+                  (dimensions->>'screen' = '1900x1100'
+                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                  OR (dimensions->>'countryCode' = 'US'
+                    AND dimensions->>'timezone' = 'America/New_York'
+                    AND dimensions->>'language' = 'en-US'
+                    AND dimensions->>'connection' IN ('3g','4g'))
+                )
+              )
+              OR (dimensions->>'deviceType' = 'tablet'
+                AND dimensions->>'touch' = 'false'
+                AND dimensions->>'countryCode' = 'US'
+                AND dimensions->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))), false))
           AND event_type = 'visit_start'
         GROUP BY 1, 2, 3, 4
         ORDER BY sessions DESC
@@ -208,6 +347,23 @@ export async function GET(request: Request) {
         SELECT dimensions->>'path' AS path, dimensions->>'target' AS field, sum(event_count)::bigint AS interactions
         FROM visitor_analytics_hourly
         WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
+              OR (
+                dimensions->>'platform' = 'Linux x86_64'
+                AND dimensions->>'browser' = 'Chrome'
+                AND (
+                  (dimensions->>'screen' = '1900x1100'
+                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                  OR (dimensions->>'countryCode' = 'US'
+                    AND dimensions->>'timezone' = 'America/New_York'
+                    AND dimensions->>'language' = 'en-US'
+                    AND dimensions->>'connection' IN ('3g','4g'))
+                )
+              )
+              OR (dimensions->>'deviceType' = 'tablet'
+                AND dimensions->>'touch' = 'false'
+                AND dimensions->>'countryCode' = 'US'
+                AND dimensions->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))), false))
           AND event_type = 'form_interaction'
           AND coalesce(dimensions->>'target', '') <> ''
         GROUP BY 1, 2
@@ -240,6 +396,23 @@ export async function GET(request: Request) {
           (SELECT count(*)::int FROM visitor_sessions other WHERE other.visitor_id = s.visitor_id) AS "visitCount"
         FROM visitor_sessions s
         WHERE s.started_at >= now() - (${days}::int * interval '1 day')
+          AND (${!filterTraffic} OR s.converted OR NOT coalesce((coalesce(s.device->>'automationHint', '') = 'true'
+            OR (
+              s.device->>'platform' = 'Linux x86_64'
+              AND s.device->>'browser' = 'Chrome'
+              AND (
+                (s.device->>'screen' = '1900x1100'
+                  AND coalesce(s.device->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                OR (coalesce(s.geo->>'countryCode',s.geo->>'country') = 'US'
+                  AND s.device->>'timezone' = 'America/New_York'
+                  AND s.device->>'language' = 'en-US'
+                  AND s.device->>'connection' IN ('3g','4g'))
+              )
+            )
+            OR (s.device->>'deviceType' = 'tablet'
+              AND s.device->>'touch' = 'false'
+              AND coalesce(s.geo->>'countryCode',s.geo->>'country') = 'US'
+              AND s.device->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))), false))
         ORDER BY s.started_at DESC
         LIMIT 100
       `,
@@ -248,6 +421,7 @@ export async function GET(request: Request) {
         FROM users
         WHERE created_at >= now() - (${days}::int * interval '1 day')
           AND coalesce(is_deleted, false) = false
+          AND id NOT LIKE 'seed_demo_%'
       `,
       sql`
         SELECT coalesce(nullif(dimensions->>'utmCampaign', ''), 'Direct / unknown') AS campaign,
@@ -256,10 +430,75 @@ export async function GET(request: Request) {
           sum(event_count)::bigint AS signups
         FROM visitor_analytics_hourly
         WHERE bucket_start >= now() - (${days}::int * interval '1 day')
+          AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
+              OR (
+                dimensions->>'platform' = 'Linux x86_64'
+                AND dimensions->>'browser' = 'Chrome'
+                AND (
+                  (dimensions->>'screen' = '1900x1100'
+                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                  OR (dimensions->>'countryCode' = 'US'
+                    AND dimensions->>'timezone' = 'America/New_York'
+                    AND dimensions->>'language' = 'en-US'
+                    AND dimensions->>'connection' IN ('3g','4g'))
+                )
+              )
+              OR (dimensions->>'deviceType' = 'tablet'
+                AND dimensions->>'touch' = 'false'
+                AND dimensions->>'countryCode' = 'US'
+                AND dimensions->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))), false))
           AND event_type = 'form_submit'
           AND dimensions->>'target' = 'signup_success'
         GROUP BY 1, 2, 3
         ORDER BY signups DESC
+      `,
+
+      sql`
+        SELECT
+          coalesce(sum(event_count) FILTER (WHERE event_type = 'visit_start'), 0)::bigint AS "unfilteredVisits",
+          coalesce(sum(event_count) FILTER (
+            WHERE event_type = 'visit_start'
+            AND coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
+              OR (
+                dimensions->>'platform' = 'Linux x86_64'
+                AND dimensions->>'browser' = 'Chrome'
+                AND (
+                  (dimensions->>'screen' = '1900x1100'
+                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                  OR (dimensions->>'countryCode' = 'US'
+                    AND dimensions->>'timezone' = 'America/New_York'
+                    AND dimensions->>'language' = 'en-US'
+                    AND dimensions->>'connection' IN ('3g','4g'))
+                )
+              )
+              OR (dimensions->>'deviceType' = 'tablet'
+                AND dimensions->>'touch' = 'false'
+                AND dimensions->>'countryCode' = 'US'
+                AND dimensions->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))),false)
+          ), 0)::bigint AS "suspectedAutomationVisits",
+          coalesce(sum(event_count) FILTER (
+            WHERE event_type = 'visit_start'
+            AND NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
+              OR (
+                dimensions->>'platform' = 'Linux x86_64'
+                AND dimensions->>'browser' = 'Chrome'
+                AND (
+                  (dimensions->>'screen' = '1900x1100'
+                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
+                  OR (dimensions->>'countryCode' = 'US'
+                    AND dimensions->>'timezone' = 'America/New_York'
+                    AND dimensions->>'language' = 'en-US'
+                    AND dimensions->>'connection' IN ('3g','4g'))
+                )
+              )
+              OR (dimensions->>'deviceType' = 'tablet'
+                AND dimensions->>'touch' = 'false'
+                AND dimensions->>'countryCode' = 'US'
+                AND dimensions->>'timezone' IN ('America/Los_Angeles','Etc/Unknown'))),false)
+            AND dimensions->>'countryCode' = 'GB'
+          ), 0)::bigint AS "filteredUkVisits"
+        FROM visitor_analytics_hourly
+        WHERE bucket_start >= now() - (${days}::int * interval '1 day')
       `,
     ]);
 
@@ -267,6 +506,7 @@ export async function GET(request: Request) {
     const sessionSummary = sessionSummaryRows[0] ?? {};
     const tracking = trackingRows[0] ?? {};
     const signups = signupRows[0]?.signups ?? 0;
+    const trafficQuality = trafficQualityRows[0] ?? {};
 
     const channelMap = new Map<string, { channel: string; sessions: number }>();
     for (const row of acquisitionRows as Record<string, unknown>[]) {
@@ -285,7 +525,9 @@ export async function GET(request: Request) {
     return Response.json({
       storageReady: true,
       days,
+      trafficMode,
       summary: {
+        ...trafficQuality,
         ...sessionSummary,
         ...summary,
         ...tracking,
