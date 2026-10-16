@@ -83,14 +83,11 @@ export async function GET(request: Request) {
           AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
               OR (
                 dimensions->>'platform' = 'Linux x86_64'
-                AND dimensions->>'browser' = 'Chrome'
                 AND (
-                  (dimensions->>'screen' = '1900x1100'
-                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                  OR (dimensions->>'countryCode' = 'US'
-                    AND dimensions->>'timezone' = 'America/New_York'
-                    AND dimensions->>'language' = 'en-US'
-                    AND dimensions->>'connection' IN ('3g','4g'))
+                  (dimensions->>'browser' = 'Chrome'
+                    AND dimensions->>'language' LIKE 'en-US%'
+                    AND dimensions->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                  OR (coalesce(dimensions->>'os', '') NOT IN ('', 'Linux'))
                 )
               )
               OR (dimensions->>'deviceType' = 'tablet'
@@ -122,14 +119,11 @@ export async function GET(request: Request) {
             AND (${!filterTraffic} OR s.converted OR NOT coalesce((coalesce(s.device->>'automationHint', '') = 'true'
             OR (
               s.device->>'platform' = 'Linux x86_64'
-              AND s.device->>'browser' = 'Chrome'
               AND (
-                (s.device->>'screen' = '1900x1100'
-                  AND coalesce(s.device->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                OR (coalesce(s.geo->>'countryCode',s.geo->>'country') = 'US'
-                  AND s.device->>'timezone' = 'America/New_York'
-                  AND s.device->>'language' = 'en-US'
-                  AND s.device->>'connection' IN ('3g','4g'))
+                (s.device->>'browser' = 'Chrome'
+                  AND s.device->>'language' LIKE 'en-US%'
+                  AND s.device->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                OR (coalesce(s.device->>'os', '') NOT IN ('', 'Linux'))
               )
             )
             OR (s.device->>'deviceType' = 'tablet'
@@ -175,14 +169,11 @@ export async function GET(request: Request) {
           AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
               OR (
                 dimensions->>'platform' = 'Linux x86_64'
-                AND dimensions->>'browser' = 'Chrome'
                 AND (
-                  (dimensions->>'screen' = '1900x1100'
-                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                  OR (dimensions->>'countryCode' = 'US'
-                    AND dimensions->>'timezone' = 'America/New_York'
-                    AND dimensions->>'language' = 'en-US'
-                    AND dimensions->>'connection' IN ('3g','4g'))
+                  (dimensions->>'browser' = 'Chrome'
+                    AND dimensions->>'language' LIKE 'en-US%'
+                    AND dimensions->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                  OR (coalesce(dimensions->>'os', '') NOT IN ('', 'Linux'))
                 )
               )
               OR (dimensions->>'deviceType' = 'tablet'
@@ -201,14 +192,11 @@ export async function GET(request: Request) {
           AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
               OR (
                 dimensions->>'platform' = 'Linux x86_64'
-                AND dimensions->>'browser' = 'Chrome'
                 AND (
-                  (dimensions->>'screen' = '1900x1100'
-                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                  OR (dimensions->>'countryCode' = 'US'
-                    AND dimensions->>'timezone' = 'America/New_York'
-                    AND dimensions->>'language' = 'en-US'
-                    AND dimensions->>'connection' IN ('3g','4g'))
+                  (dimensions->>'browser' = 'Chrome'
+                    AND dimensions->>'language' LIKE 'en-US%'
+                    AND dimensions->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                  OR (coalesce(dimensions->>'os', '') NOT IN ('', 'Linux'))
                 )
               )
               OR (dimensions->>'deviceType' = 'tablet'
@@ -231,14 +219,11 @@ export async function GET(request: Request) {
           AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
               OR (
                 dimensions->>'platform' = 'Linux x86_64'
-                AND dimensions->>'browser' = 'Chrome'
                 AND (
-                  (dimensions->>'screen' = '1900x1100'
-                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                  OR (dimensions->>'countryCode' = 'US'
-                    AND dimensions->>'timezone' = 'America/New_York'
-                    AND dimensions->>'language' = 'en-US'
-                    AND dimensions->>'connection' IN ('3g','4g'))
+                  (dimensions->>'browser' = 'Chrome'
+                    AND dimensions->>'language' LIKE 'en-US%'
+                    AND dimensions->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                  OR (coalesce(dimensions->>'os', '') NOT IN ('', 'Linux'))
                 )
               )
               OR (dimensions->>'deviceType' = 'tablet'
@@ -263,14 +248,11 @@ export async function GET(request: Request) {
           AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
               OR (
                 dimensions->>'platform' = 'Linux x86_64'
-                AND dimensions->>'browser' = 'Chrome'
                 AND (
-                  (dimensions->>'screen' = '1900x1100'
-                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                  OR (dimensions->>'countryCode' = 'US'
-                    AND dimensions->>'timezone' = 'America/New_York'
-                    AND dimensions->>'language' = 'en-US'
-                    AND dimensions->>'connection' IN ('3g','4g'))
+                  (dimensions->>'browser' = 'Chrome'
+                    AND dimensions->>'language' LIKE 'en-US%'
+                    AND dimensions->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                  OR (coalesce(dimensions->>'os', '') NOT IN ('', 'Linux'))
                 )
               )
               OR (dimensions->>'deviceType' = 'tablet'
@@ -293,14 +275,11 @@ export async function GET(request: Request) {
           AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
               OR (
                 dimensions->>'platform' = 'Linux x86_64'
-                AND dimensions->>'browser' = 'Chrome'
                 AND (
-                  (dimensions->>'screen' = '1900x1100'
-                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                  OR (dimensions->>'countryCode' = 'US'
-                    AND dimensions->>'timezone' = 'America/New_York'
-                    AND dimensions->>'language' = 'en-US'
-                    AND dimensions->>'connection' IN ('3g','4g'))
+                  (dimensions->>'browser' = 'Chrome'
+                    AND dimensions->>'language' LIKE 'en-US%'
+                    AND dimensions->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                  OR (coalesce(dimensions->>'os', '') NOT IN ('', 'Linux'))
                 )
               )
               OR (dimensions->>'deviceType' = 'tablet'
@@ -324,14 +303,11 @@ export async function GET(request: Request) {
           AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
               OR (
                 dimensions->>'platform' = 'Linux x86_64'
-                AND dimensions->>'browser' = 'Chrome'
                 AND (
-                  (dimensions->>'screen' = '1900x1100'
-                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                  OR (dimensions->>'countryCode' = 'US'
-                    AND dimensions->>'timezone' = 'America/New_York'
-                    AND dimensions->>'language' = 'en-US'
-                    AND dimensions->>'connection' IN ('3g','4g'))
+                  (dimensions->>'browser' = 'Chrome'
+                    AND dimensions->>'language' LIKE 'en-US%'
+                    AND dimensions->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                  OR (coalesce(dimensions->>'os', '') NOT IN ('', 'Linux'))
                 )
               )
               OR (dimensions->>'deviceType' = 'tablet'
@@ -350,14 +326,11 @@ export async function GET(request: Request) {
           AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
               OR (
                 dimensions->>'platform' = 'Linux x86_64'
-                AND dimensions->>'browser' = 'Chrome'
                 AND (
-                  (dimensions->>'screen' = '1900x1100'
-                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                  OR (dimensions->>'countryCode' = 'US'
-                    AND dimensions->>'timezone' = 'America/New_York'
-                    AND dimensions->>'language' = 'en-US'
-                    AND dimensions->>'connection' IN ('3g','4g'))
+                  (dimensions->>'browser' = 'Chrome'
+                    AND dimensions->>'language' LIKE 'en-US%'
+                    AND dimensions->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                  OR (coalesce(dimensions->>'os', '') NOT IN ('', 'Linux'))
                 )
               )
               OR (dimensions->>'deviceType' = 'tablet'
@@ -399,14 +372,11 @@ export async function GET(request: Request) {
           AND (${!filterTraffic} OR s.converted OR NOT coalesce((coalesce(s.device->>'automationHint', '') = 'true'
             OR (
               s.device->>'platform' = 'Linux x86_64'
-              AND s.device->>'browser' = 'Chrome'
               AND (
-                (s.device->>'screen' = '1900x1100'
-                  AND coalesce(s.device->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                OR (coalesce(s.geo->>'countryCode',s.geo->>'country') = 'US'
-                  AND s.device->>'timezone' = 'America/New_York'
-                  AND s.device->>'language' = 'en-US'
-                  AND s.device->>'connection' IN ('3g','4g'))
+                (s.device->>'browser' = 'Chrome'
+                  AND s.device->>'language' LIKE 'en-US%'
+                  AND s.device->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                OR (coalesce(s.device->>'os', '') NOT IN ('', 'Linux'))
               )
             )
             OR (s.device->>'deviceType' = 'tablet'
@@ -433,14 +403,11 @@ export async function GET(request: Request) {
           AND (${!filterTraffic} OR NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
               OR (
                 dimensions->>'platform' = 'Linux x86_64'
-                AND dimensions->>'browser' = 'Chrome'
                 AND (
-                  (dimensions->>'screen' = '1900x1100'
-                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                  OR (dimensions->>'countryCode' = 'US'
-                    AND dimensions->>'timezone' = 'America/New_York'
-                    AND dimensions->>'language' = 'en-US'
-                    AND dimensions->>'connection' IN ('3g','4g'))
+                  (dimensions->>'browser' = 'Chrome'
+                    AND dimensions->>'language' LIKE 'en-US%'
+                    AND dimensions->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                  OR (coalesce(dimensions->>'os', '') NOT IN ('', 'Linux'))
                 )
               )
               OR (dimensions->>'deviceType' = 'tablet'
@@ -461,14 +428,11 @@ export async function GET(request: Request) {
             AND coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
               OR (
                 dimensions->>'platform' = 'Linux x86_64'
-                AND dimensions->>'browser' = 'Chrome'
                 AND (
-                  (dimensions->>'screen' = '1900x1100'
-                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                  OR (dimensions->>'countryCode' = 'US'
-                    AND dimensions->>'timezone' = 'America/New_York'
-                    AND dimensions->>'language' = 'en-US'
-                    AND dimensions->>'connection' IN ('3g','4g'))
+                  (dimensions->>'browser' = 'Chrome'
+                    AND dimensions->>'language' LIKE 'en-US%'
+                    AND dimensions->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                  OR (coalesce(dimensions->>'os', '') NOT IN ('', 'Linux'))
                 )
               )
               OR (dimensions->>'deviceType' = 'tablet'
@@ -481,14 +445,11 @@ export async function GET(request: Request) {
             AND NOT coalesce((coalesce(dimensions->>'automationHint', '') = 'true'
               OR (
                 dimensions->>'platform' = 'Linux x86_64'
-                AND dimensions->>'browser' = 'Chrome'
                 AND (
-                  (dimensions->>'screen' = '1900x1100'
-                    AND coalesce(dimensions->>'timezone','') IN ('America/New_York','UTC','America/Chicago'))
-                  OR (dimensions->>'countryCode' = 'US'
-                    AND dimensions->>'timezone' = 'America/New_York'
-                    AND dimensions->>'language' = 'en-US'
-                    AND dimensions->>'connection' IN ('3g','4g'))
+                  (dimensions->>'browser' = 'Chrome'
+                    AND dimensions->>'language' LIKE 'en-US%'
+                    AND dimensions->>'timezone' IN ('UTC','America/New_York','America/Chicago','America/Los_Angeles'))
+                  OR (coalesce(dimensions->>'os', '') NOT IN ('', 'Linux'))
                 )
               )
               OR (dimensions->>'deviceType' = 'tablet'
