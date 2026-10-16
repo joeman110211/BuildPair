@@ -7,10 +7,11 @@ import { PublicFooter } from '@/components/PublicFooter';
 import { PUBLIC_SHARE_IMAGE, PublicSeo } from '@/components/PublicSeo';
 import { SemanticHeading } from '@/components/SemanticHeading';
 import { colors, radii } from '@/constants/theme';
-import { adviceAudienceLabel, adviceGuideBySlug, isOfficialAdviceSource } from '@/lib/advice-library';
+import { adviceAudienceLabel, isOfficialAdviceSource } from '@/lib/advice-library';
+import { allAdviceGuideBySlug } from '@/lib/advice-catalog';
 
 export function AdviceGuidePage({ slug }: { slug: string }) {
-  const guide = adviceGuideBySlug(slug);
+  const guide = allAdviceGuideBySlug(slug);
 
   if (!guide) {
     return <ScrollView style={styles.page} contentContainerStyle={styles.shell}>
@@ -21,10 +22,11 @@ export function AdviceGuidePage({ slug }: { slug: string }) {
   }
 
   const related = (guide.relatedSlugs ?? [])
-    .map((relatedSlug) => adviceGuideBySlug(relatedSlug))
+    .map((relatedSlug) => allAdviceGuideBySlug(relatedSlug))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
   const officialSources = guide.sources.filter(isOfficialAdviceSource);
-  const hasMarketReferences = officialSources.length < guide.sources.length;
+  const furtherSources = guide.sources.filter((source) => !isOfficialAdviceSource(source));
+  const hasMarketReferences = furtherSources.some((source) => /checkatrade|myjobquote|rated people|trustatrader|ukhomecosts/i.test(source.publisher));
 
   const canonical = 'https://www.buildpair.co.uk/advice/' + guide.slug;
   const structuredData = {
@@ -79,6 +81,14 @@ export function AdviceGuidePage({ slug }: { slug: string }) {
             icon="open-in-new"
             onPress={() => Linking.openURL(source.url)}
           >{source.publisher}: {source.title}</Button>)}
+        </View>
+      </View> : null}
+
+      {furtherSources.length ? <View style={styles.sourceBox}>
+        <SemanticHeading level={2} style={styles.sectionTitle}>Further sources</SemanticHeading>
+        <Text style={styles.body}>Additional published guidance and research used in this article.</Text>
+        <View style={styles.sourceList}>
+          {furtherSources.map((source) => <Button key={source.url} mode="outlined" icon="open-in-new" onPress={() => Linking.openURL(source.url)}>{source.publisher}: {source.title}</Button>)}
         </View>
       </View> : null}
 
