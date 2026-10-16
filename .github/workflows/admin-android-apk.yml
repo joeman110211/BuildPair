@@ -142,4 +142,4 @@ jobs:
           name: buildpair-admin-android-apk
           path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 14
