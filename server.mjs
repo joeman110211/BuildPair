@@ -246,7 +246,7 @@ function safeCandidates(requestPath) {
 
 async function resolveStaticFile(requestPath) {
   const publicAsset = String(requestPath).split('?')[0];
-  if (['/sitemap.xml', '/sitemap.txt', '/robots.txt'].includes(publicAsset)) {
+  if (['/sitemap.xml', '/sitemap-pages.xml', '/sitemap-advice.xml', '/sitemap.txt', '/robots.txt'].includes(publicAsset)) {
     const absolute = path.resolve(process.cwd(), 'public', publicAsset.slice(1));
     try {
       const fileStat = await stat(absolute);
@@ -282,7 +282,7 @@ async function serveStatic(req, res) {
   res.setHeader('Content-Type', MIME_TYPES.get(extension) || 'application/octet-stream');
   res.setHeader('Content-Length', String(file.size));
 
-  if (extension === '.html') {
+  if (extension === '.html' || file.candidate.startsWith('sitemap') || file.candidate === 'robots.txt') {
     res.setHeader('Cache-Control', 'no-cache');
   } else if (file.candidate.includes('_expo/static/')) {
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
@@ -365,7 +365,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (await serveStatic(req, res)) return;
-    if (['/sitemap.xml', '/sitemap.txt', '/robots.txt'].includes(pathName)) {
+    if (['/sitemap.xml', '/sitemap-pages.xml', '/sitemap-advice.xml', '/sitemap.txt', '/robots.txt'].includes(pathName)) {
       sendNotFound(res);
       return;
     }
