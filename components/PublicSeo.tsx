@@ -3,7 +3,7 @@ import { usePathname } from 'expo-router';
 
 export const PUBLIC_SHARE_IMAGE = 'https://res.cloudinary.com/qrrcn7ma/image/upload/e_trim/v1789145309/buildpair-logo-transparent.png';
 
-export function PublicSeo({ title, description }: { title: string; description: string }) {
+export function PublicSeo({ title, description, type = 'website' }: { title: string; description: string; type?: 'website' | 'article' }) {
   const pathname = usePathname();
   const pageTitle = `${title} | BuildPair`;
   const url = `https://www.buildpair.co.uk${pathname === '/' ? '/' : pathname}`;
@@ -30,7 +30,7 @@ export function PublicSeo({ title, description }: { title: string; description: 
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={url} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={type} />
     <meta property="og:site_name" content="BuildPair" />
     <meta property="og:locale" content="en_GB" />
     <meta property="og:title" content={pageTitle} />
