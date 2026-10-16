@@ -3,12 +3,14 @@ import { type Href, Link } from 'expo-router';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
+import { AdviceNextStep } from '@/components/AdviceNextStep';
 import { PublicFooter } from '@/components/PublicFooter';
 import { PUBLIC_SHARE_IMAGE, PublicSeo } from '@/components/PublicSeo';
 import { SemanticHeading } from '@/components/SemanticHeading';
 import { colors, radii } from '@/constants/theme';
 import { adviceAudienceLabel, isOfficialAdviceSource } from '@/lib/advice-library';
-import { allAdviceGuideBySlug } from '@/lib/advice-catalog';
+import { ALL_ADVICE_GUIDES, allAdviceGuideBySlug } from '@/lib/advice-catalog';
+import { relatedAdviceGuides } from '@/lib/advice-growth';
 
 export function AdviceGuidePage({ slug }: { slug: string }) {
   const guide = allAdviceGuideBySlug(slug);
@@ -21,9 +23,7 @@ export function AdviceGuidePage({ slug }: { slug: string }) {
     </ScrollView>;
   }
 
-  const related = (guide.relatedSlugs ?? [])
-    .map((relatedSlug) => allAdviceGuideBySlug(relatedSlug))
-    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const related = relatedAdviceGuides(guide, ALL_ADVICE_GUIDES);
   const officialSources = guide.sources.filter(isOfficialAdviceSource);
   const furtherSources = guide.sources.filter((source) => !isOfficialAdviceSource(source));
   const hasMarketReferences = furtherSources.some((source) => /checkatrade|myjobquote|rated people|trustatrader|ukhomecosts/i.test(source.publisher));
@@ -44,7 +44,7 @@ export function AdviceGuidePage({ slug }: { slug: string }) {
   };
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
-    <PublicSeo title={guide.title} description={guide.description} />
+    <PublicSeo title={guide.title} description={guide.description} type="article" />
     <Head><script type="application/ld+json">{JSON.stringify(structuredData)}</script></Head>
 
     <View style={styles.hero}>
@@ -64,6 +64,8 @@ export function AdviceGuidePage({ slug }: { slug: string }) {
         <Text style={styles.noticeTitle}>Key points</Text>
         {guide.keyPoints.map((point) => <Text key={point} style={styles.bullet}>• {point}</Text>)}
       </View>
+
+      <AdviceNextStep guide={guide} />
 
       {guide.sections.map((section) => <View key={section.heading} style={styles.section}>
         <SemanticHeading level={2} style={styles.sectionTitle}>{section.heading}</SemanticHeading>
@@ -110,7 +112,7 @@ export function AdviceGuidePage({ slug }: { slug: string }) {
 
       <View style={styles.actions}>
         <Link href="/(public)/advice" asChild><Button mode="outlined">Back to Advice Hub</Button></Link>
-        <Link href="/(public)/directory" asChild><Button mode="contained">Find a trade</Button></Link>
+        {guide.audience === 'homeowner' ? <Link href="/(public)/directory" asChild><Button mode="contained">Find a trade</Button></Link> : <Link href="/(public)/for-tradespeople" asChild><Button mode="contained">For tradespeople</Button></Link>}
       </View>
     </View>
     <PublicFooter />
