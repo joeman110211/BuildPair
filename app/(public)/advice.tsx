@@ -109,6 +109,12 @@ export default function AdviceHub() {
           </View>
         </View>
         <Text style={styles.aiNote}>Advice AI is constrained to BuildPair’s checked guidance. For regulated, legal or safety-critical questions, use the linked official source for the current detail.</Text>
+        <View style={styles.startLinks}>
+          <Text style={styles.startLinksLabel}>Popular starting points</Text>
+          <Link href="/(public)/advice/how-to-compare-building-quotes" asChild><Button compact mode="text">Compare building quotes</Button></Link>
+          <Link href="/(public)/advice/builder-deposits-and-payment-stages" asChild><Button compact mode="text">Deposits and payment stages</Button></Link>
+          <Link href="/(public)/advice/how-to-hire-bricklayer" asChild><Button compact mode="text">Hiring a bricklayer</Button></Link>
+        </View>
       </View>
     </View>
 
@@ -197,6 +203,8 @@ const styles = StyleSheet.create({
   searchActionMobile: { flexBasis: '100%' },
   inputOutline: { borderRadius: radii.lg },
   aiNote: { color: colors.muted, fontSize: 12, lineHeight: 18, maxWidth: 760, textAlign: 'center' },
+  startLinks: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 5, maxWidth: 900 },
+  startLinksLabel: { color: colors.muted, fontSize: 13, fontWeight: '700' },
   content: { width: '100%', maxWidth: 1120, alignSelf: 'center', padding: 20, paddingBottom: 48, gap: 22 },
   contentMobile: { paddingHorizontal: 16, gap: 18 },
   filterBlock: { gap: 10 },
