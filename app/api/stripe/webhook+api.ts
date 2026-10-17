@@ -3,6 +3,7 @@ import { addJobEvent, createNotification } from '@/lib/notifications';
 import { isImmediatelyReleasedStage } from '@/lib/payment-protection';
 import { getSql } from '@/lib/sql';
 import { getStripe } from '@/lib/stripe';
+import { syncDirectorySubscription, directorySubscriptionDeleted } from '@/lib/partner-directory-stripe';
 import { subscriptionProduct } from '@/lib/billing-plans';
 
 export async function POST(request: Request) {
@@ -289,6 +290,7 @@ async function handleEvent(event: Stripe.Event) {
     // Stripe does not guarantee delivery order. Retrieve current state rather than
     // allowing an old "active" event to restore a cancelled or failed subscription.
     const subscription = await getStripe().subscriptions.retrieve(event.data.object.id);
+    if (await syncDirectorySubscription(subscription)) return;
     const userId = subscription.metadata.buildpairUserId ?? subscription.metadata.buildmateUserId;
     const product = subscriptionProduct(subscription);
     if (subscription.metadata.buildpairProduct === 'project_plus') {
@@ -311,6 +313,7 @@ async function handleEvent(event: Stripe.Event) {
   }
   if (event.type === 'customer.subscription.deleted') {
     const subscription = event.data.object;
+    if (await directorySubscriptionDeleted(subscription)) return;
     if (subscription.metadata.buildpairProduct === 'project_plus') await clearProjectPlusSubscription(subscription.id);
     else await clearPaidSubscription(subscription.id);
     return;
