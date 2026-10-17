@@ -62,7 +62,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
     { label: 'Home', sectionLabel: 'BuildPair', onPress: () => go('/') },
     { label: 'Dashboard', onPress: () => go(home) },
     { label: findLabel, onPress: () => go(findHref) },
-    { label: currentMode === 'customer' ? 'My jobs' : 'My jobs', onPress: () => go(jobsHref) },
+    { label: 'My jobs', onPress: () => go(jobsHref) },
     ...(currentMode === 'trader' ? [
       { label: 'Quotes', onPress: () => go(quotesHref) },
       { label: 'Customer book', sectionLabel: 'Business tools', dividerBefore: true, onPress: () => go('/trader/customers') },
