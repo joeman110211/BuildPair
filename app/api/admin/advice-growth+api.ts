@@ -27,13 +27,14 @@ export async function GET(request: Request) {
           coalesce(sum(event_count) FILTER (
             WHERE event_type = 'click'
             AND dimensions->>'path' LIKE '/advice/%'
-            AND dimensions->>'targetPath' LIKE '%source=advice%'
+            AND (dimensions->>'targetPath' LIKE '%source=advice%'
+              OR dimensions->>'target' IN ('Find relevant tradespeople', 'Find a trade', 'BuildPair for tradespeople'))
           ), 0)::bigint AS "nextStepClicks",
           coalesce(sum(event_count) FILTER (
             WHERE event_type = 'click'
             AND dimensions->>'path' LIKE '/advice/%'
-            AND dimensions->>'targetPath' LIKE '%/directory?%'
-            AND dimensions->>'targetPath' LIKE '%source=advice%'
+            AND (dimensions->>'targetPath' LIKE '%/directory?%'
+              OR dimensions->>'target' IN ('Find relevant tradespeople', 'Find a trade'))
           ), 0)::bigint AS "tradeSearchClicks"
         FROM visitor_analytics_hourly
         WHERE bucket_start >= now() - (${days}::int * interval '1 day')
@@ -58,7 +59,8 @@ export async function GET(request: Request) {
         SELECT dimensions->>'path' AS path,
           coalesce(sum(event_count) FILTER (WHERE event_type = 'page_view'), 0)::bigint AS views,
           coalesce(sum(event_count) FILTER (
-            WHERE event_type = 'click' AND dimensions->>'targetPath' LIKE '%source=advice%'
+            WHERE event_type = 'click' AND (dimensions->>'targetPath' LIKE '%source=advice%'
+              OR dimensions->>'target' IN ('Find relevant tradespeople', 'Find a trade', 'BuildPair for tradespeople'))
           ), 0)::bigint AS "nextStepClicks"
         FROM visitor_analytics_hourly
         WHERE bucket_start >= now() - (${days}::int * interval '1 day')
