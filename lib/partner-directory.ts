@@ -37,7 +37,7 @@ export async function ensureDirectoryTable() {
         logo_url text,
         image_urls text[] NOT NULL DEFAULT '{}',
         status text NOT NULL DEFAULT 'awaiting_verification'
-          CHECK (status IN ('awaiting_verification','pending_review','approved','active','cancel_pending','suspended','rejected','removed')),
+          CHECK (status IN ('awaiting_verification','pending_review','approved','active','cancel_pending','payment_issue','suspended','rejected','removed')),
         management_hash text NOT NULL UNIQUE,
         stripe_customer_id text,
         stripe_subscription_id text UNIQUE,
