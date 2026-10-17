@@ -80,6 +80,7 @@ export default function AdminPartnersPage() {
     <View style={styles.row}>
       <Chip>{live} published partners</Chip><Chip>{pending} new enquiries</Chip>
       <Link href="/(public)/partners" asChild><Button mode="outlined">View public page</Button></Link>
+      <Link href="/admin/partner-directory" asChild><Button mode="contained">Self-service directory applications</Button></Link>
       <Button mode="contained" onPress={()=>{setDraft(emptyDraft());setShowEditor(true);setError('');}}>Add partner</Button>
       <Button mode="outlined" loading={loading} onPress={()=>void load()}>Refresh</Button>
     </View>

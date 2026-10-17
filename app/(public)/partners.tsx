@@ -13,6 +13,12 @@ const partnerCategories = ['Trade insurance','Trade supplies','Property services
 const partnerPackages = ['local','featured','founding'] as const;
 
 type Listing = { id: string; name: string; category: string; summary: string; logoUrl: string | null; offerText: string; package: string };
+type DirectoryListing={id:string;name:string;category:string;summary:string;websiteUrl:string;logoUrl:string|null;images:string[]};
+const DIRECTORY_CATEGORIES=[
+  'Building materials & supplies','Tools, equipment & workwear','Interior design & showrooms',
+  'Vans, vehicle hire & fleet','Plant, site equipment & skips','Home products & appliances',
+  'Property & surveying services','Trade training & qualifications','Business & professional services'
+] as const;
 const offers = [
   { id: 'local', name: 'Local Partner', six: 'From £495', twelve: 'Annual terms quoted individually', description: 'Approved business profile, category listing and tracked website link.' },
   { id: 'featured', name: 'Featured Partner', six: 'From £1,495', twelve: 'Annual terms quoted individually', description: 'Profile plus an agreed priority placement, optional ad-labelled content and basic reporting.' },
@@ -24,6 +30,10 @@ export default function PartnersPage() {
   const metrics = publicResponsiveMetrics(width);
   const narrow = width < 720;
   const [listings, setListings] = useState<Listing[]>([]);
+  const [directory,setDirectory]=useState<DirectoryListing[]>([]);
+  const [directoryQuery,setDirectoryQuery]=useState('');
+  const [directoryCategory,setDirectoryCategory]=useState('');
+  const [directoryLoading,setDirectoryLoading]=useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -43,6 +53,17 @@ export default function PartnersPage() {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
+  useEffect(()=>{
+    let alive=true;
+    const timer=setTimeout(()=>{
+      setDirectoryLoading(true);
+      apiFetch<{listings:DirectoryListing[]}>('/api/partner-directory?q='+encodeURIComponent(directoryQuery.trim().slice(0,70))+'&category='+encodeURIComponent(directoryCategory))
+        .then(r=>{if(alive)setDirectory(r.listings);})
+        .catch(()=>{if(alive)setDirectory([]);})
+        .finally(()=>{if(alive)setDirectoryLoading(false);});
+    },300);
+    return()=>{alive=false;clearTimeout(timer);};
+  },[directoryQuery,directoryCategory]);
   const submit = async () => {
     if (!businessName.trim() || !contactName.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setSendError('Enter your business name, contact name and a valid email address.');
@@ -88,6 +109,35 @@ export default function PartnersPage() {
           {item.offerText ? <Text style={styles.offer}>{item.offerText}</Text> : null}
           <Button mode="outlined" onPress={() => void Linking.openURL('https://www.buildpair.co.uk/api/partners/go?id=' + encodeURIComponent(item.id))}>Visit partner website</Button>
         </View>)}</View> : null}
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.eyebrowDark}>BUSINESS DIRECTORY</Text>
+        <SemanticHeading level={2} style={styles.heading}>Search products and specialist services.</SemanticHeading>
+        <Text style={styles.muted}>Approved independent suppliers and relevant businesses, not tradespeople selling building or installation work. These are paid directory listings, not BuildPair recommendations.</Text>
+        <TextInput mode="outlined" label="Search partners, products or services" autoCapitalize="none" value={directoryQuery} onChangeText={setDirectoryQuery} maxLength={70} style={styles.input}/>
+        <View style={styles.chips}>
+          <Button compact mode={!directoryCategory?'contained':'outlined'} onPress={()=>setDirectoryCategory('')}>All categories</Button>
+          {DIRECTORY_CATEGORIES.map(category=><Button key={category} compact mode={directoryCategory===category?'contained':'outlined'} onPress={()=>setDirectoryCategory(category)}>{category}</Button>)}
+        </View>
+        {directoryLoading?<Text style={styles.muted}>Searching…</Text>:null}
+        {directory.length?<View style={styles.grid}>{directory.map(item=><View key={item.id} style={styles.partnerCard}>
+          {item.logoUrl?<Image source={{uri:item.logoUrl}} resizeMode="contain" style={styles.logo}/>:null}
+          {item.images?.[0]?<Image source={{uri:item.images[0]}} resizeMode="cover" style={styles.directoryPhoto}/>:null}
+          <Text style={styles.headingSmall}>{item.name}</Text>
+          <Text style={styles.pill}>PAID DIRECTORY LISTING · {item.category}</Text>
+          <Text style={styles.muted}>{item.summary}</Text>
+          <Button mode="outlined" onPress={()=>void Linking.openURL(item.websiteUrl)}>Visit business website</Button>
+        </View>)}</View>:!directoryLoading?<View style={styles.empty}>
+          <Text style={styles.headingSmall}>No matching businesses yet</Text>
+          <Text style={styles.muted}>This is a new business directory. Try another category or check back as approved suppliers join.</Text>
+        </View>:null}
+        <View style={styles.directoryCallout}>
+          <Text style={styles.headingSmall}>Own an eligible business?</Text>
+          <Text style={styles.muted}>Suppliers, showrooms, tool and vehicle companies, designers, training providers and specialist services can apply. Tradespeople offering installation or building work must use a trade account instead.</Text>
+          <Text style={styles.price}>£24.99 <Text style={styles.priceUnit}>/ month, cancel any time</Text></Text>
+          <Text style={styles.fine}>Apply first, upload photos using a private email link, and pay by Stripe only after BuildPair approves the business. Directory listings stay on this page only and never enter Project+, quotes or membership suggestions.</Text>
+          <Link href="/(public)/partners/advertise" asChild><Button mode="contained">Advertise your business</Button></Link>
+        </View>
       </View>
       <View style={styles.section}>
         <Text style={styles.eyebrowDark}>GROW WITH BUILDPAIR</Text>
@@ -160,6 +210,8 @@ const styles = StyleSheet.create({
   empty: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, padding: 22, borderRadius: radii.lg, gap: 8 },
   partnerCard: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, padding: 22, borderRadius: 22, flexBasis: 300, flexGrow: 1, minWidth: 0, gap: 11 },
   logo: { width: 130, height: 64 },
+  directoryPhoto: {width:'100%',height:150,borderRadius:12},
+  directoryCallout:{backgroundColor:colors.primarySoft,padding:22,borderRadius:20,gap:10},
   pill: { fontSize: 10, letterSpacing: 0.7, fontWeight: '900', color: colors.primary },
   offer: { fontSize: 14, fontWeight: '700', color: colors.charcoal },
   packageCard: { flexGrow: 1, flexBasis: 280, minWidth: 0, backgroundColor: colors.surfaceRaised, padding: 23, borderRadius: 23, borderWidth: 1, borderColor: colors.border, gap: 13 },

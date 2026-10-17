@@ -3,6 +3,7 @@ import { addJobEvent, createNotification } from '@/lib/notifications';
 import { isImmediatelyReleasedStage } from '@/lib/payment-protection';
 import { getSql } from '@/lib/sql';
 import { getStripe } from '@/lib/stripe';
+import { syncDirectorySubscription, directorySubscriptionDeleted } from '@/lib/partner-directory-stripe';
 import { subscriptionProduct } from '@/lib/billing-plans';
 
 export async function POST(request: Request) {
@@ -285,10 +286,24 @@ async function handleEvent(event: Stripe.Event) {
     await getSql()`UPDATE trader_profiles SET stripe_charges_enabled = ${Boolean(account.charges_enabled)}, stripe_payouts_enabled = ${Boolean(account.payouts_enabled)}, updated_at = now() WHERE stripe_account_id = ${account.id}`;
     return;
   }
+  if (event.type === 'invoice.paid') {
+    const invoice = event.data.object as Stripe.Invoice & {
+      subscription?: string | Stripe.Subscription | null;
+      parent?: { subscription_details?: { subscription?: string | null } | null } | null;
+    };
+    const direct = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+    const parent = invoice.parent?.subscription_details?.subscription;
+    const subId = direct || parent;
+    if (subId) {
+      const sub = await getStripe().subscriptions.retrieve(subId);
+      if (await syncDirectorySubscription(sub)) return;
+    }
+  }
   if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.created') {
     // Stripe does not guarantee delivery order. Retrieve current state rather than
     // allowing an old "active" event to restore a cancelled or failed subscription.
     const subscription = await getStripe().subscriptions.retrieve(event.data.object.id);
+    if (await syncDirectorySubscription(subscription)) return;
     const userId = subscription.metadata.buildpairUserId ?? subscription.metadata.buildmateUserId;
     const product = subscriptionProduct(subscription);
     if (subscription.metadata.buildpairProduct === 'project_plus') {
@@ -311,6 +326,7 @@ async function handleEvent(event: Stripe.Event) {
   }
   if (event.type === 'customer.subscription.deleted') {
     const subscription = event.data.object;
+    if (await directorySubscriptionDeleted(subscription)) return;
     if (subscription.metadata.buildpairProduct === 'project_plus') await clearProjectPlusSubscription(subscription.id);
     else await clearPaidSubscription(subscription.id);
     return;
