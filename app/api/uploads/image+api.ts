@@ -44,7 +44,7 @@ function safeBlockReason(result: z.infer<typeof moderationSchema>) {
   return result.reason || 'This photo could not be accepted by BuildPair\'s safety check.';
 }
 
-async function moderateImage(input: { bytes: Buffer; mimeType: string; kind: MediaKind }) {
+export async function moderateImage(input: { bytes: Buffer; mimeType: string; kind: MediaKind | 'partner' }) {
   const key = process.env.GEMINI_API_KEY?.trim();
   if (!key) throw new HttpError(503, 'Photo safety checking is temporarily unavailable. Please try again shortly.');
 
@@ -54,6 +54,8 @@ async function moderateImage(input: { bytes: Buffer; mimeType: string; kind: Med
   const ai = new GoogleGenAI({ apiKey: key });
   const context = input.kind === 'job'
     ? 'a homeowner job photo showing a property, defect, access, room, materials or work required'
+    : input.kind === 'partner'
+    ? 'a legitimate UK home-improvement supplier, interiors, tools, training, vans, showroom or professional-services business logo or product image. Not a tradesperson advertising installations.'
     : 'a tradesperson profile, logo, team/work photo, portfolio image, van, completed work or before/after project';
 
   let response;
@@ -130,17 +132,18 @@ If visible text is too small or unclear to confidently identify as contact/sensi
   return result.reason || 'Passed automated BuildPair photo safety check';
 }
 
-async function uploadToCloudinary(input: { bytes: Buffer; mimeType: string; kind: MediaKind }) {
+export async function uploadToCloudinary(input: { bytes: Buffer; mimeType: string; kind: MediaKind | 'partner' }) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim() || DEFAULT_CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
   const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
   if (!apiKey || !apiSecret) throw new Error('Cloudinary is not configured');
 
-  const publicId = `${MEDIA_FOLDERS[input.kind]}/${randomUUID()}`;
+  const folder = input.kind === 'partner' ? 'buildpair/partner-directory' : MEDIA_FOLDERS[input.kind];
+  const publicId = `${folder}/${randomUUID()}`;
   const form = new FormData();
   form.append('file', new Blob([new Uint8Array(input.bytes)], { type: input.mimeType }), 'buildpair-upload');
   form.append('public_id', publicId);
-  form.append('asset_folder', MEDIA_FOLDERS[input.kind]);
+  form.append('asset_folder', folder);
   form.append('overwrite', 'false');
   if (input.mimeType === 'image/heic' || input.mimeType === 'image/heif') form.append('format', 'jpg');
   // Incoming transformation caps huge dimensions and removes EXIF/GPS/XMP metadata
