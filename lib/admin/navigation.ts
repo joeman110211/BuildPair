@@ -32,6 +32,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     title: 'Growth & usage',
     description: 'Track visits, new registrations, conversion and earlier enquiries.',
     items: [
+      { href: '/admin/partners', label: 'Commercial partners', shortLabel: 'Partners', description: 'Manage founding sponsor enquiries, partner listings, terms and publication status.' },
       { href: '/admin/ai-conversations', label: 'AI conversations', shortLabel: 'AI chats', description: 'Read BuildPair AI conversations, filter by visitor type and spot questions the assistant failed to answer well.' },
       { href: '/admin/visitors', label: 'Visitor intelligence', shortLabel: 'Visitors', description: 'Live anonymous visitors, new versus returning traffic, sources, landing pages and conversion journeys.' },
       { href: '/admin/insights', label: 'Product insights', shortLabel: 'Insights', description: 'Understand signed-in account behaviour, marketplace use and product-level trends.' },
