@@ -10,7 +10,8 @@ import { SemanticHeading } from '@/components/SemanticHeading';
 import { colors, publicResponsiveMetrics, radii } from '@/constants/theme';
 import { useWindowDimensions } from '@/hooks/useResponsiveDimensions';
 import { apiFetch, errorMessage } from '@/lib/api';
-import { partnerCategories, partnerPackages } from '@/lib/partners-store';
+const partnerCategories = ['Trade insurance','Trade supplies','Property services','Interiors & design','Tools & equipment','Business services','Other'] as const;
+const partnerPackages = ['local','featured','founding'] as const;
 
 type Listing = { id: string; name: string; category: string; summary: string; logoUrl: string | null; offerText: string; package: string };
 const offers = [
