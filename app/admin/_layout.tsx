@@ -22,6 +22,7 @@ export default function AdminLayout() {
             <Stack.Screen name="system" />
             <Stack.Screen name="operating-costs" />
             <Stack.Screen name="partners" />
+            <Stack.Screen name="partner-directory" />
             <Stack.Screen name="presence" />
             <Stack.Screen name="jobs" />
             <Stack.Screen name="profiles" />
