@@ -1,7 +1,7 @@
 import Head from 'expo-router/head';
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { PublicSeo } from '@/components/PublicSeo';
@@ -89,7 +89,7 @@ export default function PartnersPage() {
           <Text style={styles.pill}>PAID COMMERCIAL PARTNER · {item.category}</Text>
           <Text style={styles.muted}>{item.summary}</Text>
           {item.offerText ? <Text style={styles.offer}>{item.offerText}</Text> : null}
-          <Link href={('/api/partners/go?id=' + encodeURIComponent(item.id)) as never} asChild><Button mode="outlined">Visit partner website</Button></Link>
+          <Button mode="outlined" onPress={() => void Linking.openURL('https://www.buildpair.co.uk/api/partners/go?id=' + encodeURIComponent(item.id))}>Visit partner website</Button>
         </View>)}</View> : null}
       </View>
       <View style={styles.section}>
