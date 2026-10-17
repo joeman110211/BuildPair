@@ -12,7 +12,7 @@ describe('review-stage partnership discovery', () => {
     expect(homepage.indexOf('bp-home-partners-section')).toBeGreaterThan(homepage.indexOf('faqList'));
     expect(homepage.indexOf('bp-home-partners-section')).toBeLessThan(homepage.indexOf('<PublicFooter />'));
     expect(homepage).toContain('paid promotions, not independent recommendations');
-    
+  });
 
   it('keeps partners discoverable in the footer and main menu', () => {
     expect(source('components/PublicFooter.tsx')).toContain("['Partners', '/(public)/partners']");
