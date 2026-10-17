@@ -23,6 +23,7 @@ export function AdviceGuidePage({ slug }: { slug: string }) {
     </ScrollView>;
   }
 
+  const partnerReviewGuide = guide.slug === 'choosing-buildpair-partner-services' || guide.slug === 'comparing-trade-supplier-discounts';
   const related = relatedAdviceGuides(guide, ALL_ADVICE_GUIDES);
   const officialSources = guide.sources.filter(isOfficialAdviceSource);
   const furtherSources = guide.sources.filter((source) => !isOfficialAdviceSource(source));
@@ -45,7 +46,7 @@ export function AdviceGuidePage({ slug }: { slug: string }) {
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
     <PublicSeo title={guide.title} description={guide.description} type="article" />
-    <Head><script type="application/ld+json">{JSON.stringify(structuredData)}</script></Head>
+    <Head>{partnerReviewGuide ? <meta name="robots" content="noindex, nofollow" /> : null}<script type="application/ld+json">{JSON.stringify(structuredData)}</script></Head>
 
     <View style={styles.hero}>
       <View style={styles.heroInner}>
