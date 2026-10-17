@@ -10,6 +10,7 @@ const tradeRules: { pattern: RegExp; trade: TradeCategory }[] = [
   { pattern: /tile|tiling|grout/, trade: 'Tiling' },
   { pattern: /kitchen/, trade: 'Kitchens' },
   { pattern: /boiler|central.heating|gas.safety/, trade: 'Heating & Gas' },
+  { pattern: /plumb|pipework|tap.install|leak.repair|leaking.tap/, trade: 'Plumbing' },
   { pattern: /electric|eicr|rewir|consumer.unit/, trade: 'Electrical' },
   { pattern: /solar|heat.pump|ev.charg/, trade: 'Renewables & EV' },
   { pattern: /loft|garage.conversion|basement.conversion/, trade: 'Conversions' },
@@ -65,9 +66,14 @@ export function relatedAdviceGuides(guide: AdviceGuide, allGuides: AdviceGuide[]
     }
   };
   for (const slug of guide.relatedSlugs ?? []) add(allGuides.find((item) => item.slug === slug));
-  // Fill sparse related lists with checked guides on the same topic and for the same audience.
+  // Broad editorial categories span unrelated trades. Do not suggest a bathroom
+  // cost guide after a roofing article merely because both mention prices.
+  const broad = new Set(['Costs & pricing', 'Rules & regulations', 'Safety & credentials', 'Project planning']);
+  const guideTrade = tradeForAdvice(guide);
   for (const item of allGuides) {
-    if (item.audience === guide.audience && item.category === guide.category) add(item);
+    if (item.audience !== guide.audience || item.category !== guide.category) continue;
+    if (broad.has(guide.category) && (!guideTrade || tradeForAdvice(item) !== guideTrade)) continue;
+    add(item);
   }
   return matches;
 }
