@@ -286,6 +286,19 @@ async function handleEvent(event: Stripe.Event) {
     await getSql()`UPDATE trader_profiles SET stripe_charges_enabled = ${Boolean(account.charges_enabled)}, stripe_payouts_enabled = ${Boolean(account.payouts_enabled)}, updated_at = now() WHERE stripe_account_id = ${account.id}`;
     return;
   }
+  if (event.type === 'invoice.paid') {
+    const invoice = event.data.object as Stripe.Invoice & {
+      subscription?: string | Stripe.Subscription | null;
+      parent?: { subscription_details?: { subscription?: string | null } | null } | null;
+    };
+    const direct = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+    const parent = invoice.parent?.subscription_details?.subscription;
+    const subId = direct || parent;
+    if (subId) {
+      const sub = await getStripe().subscriptions.retrieve(subId);
+      if (await syncDirectorySubscription(sub)) return;
+    }
+  }
   if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.created') {
     // Stripe does not guarantee delivery order. Retrieve current state rather than
     // allowing an old "active" event to restore a cancelled or failed subscription.
