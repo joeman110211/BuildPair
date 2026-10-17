@@ -4,6 +4,7 @@ import { assertRateLimit } from '@/lib/rate-limit';
 import { jsonError,HttpError } from '@/lib/server';
 import { getSql } from '@/lib/sql';
 import { ensureDirectoryTable,newDirectoryToken,directoryTokenHash,directoryManageUrl,sendDirectoryEmail } from '@/lib/partner-directory';
+import { getStripe } from '@/lib/stripe';
 
 const update=z.object({id:z.string().uuid(),action:z.enum(['approve','reject','suspend'])});
 export async function GET(request:Request) {
@@ -52,6 +53,7 @@ export async function POST(request:Request) {
     // Suspensions apply to live listings without inadvertently cancelling Stripe
     // billing: the owner must arrange cancellation/refund separately when appropriate.
     if(!['active','cancel_pending'].includes(row.status))throw new HttpError(409,'Only an active listing may be suspended.');
+    if(row.subscriptionId) await getStripe().subscriptions.update(row.subscriptionId,{cancel_at_period_end:true},{idempotencyKey:`directory-owner-suspend-${row.id}`});
     await sql`UPDATE buildpair_partner_directory SET status='suspended',updated_at=now() WHERE id=${p.id}::uuid`;
     return Response.json({status:'suspended'});
   }catch(e){return jsonError(e);}
