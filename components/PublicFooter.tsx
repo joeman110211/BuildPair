@@ -31,6 +31,7 @@ const linkGroups = [
     links: [
       ['Pricing', '/(public)/pricing'],
       ['BuildPair Rewards', '/(public)/rewards'],
+      ['Partners', '/(public)/partners'],
       ['How payments work', '/(public)/payments'],
       ['About us', '/(public)/about'],
       ['Download app', '/(public)/download'],
