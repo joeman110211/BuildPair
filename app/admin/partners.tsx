@@ -11,13 +11,21 @@ import { apiFetch, errorMessage } from '@/lib/api';
 
 const categories = ['Trade insurance','Trade supplies','Property services','Interiors & design','Tools & equipment','Business services','Other'] as const;
 const packages = ['local','featured','founding'] as const;
+const placements = [
+  ['trader-after-onboarding','After trade onboarding'],
+  ['quote-after-send','After a quote is sent'],
+  ['project-plus-kitchen','Project+ kitchen concepts'],
+  ['project-plus-bathroom','Project+ bathroom concepts'],
+  ['pro-member-benefits','Pro member benefits'],
+] as const;
+const levels=['standard','featured','exclusive'] as const;
 type Status = 'draft' | 'live' | 'paused';
-type Partner = { id: string; name: string; category: string; summary: string; websiteUrl: string; logoUrl: string | null; offerText: string; package: string; termMonths: number; pricePence: number; status: Status; startsOn: string | null; endsOn: string | null; clickCount: number };
+type Partner = { id: string; name: string; category: string; summary: string; websiteUrl: string; logoUrl: string | null; offerText: string; placements: string[]; placementLevel: string; memberOfferText: string; memberOfferTerms: string; package: string; termMonths: number; pricePence: number; status: Status; startsOn: string | null; endsOn: string | null; clickCount: number };
 type Enquiry = { id: string; businessName: string; contactName: string; email: string; category: string; package: string; message: string; status: 'new'|'contacted'|'closed'; createdAt: string };
 type Data = { partners: Partner[]; enquiries: Enquiry[] };
-type Draft = { id: string | null; name: string; category: string; summary: string; websiteUrl: string; logoUrl: string; offerText: string; package: string; termMonths: 6|12; price: string; status: Status; startsOn: string; endsOn: string };
-function emptyDraft(): Draft { return { id: null, name:'',category:'Trade supplies',summary:'',websiteUrl:'',logoUrl:'',offerText:'',package:'local',termMonths:6,price:'',status:'draft',startsOn:'',endsOn:'' }; }
-function draftFor(p: Partner): Draft { return { id:p.id,name:p.name,category:p.category,summary:p.summary,websiteUrl:p.websiteUrl,logoUrl:p.logoUrl || '',offerText:p.offerText,package:p.package,termMonths:p.termMonths===12?12:6,price:(p.pricePence/100).toFixed(2),status:p.status,startsOn:p.startsOn||'',endsOn:p.endsOn||'' }; }
+type Draft = { id: string | null; name: string; category: string; summary: string; websiteUrl: string; logoUrl: string; offerText: string; placements: string[]; placementLevel: string; memberOfferText: string; memberOfferTerms: string; package: string; termMonths: 6|12; price: string; status: Status; startsOn: string; endsOn: string };
+function emptyDraft(): Draft { return { id: null, name:'',category:'Trade supplies',summary:'',websiteUrl:'',logoUrl:'',offerText:'',placements:[],placementLevel:'standard',memberOfferText:'',memberOfferTerms:'',package:'local',termMonths:6,price:'',status:'draft',startsOn:'',endsOn:'' }; }
+function draftFor(p: Partner): Draft { return { id:p.id,name:p.name,category:p.category,summary:p.summary,websiteUrl:p.websiteUrl,logoUrl:p.logoUrl || '',offerText:p.offerText,placements:p.placements||[],placementLevel:p.placementLevel||'standard',memberOfferText:p.memberOfferText||'',memberOfferTerms:p.memberOfferTerms||'',package:p.package,termMonths:p.termMonths===12?12:6,price:(p.pricePence/100).toFixed(2),status:p.status,startsOn:p.startsOn||'',endsOn:p.endsOn||'' }; }
 const money = (pence: number) => new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'}).format(pence/100);
 
 export default function AdminPartnersPage() {
@@ -51,6 +59,8 @@ export default function AdminPartnersPage() {
       await apiFetch('/api/admin/partners',{method:'POST',body:JSON.stringify({
         id:draft.id,name:draft.name,category:draft.category,summary:draft.summary,
         websiteUrl:draft.websiteUrl,logoUrl:draft.logoUrl,offerText:draft.offerText,
+        placements:draft.placements,placementLevel:draft.placementLevel,
+        memberOfferText:draft.memberOfferText,memberOfferTerms:draft.memberOfferTerms,
         package:draft.package,termMonths:draft.termMonths,pricePence:Math.round(price*100),
         status:draft.status,startsOn:draft.startsOn||null,endsOn:draft.endsOn||null,
       })},()=>tokenRef.current());
@@ -83,6 +93,14 @@ export default function AdminPartnersPage() {
       <TextInput mode="outlined" label="Logo image HTTPS URL (optional)" autoCapitalize="none" value={draft.logoUrl} onChangeText={v=>update('logoUrl',v)} maxLength={500}/>
       <TextInput mode="outlined" label="Short description" value={draft.summary} onChangeText={v=>update('summary',v)} multiline maxLength={600}/>
       <TextInput mode="outlined" label="Promotional offer (optional)" value={draft.offerText} onChangeText={v=>update('offerText',v)} multiline maxLength={250}/>
+      <Text style={styles.label}>Optional contextual placements</Text>
+      <Text style={styles.muted}>Disabled by default. Choose only where the signed agreement allows. No personal or job data is shared. One clearly labelled suggestion per relevant screen, with a dismiss button.</Text>
+      <View style={styles.row}>{placements.map(([id,label])=><Button key={id} compact mode={draft.placements.includes(id)?'contained':'outlined'} onPress={()=>setDraft(d=>({...d,placements:d.placements.includes(id)?d.placements.filter(x=>x!==id):[...d.placements,id]}))}>{draft.placements.includes(id)?'✓ ':''}{label}</Button>)}</View>
+      <Text style={styles.label}>Placement priority</Text>
+      <View style={styles.row}>{levels.map(level=><Button key={level} compact mode={draft.placementLevel===level?'contained':'outlined'} onPress={()=>update('placementLevel',level)}>{level==='exclusive'?'Exclusive suggestion slot':level==='featured'?'Priority suggestion':'Standard rotation'}</Button>)}</View>
+      <Text style={styles.muted}>Exclusivity applies only to an agreed suggestion slot and dates, not all recommendations, the whole industry or independent editorial guides. Record the contract before enabling it.</Text>
+      <TextInput mode="outlined" label="Agreed Pro-only discount or benefit (optional)" value={draft.memberOfferText} onChangeText={v=>update('memberOfferText',v)} multiline maxLength={250}/>
+      <TextInput mode="outlined" label="Pro benefit conditions, eligible members, end date (optional)" value={draft.memberOfferTerms} onChangeText={v=>update('memberOfferTerms',v)} multiline maxLength={500}/>
       <Text style={styles.label}>Category</Text>
       <View style={styles.row}>{categories.map(c=><Button key={c} compact mode={draft.category===c?'contained':'outlined'} onPress={()=>update('category',c)}>{c}</Button>)}</View>
       <Text style={styles.label}>Package</Text>
@@ -104,6 +122,7 @@ export default function AdminPartnersPage() {
       <Text style={styles.muted}>{p.category} · {p.package} · {p.termMonths} months · {money(p.pricePence)}</Text>
       <Text style={styles.muted}>{p.startsOn||'No start date'} to {p.endsOn||'No end date'} · {p.clickCount} indicative outbound clicks (may include bots)</Text>
       <Text style={styles.muted}>{p.summary}</Text>
+      <Text style={styles.muted}>Suggestion priority: {p.placementLevel||'standard'} · Placements: {p.placements?.join(', ')||'none'} · Pro deal: {p.memberOfferText?'agreed offer recorded':'not available'}</Text>
       <Button mode="outlined" onPress={()=>{setDraft(draftFor(p));setShowEditor(true);setNotice('');}}>Edit listing</Button>
     </AppCard>)}</View>
     <Text variant="titleLarge" style={styles.title}>Partnership enquiries</Text>
