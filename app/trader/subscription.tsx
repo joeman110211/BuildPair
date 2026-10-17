@@ -158,6 +158,12 @@ export default function SubscriptionScreen() {
       </View> : <Text style={styles.muted}>Starter tradespeople can browse jobs without consuming anything, but submitting an open-marketplace offer requires an active paid plan.</Text>}
     </AppCard>
 
+    <AppCard>
+      <Text variant="titleLarge" style={styles.title}>Pro member benefits</Text>
+      <Text style={styles.muted}>Partner discounts and offers will appear only after a business has agreed real benefits and eligibility terms. No offers or savings are guaranteed.</Text>
+      <Link href="/trader/member-benefits" asChild><Button mode="outlined">View member benefits</Button></Link>
+    </AppCard>
+
     {!isWeb ? <AppCard>
       <Text variant="titleLarge" style={styles.title}>Mobile plan access</Text>
       <Text style={styles.muted}>Plan purchases and plan changes are not offered inside this mobile app. If your BuildPair account already has Core, Plus or Pro, the same entitlement and allowance are available here automatically.</Text>
