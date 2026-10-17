@@ -7,6 +7,7 @@ https://www.buildpair.co.uk/directory
 https://www.buildpair.co.uk/jobs
 https://www.buildpair.co.uk/payments
 https://www.buildpair.co.uk/rewards
+https://www.buildpair.co.uk/partners
 https://www.buildpair.co.uk/trust-safety
 https://www.buildpair.co.uk/marketplace-standards
 https://www.buildpair.co.uk/advice
@@ -114,3 +115,5 @@ https://www.buildpair.co.uk/advice/handling-homeowner-complaints-trades
 https://www.buildpair.co.uk/advice/site-measurements-before-quoting-trades
 https://www.buildpair.co.uk/advice/trade-materials-ordering-and-customer-supply
 https://www.buildpair.co.uk/advice/trade-insurance-domestic-building-jobs
+https://www.buildpair.co.uk/advice/choosing-buildpair-partner-services
+https://www.buildpair.co.uk/advice/comparing-trade-supplier-discounts
