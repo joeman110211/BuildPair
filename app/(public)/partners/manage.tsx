@@ -17,6 +17,7 @@ export default function ManagePartnerListing() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [confirmRemoval, setConfirmRemoval] = useState(false);
   async function reload() {
     if (!token) {setError('Open the private management link sent to your email.');return;}
     try {
@@ -78,7 +79,11 @@ export default function ManagePartnerListing() {
         <Text style={styles.sub}>To change an approved photo, description or website, contact info@buildpair.co.uk. Changes require review.</Text>
         <Button mode="outlined" onPress={()=>void Linking.openURL('mailto:info@buildpair.co.uk?subject=Partner%20listing%20change')}>Request a change</Button>
         {data.status==='active'?<Button mode="outlined" disabled={busy} onPress={()=>void perform('cancel')}>Cancel future renewal</Button>:<Text style={styles.sub}>Renewal cancelled; your paid listing remains until its paid period ends.</Text>}
-        <Button mode="outlined" textColor="#B42318" disabled={busy} onPress={()=>void perform('remove')}>Remove listing now</Button>
+        {confirmRemoval ? <View style={styles.card}>
+          <Text style={styles.error}>Remove this listing immediately and stop future monthly renewal? This will take your advert offline now.</Text>
+          <Button mode="outlined" textColor="#B42318" disabled={busy} onPress={()=>void perform('remove')}>Confirm immediate removal</Button>
+          <Button mode="text" onPress={()=>setConfirmRemoval(false)}>Keep my listing</Button>
+        </View> : <Button mode="outlined" textColor="#B42318" disabled={busy} onPress={()=>setConfirmRemoval(true)}>Remove listing now</Button>}
       </>:null}
       {data.paidUntil?<Text style={styles.sub}>Paid through {new Date(data.paidUntil).toLocaleDateString('en-GB')}</Text>:null}
       {['removed','rejected','suspended','payment_issue'].includes(data.status)?<Text style={styles.sub}>Not visible in the public directory. Contact BuildPair if needed.</Text>:null}
