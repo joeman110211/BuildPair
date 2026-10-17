@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       const existing = await sql`
         SELECT name FROM buildpair_partners WHERE status='live' AND placement_level='exclusive'
           AND id <> coalesce(${p.id}::uuid, '00000000-0000-0000-0000-000000000000'::uuid)
-          AND placements && ${p.placements}::text[]
+          AND placements && string_to_array(${p.placements.join(',')}, ',')
           AND (ends_on IS NULL OR ends_on >= current_date)
         LIMIT 1
       `;
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     if (p.id) {
       const rows = await sql`UPDATE buildpair_partners SET name=${p.name}, category=${p.category}, summary=${p.summary},
         website_url=${website}, logo_url=${logo}, offer_text=${p.offerText},
-        placements=${p.placements}, placement_level=${p.placementLevel},
+        placements=string_to_array(${p.placements.join(',')}, ','), placement_level=${p.placementLevel},
         member_offer_text=${p.memberOfferText}, member_offer_terms=${p.memberOfferTerms}, package=${p.package},
         term_months=${p.termMonths}, price_pence=${p.pricePence}, status=${p.status},
         starts_on=${p.startsOn}::date, ends_on=${p.endsOn}::date, updated_at=now()
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       await sql`INSERT INTO buildpair_partners
         (name, category, summary, website_url, logo_url, offer_text, placements, placement_level, member_offer_text, member_offer_terms, package, term_months, price_pence, status, starts_on, ends_on)
         VALUES (${p.name},${p.category},${p.summary},${website},${logo},${p.offerText},
-          ${p.placements},${p.placementLevel},${p.memberOfferText},${p.memberOfferTerms},${p.package},${p.termMonths},${p.pricePence},${p.status},${p.startsOn}::date,${p.endsOn}::date)`;
+          string_to_array(${p.placements.join(',')}, ','),${p.placementLevel},${p.memberOfferText},${p.memberOfferTerms},${p.package},${p.termMonths},${p.pricePence},${p.status},${p.startsOn}::date,${p.endsOn}::date)`;
     }
     return Response.json({ saved: true });
   } catch (error) { return jsonError(error); }
