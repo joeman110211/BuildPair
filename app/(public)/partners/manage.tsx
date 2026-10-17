@@ -81,7 +81,7 @@ export default function ManagePartnerListing() {
         <Button mode="outlined" textColor="#B42318" disabled={busy} onPress={()=>void perform('remove')}>Remove listing now</Button>
       </>:null}
       {data.paidUntil?<Text style={styles.sub}>Paid through {new Date(data.paidUntil).toLocaleDateString('en-GB')}</Text>:null}
-      {['removed','rejected','suspended'].includes(data.status)?<Text style={styles.sub}>Not visible in the public directory. Contact BuildPair if needed.</Text>:null}
+      {['removed','rejected','suspended','payment_issue'].includes(data.status)?<Text style={styles.sub}>Not visible in the public directory. Contact BuildPair if needed.</Text>:null}
     </View>}
     <Link href="/(public)/partners" asChild><Button mode="text">Back to Partners</Button></Link>
     <PublicFooter/>
