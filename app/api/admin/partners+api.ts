@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { requireOwnerAdmin } from '@/lib/admin/owner';
 import { assertRateLimit } from '@/lib/rate-limit';
-import { ensurePartnersTables, partnerCategories, partnerPackages, safePartnerUrl } from '@/lib/partners-store';
+import { ensurePartnersTables, partnerCategories, partnerPackages, partnerPlacementIds, partnerPlacementLevels, safePartnerUrl } from '@/lib/partners-store';
 import { getSql } from '@/lib/sql';
 import { HttpError, jsonError } from '@/lib/server';
 
@@ -13,6 +13,10 @@ const listing = z.object({
   websiteUrl: z.string().trim().max(500),
   logoUrl: z.string().trim().max(500).default(''),
   offerText: z.string().trim().max(250).default(''),
+  placements: z.array(z.enum(partnerPlacementIds)).max(5).default([]),
+  placementLevel: z.enum(partnerPlacementLevels).default('standard'),
+  memberOfferText: z.string().trim().max(250).default(''),
+  memberOfferTerms: z.string().trim().max(500).default(''),
   package: z.enum(partnerPackages),
   termMonths: z.union([z.literal(6),z.literal(12)]),
   pricePence: z.number().int().min(0).max(100000000),
@@ -30,7 +34,8 @@ export async function GET(request: Request) {
     const sql = getSql();
     const [partners, enquiries] = await Promise.all([
       sql`SELECT id, name, category, summary, website_url AS "websiteUrl", logo_url AS "logoUrl",
-        offer_text AS "offerText", package, term_months AS "termMonths",
+        offer_text AS "offerText", placements, placement_level AS "placementLevel",
+        member_offer_text AS "memberOfferText", member_offer_terms AS "memberOfferTerms", package, term_months AS "termMonths",
         price_pence AS "pricePence", status, starts_on::text AS "startsOn",
         ends_on::text AS "endsOn", click_count AS "clickCount", updated_at AS "updatedAt"
         FROM buildpair_partners ORDER BY created_at DESC LIMIT 300`,
@@ -50,20 +55,33 @@ export async function POST(request: Request) {
     const logo = p.logoUrl ? safePartnerUrl(p.logoUrl) : null;
     if (!website || (p.logoUrl && !logo)) throw new HttpError(400, 'Use a valid HTTPS website and logo URL.');
     if ((p.startsOn && !Number.isFinite(Date.parse(p.startsOn))) || (p.endsOn && !Number.isFinite(Date.parse(p.endsOn))) || (p.startsOn && p.endsOn && p.endsOn < p.startsOn)) throw new HttpError(400, 'Check the listing dates.');
+    if (p.placements.includes('pro-member-benefits') && !p.memberOfferText) throw new HttpError(400, 'Enter a verified Pro member offer before enabling that placement.');
     await ensurePartnersTables();
     const sql = getSql();
+    if (p.status === 'live' && p.placementLevel === 'exclusive' && p.placements.length) {
+      const existing = await sql`
+        SELECT name FROM buildpair_partners WHERE status='live' AND placement_level='exclusive'
+          AND id <> coalesce(${p.id}::uuid, '00000000-0000-0000-0000-000000000000'::uuid)
+          AND placements && ${p.placements}::text[]
+          AND (ends_on IS NULL OR ends_on >= current_date)
+        LIMIT 1
+      `;
+      if(existing.length) throw new HttpError(409, 'An active exclusive sponsor already occupies one of those placements.');
+    }
     if (p.id) {
       const rows = await sql`UPDATE buildpair_partners SET name=${p.name}, category=${p.category}, summary=${p.summary},
-        website_url=${website}, logo_url=${logo}, offer_text=${p.offerText}, package=${p.package},
+        website_url=${website}, logo_url=${logo}, offer_text=${p.offerText},
+        placements=${p.placements}, placement_level=${p.placementLevel},
+        member_offer_text=${p.memberOfferText}, member_offer_terms=${p.memberOfferTerms}, package=${p.package},
         term_months=${p.termMonths}, price_pence=${p.pricePence}, status=${p.status},
         starts_on=${p.startsOn}::date, ends_on=${p.endsOn}::date, updated_at=now()
         WHERE id=${p.id}::uuid RETURNING id`;
       if (!rows.length) throw new HttpError(404, 'Partner not found');
     } else {
       await sql`INSERT INTO buildpair_partners
-        (name, category, summary, website_url, logo_url, offer_text, package, term_months, price_pence, status, starts_on, ends_on)
+        (name, category, summary, website_url, logo_url, offer_text, placements, placement_level, member_offer_text, member_offer_terms, package, term_months, price_pence, status, starts_on, ends_on)
         VALUES (${p.name},${p.category},${p.summary},${website},${logo},${p.offerText},
-          ${p.package},${p.termMonths},${p.pricePence},${p.status},${p.startsOn}::date,${p.endsOn}::date)`;
+          ${p.placements},${p.placementLevel},${p.memberOfferText},${p.memberOfferTerms},${p.package},${p.termMonths},${p.pricePence},${p.status},${p.startsOn}::date,${p.endsOn}::date)`;
     }
     return Response.json({ saved: true });
   } catch (error) { return jsonError(error); }
