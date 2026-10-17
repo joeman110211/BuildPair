@@ -19,6 +19,7 @@ describe('progressive dashboard flow and route safety', () => {
     expect(trade.indexOf('<AppCard style={styles.nextActionCard}>')).toBeLessThan(trade.indexOf('Optional profile improvements'));
     expect(trade.indexOf('Quick actions')).toBeLessThan(trade.indexOf('CURRENT MEMBERSHIP'));
     expect(trade).toContain('{jobs.length || quotes.length ? <View style={styles.stats}>');
+    expect(trade).toContain('href="/trader/quotes/new" asChild><Button mode="outlined"');
     expect(trade).toContain('{activeJobs.length ? <>');
     expect(trade).toContain('PartnerSuggestion placement="trader-after-onboarding"');
   });
