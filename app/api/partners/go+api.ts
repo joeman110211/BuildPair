@@ -14,6 +14,6 @@ export async function GET(request: Request) {
     if (!url) throw new HttpError(404,'Partner link unavailable');
     // Indicative outbound clicks only. Not verified unique human visitors.
     void sql`UPDATE buildpair_partners SET click_count=click_count+1 WHERE id=${id}::uuid`.catch(() => undefined);
-    return Response.redirect(url, 302);
+    return new Response(null, { status: 302, headers: { Location: url, 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store' } });
   } catch (error) { return jsonError(error); }
 }
