@@ -132,10 +132,27 @@ export default function TraderDashboard() {
       <View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.cardTitle}>BuildPair payouts ready</Text><Text style={styles.muted}>Stripe has confirmed that your connected account can receive materials, deposit and released staged payments.</Text></View><Chip icon="check-circle-outline">Ready</Chip></View>
     </AppCard> : null}
 
+    <AppCard style={styles.nextActionCard}>
+      <View style={styles.row}><View style={styles.flex}><Text style={styles.nextActionEyebrow}>NEXT ACTION</Text><Text variant="titleLarge" style={styles.cardTitle}>{nextAction.title}</Text><Text style={styles.muted}>{nextAction.body}</Text></View><Chip icon="arrow-right-circle-outline">Next</Chip></View>
+      <Button mode="contained" icon="arrow-right" onPress={() => router.push(nextAction.href)}>{nextAction.label}</Button>
+    </AppCard>
+
+    <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.cardTitle}>Quick actions</Text></View>
+    <View style={styles.quickActions}>
+      <Link href="/trader/job-board" asChild><Button mode="contained" contentStyle={styles.actionButton}>Find jobs</Button></Link>
+      <Link href="/trader/quotes/new" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Create a quote</Button></Link>
+      <Link href="/trader/invoices/new" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Create invoice</Button></Link>
+      {activeJobs.length ? <Link href="/trader/my-jobs" asChild><Button mode="outlined" contentStyle={styles.actionButton}>My active jobs</Button></Link> : null}
+      {jobs.length || quotes.length ? <Link href="/trader/customers" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Customer book</Button></Link> : null}
+      {paidActive && (profile.subscriptionTier === 'basic' || profile.subscriptionTier === 'featured') ? <Link href="/trader/calendar" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Working calendar</Button></Link> : null}
+      <Link href="/trader/profile" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Manage profile</Button></Link>
+      {(pendingQuotes.length || activeJobs.length) ? <Link href="/trader/attention" asChild><Button mode="outlined" icon="bell-alert-outline" contentStyle={styles.actionButton}>Needs attention</Button></Link> : null}
+    </View>
+
     <AppCard>
       <View style={styles.row}>
         <View style={styles.flex}>
-          <Text variant="titleLarge" style={styles.cardTitle}>Strengthen your profile</Text>
+          <Text variant="titleLarge" style={styles.cardTitle}>Optional profile improvements</Text>
           <Text style={styles.muted}>{completedProfileChecks} of {profileChecks.length} suggested details completed</Text>
         </View>
         <Chip icon={completedProfileChecks === profileChecks.length ? 'check-circle-outline' : 'progress-check'}>{Math.round(completedProfileChecks / profileChecks.length * 100)}%</Chip>
@@ -144,11 +161,6 @@ export default function TraderDashboard() {
       {profileChecks.map((check) => <Text key={check.label} style={styles.muted}>{check.done ? '✓' : '○'} {check.label}</Text>)}
       <Text style={styles.muted}>Photos and qualifications are optional. Qualifications are trader-declared unless BuildPair verifies them.</Text>
       {completedProfileChecks < profileChecks.length ? <Link href="/trader/onboarding" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Improve profile</Button></Link> : null}
-    </AppCard>
-
-    <AppCard style={styles.nextActionCard}>
-      <View style={styles.row}><View style={styles.flex}><Text style={styles.nextActionEyebrow}>NEXT ACTION</Text><Text variant="titleLarge" style={styles.cardTitle}>{nextAction.title}</Text><Text style={styles.muted}>{nextAction.body}</Text></View><Chip icon="arrow-right-circle-outline">Next</Chip></View>
-      <Button mode="contained" icon="arrow-right" onPress={() => router.push(nextAction.href)}>{nextAction.label}</Button>
     </AppCard>
 
     <AppCard style={[styles.membershipCard, paidActive && styles.membershipCardPaid]}>
@@ -198,32 +210,19 @@ export default function TraderDashboard() {
       <Text style={styles.relayNote}>No paid-lead nonsense and no cash-for-random-invites scheme. The point is to seed BuildPair with real local working networks as our local trade network grows.</Text>
     </AppCard> : null}
 
-    <PartnerSuggestion placement="trader-after-onboarding" enabled={Boolean(profile?.businessName?.trim() && profile?.tradeCategory)} />
-
-    <View style={styles.stats}>
+    {jobs.length || quotes.length ? <View style={styles.stats}>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{newLeads.length}</Text><Text style={styles.statLabel}>New opportunities</Text></AppCard>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{pendingQuotes.length}</Text><Text style={styles.statLabel}>Quotes awaiting reply</Text></AppCard>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{activeJobs.length}</Text><Text style={styles.statLabel}>Active jobs</Text></AppCard>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{completedJobs.length}</Text><Text style={styles.statLabel}>Completed</Text></AppCard>
-    </View>
-
-    <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.cardTitle}>Quick actions</Text></View>
-    <View style={styles.quickActions}>
-      <Link href="/trader/job-board" asChild><Button mode="contained" contentStyle={styles.actionButton}>Find jobs</Button></Link>
-      <Link href="/trader/my-jobs" asChild><Button mode="outlined" contentStyle={styles.actionButton}>My active jobs</Button></Link>
-      <Link href="/trader/quotes" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Quote any customer</Button></Link>
-      <Link href="/trader/invoices/new" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Create invoice</Button></Link>
-      <Link href="/trader/customers" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Customer book</Button></Link>
-      <Link href="/trader/calendar" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Working calendar</Button></Link>
-      <Link href="/trader/attention" asChild><Button mode="outlined" icon="bell-alert-outline" contentStyle={styles.actionButton}>Needs attention</Button></Link>
-      <Link href="/trader/profile" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Manage profile</Button></Link>
-      <Button mode="outlined" contentStyle={styles.actionButton} onPress={() => router.push(`/(public)/traders/${profile.id}` as Href)}>View public profile</Button>
-    </View>
+    </View> : null}
 
     {error ? <EmptyState title="Something needs attention" body={error} action={<Button mode="outlined" onPress={load}>Try again</Button>} /> : null}
 
-    <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.cardTitle}>Active jobs</Text><Link href="/trader/my-jobs" asChild><Button mode="text">View all</Button></Link></View>
-    {activeJobs.length ? activeJobs.slice(0, 3).map((job) => <AppCard key={job.id} style={styles.activeJobCard}><View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.cardTitle}>{job.title}</Text><Text style={styles.muted}>Accepted job · open this for payment stages, variations and completion.</Text></View><Chip icon="progress-clock">In progress</Chip></View><Button mode="contained" onPress={() => router.push(`/trader/jobs/${job.id}` as Href)}>Continue job</Button></AppCard>) : <EmptyState title="No active jobs" body="Accepted jobs will stay visible here so the workflow does not disappear after a quote is accepted." />}
+    {activeJobs.length ? <>
+      <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.cardTitle}>Active jobs</Text><Link href="/trader/my-jobs" asChild><Button mode="text">View all</Button></Link></View>
+      {activeJobs.slice(0, 3).map((job) => <AppCard key={job.id} style={styles.activeJobCard}><View style={styles.row}><View style={styles.flex}><Text variant="titleMedium" style={styles.cardTitle}>{job.title}</Text><Text style={styles.muted}>Accepted job · open this for payment stages, variations and completion.</Text></View><Chip icon="progress-clock">In progress</Chip></View><Button mode="contained" onPress={() => router.push(`/trader/jobs/${job.id}` as Href)}>Continue job</Button></AppCard>)}
+    </> : null}
 
     <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.cardTitle}>Recent opportunities</Text><Link href="/trader/job-board" asChild><Button mode="text">View all</Button></Link></View>
     {!newLeads.length ? <EmptyState title="No new opportunities right now" body={`New ${profile.tradeCategory.toLowerCase()} jobs matching your account will appear here.`} /> : newLeads.slice(0, 3).map((job) => <AppCard key={job.id}>
@@ -232,6 +231,8 @@ export default function TraderDashboard() {
       <Text numberOfLines={2} style={styles.description}>{job.description}</Text>
       <View style={styles.cardActions}><Button mode="contained" onPress={() => router.push('/trader/job-board')}>View opportunity</Button></View>
     </AppCard>)}
+
+    <PartnerSuggestion placement="trader-after-onboarding" enabled={Boolean(profile?.businessName?.trim() && profile?.tradeCategory)} />
   </Screen>;
 }
 
