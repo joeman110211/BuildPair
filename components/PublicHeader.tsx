@@ -33,9 +33,9 @@ function NavMenu({ dashboard, signedIn, onDashboard, onSignOut, preview = false 
     { label: 'Advice Hub', onPress: () => go('/(public)/advice') },
     { label: 'For homeowners', sectionLabel: 'Guides', dividerBefore: true, onPress: () => go('/(public)/for-homeowners') },
     { label: 'Updates', onPress: () => go('/(public)/updates') },
-    { label: 'Partners', onPress: () => go('/(public)/partners') },
     { label: 'Trust & safety', sectionLabel: 'Support', dividerBefore: true, onPress: () => go('/(public)/trust-safety') },
     { label: 'Contact', onPress: () => go('/(public)/contact') },
+    { label: 'Partners', sectionLabel: 'Work with us', dividerBefore: true, onPress: () => go('/(public)/partners') },
   ];
 
   if (preview) {
