@@ -62,14 +62,18 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
     { label: 'Home', sectionLabel: 'BuildPair', onPress: () => go('/') },
     { label: 'Dashboard', onPress: () => go(home) },
     { label: findLabel, onPress: () => go(findHref) },
-    { label: 'Jobs', onPress: () => go(jobsHref) },
+    { label: currentMode === 'customer' ? 'My jobs' : 'My jobs', onPress: () => go(jobsHref) },
     ...(currentMode === 'trader' ? [
       { label: 'Quotes', onPress: () => go(quotesHref) },
-      { label: 'Customer book', onPress: () => go('/trader/customers') },
+      { label: 'Customer book', sectionLabel: 'Business tools', dividerBefore: true, onPress: () => go('/trader/customers') },
       { label: 'Working calendar', onPress: () => go('/trader/calendar') },
-      { label: 'Project+ planner', onPress: () => go('/trader/project-plus') },
+      { label: 'Project+', onPress: () => go('/trader/project-plus') },
       { label: 'Pro member benefits', onPress: () => go('/trader/member-benefits') },
-    ] satisfies CompactNavItem[] : [{ label: 'Project+ planner', onPress: () => go('/customer/project-plus') } satisfies CompactNavItem]),
+    ] satisfies CompactNavItem[] : [
+      { label: 'Saved trades', sectionLabel: 'Homeowner tools', dividerBefore: true, onPress: () => go('/customer/saved-trades') },
+      { label: 'Home Record', onPress: () => go('/customer/home-record') },
+      { label: 'Project+', onPress: () => go('/customer/project-plus') },
+    ] satisfies CompactNavItem[]),
     { label: messageLabel, onPress: () => go(messagesHref) },
     { label: notificationLabel, onPress: () => go(notificationsHref) },
     { label: 'Profile', sectionLabel: 'Your account', dividerBefore: true, onPress: () => go(profileHref) },
@@ -91,7 +95,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
       <Link href="/" asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Home</Button></Link>
       <Link href={home} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Dashboard</Button></Link>
       <Link href={findHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{findLabel}</Button></Link>
-      <Link href={jobsHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Jobs</Button></Link>
+      <Link href={jobsHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>My jobs</Button></Link>
       {currentMode === 'trader' ? <Link href={quotesHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>Quotes</Button></Link> : null}
       <Link href={messagesHref} asChild><Button mode="text" contentStyle={styles.navButtonContent} textColor={colors.charcoalSoft}>{messageLabel}</Button></Link>
       <Button mode="text" contentStyle={styles.navButtonContent} textColor={unreadNotifications ? colors.primary : colors.charcoalSoft} onPress={() => router.push(notificationsHref)}>{notificationLabel}</Button>
