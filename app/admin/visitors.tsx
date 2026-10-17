@@ -49,6 +49,11 @@ type VisitorData = {
   forms: CountRow[];
   recentSessions: Session[];
 };
+type AdviceGrowthReport = {
+  storageReady: boolean;
+  summary: Record<string, unknown>;
+  topGuides: { path: string; views: number | string; nextStepClicks: number | string }[];
+};
 type SessionEvent = { id: number; eventType: string; path: string | null; target: string | null; value: number | null; details: Record<string, unknown>; createdAt: string };
 
 function number(value: unknown) {
@@ -101,6 +106,7 @@ export default function VisitorAnalyticsAdmin() {
   const [days, setDays] = useState('7');
   const [trafficMode, setTrafficMode] = useState<'filtered' | 'all'>('filtered');
   const [data, setData] = useState<VisitorData | null>(null);
+  const [adviceGrowth, setAdviceGrowth] = useState<AdviceGrowthReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -120,6 +126,14 @@ export default function VisitorAnalyticsAdmin() {
     void apiFetch<VisitorData>(`/api/admin/visitors?days=${days}&traffic=${trafficMode}`, {}, getToken)
       .then((result) => { if (active) { setData(result); setError(''); setLoading(false); } })
       .catch((cause) => { if (active) { setError(errorMessage(cause)); setLoading(false); } });
+    return () => { active = false; };
+  }, [days, trafficMode, getToken]);
+
+  useEffect(() => {
+    let active = true;
+    void apiFetch<AdviceGrowthReport>(`/api/admin/advice-growth?days=${days}&traffic=${trafficMode}`, {}, getToken)
+      .then((result) => { if (active) setAdviceGrowth(result); })
+      .catch(() => { if (active) setAdviceGrowth(null); });
     return () => { active = false; };
   }, [days, trafficMode, getToken]);
 
@@ -161,6 +175,10 @@ export default function VisitorAnalyticsAdmin() {
   const engagedRate = detailedSessions ? (number(summary.detailedEngagedSessions) / detailedSessions) * 100 : 0;
   const pagesPerVisit = visits ? number(summary.pageViews) / visits : 0;
   const legacyViews = number(summary.legacyAggregatePageViews);
+  const adviceSummary = adviceGrowth?.summary ?? {};
+  const adviceViews = number(adviceSummary.guideViews);
+  const adviceClicks = number(adviceSummary.tradeSearchClicks);
+  const adviceClickRate = adviceViews ? (adviceClicks / adviceViews) * 100 : 0;
 
   return <Screen title="Visitor Intelligence" subtitle="Live marketplace traffic, acquisition, coarse location, device mix and conversion signals in one place.">
     <AppCard style={styles.heroCard}>
@@ -209,6 +227,21 @@ export default function VisitorAnalyticsAdmin() {
       <Metric live label="Detailed live now" value={compact(summary.detailedActiveNow)} hint="Opted-in detailed visitors active in roughly the last 2 minutes." />
       <Metric label="Detailed conversion" value={`${conversionRate.toFixed(1)}%`} hint={`${compact(summary.detailedConvertedSessions)} of ${compact(summary.detailedSessions)} opted-in detailed visits converted.`} />
     </View>
+
+    <AppCard>
+      <Text variant="titleLarge" style={styles.title}>Advice Hub performance</Text>
+      <Text style={styles.muted}>Guide views and onward clicks from aggregate web analytics. These are interactions, not unique readers, registered homeowners or confirmed jobs. Suspected automated activity follows the traffic-quality filter above.</Text>
+      {adviceGrowth && !adviceGrowth.storageReady ? <Text style={styles.muted}>Advice Hub analytics storage is not available.</Text> : null}
+      <View style={styles.metrics}>
+        <Metric label="Advice Hub views" value={compact(adviceSummary.hubViews)} hint="Views of the advice index." />
+        <Metric label="Guide views" value={compact(adviceSummary.guideViews)} hint="Article page views across all guides." />
+        <Metric label="Guide next-step clicks" value={compact(adviceSummary.nextStepClicks)} hint="Clicks through to trade search or the tradesperson overview." />
+        <Metric label="Find-a-trade clicks" value={compact(adviceSummary.tradeSearchClicks)} hint="Guide-to-directory clicks recorded after this release." />
+        <Metric label="Guide click rate" value={`${adviceClickRate.toFixed(1)}%`} hint="Directory clicks divided by guide views, not an individual-user conversion rate." />
+      </View>
+      <Text variant="titleMedium" style={styles.title}>Most-read advice guides</Text>
+      <RankedRows rows={adviceGrowth?.topGuides ?? []} render={(row, index) => <View style={styles.row}><Text style={styles.rank}>{index + 1}</Text><View style={styles.flex}><Text style={styles.rowTitle}>{text(row.path)}</Text><Text style={styles.muted}>{compact(row.views)} views · {compact(row.nextStepClicks)} next-step clicks</Text></View></View>} />
+    </AppCard>
 
     <AppCard>
       <View style={styles.quickFacts}>
