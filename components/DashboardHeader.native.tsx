@@ -62,6 +62,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
       { label: 'Customer book', onPress: () => go('/trader/customers') },
       { label: 'Working calendar', onPress: () => go('/trader/calendar') },
       { label: 'Project+ planner', onPress: () => go('/trader/project-plus') },
+      { label: 'Pro member benefits', onPress: () => go('/trader/member-benefits') },
     ] satisfies CompactNavItem[] : [{ label: 'Project+ planner', sectionLabel: 'Planning', dividerBefore: true, onPress: () => go('/customer/project-plus') } satisfies CompactNavItem]),
     { label: unreadMessages ? `Messages (${unreadMessages > 99 ? '99+' : unreadMessages})` : 'Messages', sectionLabel: 'Activity', dividerBefore: true, onPress: () => go(messagesHref) },
     { label: unreadNotifications ? `Notifications (${unreadNotifications > 99 ? '99+' : unreadNotifications})` : 'Notifications', onPress: () => go(notificationsHref) },

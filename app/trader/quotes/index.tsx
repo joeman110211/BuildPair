@@ -6,6 +6,7 @@ import { Linking, Platform, Share, StyleSheet, View } from 'react-native';
 import { Chip, Text } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
+import { PartnerSuggestion } from '@/components/PartnerSuggestion';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { colors, spacing } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
@@ -147,6 +148,8 @@ export default function TraderQuotesScreen() {
         </>}
       </View>
     </AppCard>)}
+
+    <PartnerSuggestion placement="quote-after-send" enabled={businessQuotes.some(q => q.status !== 'draft') || jobQuotes.length > 0} />
 
     <View style={styles.heading}><Text variant="titleLarge" style={styles.title}>BuildPair job quotes</Text><Chip>{jobQuotes.length}</Chip></View>
     <Text style={styles.muted}>Quotes sent against homeowner jobs already inside BuildPair stay linked to that job and its messages.</Text>

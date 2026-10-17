@@ -68,6 +68,7 @@ export function DashboardHeader({ home }: { home: '/customer/dashboard' | '/trad
       { label: 'Customer book', onPress: () => go('/trader/customers') },
       { label: 'Working calendar', onPress: () => go('/trader/calendar') },
       { label: 'Project+ planner', onPress: () => go('/trader/project-plus') },
+      { label: 'Pro member benefits', onPress: () => go('/trader/member-benefits') },
     ] satisfies CompactNavItem[] : [{ label: 'Project+ planner', onPress: () => go('/customer/project-plus') } satisfies CompactNavItem]),
     { label: messageLabel, onPress: () => go(messagesHref) },
     { label: notificationLabel, onPress: () => go(notificationsHref) },

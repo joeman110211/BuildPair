@@ -1,4 +1,5 @@
 import { useAuth } from '@clerk/expo';
+import { Link } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { Chip, ProgressBar, Text } from 'react-native-paper';
@@ -155,6 +156,12 @@ export default function SubscriptionScreen() {
         <ProgressBar progress={usageProgress} color={colors.primary} style={styles.progress} />
         <Text style={styles.muted}>Allowance resets {resetLabel}. An open-marketplace opportunity is counted when you first engage with a job by opening a conversation or sending an offer. Merely viewing a job does not use the allowance. Core direct homeowner requests use the same allowance; Plus and Pro direct requests do not.</Text>
       </View> : <Text style={styles.muted}>Starter tradespeople can browse jobs without consuming anything, but submitting an open-marketplace offer requires an active paid plan.</Text>}
+    </AppCard>
+
+    <AppCard>
+      <Text variant="titleLarge" style={styles.title}>Pro member benefits</Text>
+      <Text style={styles.muted}>Partner discounts and offers will appear only after a business has agreed real benefits and eligibility terms. No offers or savings are guaranteed.</Text>
+      <Link href="/trader/member-benefits" asChild><Button mode="outlined">View member benefits</Button></Link>
     </AppCard>
 
     {!isWeb ? <AppCard>
