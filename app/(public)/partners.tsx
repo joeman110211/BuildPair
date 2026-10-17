@@ -1,4 +1,3 @@
-import Head from 'expo-router/head';
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, Linking, ScrollView, StyleSheet, View } from 'react-native';
@@ -15,9 +14,9 @@ const partnerPackages = ['local','featured','founding'] as const;
 
 type Listing = { id: string; name: string; category: string; summary: string; logoUrl: string | null; offerText: string; package: string };
 const offers = [
-  { id: 'local', name: 'Local Partner', six: '£495', twelve: '£895', description: 'Business listing, category placement and an approved website link.' },
-  { id: 'featured', name: 'Featured Partner', six: '£1,495', twelve: '£2,695', description: 'Local benefits, featured category positioning and a clearly labelled sponsored content opportunity.' },
-  { id: 'founding', name: 'Founding Partner', six: '£2,995', twelve: '£4,995', description: 'Featured benefits plus an agreed launch campaign and performance reporting.' },
+  { id: 'local', name: 'Local Partner', six: 'From £495', twelve: 'Annual terms quoted individually', description: 'Approved business profile, category listing and tracked website link.' },
+  { id: 'featured', name: 'Featured Partner', six: 'From £1,495', twelve: 'Annual terms quoted individually', description: 'Profile plus an agreed priority placement, optional ad-labelled content and basic reporting.' },
+  { id: 'founding', name: 'Founding Partner', six: 'From £2,995', twelve: 'Tailored 6 or 12-month campaigns', description: 'Bespoke launch plan with agreed contextual suggestion slots, creative, reporting and optional placement exclusivity.' },
 ] as const;
 
 export default function PartnersPage() {
@@ -58,8 +57,6 @@ export default function PartnersPage() {
   };
   return <ScrollView style={styles.page} contentContainerStyle={styles.scroll}>
     <PublicSeo title="BuildPair partners and commercial opportunities" description="Explore commercial partners and founding partnership opportunities supporting BuildPair's UK homeowner and tradesperson platform." />
-    {/* Keep the review version out of search engines and the sitemap until approved. */}
-    <Head><meta name="robots" content="noindex, nofollow" /></Head>
     <View style={[styles.hero, narrow && styles.heroMobile]}>
       <View style={styles.container}>
         <Text style={styles.eyebrow}>BUILDPAIR PARTNERS</Text>
@@ -99,13 +96,13 @@ export default function PartnersPage() {
         <View style={styles.grid}>
           {offers.map((offer) => <View key={offer.id} style={[styles.packageCard, packageName === offer.id && styles.selectedCard]}>
             <Text style={styles.headingSmall}>{offer.name}</Text>
-            <Text style={styles.price}>{offer.six} <Text style={styles.priceUnit}>/ six months</Text></Text>
-            <Text style={styles.muted}>{offer.twelve} for twelve months</Text>
+            <Text style={styles.price}>{offer.six} <Text style={styles.priceUnit}>/ six-month guide</Text></Text>
+            <Text style={styles.muted}>{offer.twelve}</Text>
             <Text style={styles.muted}>{offer.description}</Text>
             <Button mode={packageName === offer.id ? 'contained' : 'outlined'} onPress={() => setPackageName(offer.id)}> {packageName === offer.id ? 'Selected' : 'Choose package'} </Button>
           </View>)}
         </View>
-        <Text style={styles.fine}>Introductory guide prices, subject to a written proposal, availability, deliverables and any applicable VAT. No payment is taken by submitting an enquiry. Partner listings are paid advertising, not independent BuildPair recommendations.</Text>
+        <Text style={styles.fine}>Illustrative starting prices, not a binding rate card. Final six or twelve-month pricing depends on placement, creative work, priority, exclusivity and measurable deliverables. VAT applies only if chargeable. No payment is taken by submitting an enquiry. Every paid placement is clearly marked Ad and can be dismissed when shown as an optional suggestion. We do not share user, job, quote or design information with advertisers. Partner listings are paid advertising, not independent BuildPair recommendations.</Text>
         <View style={styles.partnerGuides}>
           <Text style={styles.headingSmall}>How partnerships work</Text>
           <Text style={styles.muted}>Practical advice for choosing third-party services and comparing offers, without confusing advertisements with recommendations.</Text>
