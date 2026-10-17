@@ -4,6 +4,7 @@ import { Image, Linking, Platform, StyleSheet, View } from 'react-native';
 import { Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
+import { PartnerSuggestion } from '@/components/PartnerSuggestion';
 import { LoadingScreen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { apiFetch, errorMessage } from '@/lib/api';
@@ -149,6 +150,11 @@ export function ProjectPlusStudio({ audience }: { audience: 'customer' | 'trader
       {plan.budgetBuckets?.length ? <View style={styles.list}><Text variant="titleMedium" style={styles.title}>Budget buckets</Text>{plan.budgetBuckets.map((item, index) => <Text key={index} style={styles.muted}>• <Text style={styles.strong}>{item.name}:</Text> {item.note}</Text>)}</View> : null}
       {plan.safetyNote ? <Text style={styles.notice}>{plan.safetyNote}</Text> : null}
     </AppCard> : null}
+
+    {roomType === 'Kitchen' || roomType === 'Bathroom' ? <PartnerSuggestion
+      placement={roomType === 'Kitchen' ? 'project-plus-kitchen' : 'project-plus-bathroom'}
+      enabled={Boolean(plan || imageUrl)}
+    /> : null}
 
     {recentImages.length ? <View style={styles.wrap}><Text variant="titleLarge" style={styles.title}>Recent concepts</Text><View style={styles.gallery}>{recentImages.map((item) => <AppCard key={item.id} style={styles.galleryCard}><Image source={{ uri: item.imageUrl! }} style={styles.thumb} /><Text variant="titleSmall" style={styles.title}>{item.title}</Text><Text numberOfLines={2} style={styles.muted}>{item.prompt}</Text></AppCard>)}</View></View> : null}
   </View>;
