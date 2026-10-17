@@ -20,9 +20,10 @@ export async function syncDirectorySubscription(subscription:Stripe.Subscription
       paid_until=COALESCE(${paidThrough}::timestamptz,paid_until),
       status=CASE
         WHEN status IN ('removed','rejected','suspended') THEN status
-        WHEN ${!active} THEN 'suspended'
+        WHEN ${!active} AND status='approved' THEN 'approved'
+        WHEN ${!active} THEN 'payment_issue'
         WHEN ${canceled} THEN 'cancel_pending'
-        WHEN status IN ('approved','active','cancel_pending') THEN 'active'
+        WHEN status IN ('approved','active','cancel_pending','payment_issue') THEN 'active'
         ELSE status END,
       updated_at=now()
     WHERE id=${id}::uuid
@@ -35,7 +36,7 @@ export async function directorySubscriptionDeleted(subscription:Stripe.Subscript
   await ensureDirectoryTable();
   await getSql()`
     UPDATE buildpair_partner_directory SET
-       status=CASE WHEN status='removed' THEN 'removed' ELSE 'suspended' END,
+       status=CASE WHEN status IN ('removed','rejected','suspended') THEN status ELSE 'payment_issue' END,
        updated_at=now()
     WHERE stripe_subscription_id=${subscription.id}
   `;
