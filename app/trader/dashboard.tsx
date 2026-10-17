@@ -140,12 +140,13 @@ export default function TraderDashboard() {
     <View style={styles.sectionHeading}><Text variant="titleLarge" style={styles.cardTitle}>Quick actions</Text></View>
     <View style={styles.quickActions}>
       <Link href="/trader/job-board" asChild><Button mode="contained" contentStyle={styles.actionButton}>Find jobs</Button></Link>
-      <Link href="/trader/quotes" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Create a quote</Button></Link>
+      <Link href="/trader/quotes/new" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Create a quote</Button></Link>
       <Link href="/trader/invoices/new" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Create invoice</Button></Link>
       {activeJobs.length ? <Link href="/trader/my-jobs" asChild><Button mode="outlined" contentStyle={styles.actionButton}>My active jobs</Button></Link> : null}
       {jobs.length || quotes.length ? <Link href="/trader/customers" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Customer book</Button></Link> : null}
       {paidActive && (profile.subscriptionTier === 'basic' || profile.subscriptionTier === 'featured') ? <Link href="/trader/calendar" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Working calendar</Button></Link> : null}
       <Link href="/trader/profile" asChild><Button mode="outlined" contentStyle={styles.actionButton}>Manage profile</Button></Link>
+      {(pendingQuotes.length || activeJobs.length) ? <Link href="/trader/attention" asChild><Button mode="outlined" icon="bell-alert-outline" contentStyle={styles.actionButton}>Needs attention</Button></Link> : null}
     </View>
 
     <AppCard>
