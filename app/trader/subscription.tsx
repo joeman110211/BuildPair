@@ -1,4 +1,5 @@
 import { useAuth } from '@clerk/expo';
+import { Link } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { Chip, ProgressBar, Text } from 'react-native-paper';
