@@ -106,6 +106,14 @@ export default function PartnersPage() {
           </View>)}
         </View>
         <Text style={styles.fine}>Introductory guide prices, subject to a written proposal, availability, deliverables and any applicable VAT. No payment is taken by submitting an enquiry. Partner listings are paid advertising, not independent BuildPair recommendations.</Text>
+        <View style={styles.partnerGuides}>
+          <Text style={styles.headingSmall}>How partnerships work</Text>
+          <Text style={styles.muted}>Practical advice for choosing third-party services and comparing offers, without confusing advertisements with recommendations.</Text>
+          <View style={styles.chips}>
+            <Link href="/(public)/advice/choosing-buildpair-partner-services" asChild><Button mode="outlined">For homeowners →</Button></Link>
+            <Link href="/(public)/advice/comparing-trade-supplier-discounts" asChild><Button mode="outlined">For tradespeople →</Button></Link>
+          </View>
+        </View>
       </View>
       <View style={styles.formCard}>
         <Text style={styles.eyebrowDark}>PARTNERSHIP ENQUIRY</Text>
@@ -162,6 +170,7 @@ const styles = StyleSheet.create({
   price: { fontSize: 26, fontWeight: '900', color: colors.charcoal },
   priceUnit: { fontSize: 12, fontWeight: '500', color: colors.muted },
   fine: { fontSize: 12, color: colors.muted, lineHeight: 19 },
+  partnerGuides: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, padding: 20, borderRadius: 18, gap: 10 },
   formCard: { backgroundColor: colors.surfaceRaised, borderRadius: 25, borderColor: colors.border, borderWidth: 1, padding: 22, gap: 15 },
   fields: { gap: 11 },
   input: { backgroundColor: colors.surfaceRaised },
