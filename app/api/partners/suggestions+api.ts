@@ -1,6 +1,7 @@
 import { ensurePartnersTables, partnerPlacementIds } from '@/lib/partners-store';
 import { getSql } from '@/lib/sql';
-import { jsonError } from '@/lib/server';
+import { authenticatedUserId, jsonError } from '@/lib/server';
+import { requireTraderPlanSetupAccess } from '@/lib/trader-plan-access';
 
 type PlacementId = typeof partnerPlacementIds[number];
 type CampaignRow = {
@@ -15,6 +16,10 @@ export async function GET(request: Request) {
     const placement = new URL(request.url).searchParams.get('placement');
     if (!placement || !partnerPlacementIds.includes(placement as PlacementId)) {
       return Response.json({ suggestion: null }, { headers: { 'Cache-Control': 'no-store' } });
+    }
+    if (placement === 'pro-member-benefits') {
+      const userId = await authenticatedUserId(request);
+      await requireTraderPlanSetupAccess(userId, 'featured', 'BuildPair Pro membership is required to access member offers.');
     }
     // The request only carries a fixed context string. No account, job, quote,
     // design, location, email, contact, search term or personalised profile data.
