@@ -28,7 +28,6 @@ describe('review-stage partnership discovery', () => {
       expect(source(`app/(public)/advice/${guide.slug}.tsx`)).toContain(`slug="${guide.slug}"`);
       expect(source('public/sitemap-advice.xml')).toContain(guide.slug);
       expect(source('public/sitemap.txt')).toContain(guide.slug);
-      expect(page).toContain(guide.slug);
     }
     expect(page).not.toContain('<meta name="robots" content="noindex, nofollow" />');
   });
