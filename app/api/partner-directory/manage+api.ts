@@ -20,7 +20,8 @@ export async function POST(request:Request) {
       await sendDirectoryEmail(owner,'New directory listing to review',`New applicant: ${item.businessName}\nCategory: ${item.category}\nVisit https://www.buildpair.co.uk/admin/partners\nNo advertiser is published or charged before your approval.`);
       return Response.json({status:'pending_review'});
     }
-    if(!['active','cancel_pending','approved'].includes(item.status))throw new HttpError(409,'There is no active subscription to cancel or remove.');
+    if(!['active','cancel_pending','approved'].includes(item.status))throw new HttpError(409,'There is no active listing to manage.');
+    if(p.action==='cancel' && !item.subscriptionId)throw new HttpError(409,'No monthly payment is active. Use Remove listing instead.');
     if(item.subscriptionId){
       const stripe=getStripe();
       // Renewal stops but the already-paid term is preserved.
