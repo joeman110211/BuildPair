@@ -6,6 +6,7 @@ import { Share, StyleSheet, View } from 'react-native';
 import { Chip, ProgressBar, Text } from 'react-native-paper';
 import { Button } from '@/components/BrandButton';
 import { AppCard } from '@/components/AppCard';
+import { PartnerSuggestion } from '@/components/PartnerSuggestion';
 import { EmptyState, LoadingScreen, Screen } from '@/components/Screen';
 import { SUBSCRIPTION_TIERS } from '@/constants/options';
 import { colors, controlHeights, spacing } from '@/constants/theme';
@@ -196,6 +197,8 @@ export default function TraderDashboard() {
       <Text selectable style={styles.relayLink}>{referral.referralUrl}</Text>
       <Text style={styles.relayNote}>No paid-lead nonsense and no cash-for-random-invites scheme. The point is to seed BuildPair with real local working networks as our local trade network grows.</Text>
     </AppCard> : null}
+
+    <PartnerSuggestion placement="trader-after-onboarding" enabled={Boolean(profile?.businessName?.trim() && profile?.tradeCategory)} />
 
     <View style={styles.stats}>
       <AppCard style={styles.stat}><Text variant="headlineMedium" style={styles.statNumber}>{newLeads.length}</Text><Text style={styles.statLabel}>New opportunities</Text></AppCard>
