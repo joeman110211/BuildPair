@@ -21,6 +21,7 @@ export async function POST(request:Request) {
    if(item.checkoutSessionId){
      const previous=await stripe.checkout.sessions.retrieve(item.checkoutSessionId);
      if(previous.status==='open'&&previous.url)return Response.json({url:previous.url});
+     if(previous.status==='complete')throw new HttpError(409,'Your checkout completed. Please refresh shortly while Stripe confirms the listing. Contact BuildPair if it does not activate.');
    }
    const session=await stripe.checkout.sessions.create({
      mode:'subscription',customer:customerId,client_reference_id:item.id,
