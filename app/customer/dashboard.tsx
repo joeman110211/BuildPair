@@ -71,18 +71,16 @@ export default function CustomerDashboard() {
       <Button mode="contained" icon="arrow-right" onPress={() => router.push(attention.href)}>{attention.label}</Button>
     </AppCard> : null}
 
-
     {hasJobs ? <View style={styles.stats}>
       <AppCard style={[styles.stat, styles.statOrange]}><Text style={styles.statEyebrow}>QUOTING</Text><Text variant="headlineMedium" style={styles.statNumber}>{openJobs.length}</Text><Text style={styles.statLabel}>Jobs receiving quotes</Text></AppCard>
       <AppCard style={[styles.stat, styles.statTeal]}><Text style={styles.statEyebrow}>IN PROGRESS</Text><Text variant="headlineMedium" style={styles.statNumber}>{activeJobs.length}</Text><Text style={styles.statLabel}>Active projects</Text></AppCard>
       <AppCard style={[styles.stat, styles.statBlue]}><Text style={styles.statEyebrow}>COMPLETED</Text><Text variant="headlineMedium" style={styles.statNumber}>{completedJobs.length}</Text><Text style={styles.statLabel}>Finished jobs</Text></AppCard>
-    </View>
- : null}
+    </View> : null}
+
     {error ? <EmptyState title="Couldn’t load your dashboard" body={error} action={<Button mode="outlined" onPress={load}>Try again</Button>} /> : null}
 
-
-    <View style={styles.sectionHeading}><View><Text style={styles.sectionEyebrow}>YOUR PROJECTS</Text><Text variant="titleLarge" style={styles.title}>Continue where you left off</Text></View><Link href="/customer/jobs" asChild><Button mode="text">View all jobs</Button></Link></View>
-    {!jobs.length ? <EmptyState title="No jobs yet" body="Post what you need once. BuildPair keeps quotes, messages and project history together." action={<Link href="/customer/new-job" asChild><Button mode="contained" contentStyle={styles.actionButton}>Post your first job</Button></Link>} /> : orderedJobs.slice(0, 4).map((job) => <AppCard key={job.id} style={job.status === 'in_progress' ? styles.activeJob : undefined}>
+    {hasJobs ? <View style={styles.sectionHeading}><View><Text style={styles.sectionEyebrow}>YOUR PROJECTS</Text><Text variant="titleLarge" style={styles.title}>Continue where you left off</Text></View><Link href="/customer/jobs" asChild><Button mode="text">View all jobs</Button></Link></View> : null}
+    {!hasJobs ? <EmptyState title="No jobs yet" body="Post your first job using the button above. BuildPair keeps quotes, messages and project history together." /> : orderedJobs.slice(0, 4).map((job) => <AppCard key={job.id} style={job.status === 'in_progress' ? styles.activeJob : undefined}>
       <View style={styles.row}><View style={styles.flex}><Text variant="titleLarge" style={styles.title}>{job.title}</Text><Text style={styles.muted}>{job.category}{job.locationLabel ? ` · ${job.locationLabel}` : ''}{job.postcode ? ` · ${job.postcode}` : ''}</Text></View><Chip icon={job.status === 'in_progress' ? 'progress-clock' : undefined}>{job.status.replace('_', ' ')}</Chip></View>
       <Text style={styles.meta}>{job.status === 'in_progress' ? 'Active project · open this for payments and next steps' : `${job.budgetRange} · ${job.urgency}`}</Text>
       <Text numberOfLines={2} style={styles.description}>{job.description}</Text>
